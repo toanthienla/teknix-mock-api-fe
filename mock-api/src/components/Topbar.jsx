@@ -3,17 +3,18 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function Topbar({ onSearch }) {
+export default function Topbar({ onSearch, onNewProject }) {
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    if (onSearch) onSearch(value); 
+    if (onSearch) onSearch(value);
   };
 
   return (
     <div className="flex items-center justify-between mb-6">
+     
       <div className="flex-1 flex justify-center">
         <div className="relative w-full max-w-md">
           <Input
@@ -27,8 +28,13 @@ export default function Topbar({ onSearch }) {
           </div>
         </div>
       </div>
+
+     
       <div className="ml-4">
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+        <Button
+          onClick={onNewProject} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+        >
           New Project
         </Button>
       </div>
