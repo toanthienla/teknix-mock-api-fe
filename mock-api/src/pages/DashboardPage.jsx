@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
@@ -8,7 +8,6 @@ import { ChevronDown } from "lucide-react";
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-
   const [workspaces, setWorkspaces] = useState([
     {
       id: "ws1",
@@ -63,115 +62,156 @@ export default function DashboardPage() {
   const [currentWsId, setCurrentWsId] = useState("ws1");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAddWorkspace = (name) => {
-    const newWs = {
-      id: `ws${Date.now()}`,
-      name,
-      projects: [],
-    };
-    setWorkspaces((prev) => [...prev, newWs]);
-    setCurrentWsId(newWs.id);
-  };
-
-  const handleEditWorkspace = (id) => {
-    const ws = workspaces.find((w) => w.id === id);
-    const newName = prompt("Edit workspace name:", ws.name);
-    if (newName) {
-      setWorkspaces((prev) =>
-        prev.map((w) => (w.id === id ? { ...w, name: newName } : w))
-      );
-    }
-  };
-
-  const handleDeleteWorkspace = (id) => {
-    if (confirm("Are you sure you want to delete this workspace?")) {
-      setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      if (currentWsId === id && workspaces.length > 1) {
-        setCurrentWsId(workspaces[0].id);
-      }
-    }
-  };
 
   const currentWorkspace = workspaces.find((w) => w.id === currentWsId);
   const currentProject = currentWorkspace?.projects.find((p) => p.id === projectId);
+
+  
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  
+  useEffect(() => {
+    if (currentProject) {
+      setEditTitle(currentProject.title);
+      setEditDesc(currentProject.description || "");
+    }
+  }, [currentProject]);
+
+  
   const filteredProjects = currentWorkspace?.projects.filter((p) =>
     p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  
+  const handleDeleteProject = (projectId) => {
+    setWorkspaces((prev) =>
+      prev.map((ws) =>
+        ws.id === currentWsId
+          ? { ...ws, projects: ws.projects.filter((p) => p.id !== projectId) }
+          : ws
+      )
+    );
+  };
+
+  
+  const handleUpdateProject = () => {
+    setWorkspaces((prev) =>
+      prev.map((ws) =>
+        ws.id === currentWsId
+          ? {
+              ...ws,
+              projects: ws.projects.map((p) =>
+                p.id === projectId ? { ...p, title: editTitle, description: editDesc } : p
+              ),
+            }
+          : ws
+      )
+    );
+    navigate("/dashboard"); 
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
+        
         <aside className="w-72 border-r border-slate-100 bg-white">
           <Sidebar
             workspaces={workspaces}
             current={currentWsId}
             setCurrent={setCurrentWsId}
-            onAddWorkspace={handleAddWorkspace}
-            onEditWorkspace={handleEditWorkspace}
-            onDeleteWorkspace={handleDeleteWorkspace}
           />
         </aside>
+
         <main className="flex-1 p-8">
           <Topbar onSearch={setSearchTerm} workspace={currentWorkspace} />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">All Projects</h2>
+            <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
+              <span>Recently created</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
 
-          {!projectId ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">All Projects</h2>
-                <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
-                  <span>Recently created</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6">
-                {filteredProjects?.length > 0 ? (
-                  filteredProjects.map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => navigate(`/dashboard/${p.id}`)}
-                      className="cursor-pointer"
-                    >
-                      <ProjectCard project={p} />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-slate-500">No projects found in this workspace.</p>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              {currentProject ? (
-                <div>
-                  <h2 className="text-2xl font-semibold mb-4">
-                    {currentProject.title}
-                  </h2>
-                  <p className="text-slate-600">
-                    {currentProject.description || "No description"}
-                  </p>
-                  <button
-                    onClick={() => navigate("/dashboard")}
-                    className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md"
-                  >
-                    Back to Projects
-                  </button>
+          
+          <div className="grid grid-cols-3 gap-6">
+            {filteredProjects?.length > 0 ? (
+              filteredProjects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/dashboard/${p.id}`)} 
+                  className="cursor-pointer"
+                >
+                  <ProjectCard
+                    project={p}
+                    onEdit={(id) => navigate(`/dashboard/${id}`)}
+                    onDelete={(id) => handleDeleteProject(id)}
+                  />
                 </div>
-              ) : (
-                <div>
-                  <p className="text-red-500">Project not found!</p>
-                  <button
-                    onClick={() => navigate("/dashboard")}
-                    className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md"
-                  >
-                    Back
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+              ))
+            ) : (
+              <p className="text-slate-500">No projects found in this workspace.</p>
+            )}
+          </div>
         </main>
       </div>
+
+      
+      {currentProject && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-[400px] p-6 relative">
+           
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-semibold mb-2">Edit Project</h2>
+            <p className="text-sm text-gray-500 mb-4">Project details</p>
+
+           
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Project name"
+              className="w-full border rounded-md px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+
+            
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <textarea
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="Description"
+              rows="4"
+              maxLength={200}
+              className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <div className="text-right text-xs text-gray-400 mt-1">
+              {editDesc.length}/200
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProject}
+                className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
