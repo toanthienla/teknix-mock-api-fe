@@ -11,12 +11,6 @@
       "name": "Backend Team",
       "created_at": "2025-09-02T11:00:00Z",
       "updated_at": "2025-09-11T13:00:00Z"
-    },
-    {
-      "id": 3,
-      "name": "WP",
-      "created_at": "2025-09-15T06:50:59.208Z",
-      "updated_at": "2025-09-15T06:50:59.208Z"
     }
   ],
   "projects": [
@@ -50,22 +44,6 @@
       "description": "Implement project endpoints",
       "created_at": "2025-09-08T11:00:00Z",
       "updated_at": "2025-09-13T17:00:00Z"
-    },
-    {
-      "id": 5,
-      "name": "project1",
-      "description": "",
-      "workspace_id": 3,
-      "created_at": "2025-09-15T06:51:08.168Z",
-      "updated_at": "2025-09-15T06:51:08.168Z"
-    },
-    {
-      "id": 6,
-      "name": "pr",
-      "description": "",
-      "workspace_id": 3,
-      "created_at": "2025-09-15T06:51:43.968Z",
-      "updated_at": "2025-09-15T06:51:43.968Z"
     }
   ]
 }

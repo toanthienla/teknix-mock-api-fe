@@ -87,17 +87,16 @@ export default function DashboardPage() {
 
   // 🔹 create project
   const handleCreateProject = () => {
+    if (!currentWsId) {
+      alert("Workspace không hợp lệ")
+      return
+    }
     if (!newTitle.trim()) return
 
-    // Tự động tăng id
-    const maxId = projects.length > 0 ? Math.max(...projects.map(p => Number(p.id))) : 0
-    const newId = maxId + 1
-
     const newProject = {
-      id: newId,
       name: newTitle,
       description: newDesc,
-      workspace_id: Number(currentWsId),
+      workspace_id: currentWsId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -109,9 +108,8 @@ export default function DashboardPage() {
     })
       .then((res) => res.json())
       .then((createdProject) => {
-        // Thêm project mới vào state trực tiếp
         setProjects((prev) => [...prev, createdProject])
-        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true })) // mở workspace chứa project mới
+        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true }))
         setNewTitle("")
         setNewDesc("")
         setOpenNew(false)
@@ -134,15 +132,17 @@ export default function DashboardPage() {
         id: editId,
         name: editTitle,
         description: editDesc,
-        workspace_id: Number(currentWsId),
+        workspace_id: currentWsId,
         updated_at: new Date().toISOString(),
       }),
-    }).then(() => {
-      setProjects((prev) =>
-        prev.map((p) => (p.id === editId ? { ...p, name: editTitle, description: editDesc } : p))
-      )
-      setOpenEdit(false)
     })
+      .then((res) => res.json())
+      .then((updatedProject) => {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+        )
+        setOpenEdit(false)
+      })
   }
 
   // 🔹 delete project
@@ -156,12 +156,7 @@ export default function DashboardPage() {
   const handleAddWorkspace = (name) => {
     if (!name.trim()) return
 
-    // Tự động tăng id
-    const maxId = workspaces.length > 0 ? Math.max(...workspaces.map(w => Number(w.id))) : 0
-    const newId = maxId + 1
-
     const newWs = {
-      id: newId,
       name,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -176,7 +171,9 @@ export default function DashboardPage() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs])
         setCurrentWsId(createdWs.id)
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true })) // mở workspace mới
+        // mở workspace và mở luôn dialog tạo project
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }))
+       
       })
   }
 
@@ -193,11 +190,23 @@ export default function DashboardPage() {
   }
 
   const handleDeleteWorkspace = (id) => {
-    fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
-      setWorkspaces((prev) => prev.filter((w) => w.id !== id))
-      if (currentWsId === id) setCurrentWsId(null)
+  fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
+    setWorkspaces((prev) => prev.filter((w) => w.id !== id))
+    if (currentWsId === id) setCurrentWsId(null)
+
+    // Lấy tất cả project thuộc workspace này
+    const projectsToDelete = projects.filter((p) => p.workspace_id === id)
+
+    // Xóa từng project trên server
+    projectsToDelete.forEach((p) => {
+      fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
     })
-  }
+
+    // Xóa khỏi state luôn
+    setProjects((prev) => prev.filter((p) => p.workspace_id !== id))
+  })
+}
+
 
   // 🔹 current project detail
   const currentProject = projectId
