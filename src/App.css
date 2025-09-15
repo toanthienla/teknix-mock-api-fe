@@ -1,0 +1,11 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(0deg, #F1F5F9, #F1F5F9), #FFFFFF;
+}
+
+.main-content {
+  flex: 1;
+  padding: 32px;
+  margin-left: 280px; /* Width of sidebar */
+}

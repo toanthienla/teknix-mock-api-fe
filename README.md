@@ -1,80 +1,12 @@
-# Teknix Mock API - Frontend
+# React + Vite
 
-This is the user interface (frontend) for the Mock API platform.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🛠️ Tech Stack
+Currently, two official plugins are available:
 
-- **React 19.1.1**
-- **Vite 7.1.2**
-- **Tailwind CSS 4.1.13** - Utility-first CSS framework
-- **DaisyUI 5.1.9** - Component library for Tailwind CSS
-- **ESLint**
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 📁 Project Structure
+## Expanding the ESLint configuration
 
-```
-mock-api/
-├── public/
-├── src/
-│   ├── components/        # Reusable UI components
-│   ├── context/          # React Context providers
-│   ├── hooks/            # Custom React hooks
-│   ├── layouts/          # Layout components
-│   ├── pages/            # Page components
-│   ├── routes/           # Routing configuration
-│   ├── services/         # API services
-│   ├── styles/           # Global styles
-│   ├── utils/            # Utility functions
-│   ├── App.jsx           # Main App component
-│   └── main.jsx          # Entry point
-├── package.json
-├── vite.config.js
-└── eslint.config.js
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 18 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone repository:
-
-```bash
-git clone https://github.com/toanthienla/teknix-mock-api-fe.git
-cd teknix-mock-api-fe/mock-api
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Run development server:
-
-```bash
-npm run dev
-```
-
-## 🎨 UI Components
-
-The project uses DaisyUI components with Tailwind CSS to create beautiful and responsive interfaces. Some available components include:
-
-- Buttons with multiple variants (primary, secondary, accent, etc.)
-- Form components
-- Navigation components
-- Modal and Dialog components
-
-### Styling
-
-- Using Tailwind CSS 4.1 for utility classes
-- DaisyUI 5.1 for pre-built components
-- Custom styles in `src/styles/index.css`
-
-## 🚀 Deployment
-
-Coming soon...
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
