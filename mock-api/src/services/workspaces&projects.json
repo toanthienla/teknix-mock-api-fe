@@ -1,0 +1,71 @@
+{
+  "workspaces": [
+    {
+      "id": "1",
+      "name": "Frontend Team",
+      "created_at": "2025-09-01T10:00:00Z",
+      "updated_at": "2025-09-10T12:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Backend Team",
+      "created_at": "2025-09-02T11:00:00Z",
+      "updated_at": "2025-09-11T13:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "WP",
+      "created_at": "2025-09-15T06:50:59.208Z",
+      "updated_at": "2025-09-15T06:50:59.208Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "name": "FE Workspace UI",
+      "description": "Build UI for managing workspaces",
+      "workspace_id": 1,
+      "updated_at": "2025-09-15T04:09:31.149Z"
+    },
+    {
+      "id": "2",
+      "workspace_id": 1,
+      "name": "FE Project Dashboard",
+      "description": "Implement project dashboard for frontend",
+      "created_at": "2025-09-06T09:15:00Z",
+      "updated_at": "2025-09-11T15:00:00Z"
+    },
+    {
+      "id": "3",
+      "workspace_id": 2,
+      "name": "BE Workspace API",
+      "description": "Build API for workspace management",
+      "created_at": "2025-09-07T10:00:00Z",
+      "updated_at": "2025-09-12T16:00:00Z"
+    },
+    {
+      "id": "4",
+      "workspace_id": 2,
+      "name": "BE Project API",
+      "description": "Implement project endpoints",
+      "created_at": "2025-09-08T11:00:00Z",
+      "updated_at": "2025-09-13T17:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "project1",
+      "description": "",
+      "workspace_id": 3,
+      "created_at": "2025-09-15T06:51:08.168Z",
+      "updated_at": "2025-09-15T06:51:08.168Z"
+    },
+    {
+      "id": 6,
+      "name": "pr",
+      "description": "",
+      "workspace_id": 3,
+      "created_at": "2025-09-15T06:51:43.968Z",
+      "updated_at": "2025-09-15T06:51:43.968Z"
+    }
+  ]
+}

@@ -1,13 +1,11 @@
 import React, { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import randomColor from "randomcolor";
 
-export default function ProjectCard({ project, onEdit, onDelete }) {
-  const { id, title, description } = project;
+export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
+  const { id, name, description } = project; // <-- dùng name thay vì title
 
- 
   const bgColor = useMemo(
     () =>
       randomColor({
@@ -17,64 +15,46 @@ export default function ProjectCard({ project, onEdit, onDelete }) {
     [id]
   );
 
-  
-  const shortName = useMemo(
-    () =>
-      title
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase(),
-    [title]
-  );
-
   return (
-    <Card className="shadow-sm hover:shadow-md transition cursor-pointer">
-      <CardContent className="p-0">
-       
+    <div
+      className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md cursor-pointer transition"
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-3">
         <div
-          className="h-40 rounded-t-md flex items-center justify-center text-4xl font-bold text-slate-700"
+          className="w-10 h-10 rounded-md"
           style={{ backgroundColor: bgColor }}
+        />
+        <div>
+          <div className="font-medium text-sm text-slate-800">{name}</div>
+          <div className="text-xs text-slate-500 truncate max-w-[180px]">
+            {description || "No description"}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(project);
+          }}
         >
-          {shortName}
-        </div>
-
-        
-        <div className="p-4 flex items-start justify-between">
-          <div>
-            <div className="font-medium">{title}</div>
-            <div className="text-xs text-slate-400">
-              {description || "No description"}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 ml-3">
-         
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(id);
-              }}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-
-           
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(id);
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          <Pencil className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(id);
+          }}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   );
 }
