@@ -132,12 +132,7 @@ export default function DashboardPage() {
   }
 
   
-  const handleDeleteProject = (id) => {
-    fetch(`${API_ROOT}/projects/${id}`, { method: "DELETE" }).then(() => {
-      setProjects((prev) => prev.filter((p) => p.id !== id))
-    })
-  }
-
+  
   
   const handleAddWorkspace = (name) => {
     if (!name.trim()) return
@@ -218,6 +213,20 @@ export default function DashboardPage() {
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null
+
+  
+  const handleDeleteProject = (projectId) => {
+    setWorkspaces((prev) =>
+      prev.map((ws) =>
+        ws.id === currentWsId
+          ? { ...ws, projects: ws.projects.filter((p) => p.id !== projectId) }
+          : ws
+      )
+    );
+  };
+
+  
+ 
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
