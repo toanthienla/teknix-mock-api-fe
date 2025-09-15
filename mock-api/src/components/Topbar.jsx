@@ -36,8 +36,6 @@ export default function Topbar({ onSearch, onNewProject }) {
           onClick={onNewProject} 
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
 =======
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-          onClick={onNewProject}
 >>>>>>> 94b41572bfef948c11fa4ed8e7ece02e9cf5efeb
         >
           New Project
