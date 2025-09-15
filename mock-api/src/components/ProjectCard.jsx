@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import randomColor from "randomcolor";
 
 export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
-  const { id, name, description } = project; // <-- dùng name thay vì title
+  const { id, name, description } = project; 
 
   const bgColor = useMemo(
     () =>

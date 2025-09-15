@@ -116,33 +116,35 @@ export default function Sidebar({
 
           <li className="mt-2">
             {isAdding ? (
-              <Input
-                autoFocus
-                placeholder="Workspace name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd();
-                  if (e.key === "Escape") {
+              <div className="relative w-full">
+                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  autoFocus
+                  placeholder="Type workspace name..."
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAdd();
+                    if (e.key === "Escape") {
+                      setIsAdding(false);
+                      setNewName("");
+                    }
+                  }}
+                  onBlur={() => {
                     setIsAdding(false);
                     setNewName("");
-                  }
-                }}
-                onBlur={() => {
-                  setIsAdding(false);
-                  setNewName("");
-                }}
-                className="w-full"
-              />
+                  }}
+                  className="pl-8"
+                />
+              </div>
             ) : (
-              <Button
-                variant="link"
-                className="w-full flex items-center gap-3 text-blue-600"
+              <div
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 text-black"
                 onClick={() => setIsAdding(true)}
               >
                 <Plus className="w-4 h-4" />
-                New Workspace
-              </Button>
+                <span>New Workspace</span>
+              </div>
             )}
           </li>
         </ul>

@@ -8,22 +8,11 @@ import ProjectCard from "../components/ProjectCard"
 import { ChevronDown } from "lucide-react"
 import { API_ROOT } from "../utils/constants"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogFooter,} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
+import {DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem,} from "@/components/ui/dropdown-menu"
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -34,22 +23,19 @@ export default function DashboardPage() {
   const [currentWsId, setCurrentWsId] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOption, setSortOption] = useState("Recently created")
-  const [openProjectsMap, setOpenProjectsMap] = useState({}) // track open workspace project lists
-
-  // dialogs
+  const [openProjectsMap, setOpenProjectsMap] = useState({})
   const [openNew, setOpenNew] = useState(false)
   const [openEdit, setOpenEdit] = useState(false)
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState(null) 
 
-  // new project state
   const [newTitle, setNewTitle] = useState("")
   const [newDesc, setNewDesc] = useState("")
 
-  // edit project state
   const [editId, setEditId] = useState(null)
   const [editTitle, setEditTitle] = useState("")
   const [editDesc, setEditDesc] = useState("")
 
-  // 🔹 fetch workspaces + projects
+  
   useEffect(() => {
     fetchWorkspaces()
     fetchProjects()
@@ -70,7 +56,7 @@ export default function DashboardPage() {
       .then((data) => setProjects(data))
   }
 
-  // 🔹 filter + sort projects
+  
   const currentProjects = projects.filter(
     (p) => String(p.workspace_id) === String(currentWsId)
   )
@@ -85,7 +71,7 @@ export default function DashboardPage() {
     sortedProjects.sort((a, b) => b.name.localeCompare(a.name))
   }
 
-  // 🔹 create project
+  
   const handleCreateProject = () => {
     if (!currentWsId) {
       alert("Workspace không hợp lệ")
@@ -116,7 +102,7 @@ export default function DashboardPage() {
       })
   }
 
-  // 🔹 edit project
+  
   const openEditProject = (p) => {
     setEditId(p.id)
     setEditTitle(p.name)
@@ -145,16 +131,26 @@ export default function DashboardPage() {
       })
   }
 
-  // 🔹 delete project
+  
   const handleDeleteProject = (id) => {
     fetch(`${API_ROOT}/projects/${id}`, { method: "DELETE" }).then(() => {
       setProjects((prev) => prev.filter((p) => p.id !== id))
     })
   }
 
-  // 🔹 workspace actions
+  
   const handleAddWorkspace = (name) => {
     if (!name.trim()) return
+
+    if (name.length > 20) {
+      alert("Tên workspace quá dài (tối đa 20 ký tự)")
+      return
+    }
+
+    if (workspaces.some((w) => w.name.toLowerCase() === name.toLowerCase())) {
+      alert("Tên workspace đã tồn tại")
+      return
+    }
 
     const newWs = {
       name,
@@ -171,13 +167,27 @@ export default function DashboardPage() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs])
         setCurrentWsId(createdWs.id)
-        // mở workspace và mở luôn dialog tạo project
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }))
-       
       })
   }
 
   const handleEditWorkspace = (id, name) => {
+    if (!name.trim()) return
+
+    if (name.length > 20) {
+      alert("Tên workspace quá dài (tối đa 20 ký tự)")
+      return
+    }
+
+    if (
+      workspaces.some(
+        (w) => w.id !== id && w.name.toLowerCase() === name.toLowerCase()
+      )
+    ) {
+      alert("Tên workspace đã tồn tại")
+      return
+    }
+
     fetch(`${API_ROOT}/workspaces/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -190,25 +200,21 @@ export default function DashboardPage() {
   }
 
   const handleDeleteWorkspace = (id) => {
-  fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
-    setWorkspaces((prev) => prev.filter((w) => w.id !== id))
-    if (currentWsId === id) setCurrentWsId(null)
+    fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
+      setWorkspaces((prev) => prev.filter((w) => w.id !== id))
+      if (currentWsId === id) setCurrentWsId(null)
 
-    // Lấy tất cả project thuộc workspace này
-    const projectsToDelete = projects.filter((p) => p.workspace_id === id)
+      const projectsToDelete = projects.filter((p) => p.workspace_id === id)
 
-    // Xóa từng project trên server
-    projectsToDelete.forEach((p) => {
-      fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+      projectsToDelete.forEach((p) => {
+        fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+      })
+
+      setProjects((prev) => prev.filter((p) => p.workspace_id !== id))
     })
+  }
 
-    // Xóa khỏi state luôn
-    setProjects((prev) => prev.filter((p) => p.workspace_id !== id))
-  })
-}
-
-
-  // 🔹 current project detail
+  
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null
@@ -216,7 +222,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
-        {/* Sidebar */}
+       
         <aside className="w-72 border-r border-slate-100 bg-white">
           <Sidebar
             workspaces={workspaces}
@@ -230,13 +236,13 @@ export default function DashboardPage() {
               const name = prompt("Edit workspace name", ws.name)
               if (name) handleEditWorkspace(id, name)
             }}
-            onDeleteWorkspace={handleDeleteWorkspace}
+            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)} 
             openProjectsMap={openProjectsMap}
             setOpenProjectsMap={setOpenProjectsMap}
           />
         </aside>
 
-        {/* Main */}
+       
         <main className="flex-1 p-8">
           <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNew(true)} />
 
@@ -300,7 +306,7 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* New Project Dialog */}
+     
       <Dialog open={openNew} onOpenChange={setOpenNew}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -334,7 +340,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Project Dialog */}
+      
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -360,6 +366,30 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button onClick={handleUpdateProject}>Update</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+     
+      <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Workspace</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this workspace? This action will also remove all projects inside.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                handleDeleteWorkspace(confirmDeleteWs)
+                setConfirmDeleteWs(null)
+              }}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
