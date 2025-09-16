@@ -101,13 +101,12 @@ export default function DashboardPage() {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
-  // ===== Workspace Functions =====
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
     if (!trimmed) return "Workspace name cannot be empty";
     if (!/^[A-Za-z][A-Za-z0-9]*( [A-Za-z0-9]+)*$/.test(trimmed))
       return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (trimmed.length > 50) return "Workspace name max 50 chars";
     if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
       return "Workspace name already exists";
     return "";
@@ -162,23 +161,19 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to update workspace"));
   };
 
-  // ===== UPDATED: Delete Workspace and its Projects =====
   const handleDeleteWorkspace = async (id) => {
     try {
-      // Lấy tất cả project trong workspace
       const res = await fetch(`${API_ROOT}/projects`);
       const allProjects = await res.json();
       const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
 
-      // Xóa từng project
+
       await Promise.all(
         projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
       );
 
-      // Xóa workspace
       await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
-      // Cập nhật state frontend
       setWorkspaces(prev => prev.filter(w => w.id !== id));
       setProjects(prev => prev.filter(p => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
@@ -189,7 +184,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ===== Project Functions =====
   const validateProject = (title, desc) => {
     let valid = true;
     setNewTitleError("");
@@ -201,8 +195,8 @@ export default function DashboardPage() {
     if (!titleTrim) {
       setNewTitleError("Project name cannot be empty");
       valid = false;
-    } else if (titleTrim.length > 20) {
-      setNewTitleError("Project name cannot exceed 20 chars");
+    } else if (titleTrim.length > 50) {
+      setNewTitleError("Project name cannot exceed 50 chars");
       valid = false;
     } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
       setNewTitleError("Must start with a letter, no special chars, single spaces allowed");
@@ -276,8 +270,8 @@ export default function DashboardPage() {
     if (!titleTrim) {
       setEditTitleError("Project name cannot be empty");
       valid = false;
-    } else if (titleTrim.length > 20) {
-      setEditTitleError("Project name cannot exceed 20 chars");
+    } else if (titleTrim.length > 50) {
+      setEditTitleError("Project name cannot exceed 50 chars");
       valid = false;
     } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
       setEditTitleError("Must start with a letter, no special chars, single spaces allowed");
@@ -334,7 +328,6 @@ export default function DashboardPage() {
       .catch(() => toast.error("Failed to delete project"));
   };
 
-  // ===== Render =====
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -416,10 +409,8 @@ export default function DashboardPage() {
           </DialogHeader>
 
           <div className="mt-2 space-y-4">
-            {/* Project Detail Label */}
             <h3 className="text-sm font-semibold text-slate-700">Project Detail</h3>
 
-            {/* Name Field */}
             <div>
               <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
               <Input
@@ -429,8 +420,6 @@ export default function DashboardPage() {
               />
               {newTitleError && <p className="text-red-600 text-sm mt-1">{newTitleError}</p>}
             </div>
-
-            {/* Description Field */}
             <div>
               <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
               <Textarea
@@ -438,7 +427,7 @@ export default function DashboardPage() {
                 onChange={(e) => setNewDesc(e.target.value)}
                 placeholder="Type Here"
               />
-              {/* Character count hiển thị dưới ô */}
+
               <p className="text-right text-slate-400 text-xs mt-1">
                 {newDesc.length} / 200
               </p>
@@ -462,18 +451,14 @@ export default function DashboardPage() {
             <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Name Field */}
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
               <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
               {editTitleError && <p className="text-red-600 text-sm mt-1">{editTitleError}</p>}
             </div>
-
-            {/* Description Field */}
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mt-2">Description</h3>
               <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
-              {/* Character count hiển thị dưới ô */}
               <p className="text-right text-slate-400 text-xs mt-1">
                 {editDesc.length} / 200
               </p>
