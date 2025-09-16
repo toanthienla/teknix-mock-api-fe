@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import Sidebar from "../components/Sidebar"
-import Topbar from "../components/Topbar"
-import ProjectCard from "../components/ProjectCard"
-import { ChevronDown } from "lucide-react"
-import { API_ROOT } from "../utils/constants"
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import Topbar from "../components/Topbar";
+import ProjectCard from "../components/ProjectCard";
+import { ChevronDown } from "lucide-react";
+import { API_ROOT } from "../utils/constants";
 
 import {
   Dialog,
@@ -14,134 +14,231 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
-import { ToastContainer, toast } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
-  const { projectId } = useParams()
+  const navigate = useNavigate();
+  const { projectId } = useParams();
 
-  const [workspaces, setWorkspaces] = useState([])
-  const [projects, setProjects] = useState([])
-  const [currentWsId, setCurrentWsId] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [sortOption, setSortOption] = useState("Recently created")
-  const [openProjectsMap, setOpenProjectsMap] = useState({})
+  const [workspaces, setWorkspaces] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [currentWsId, setCurrentWsId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("Recently created");
+  const [openProjectsMap, setOpenProjectsMap] = useState({});
 
-  // dialogs
-  const [openNew, setOpenNew] = useState(false)
-  const [openEdit, setOpenEdit] = useState(false)
-  const [openDelete, setOpenDelete] = useState(false)
-  const [deleteProjectId, setDeleteProjectId] = useState(null)
+  const [openNewProject, setOpenNewProject] = useState(false);
+  const [openEditProject, setOpenEditProject] = useState(false);
+  const [openDeleteProject, setOpenDeleteProject] = useState(false);
+  const [deleteProjectId, setDeleteProjectId] = useState(null);
 
-  // new project state
-  const [newTitle, setNewTitle] = useState("")
-  const [newDesc, setNewDesc] = useState("")
-  const [newTitleError, setNewTitleError] = useState("")
-  const [newDescError, setNewDescError] = useState("")
+  const [openEditWs, setOpenEditWs] = useState(false);
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
+  const [editWsId, setEditWsId] = useState(null);
+  const [editWsName, setEditWsName] = useState("");
 
-  // edit project state
-  const [editId, setEditId] = useState(null)
-  const [editTitle, setEditTitle] = useState("")
-  const [editDesc, setEditDesc] = useState("")
-  const [editTitleError, setEditTitleError] = useState("")
-  const [editDescError, setEditDescError] = useState("")
+  const [wsName, setWsName] = useState("");
+  const [wsError, setWsError] = useState("");
+
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newTitleError, setNewTitleError] = useState("");
+  const [newDescError, setNewDescError] = useState("");
+
+  const [editId, setEditId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editTitleError, setEditTitleError] = useState("");
+  const [editDescError, setEditDescError] = useState("");
 
   useEffect(() => {
-    fetchWorkspaces()
-    fetchProjects()
-  }, [])
+    fetchWorkspaces();
+    fetchProjects();
+  }, []);
 
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
-        setWorkspaces(data)
-        if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id)
+        setWorkspaces(data);
+        if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
       })
-      .catch(() => toast.error("Failed to load workspaces "))
-  }
+      .catch(() => toast.error("Failed to load workspaces"));
+  };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => setProjects(data))
-      .catch(() => toast.error("Failed to load projects "))
-  }
+      .catch(() => toast.error("Failed to load projects"));
+  };
 
   const currentProjects = projects.filter(
     (p) => String(p.workspace_id) === String(currentWsId)
-  )
+  );
+
   const filteredProjects = currentProjects.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
-  let sortedProjects = [...filteredProjects]
-  if (sortOption === "A → Z") sortedProjects.sort((a, b) => a.name.localeCompare(b.name))
-  if (sortOption === "Z → A") sortedProjects.sort((a, b) => b.name.localeCompare(a.name))
+  let sortedProjects = [...filteredProjects];
+  if (sortOption === "A → Z") sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
+  if (sortOption === "Z → A") sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
 
-  // validate new project
-  const validateNewProject = () => {
-    let valid = true
-    setNewTitleError("")
-    setNewDescError("")
+  const currentProject = projectId
+    ? projects.find((p) => String(p.id) === String(projectId))
+    : null;
 
-    if (!newTitle.trim()) {
-      setNewTitleError("Project name cannot be empty")
-      valid = false
-    } else if (newTitle.length > 20) {
-      setNewTitleError("Project name cannot exceed 20 characters")
-      valid = false
-    } else if (!/^[A-Za-z][A-Za-z0-9 ]*$/.test(newTitle.trim())) {
-      setNewTitleError(
-        "Project name must not start with a number and cannot contain special characters"
-      )
-      valid = false
+  // ===== Workspace Functions =====
+  const validateWsName = (name, excludeId = null) => {
+    const trimmed = name.trim();
+    if (!trimmed) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9]*( [A-Za-z0-9]+)*$/.test(trimmed))
+      return "Must start with a letter, no special chars, single spaces allowed";
+    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
+      return "Workspace name already exists";
+    return "";
+  };
+
+  const handleAddWorkspace = (name) => {
+    const err = validateWsName(name);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    fetch(`${API_ROOT}/workspaces`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }),
+    })
+      .then((res) => res.json())
+      .then((createdWs) => {
+        setWorkspaces((prev) => [...prev, createdWs]);
+        setCurrentWsId(createdWs.id);
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        toast.success("Workspace created successfully");
+      })
+      .catch(() => toast.error("Failed to create workspace"));
+  };
+
+  const handleEditWorkspace = () => {
+    const err = validateWsName(editWsName, editWsId);
+    if (err) {
+      setWsError(err);
+      return;
+    }
+    fetch(`${API_ROOT}/workspaces/${editWsId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: editWsName.trim(), updated_at: new Date().toISOString() }),
+    })
+      .then(() => {
+        setWorkspaces((prev) =>
+          prev.map((w) => (w.id === editWsId ? { ...w, name: editWsName.trim() } : w))
+        );
+        setOpenEditWs(false);
+        setEditWsName("");
+        setEditWsId(null);
+        setWsError("");
+        toast.success("Workspace updated successfully");
+      })
+      .catch(() => toast.error("Failed to update workspace"));
+  };
+
+  // ===== UPDATED: Delete Workspace and its Projects =====
+  const handleDeleteWorkspace = async (id) => {
+    try {
+      // Lấy tất cả project trong workspace
+      const res = await fetch(`${API_ROOT}/projects`);
+      const allProjects = await res.json();
+      const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
+
+      // Xóa từng project
+      await Promise.all(
+        projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
+      );
+
+      // Xóa workspace
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+
+      // Cập nhật state frontend
+      setWorkspaces(prev => prev.filter(w => w.id !== id));
+      setProjects(prev => prev.filter(p => p.workspace_id !== id));
+      if (currentWsId === id) setCurrentWsId(null);
+
+      toast.success("Workspace and its projects deleted successfully");
+    } catch (err) {
+      toast.error("Failed to delete workspace or its projects");
+    }
+  };
+
+  // ===== Project Functions =====
+  const validateProject = (title, desc) => {
+    let valid = true;
+    setNewTitleError("");
+    setNewDescError("");
+
+    const titleTrim = title.trim();
+    const descTrim = desc.trim();
+
+    if (!titleTrim) {
+      setNewTitleError("Project name cannot be empty");
+      valid = false;
+    } else if (titleTrim.length > 20) {
+      setNewTitleError("Project name cannot exceed 20 chars");
+      valid = false;
+    } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+      setNewTitleError("Must start with a letter, no special chars, single spaces allowed");
+      valid = false;
     }
 
-    if (!newDesc.trim()) {
-      setNewDescError("Project description cannot be empty")
-      valid = false
-    } else if (newDesc.length > 200) {
-      setNewDescError("Project description cannot exceed 200 characters")
-      valid = false
+
+    if (!descTrim) {
+      setNewDescError("Project description cannot be empty");
+      valid = false;
+    } else if (descTrim.length > 200) {
+      setNewDescError("Project description max 200 chars");
+      valid = false;
     }
 
     const duplicate = projects.some(
       (p) =>
         p.workspace_id === currentWsId &&
-        p.name.toLowerCase() === newTitle.trim().toLowerCase()
-    )
+        p.name.toLowerCase() === titleTrim.toLowerCase()
+    );
     if (duplicate) {
-      setNewTitleError("Project name already exists in this workspace")
-      valid = false
+      setNewTitleError("Project name already exists in this workspace");
+      valid = false;
     }
-
-    return valid
-  }
+    return valid;
+  };
 
   const handleCreateProject = () => {
-    if (!validateNewProject()) return
-
+    if (!validateProject(newTitle, newDesc)) return;
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
       workspace_id: currentWsId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    }
-
+    };
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -149,76 +246,62 @@ export default function DashboardPage() {
     })
       .then((res) => res.json())
       .then((createdProject) => {
-        setProjects((prev) => [...prev, createdProject])
-        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true }))
-        setNewTitle("")
-        setNewDesc("")
-        setOpenNew(false)
-        toast.success("Project created successfully ")
+        setProjects((prev) => [...prev, createdProject]);
+        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true }));
+        setNewTitle("");
+        setNewDesc("");
+        setOpenNewProject(false);
+        toast.success("Project created successfully");
       })
-      .catch(() => toast.error("Failed to create project "))
-  }
+      .catch(() => toast.error("Failed to create project"));
+  };
 
-  // edit project
-  const openEditProject = (p) => {
-    setEditId(p.id)
-    setEditTitle(p.name)
-    setEditDesc(p.description || "")
-    setEditTitleError("")
-    setEditDescError("")
-    setOpenEdit(true)
-  }
-
-  const validateEditProject = () => {
-    let valid = true
-    setEditTitleError("")
-    setEditDescError("")
-
-    if (!editTitle.trim()) {
-      setEditTitleError("Project name cannot be empty")
-      valid = false
-    } else if (editTitle.length > 20) {
-      setEditTitleError("Project name cannot exceed 20 characters")
-      valid = false
-    } else if (!/^[A-Za-z][A-Za-z0-9 ]*$/.test(editTitle.trim())) {
-      setEditTitleError(
-        "Project name must not start with a number and cannot contain special characters"
-      )
-      valid = false
-    }
-
-    if (!editDesc.trim()) {
-      setEditDescError("Project description cannot be empty")
-      valid = false
-    } else if (editDesc.length > 200) {
-      setEditDescError("Project description cannot exceed 200 characters")
-      valid = false
-    }
-
-    const duplicate = projects.some(
-      (p) =>
-        p.workspace_id === currentWsId &&
-        p.name.toLowerCase() === editTitle.trim().toLowerCase() &&
-        p.id !== editId
-    )
-    if (duplicate) {
-      setEditTitleError("Project name already exists in this workspace")
-      valid = false
-    }
-
-    return valid
-  }
+  const openEditProjectDialog = (p) => {
+    setEditId(p.id);
+    setEditTitle(p.name);
+    setEditDesc(p.description || "");
+    setEditTitleError("");
+    setEditDescError("");
+    setOpenEditProject(true);
+  };
 
   const handleUpdateProject = () => {
-    if (!validateEditProject()) return
+    let valid = true;
+    setEditTitleError("");
+    setEditDescError("");
+
+    const titleTrim = editTitle.trim();
+    const descTrim = editDesc.trim();
+
+    if (!titleTrim) {
+      setEditTitleError("Project name cannot be empty");
+      valid = false;
+    } else if (titleTrim.length > 20) {
+      setEditTitleError("Project name cannot exceed 20 chars");
+      valid = false;
+    } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+      setEditTitleError("Must start with a letter, no special chars, single spaces allowed");
+      valid = false;
+    }
+
+
+    if (!descTrim) {
+      setEditDescError("Project description cannot be empty");
+      valid = false;
+    } else if (descTrim.length > 200) {
+      setEditDescError("Project description max 200 chars");
+      valid = false;
+    }
+
+    if (!valid) return;
 
     fetch(`${API_ROOT}/projects/${editId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: editId,
-        name: editTitle.trim(),
-        description: editDesc.trim(),
+        name: titleTrim,
+        description: descTrim,
         workspace_id: currentWsId,
         updated_at: new Date().toISOString(),
       }),
@@ -227,35 +310,31 @@ export default function DashboardPage() {
       .then((updatedProject) => {
         setProjects((prev) =>
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-        )
-        setOpenEdit(false)
-        toast.success("Project updated successfully ")
+        );
+        setOpenEditProject(false);
+        toast.success("Project updated successfully");
       })
-      .catch(() => toast.error("Failed to update project "))
-  }
+      .catch(() => toast.error("Failed to update project"));
+  };
 
-  // delete project
-  const openDeleteDialog = (id) => {
-    setDeleteProjectId(id)
-    setOpenDelete(true)
-  }
+  const openDeleteProjectDialog = (id) => {
+    setDeleteProjectId(id);
+    setOpenDeleteProject(true);
+  };
 
   const handleDeleteProject = () => {
-    if (!deleteProjectId) return
+    if (!deleteProjectId) return;
     fetch(`${API_ROOT}/projects/${deleteProjectId}`, { method: "DELETE" })
       .then(() => {
-        setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId))
-        setDeleteProjectId(null)
-        setOpenDelete(false)
-        toast.success("Project deleted successfully ")
+        setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
+        setDeleteProjectId(null);
+        setOpenDeleteProject(false);
+        toast.success("Project deleted successfully");
       })
-      .catch(() => toast.error("Failed to delete project "))
-  }
+      .catch(() => toast.error("Failed to delete project"));
+  };
 
-  const currentProject = projectId
-    ? projects.find((p) => String(p.id) === String(projectId))
-    : null
-
+  // ===== Render =====
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -265,78 +344,26 @@ export default function DashboardPage() {
             projects={projects}
             current={currentWsId}
             setCurrent={setCurrentWsId}
-            onAddWorkspace={(name) => {
-              if (!name.trim()) return
-              fetch(`${API_ROOT}/workspaces`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  name,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                }),
-              })
-                .then((res) => res.json())
-                .then((createdWs) => {
-                  setWorkspaces((prev) => [...prev, createdWs])
-                  setCurrentWsId(createdWs.id)
-                  setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }))
-                  toast.success("Workspace created successfully ")
-                })
-                .catch(() => toast.error("Failed to create workspace "))
+            onAddWorkspace={handleAddWorkspace}
+            onEditWorkspace={(ws) => {
+              setEditWsId(ws.id);
+              setEditWsName(ws.name);
+              setOpenEditWs(true);
             }}
-            onEditWorkspace={(id) => {
-              const ws = workspaces.find((w) => w.id === id)
-              if (!ws) return
-              const name = prompt("Edit workspace name", ws.name)
-              if (name)
-                fetch(`${API_ROOT}/workspaces/${id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    name,
-                    updated_at: new Date().toISOString(),
-                  }),
-                })
-                  .then(() =>
-                    setWorkspaces((prev) =>
-                      prev.map((w) => (w.id === id ? { ...w, name } : w))
-                    )
-                  )
-                  .then(() => toast.success("Workspace updated successfully "))
-                  .catch(() => toast.error("Failed to update workspace "))
-            }}
-            onDeleteWorkspace={(id) => {
-              const confirmed = window.confirm(
-                "Are you sure you want to delete this workspace and all its projects?"
-              )
-              if (!confirmed) return
-              fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" })
-                .then(() => {
-                  setWorkspaces((prev) => prev.filter((w) => w.id !== id))
-                  setProjects((prev) => prev.filter((p) => p.workspace_id !== id))
-                  if (currentWsId === id) setCurrentWsId(null)
-                  toast.success("Workspace deleted successfully ")
-                })
-                .catch(() => toast.error("Failed to delete workspace "))
-            }}
+            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
             openProjectsMap={openProjectsMap}
             setOpenProjectsMap={setOpenProjectsMap}
           />
         </aside>
 
         <main className="flex-1 p-8">
-          <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNew(true)} />
+          <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNewProject(true)} />
 
           {currentProject ? (
             <div>
               <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
               <p className="text-slate-600">{currentProject.description}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => navigate("/dashboard")}
-              >
+              <Button variant="outline" className="mt-4" onClick={() => navigate("/dashboard")}>
                 Back to all projects
               </Button>
             </div>
@@ -351,21 +378,12 @@ export default function DashboardPage() {
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-40 bg-white shadow-md rounded-md"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setSortOption("Recently created")}
-                    >
+                  <DropdownMenuContent align="end" className="w-40 bg-white shadow-md rounded-md">
+                    <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
                       Recently created
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
-                      A → Z
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
-                      Z → A
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>A → Z</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>Z → A</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -376,8 +394,8 @@ export default function DashboardPage() {
                     <ProjectCard
                       key={p.id}
                       project={p}
-                      onEdit={() => openEditProject(p)}
-                      onDelete={() => openDeleteDialog(p.id)}
+                      onEdit={() => openEditProjectDialog(p)}
+                      onDelete={() => openDeleteProjectDialog(p.id)}
                       onClick={() => navigate(`/dashboard/${p.id}`)}
                     />
                   ))
@@ -391,133 +409,143 @@ export default function DashboardPage() {
       </div>
 
       {/* New Project Dialog */}
-      <Dialog open={openNew} onOpenChange={setOpenNew}>
+      <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>New Project</DialogTitle>
           </DialogHeader>
 
-          <h3 className="text-sm font-semibold text-slate-700 mt-2">
-            Project Detail
-          </h3>
-
           <div className="mt-2 space-y-4">
+            {/* Project Detail Label */}
+            <h3 className="text-sm font-semibold text-slate-700">Project Detail</h3>
+
+            {/* Name Field */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
               <Input
-                placeholder="Enter Project Name"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Enter Project Name"
               />
-              {newTitleError && (
-                <p className="text-red-600 text-sm mt-1">{newTitleError}</p>
-              )}
+              {newTitleError && <p className="text-red-600 text-sm mt-1">{newTitleError}</p>}
             </div>
 
+            {/* Description Field */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                Description
-              </h3>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
               <Textarea
-                placeholder="Type Here"
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Type Here"
               />
-              {newDescError && (
-                <p className="text-red-600 text-sm mt-1">{newDescError}</p>
-              )}
+              {/* Character count hiển thị dưới ô */}
+              <p className="text-right text-slate-400 text-xs mt-1">
+                {newDesc.length} / 200
+              </p>
+              {newDescError && <p className="text-red-600 text-sm mt-1">{newDescError}</p>}
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenNew(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
-              onClick={handleCreateProject}
-            >
-              Create
-            </Button>
+            <Button variant="outline" onClick={() => setOpenNewProject(false)}>Cancel</Button>
+            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleCreateProject}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+
+
       {/* Edit Project Dialog */}
-      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+      <Dialog open={openEditProject} onOpenChange={setOpenEditProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
-
-          <h3 className="text-sm font-semibold text-slate-700 mt-2">
-            Project Detail
-          </h3>
-
           <div className="space-y-4">
+            {/* Name Field */}
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
-              <Input
-                placeholder="Enter Project Name"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-              />
-              {editTitleError && (
-                <p className="text-red-600 text-sm mt-1">{editTitleError}</p>
-              )}
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+              {editTitleError && <p className="text-red-600 text-sm mt-1">{editTitleError}</p>}
             </div>
 
+            {/* Description Field */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                Description
-              </h3>
-              <Textarea
-                placeholder="Type Here"
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-              />
-              {editDescError && (
-                <p className="text-red-600 text-sm mt-1">{editDescError}</p>
-              )}
+              <h3 className="text-sm font-semibold text-slate-700 mt-2">Description</h3>
+              <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+              {/* Character count hiển thị dưới ô */}
+              <p className="text-right text-slate-400 text-xs mt-1">
+                {editDesc.length} / 200
+              </p>
+              {editDescError && <p className="text-red-600 text-sm mt-1">{editDescError}</p>}
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEdit(false)}>
+            <Button variant="outline" onClick={() => setOpenEditProject(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               onClick={handleUpdateProject}
+              disabled={
+                editTitle.trim() === (projects.find(p => p.id === editId)?.name || "") &&
+                editDesc.trim() === (projects.find(p => p.id === editId)?.description || "")
+              }
             >
               Update
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
-      {/* Delete Project Dialog */}
-      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+
+      {/* Delete Project */}
+      <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Project</DialogTitle>
           </DialogHeader>
-          <p className="text-slate-700 mt-2">
-            Are you sure you want to delete this project? This action cannot be
-            undone.
-          </p>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setOpenDelete(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteProject}>
-              Delete
-            </Button>
+          <p>Are you sure you want to delete this project?</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenDeleteProject(false)}>Cancel</Button>
+            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleDeleteProject}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <ToastContainer position="top-center" autoClose={3000} hideProgressBar={false} />
+      {/* Edit Workspace */}
+      <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
+        <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-4">
+            <Input value={editWsName} onChange={(e) => setEditWsName(e.target.value)} placeholder="Enter Workspace Name" />
+            {wsError && <p className="text-red-600 text-sm mt-1">{wsError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
+            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Workspace */}
+      <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Workspace</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this workspace? This will remove all projects inside.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
+            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => { handleDeleteWorkspace(confirmDeleteWs); setConfirmDeleteWs(null); }}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} />
     </div>
-  )
+  );
 }
