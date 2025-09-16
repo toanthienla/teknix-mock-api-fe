@@ -1,0 +1,20 @@
+/* Success (xanh lá) */
+.Toastify__toast--success {
+  background: #22c55e !important; /* xanh lá */
+  color: #fff !important;
+  font-weight: 500;
+}
+
+/* Error (đỏ) */
+.Toastify__toast--error {
+  background: #ef4444 !important; /* đỏ */
+  color: #fff !important;
+  font-weight: 500;
+}
+
+/* Warning (vàng) */
+.Toastify__toast--warning {
+  background: #eab308 !important; /* vàng */
+  color: #000 !important;
+  font-weight: 500;
+}

@@ -8,11 +8,14 @@ import ProjectCard from "../components/ProjectCard"
 import { ChevronDown } from "lucide-react"
 import { API_ROOT } from "../utils/constants"
 
-import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogFooter,} from "@/components/ui/dialog"
+import { Dialog,DialogContent, DialogHeader, DialogTitle, DialogFooter,} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem,} from "@/components/ui/dropdown-menu"
+import { DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem,} from "@/components/ui/dropdown-menu"
+
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -26,7 +29,7 @@ export default function DashboardPage() {
   const [openProjectsMap, setOpenProjectsMap] = useState({})
   const [openNew, setOpenNew] = useState(false)
   const [openEdit, setOpenEdit] = useState(false)
-  const [confirmDeleteWs, setConfirmDeleteWs] = useState(null) 
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState(null)
 
   const [newTitle, setNewTitle] = useState("")
   const [newDesc, setNewDesc] = useState("")
@@ -35,7 +38,6 @@ export default function DashboardPage() {
   const [editTitle, setEditTitle] = useState("")
   const [editDesc, setEditDesc] = useState("")
 
-  
   useEffect(() => {
     fetchWorkspaces()
     fetchProjects()
@@ -56,7 +58,6 @@ export default function DashboardPage() {
       .then((data) => setProjects(data))
   }
 
-  
   const currentProjects = projects.filter(
     (p) => String(p.workspace_id) === String(currentWsId)
   )
@@ -71,10 +72,9 @@ export default function DashboardPage() {
     sortedProjects.sort((a, b) => b.name.localeCompare(a.name))
   }
 
-  
   const handleCreateProject = () => {
     if (!currentWsId) {
-      alert("Invalid workspace")
+      toast.error("Invalid workspace")
       return
     }
     if (!newTitle.trim()) return
@@ -99,10 +99,10 @@ export default function DashboardPage() {
         setNewTitle("")
         setNewDesc("")
         setOpenNew(false)
+        toast.success("Project created successfully")
       })
   }
 
-  
   const openEditProject = (p) => {
     setEditId(p.id)
     setEditTitle(p.name)
@@ -128,28 +128,34 @@ export default function DashboardPage() {
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
         )
         setOpenEdit(false)
+        toast.success("Project updated successfully")
       })
   }
 
   
   const handleAddWorkspace = (name) => {
     if (!name.trim()) {
-      alert("Workspace name cannot be blank")
+      toast.error("Workspace name cannot be blank")
       return
     }
 
     if (/^[^a-zA-Z]/.test(name)) {
-      alert("Workspace names cannot start with numbers or special characters")
+      toast.error("Workspace names cannot start with numbers or special characters")
       return
     }
 
     if (name.length > 20) {
-      alert("Workspace name is too long (maximum 20 characters)")
+      toast.error("Workspace name is too long (maximum 20 characters)")
+      return
+    }
+
+    if (/\s{2,}/.test(name)) {
+      toast.error("Workspace name cannot have multiple consecutive spaces")
       return
     }
 
     if (workspaces.some((w) => w.name.toLowerCase() === name.toLowerCase())) {
-      alert("Workspace name already exists")
+      toast.error("Workspace name already exists")
       return
     }
 
@@ -169,23 +175,28 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs])
         setCurrentWsId(createdWs.id)
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }))
-        alert("Create workspace successfully")
+        toast.success("Workspace created successfully")
       })
   }
 
   const handleEditWorkspace = (id, name) => {
     if (!name.trim()) {
-      alert("Workspace name cannot be blank")
+      toast.error("Workspace name cannot be blank")
       return
     }
 
     if (/^[^a-zA-Z]/.test(name)) {
-      alert("Workspace names cannot start with numbers or special characters")
+      toast.error("Workspace names cannot start with numbers or special characters")
       return
     }
 
     if (name.length > 20) {
-      alert("Workspace name is too long (maximum 20 characters)")
+      toast.error("Workspace name is too long (maximum 20 characters)")
+      return
+    }
+
+    if (/\s{2,}/.test(name)) {
+      toast.error("Workspace name cannot have multiple consecutive spaces")
       return
     }
 
@@ -194,7 +205,7 @@ export default function DashboardPage() {
         (w) => w.id !== id && w.name.toLowerCase() === name.toLowerCase()
       )
     ) {
-      alert("Workspace name already exists")
+      toast.error("Workspace name already exists")
       return
     }
 
@@ -206,10 +217,9 @@ export default function DashboardPage() {
       setWorkspaces((prev) =>
         prev.map((w) => (w.id === id ? { ...w, name } : w))
       )
-      alert("Rename workspace successfully")
+      toast.success("Workspace renamed successfully")
     })
   }
-  
 
   const handleDeleteWorkspace = (id) => {
     fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
@@ -223,15 +233,14 @@ export default function DashboardPage() {
       })
 
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id))
+      toast.success("Workspace deleted successfully")
     })
   }
 
-  
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null
 
-  
   const handleDeleteProject = (projectId) => {
     setWorkspaces((prev) =>
       prev.map((ws) =>
@@ -239,14 +248,13 @@ export default function DashboardPage() {
           ? { ...ws, projects: ws.projects.filter((p) => p.id !== projectId) }
           : ws
       )
-    );
-  };
+    )
+    toast.success("Project deleted successfully")
+  }
 
-  
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
-       
         <aside className="w-72 border-r border-slate-100 bg-white">
           <Sidebar
             workspaces={workspaces}
@@ -258,17 +266,16 @@ export default function DashboardPage() {
               const ws = workspaces.find((w) => w.id === id)
               if (!ws) return
               const name = prompt("Edit workspace name", ws.name)
-              if (name !== null) { 
+              if (name !== null) {
                 handleEditWorkspace(id, name)
               }
             }}
-            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)} 
+            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
             openProjectsMap={openProjectsMap}
             setOpenProjectsMap={setOpenProjectsMap}
           />
         </aside>
 
-       
         <main className="flex-1 p-8">
           <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNew(true)} />
 
@@ -332,7 +339,6 @@ export default function DashboardPage() {
         </main>
       </div>
 
-     
       <Dialog open={openNew} onOpenChange={setOpenNew}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -366,7 +372,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -396,7 +401,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-     
       <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
@@ -419,6 +423,18 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   )
 }
