@@ -1,252 +1,235 @@
-import React from "react";
-import {
-  Grid,
-  Folder,
-  Pencil,
-  Trash2,
-  Plus,
-  ChevronDown,
-  SearchIcon,
-  CopyIcon,
-  MoreVerticalIcon,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChevronDown,
+  Search,
+  Globe,
+  Folder,
+  Cog,
+  Plus,
+  ChevronRight,
+  Ellipsis,
+  Star,
+  Trash2,
+  Upload,
+  Code,
+  Settings,
+  User,
+  Mail,
+  Bell,
+  Menu
+} from 'lucide-react';
 
-const statusCodeData = [
+const EndpointDetail = () => {
+  const [isActive, setIsActive] = useState(true);
+  const [responseBody, setResponseBody] = useState(`[
   {
-    code: "200",
-    name: "Success Response",
-    isDefault: true,
-    bgColor: "bg-slate-100",
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
   },
   {
-    code: "404",
-    name: "Not Found",
-    isDefault: false,
-    bgColor: "",
-  },
-  {
-    code: "500",
-    name: "Internal Server Error",
-    isDefault: false,
-    bgColor: "",
-  },
-];
+    "id": 2,
+    "name": "Jane Smith",
+    "email": "jane@example.com"
+  }
+]`);
 
-export const MainContentSection = ({
-  onNewResponse,
-  onToggleActive,
-  onSearch,
-}) => {
   return (
-    <div className="flex flex-col w-full items-start relative">
-      <header className="flex items-center justify-between pl-[200px] pr-6 pt-6 pb-[25px] relative w-full border-b border-slate-200">
-        <div className="flex flex-col max-w-md w-[400px] h-9 items-start justify-center relative">
-          <div className="relative w-full h-9 bg-slate-100 rounded-lg overflow-hidden">
-            <div className="flex items-center gap-2 absolute top-[9px] left-10">
-              <SearchIcon className="w-5 h-5 text-[#777671]" />
-              <Input
-                placeholder="Search..."
-                className="border-0 bg-transparent text-[#777671] font-semibold text-[15px] p-0 h-auto focus-visible:ring-0"
-                onChange={(e) => onSearch?.(e.target.value)}
-              />
-            </div>
-          </div>
+    <div className="flex min-h-screen bg-gradient-to-b from-gray-100 to-gray-100">
+      {/* Sidebar */}
+      <div className="w-72 bg-white p-6 fixed left-0 top-0 h-full border-r border-gray-200 flex flex-col">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-800">MockAPI</h1>
+          <Button variant="ghost" size="icon">
+            <ChevronDown className="h-4 w-4" />
+          </Button>
         </div>
 
-        <div className="inline-flex flex-col items-start pl-6 pr-0 py-0 relative">
-          <div className="inline-flex items-center gap-3 relative">
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 h-auto"
-              onClick={onNewResponse}
-            >
-              New&nbsp;&nbsp;response
+        <div className="mb-6">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">WORKSPACES</h2>
+          <ul className="space-y-1">
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer">
+              <Globe className="h-4 w-4 mr-3" />
+              <span>Workspace 1</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md bg-gray-100 text-gray-700 mt-1 cursor-pointer">
+              <Folder className="h-4 w-4 mr-3" />
+              <span>Project 1</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer pl-10">
+              <Cog className="h-4 w-4 mr-3" />
+              <span>Get All User</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer pl-10">
+              <Cog className="h-4 w-4 mr-3" />
+              <span>Create New User</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer pl-10">
+              <Cog className="h-4 w-4 mr-3" />
+              <span>Get User By Id</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer pl-10">
+              <Cog className="h-4 w-4 mr-3" />
+              <span>Update User</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer pl-10">
+              <Cog className="h-4 w-4 mr-3" />
+              <span>Delete User</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer">
+              <Folder className="h-4 w-4 mr-3" />
+              <span>Project 2</span>
+            </li>
+            <li className="flex items-center py-2 px-3 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer">
+              <Folder className="h-4 w-4 mr-3" />
+              <span>Project 3</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-gray-300 rounded-md mr-3"></div>
+            <div>
+              <p className="text-sm font-semibold">hancontam</p>
+              <p className="text-xs text-gray-500">hancontam@gmail.com</p>
+            </div>
+            <Button variant="ghost" size="icon" className="ml-auto">
+              <Ellipsis className="h-4 w-4" />
             </Button>
           </div>
         </div>
+      </div>
 
-        <div className="inline-flex items-center absolute top-[29px] left-[709px]">
-          <div className="inline-flex flex-col items-start gap-2.5 pl-0 pr-2 py-0 relative">
-            <Switch
-              defaultChecked
-              className="w-11 h-6 data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 data-[state=checked]:translate-x-5"
-              onCheckedChange={onToggleActive}
-            />
+      {/* Main Content */}
+      <div className="ml-72 flex-1 p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="relative w-96">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input type="text" placeholder="Search all portals" className="pl-10" />
           </div>
-
-          <div className="inline-flex items-center justify-center gap-2.5 relative">
-            <div className="[font-family:'Inter',Helvetica] font-medium text-neutral-950 text-sm tracking-[0] leading-5 whitespace-nowrap">
-              Is Active
+          <div className="flex items-center space-x-4">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="mr-2 h-4 w-4" /> New response
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={isActive}
+                onCheckedChange={setIsActive}
+                className="data-[state=checked]:bg-blue-600"
+              />
+              <Label>Is Active</Label>
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="flex flex-col items-start gap-6 pl-[15px] pr-2 pt-[15px] pb-[88px] relative flex-1 w-full grow overflow-scroll">
-        <div className="flex w-[960px] items-center gap-4 px-[5.5px] py-0 relative">
-          <div className="[font-family:'Inter',Helvetica] font-bold text-[#37352f] text-3xl tracking-[0] leading-[normal] whitespace-nowrap">
-            Get All User
-          </div>
-
-          <Badge className="bg-[#d5fbd3] text-black hover:bg-[#d5fbd3] px-2.5 py-0.5 h-[22px]">
-            Get
-          </Badge>
-
-          <div className="flex w-[707px] items-center gap-3.5 pl-[5px] pr-[9px] py-0 relative rounded-md border border-gray-300">
-            <Input
-              defaultValue="api/users"
-              className="flex-1 border-0 [font-family:'Inter',Helvetica] font-semibold text-[#777671] text-base p-0 h-auto focus-visible:ring-0"
-            />
-            <CopyIcon className="w-[21px] h-[21px] text-gray-500" />
-          </div>
-        </div>
-
-        <div className="relative w-[327px] h-[219px]">
-          <Card className="w-[295px] h-[189px] left-4 relative top-[11px] border-slate-300">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-neutral-200">
-                    <TableHead className="w-[119.2px] h-10 px-2 py-0 font-medium text-sm text-neutral-950">
-                      Status Code
-                    </TableHead>
-                    <TableHead className="w-[270.55px] h-10 px-3 py-2 font-medium text-sm text-neutral-950">
-                      Name Response
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {statusCodeData.map((item, index) => (
-                    <TableRow
-                      key={index}
-                      className={`border-neutral-200 ${item.bgColor} relative`}
-                    >
-                      <TableCell className="w-[119.2px] h-[49px] p-2 font-medium text-sm text-neutral-950">
-                        {item.code}
-                      </TableCell>
-                      <TableCell className="w-[200.55px] h-[49px] p-2 font-medium text-sm text-neutral-950 flex items-center">
-                        {item.isDefault && (
-                          <Badge className="mr-2 border-[#79787b] bg-transparent text-neutral-950 px-2.5 py-0.5 h-[22px]">
-                            Default
-                          </Badge>
-                        )}
-                        <span className="flex-1">{item.name}</span>
-                      </TableCell>
-                      <TableCell className="w-8 h-8 p-2">
-                        <MoreVerticalIcon className="w-4 h-4" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="absolute w-[583px] h-[53px] top-[76px] left-[343px]">
-          <Tabs defaultValue="rules" className="w-full">
-            <TabsList className="bg-transparent h-auto p-0 gap-3">
-              <TabsTrigger
-                value="header-body"
-                className="bg-transparent p-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none [font-family:'Inter',Helvetica] font-semibold text-[#898883] text-[15px] data-[state=active]:text-[#37352f]"
-              >
-                Header&Body
-              </TabsTrigger>
-              <TabsTrigger
-                value="rules"
-                className="bg-transparent p-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none [font-family:'Inter',Helvetica] font-semibold text-[#898883] text-[15px] data-[state=active]:text-[#37352f]"
-              >
-                Rules
-              </TabsTrigger>
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
             </TabsList>
+            <TabsContent value="summary">
+              <div className="border-b-2 border-gray-800 w-20 mb-4"></div>
+            </TabsContent>
           </Tabs>
         </div>
 
-        <div className="absolute w-[638px] h-[616px] top-[111px] left-[353px]">
-          <Card className="w-[638px] h-[616px] bg-white border-slate-300">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="font-large text-slate-900">
-                  Success Response
-                </div>
+        {/* Endpoint Detail Card */}
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold text-gray-800 mr-4">Get All Users</h2>
+              <Badge variant="outline" className="bg-green-100 text-green-800">GET</Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="icon">
+                <Star className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Status Info */}
+          <div className="border border-gray-300 rounded-md px-4 py-3 mb-6">
+            <p className="text-gray-600 font-medium">Status: This endpoint is active and receiving requests</p>
+          </div>
+
+          {/* Form */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="response-name" className="text-right">
+                Response Name
+              </Label>
+              <Input id="response-name" defaultValue="Default Response" className="col-span-3" />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status-code" className="text-right">
+                Status Code
+              </Label>
+              <Input id="status-code" defaultValue="200" className="col-span-3" />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="response-header" className="text-right">
+                Response Header
+              </Label>
+              <div className="col-span-3 flex space-x-2">
+                <Input id="header-key" placeholder="Key" defaultValue="Content-Type" />
+                <Input id="header-value" placeholder="Value" defaultValue="application/json" />
               </div>
+            </div>
 
-              <div className="flex flex-col gap-[7px]">
-                <div className="flex items-center gap-2 p-2 rounded-md border border-slate-300">
-                  <Select defaultValue="query-parameter">
-                    <SelectTrigger className="w-[168px] h-[29px] border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="query-parameter">
-                        Query parameter
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    defaultValue="role"
-                    className="w-[184px] h-[30px] border-slate-300 text-[13px]"
-                  />
-
-                  <div className="w-[31px] h-[29px] bg-[#2563eb1a] rounded-md border border-blue-600 flex items-center justify-center">
-                    <span className="text-blue-600 text-[32px] leading-[18px]">
-                      =
-                    </span>
-                  </div>
-
-                  <Input
-                    defaultValue="admin"
-                    className="w-[151px] h-[30px] border-slate-300 text-[13px]"
-                  />
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-7 h-[41px] p-0"
-                  >
-                    <img
-                      className="w-7 h-[41px]"
-                      alt="Frame"
-                      src="/frame-78.svg"
-                    />
+            <div className="grid grid-cols-4 gap-4">
+              <Label htmlFor="response-body" className="text-right pt-2">
+                Response Body
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <Textarea
+                  id="response-body"
+                  value={responseBody}
+                  onChange={(e) => setResponseBody(e.target.value)}
+                  className="font-mono h-60"
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Upload className="mr-2 h-4 w-4" /> Upload
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Code className="mr-2 h-4 w-4" /> Format
                   </Button>
                 </div>
-
-                <div className="flex items-center gap-2 p-2 rounded-md border border-slate-300">
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 text-[#37352f] font-medium text-[15px]"
-                    onClick={onNewResponse}
-                  >
-                    <PlusIcon className="w-5 h-5 mr-2" />
-                    Add rule
-                  </Button>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="delay" className="text-right">
+                Delay (ms)
+              </Label>
+              <Input id="delay" defaultValue="0" className="col-span-3" />
+            </div>
+
+            <div className="flex justify-end">
+              <Button className="bg-blue-600 hover:bg-blue-700">Save Changes</Button>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
+
+export default EndpointDetail;
