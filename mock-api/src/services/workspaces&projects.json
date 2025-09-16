@@ -1,44 +1,41 @@
 {
   "workspaces": [
     {
-      "id": "1",
+      "id": 1,
       "name": "Frontend Team",
       "created_at": "2025-09-01T10:00:00Z",
       "updated_at": "2025-09-10T12:00:00Z"
     },
     {
-      "id": "2",
+      "id": 2,
       "name": "Backend Team",
       "created_at": "2025-09-02T11:00:00Z",
       "updated_at": "2025-09-11T13:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "DevOps Team",
+      "created_at": "2025-09-03T09:00:00Z",
+      "updated_at": "2025-09-12T15:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "QA Team",
+      "created_at": "2025-09-04T14:00:00Z",
+      "updated_at": "2025-09-14T17:00:00Z"
     }
   ],
   "projects": [
     {
-      "id": "1",
+      "id": 1,
+      "workspace_id": 1,
       "name": "FE Workspace UI",
       "description": "Build UI for managing workspaces",
-      "workspace_id": 1,
-      "updated_at": "2025-09-15T04:09:31.149Z"
+      "created_at": "2025-09-05T08:30:00Z",
+      "updated_at": "2025-09-10T14:00:00Z"
     },
     {
-      "id": "2",
-      "workspace_id": 1,
-      "name": "FE Project Dashboard",
-      "description": "Implement project dashboard for frontend",
-      "created_at": "2025-09-06T09:15:00Z",
-      "updated_at": "2025-09-11T15:00:00Z"
-    },
-    {
-      "id": "3",
-      "workspace_id": 2,
-      "name": "BE Workspace API",
-      "description": "Build API for workspace management",
-      "created_at": "2025-09-07T10:00:00Z",
-      "updated_at": "2025-09-12T16:00:00Z"
-    },
-    {
-      "id": "4",
+      "id": 2,
       "workspace_id": 2,
       "name": "BE Project API",
       "description": "Implement project endpoints",
@@ -46,11 +43,342 @@
       "updated_at": "2025-09-13T17:00:00Z"
     },
     {
-      "id": "ad81",
-      "name": "p",
-      "description": "",
-      "workspace_id": "726f",
-      "updated_at": "2025-09-15T08:20:49.927Z"
+      "id": 3,
+      "workspace_id": 3,
+      "name": "CI/CD Pipeline",
+      "description": "Automate build and deploy",
+      "created_at": "2025-09-09T13:00:00Z",
+      "updated_at": "2025-09-14T16:00:00Z"
+    },
+    {
+      "id": 4,
+      "workspace_id": 4,
+      "name": "Test Automation",
+      "description": "Automate QA test cases",
+      "created_at": "2025-09-11T10:00:00Z",
+      "updated_at": "2025-09-15T09:00:00Z"
+    }
+  ],
+  "endpoints": [
+    {
+      "id": 1,
+      "project_id": 1,
+      "name": "Get Users",
+      "method": "GET",
+      "path": "/users",
+      "created_at": "2025-09-12T08:00:00Z",
+      "updated_at": "2025-09-12T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "project_id": 1,
+      "name": "Create User",
+      "method": "POST",
+      "path": "/users",
+      "created_at": "2025-09-12T08:30:00Z",
+      "updated_at": "2025-09-12T10:30:00Z"
+    },
+    {
+      "id": 3,
+      "project_id": 2,
+      "name": "Get Cars",
+      "method": "GET",
+      "path": "/cars",
+      "created_at": "2025-09-13T09:00:00Z",
+      "updated_at": "2025-09-13T11:00:00Z"
+    },
+    {
+      "id": 4,
+      "project_id": 2,
+      "name": "Add Car",
+      "method": "POST",
+      "path": "/cars",
+      "created_at": "2025-09-13T09:30:00Z",
+      "updated_at": "2025-09-13T11:30:00Z"
+    },
+    {
+      "id": 5,
+      "project_id": 3,
+      "name": "Trigger Build",
+      "method": "POST",
+      "path": "/pipeline/build",
+      "created_at": "2025-09-14T10:00:00Z",
+      "updated_at": "2025-09-14T11:00:00Z"
+    },
+    {
+      "id": 6,
+      "project_id": 3,
+      "name": "Get Build Status",
+      "method": "GET",
+      "path": "/pipeline/status",
+      "created_at": "2025-09-14T10:15:00Z",
+      "updated_at": "2025-09-14T11:15:00Z"
+    },
+    {
+      "id": 7,
+      "project_id": 4,
+      "name": "Get Test Cases",
+      "method": "GET",
+      "path": "/testcases",
+      "created_at": "2025-09-15T08:00:00Z",
+      "updated_at": "2025-09-15T09:30:00Z"
+    },
+    {
+      "id": 8,
+      "project_id": 4,
+      "name": "Run Test Case",
+      "method": "POST",
+      "path": "/testcases/run",
+      "created_at": "2025-09-15T09:00:00Z",
+      "updated_at": "2025-09-15T09:45:00Z"
+    }
+  ],
+  "endpoint_responses": [
+    {
+      "id": 1,
+      "endpoint_id": 1,
+      "name": "Success",
+      "status_code": 200,
+      "response_body": { "id": 1, "username": "john_doe" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-12T08:10:00Z",
+      "updated_at": "2025-09-12T08:20:00Z"
+    },
+    {
+      "id": 2,
+      "endpoint_id": 1,
+      "name": "Not Found",
+      "status_code": 404,
+      "response_body": { "error": "User not found" },
+      "condition": {},
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-12T08:15:00Z",
+      "updated_at": "2025-09-12T08:25:00Z"
+    },
+    {
+      "id": 14,
+      "endpoint_id": 1,
+      "name": "Unauthorized",
+      "status_code": 401,
+      "response_body": { "error": "Unauthorized access" },
+      "condition": { "auth": false },
+      "priority": 3,
+      "is_default": false,
+      "created_at": "2025-09-16T02:00:00Z",
+      "updated_at": "2025-09-16T02:01:00Z"
+    },
+    {
+      "id": 15,
+      "endpoint_id": 1,
+      "name": "Validation Error",
+      "status_code": 400,
+      "response_body": { "error": "Missing required fields" },
+      "condition": { "missing_fields": ["username"] },
+      "priority": 4,
+      "is_default": false,
+      "created_at": "2025-09-16T02:02:00Z",
+      "updated_at": "2025-09-16T02:03:00Z"
+    },
+    {
+      "id": 16,
+      "endpoint_id": 1,
+      "name": "Internal Server Error",
+      "status_code": 500,
+      "response_body": { "error": "Unexpected error occurred" },
+      "condition": {},
+      "priority": 5,
+      "is_default": false,
+      "created_at": "2025-09-16T02:04:00Z",
+      "updated_at": "2025-09-16T02:05:00Z"
+    },
+    {
+      "id": 3,
+      "endpoint_id": 2,
+      "name": "Created",
+      "status_code": 201,
+      "response_body": { "id": 2, "username": "new_user" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-12T09:00:00Z",
+      "updated_at": "2025-09-12T09:15:00Z"
+    },
+    {
+      "id": 17,
+      "endpoint_id": 2,
+      "name": "Duplicate Username",
+      "status_code": 409,
+      "response_body": { "error": "Username already exists" },
+      "condition": { "username_exists": true },
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-16T02:07:00Z",
+      "updated_at": "2025-09-16T02:08:00Z"
+    },
+    {
+      "id": 18,
+      "endpoint_id": 2,
+      "name": "Invalid Email",
+      "status_code": 400,
+      "response_body": { "error": "Invalid email format" },
+      "condition": { "invalid_email": true },
+      "priority": 3,
+      "is_default": false,
+      "created_at": "2025-09-16T02:09:00Z",
+      "updated_at": "2025-09-16T02:10:00Z"
+    },
+    {
+      "id": 4,
+      "endpoint_id": 3,
+      "name": "Success",
+      "status_code": 200,
+      "response_body": [
+        { "id": 1, "brand": "Toyota", "model": "Corolla" },
+        { "id": 2, "brand": "Honda", "model": "Civic" }
+      ],
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-13T09:30:00Z",
+      "updated_at": "2025-09-13T09:45:00Z"
+    },
+    {
+      "id": 19,
+      "endpoint_id": 3,
+      "name": "Empty List",
+      "status_code": 200,
+      "response_body": [],
+      "condition": { "no_cars": true },
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-16T02:11:00Z",
+      "updated_at": "2025-09-16T02:12:00Z"
+    },
+    {
+      "id": 20,
+      "endpoint_id": 3,
+      "name": "Internal Error",
+      "status_code": 500,
+      "response_body": { "error": "Database failure" },
+      "condition": {},
+      "priority": 3,
+      "is_default": false,
+      "created_at": "2025-09-16T02:13:00Z",
+      "updated_at": "2025-09-16T02:14:00Z"
+    },
+    {
+      "id": 5,
+      "endpoint_id": 4,
+      "name": "Created",
+      "status_code": 201,
+      "response_body": { "id": 3, "brand": "Ford", "model": "Fiesta" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-13T09:40:00Z",
+      "updated_at": "2025-09-13T09:50:00Z"
+    },
+    {
+      "id": 6,
+      "endpoint_id": 4,
+      "name": "Invalid Data",
+      "status_code": 400,
+      "response_body": { "error": "Missing car model" },
+      "condition": {},
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-13T09:45:00Z",
+      "updated_at": "2025-09-13T09:55:00Z"
+    },
+    {
+      "id": 7,
+      "endpoint_id": 5,
+      "name": "Build Triggered",
+      "status_code": 202,
+      "response_body": { "status": "pending", "buildId": "abc123" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-14T10:10:00Z",
+      "updated_at": "2025-09-14T10:20:00Z"
+    },
+    {
+      "id": 8,
+      "endpoint_id": 6,
+      "name": "Status Success",
+      "status_code": 200,
+      "response_body": { "buildId": "abc123", "status": "success" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-14T10:20:00Z",
+      "updated_at": "2025-09-14T10:30:00Z"
+    },
+    {
+      "id": 9,
+      "endpoint_id": 6,
+      "name": "Status Failed",
+      "status_code": 200,
+      "response_body": { "buildId": "abc123", "status": "failed", "error": "Build error" },
+      "condition": {},
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-14T10:25:00Z",
+      "updated_at": "2025-09-14T10:35:00Z"
+    },
+    {
+      "id": 10,
+      "endpoint_id": 7,
+      "name": "Get All Test Cases Success",
+      "status_code": 200,
+      "response_body": [
+        { "id": 101, "title": "Login Test", "status": "active" },
+        { "id": 102, "title": "Checkout Test", "status": "active" }
+      ],
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-15T08:10:00Z",
+      "updated_at": "2025-09-15T08:30:00Z"
+    },
+    {
+      "id": 11,
+      "endpoint_id": 7,
+      "name": "No Test Case Found",
+      "status_code": 404,
+      "response_body": { "error": "No test cases found" },
+      "condition": {},
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-15T08:15:00Z",
+      "updated_at": "2025-09-15T08:35:00Z"
+    },
+    {
+      "id": 12,
+      "endpoint_id": 8,
+      "name": "Test Case Run Success",
+      "status_code": 200,
+      "response_body": { "id": 101, "result": "pass" },
+      "condition": {},
+      "priority": 1,
+      "is_default": true,
+      "created_at": "2025-09-15T09:10:00Z",
+      "updated_at": "2025-09-15T09:40:00Z"
+    },
+    {
+      "id": 13,
+      "endpoint_id": 8,
+      "name": "Test Case Run Failed",
+      "status_code": 200,
+      "response_body": { "id": 101, "result": "fail", "error": "Assertion error" },
+      "condition": {},
+      "priority": 2,
+      "is_default": false,
+      "created_at": "2025-09-15T09:15:00Z",
+      "updated_at": "2025-09-15T09:45:00Z"
     }
   ]
 }
