@@ -2,33 +2,46 @@ import React from "react"
 import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 import {Pencil, Trash2} from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "react-toastify";
 
 export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
+    const {id, name, path, method} = endpoint;
+
     return (
-        <div className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-3 text-sm border-b border-gray-200"
-             onClick={onClick}>
+        <div className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-3 text-sm border-b border-gray-200">
             {/* Tên + Path */}
-            <div className="flex flex-col">
-                <span className="font-medium text-gray-800">{endpoint.name}</span>
-                <span className="text-xs text-gray-500">{endpoint.endpoint_path}</span>
+            <div className="flex flex-col" onClick={onClick}>
+                <span className="font-medium text-gray-800">{name}</span>
+                <span className="text-xs text-gray-500">{path}</span>
             </div>
 
             {/* Method */}
             <div>
                 <Badge
                     className={`px-2 py-0.5 text-xs font-semibold ${
-                        endpoint.method === "GET"
+                        method === "GET"
                             ? "bg-green-100 text-green-800"
-                            : endpoint.method === "POST"
+                            : method === "POST"
                                 ? "bg-blue-100 text-blue-800"
-                                : endpoint.method === "PUT"
+                                : method === "PUT"
                                     ? "bg-orange-100 text-orange-800"
-                                    : endpoint.method === "DELETE"
+                                    : method === "DELETE"
                                         ? "bg-red-100 text-red-800"
                                         : "bg-gray-100 text-gray-800"
                     }`}
                 >
-                    {endpoint.method}
+                    {method}
                 </Badge>
             </div>
 
@@ -54,14 +67,35 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                     >
                         <Pencil className="w-4 h-4"/>
                     </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-gray-500 hover:text-red-600"
-                        onClick={() => onDelete(endpoint.id)}
-                    >
-                        <Trash2 className="w-4 h-4"/>
-                    </Button>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-gray-500 hover:text-red-600"
+                            >
+                                <Trash2 className="w-4 h-4"/>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete endpoint data from our servers.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => toast.error("Canceled delete endpoint")}>
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(id)}>
+                                    Continue
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
                 </div>
             </div>
         </div>

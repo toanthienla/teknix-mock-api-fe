@@ -14,7 +14,7 @@ import {
     ChevronsUpDown, Search,
 } from 'lucide-react';
 import Sidebar from "@/components/Sidebar.jsx";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog.jsx";
 import {Input} from "@/components/ui/input.jsx";
@@ -29,8 +29,10 @@ import {
 } from "@/components/ui/select.jsx"
 import EndpointCard from "@/components/EndpointCard.jsx";
 
+import {toast} from 'react-toastify';
+
 export default function Dashboard() {
-    // const navigate = useNavigate()
+    const navigate = useNavigate()
     const {projectId} = useParams()
     const [activeTab, setActiveTab] = useState("endpoints")
     const [logs, setLogs] = useState([])
@@ -53,7 +55,7 @@ export default function Dashboard() {
     // new endpoint state
     const [newEName, setNewEName] = useState("")
     const [newEPath, setNewEPath] = useState("")
-    const [newEMethod, setNewEMethod] = useState("GET")
+    const [newEMethod, setNewEMethod] = useState("")
 
     // edit project state
     const [editId, setEditId] = useState(null)
@@ -65,7 +67,154 @@ export default function Dashboard() {
     const [openNew, setOpenNew] = useState(false)
     const [openEdit, setOpenEdit] = useState(false)
 
-    // 🔹 fetch workspaces + projects
+    // Use toast to validate
+    const validateCreateEndpoint = (name, path, method) => {
+
+        // Validate endpoint name
+        // Regex pattern
+        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_\-\s]*$/;
+
+        if (!name.trim()) {
+            toast.error("Name is required");
+            return false;
+        }
+        if (name.trim().length > 20) {
+            toast.error("Name must be less than 20 characters");
+            return false;
+        }
+
+        if (!validPattern.test(name.trim())) {
+            toast.error("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
+            return false;
+        }
+
+        const duplicateName = endpoints.find((ep) => ep.name.toLowerCase() === name.toLowerCase())
+        if (duplicateName) {
+            toast.error("Name already exists");
+            return false;
+        }
+
+        if (!path.trim()) {
+            toast.error("Path is required");
+            return false;
+        } else if (!path.startsWith("/")) {
+            toast.error("Path must start with '/'");
+            return false;
+        }
+
+        // Validate Path
+        if (!path.trim()) {
+            toast.error("Path is required");
+            return false;
+        }
+        if (!path.startsWith("/")) {
+            toast.error("Path must start with '/'");
+            return false;
+        }
+        if (path.length > 1 && path.endsWith("/")) {
+            toast.error("Path must not end with '/'");
+            return false;
+        }
+
+        // Regex to check route + query
+        //     ^ … $ : khớp toàn bộ chuỗi.
+        //     \/ : path bắt buộc bắt đầu bằng /.
+        //     [a-zA-Z0-9\-_]* : segment đầu tiên có thể rỗng hoặc là users, api_v1.
+        //     (\/[a-zA-Z0-9\-_]*)* : cho phép nhiều segment, ví dụ /users/profile/details.
+        //     (\/:[a-zA-Z0-9\-_]+)* : cho phép parameter động, ví dụ /users/:id.
+        //     (?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)? : phần query string, ví dụ ?id=1&sort=asc.
+        const validPath = /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+
+        if (!validPath.test(path.trim())) {
+            toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
+            return false;
+        }
+
+        // Check duplicate path + method
+        const duplicateEndpoint = endpoints.some(
+            (ep) =>
+                ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
+                ep.method.toUpperCase() === method.toUpperCase()
+        );
+        if (duplicateEndpoint) {
+            toast.error(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
+            return false;
+        }
+
+        if (!method) {
+            toast.error("Method is required");
+            return false;
+        }
+
+        return true;
+    };
+
+    // Validate for edit (note: exclude editing endpoint)
+    const validateEditEndpoint = (id, name, path, method) => {
+        // Validate endpoint name
+        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_\-\s]*$/;
+
+        if (!name.trim()) {
+            toast.error("Name is required");
+            return false;
+        }
+        if (name.trim().length > 20) {
+            toast.error("Name must be less than 20 characters");
+            return false;
+        }
+        if (!validPattern.test(name.trim())) {
+            toast.error("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
+            return false;
+        }
+        const duplicateName = endpoints.find(
+            (ep) => ep.id !== id && ep.name.toLowerCase() === name.toLowerCase()
+        );
+        if (duplicateName) {
+            toast.error("Name already exists");
+            return false;
+        }
+
+        // Validate path
+        if (!path.trim()) {
+            toast.error("Path is required");
+            return false;
+        }
+        if (!path.startsWith("/")) {
+            toast.error("Path must start with '/'");
+            return false;
+        }
+        if (path.length > 1 && path.endsWith("/")) {
+            toast.error("Path must not end with '/'");
+            return false;
+        }
+
+        const validPath = /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+        if (!validPath.test(path.trim())) {
+            toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
+            return false;
+        }
+
+        const duplicateEndpoint = endpoints.some(
+            (ep) =>
+                ep.id !== id &&
+                ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
+                ep.method.toUpperCase() === method.toUpperCase()
+        );
+        if (duplicateEndpoint) {
+            toast.error(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
+            return false;
+        }
+
+        // Validate method
+        if (!method) {
+            toast.error("Method is required");
+            return false;
+        }
+
+        return true;
+    };
+
+    // fetch workspaces + projects
     useEffect(() => {
         fetchWorkspaces()
         fetchProjects()
@@ -100,8 +249,7 @@ export default function Dashboard() {
             .catch((err) => console.error("Error fetching logs:", err))
     }
 
-
-    // 🔹 filter + sort endpoints
+    // filter + sort endpoints
     const currentEndpoints = endpoints.filter(
         (p) => String(p.project_id) === String(projectId)
     )
@@ -109,7 +257,7 @@ export default function Dashboard() {
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
-    // 🔹 sort endpoints based on sortOption
+    // sort endpoints based on sortOption
     let sortedEndpoints = [...filteredEndpoints]
 
     if (sortOption === "Recently created") {
@@ -122,8 +270,7 @@ export default function Dashboard() {
         sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name))
     }
 
-
-    // 🔹 workspace actions
+    // workspace actions
     const handleAddWorkspace = (name) => {
         if (!name.trim()) return
 
@@ -170,18 +317,20 @@ export default function Dashboard() {
         })
     }
 
-    // 🔹 create endpoint
+    // create endpoint
     const handleCreateEndpoint = () => {
-        if (!newEName.trim()) return
+        if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) {
+            return;
+        }
 
         // Tự động tăng id
         const maxId = endpoints.length > 0 ? Math.max(...endpoints.map(ep => Number(ep.id))) : 0
-        const newId = maxId + 1
+        const newId = (maxId + 1).toString()
 
         const newEndpoint = {
             id: newId,
             name: newEName,
-            endpoint_path: newEPath,
+            path: newEPath,
             method: newEMethod,
             project_id: Number(projectId),
             created_at: new Date().toISOString(),
@@ -196,32 +345,43 @@ export default function Dashboard() {
             .then((res) => res.json())
             .then((createdEndpoint) => {
                 // Thêm endpoint mới vào state trực tiếp
-                setEndpoints((prev) => [...prev, createdEndpoint])
-                setOpenProjectsMap((prev) => ({...prev, [currentWsId]: true})) // mở workspace chứa project mới
-                setNewEName("")
-                setNewEPath("")
-                setNewEMethod("")
-                setOpenNew(false)
+                setEndpoints((prev) => [...prev, createdEndpoint]);
+                setOpenProjectsMap((prev) => ({...prev, [currentWsId]: true}));
+                setNewEName("");
+                setNewEPath("");
+                setNewEMethod("");
+                setOpenNew(false);
+
+                toast.success("Create endpoint successfully!");
             })
+            .catch((error) => {
+                console.error("Error creating endpoint:", error);
+                toast.error("Error creating endpoint!");
+            });
+
     }
 
-    // 🔹 edit endpoint
+    // edit endpoint
     const openEditEndpoint = (p) => {
         setEditId(p.id)
         setEditEName(p.name)
-        setEditEPath(p.endpoint_path)
+        setEditEPath(p.path)
         setEditEMethod(p.method || "GET")
         setOpenEdit(true)
     }
 
     const handleUpdateEndpoint = () => {
+        if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) {
+            return;
+        }
+
         fetch(`${API_ROOT}/endpoints/${editId}`, {
             method: "PUT",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 id: editId,
                 name: editEName,
-                endpoint_path: editEPath,
+                path: editEPath,
                 method: editEMethod,
                 project_id: Number(projectId),
                 updated_at: new Date().toISOString(),
@@ -230,19 +390,23 @@ export default function Dashboard() {
             setEndpoints((prev) =>
                 prev.map((ep) =>
                     ep.id === editId
-                        ? {...ep, name: editEName, endpoint_path: editEPath, method: editEMethod}
+                        ? {...ep, name: editEName, path: editEPath, method: editEMethod}
                         : ep
                 )
             )
             setOpenEdit(false)
+
+            toast.success("Update endpoint successfully!");
         })
     }
 
-    // 🔹 delete endpoint
+    //  delete endpoint
     const handleDeleteEndpoint = (id) => {
         fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"}).then(() => {
-            setEndpoints((prev) => prev.filter((p) => p.id !== id))
+            setEndpoints((prev) => prev.filter((e) => e.id !== id))
         })
+
+        toast.success("Delete endpoint successfully!");
     }
 
     return (
@@ -289,18 +453,18 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             </div>
+                            <Button variant="outline" className="mr-2 flex items-center gap-1">
+                                <Badge className="bg-blue-500 text-white px-2 py-0.5 rounded-lg text-xs">
+                                    {sortedEndpoints.length}
+                                </Badge>
+                                Active
+                            </Button>
+                            <Button className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1">
+                                <Play className="w-4 h-4"/> {/* Assuming a play icon for "Start all" */}
+                                Start all
+                            </Button>
                         </div>
                     </div>
-                    <Button variant="outline" className="mr-2 flex items-center gap-1">
-                        <Badge className="bg-blue-500 text-white px-2 py-0.5 rounded-lg text-xs">
-                            {sortedEndpoints.length}
-                        </Badge>
-                        Active
-                    </Button>
-                    <Button className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1">
-                        <Play className="w-4 h-4"/> {/* Assuming a play icon for "Start all" */}
-                        Start all
-                    </Button>
                 </header>
 
                 {/* Content Area */}
@@ -406,7 +570,7 @@ export default function Dashboard() {
 
                                                         <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
                                                         <Input
-                                                            placeholder="Type Here"
+                                                            placeholder="/example/path/:number"
                                                             value={newEPath}
                                                             onChange={(e) => setNewEPath(e.target.value)}
                                                         />
@@ -452,15 +616,19 @@ export default function Dashboard() {
 
                                 {/* Endpoint Rows */}
                                 <div>
-                                    {sortedEndpoints.map((endpoint) => (
-                                        <EndpointCard
-                                            key={endpoint.id}
-                                            endpoint={endpoint}
-                                            onEdit={() => openEditEndpoint(endpoint)}
-                                            onDelete={() => handleDeleteEndpoint(endpoint.id)}
-                                            onClick={() => navigate(`/dashboard/${projectId}/${endpoint.id}`)}
-                                        />
-                                    ))}
+                                    {sortedEndpoints?.length > 0 ? (
+                                        sortedEndpoints.map((e) => (
+                                            <EndpointCard
+                                                key={e.id}
+                                                endpoint={e}
+                                                onEdit={() => openEditEndpoint(e)}
+                                                onDelete={() => handleDeleteEndpoint(e.id)}
+                                                onClick={() => navigate(`/dashboard/${projectId}/${e.id}`)}
+                                            />
+                                        ))
+                                    ) : (
+                                        <p className="text-slate-500">No projects found.</p>
+                                    )}
                                 </div>
 
                                 {/* Edit Endpoint Dialog */}
