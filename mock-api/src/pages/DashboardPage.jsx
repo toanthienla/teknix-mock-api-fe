@@ -74,7 +74,7 @@ export default function DashboardPage() {
   
   const handleCreateProject = () => {
     if (!currentWsId) {
-      alert("Workspace không hợp lệ")
+      alert("Invalid workspace")
       return
     }
     if (!newTitle.trim()) return
@@ -132,18 +132,24 @@ export default function DashboardPage() {
   }
 
   
-  
-  
   const handleAddWorkspace = (name) => {
-    if (!name.trim()) return
+    if (!name.trim()) {
+      alert("Workspace name cannot be blank")
+      return
+    }
+
+    if (/^[^a-zA-Z]/.test(name)) {
+      alert("Workspace names cannot start with numbers or special characters")
+      return
+    }
 
     if (name.length > 20) {
-      alert("Tên workspace quá dài (tối đa 20 ký tự)")
+      alert("Workspace name is too long (maximum 20 characters)")
       return
     }
 
     if (workspaces.some((w) => w.name.toLowerCase() === name.toLowerCase())) {
-      alert("Tên workspace đã tồn tại")
+      alert("Workspace name already exists")
       return
     }
 
@@ -163,14 +169,23 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs])
         setCurrentWsId(createdWs.id)
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }))
+        alert("Create workspace successfully")
       })
   }
 
   const handleEditWorkspace = (id, name) => {
-    if (!name.trim()) return
+    if (!name.trim()) {
+      alert("Workspace name cannot be blank")
+      return
+    }
+
+    if (/^[^a-zA-Z]/.test(name)) {
+      alert("Workspace names cannot start with numbers or special characters")
+      return
+    }
 
     if (name.length > 20) {
-      alert("Tên workspace quá dài (tối đa 20 ký tự)")
+      alert("Workspace name is too long (maximum 20 characters)")
       return
     }
 
@@ -179,7 +194,7 @@ export default function DashboardPage() {
         (w) => w.id !== id && w.name.toLowerCase() === name.toLowerCase()
       )
     ) {
-      alert("Tên workspace đã tồn tại")
+      alert("Workspace name already exists")
       return
     }
 
@@ -191,8 +206,10 @@ export default function DashboardPage() {
       setWorkspaces((prev) =>
         prev.map((w) => (w.id === id ? { ...w, name } : w))
       )
+      alert("Rename workspace successfully")
     })
   }
+  
 
   const handleDeleteWorkspace = (id) => {
     fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
@@ -226,8 +243,6 @@ export default function DashboardPage() {
   };
 
   
- 
-
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -243,7 +258,9 @@ export default function DashboardPage() {
               const ws = workspaces.find((w) => w.id === id)
               if (!ws) return
               const name = prompt("Edit workspace name", ws.name)
-              if (name) handleEditWorkspace(id, name)
+              if (name !== null) { 
+                handleEditWorkspace(id, name)
+              }
             }}
             onDeleteWorkspace={(id) => setConfirmDeleteWs(id)} 
             openProjectsMap={openProjectsMap}
