@@ -13,10 +13,12 @@ export default function Sidebar({
   onDeleteWorkspace,
   projects = [],
   openProjectsMap,
-  setOpenProjectsMap,
+  setOpenProjectsMap, endpoints = [],
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
+  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
+
 
   const navigate = useNavigate();
 
@@ -35,9 +37,20 @@ export default function Sidebar({
     }));
   };
 
+  const toggleEndpoints = (projectId) => {
+    setOpenEndpointsMap((prev) => ({
+      ...prev,
+      [projectId]: !prev[projectId],
+    }));
+  };
+
+
   return (
     <div className="p-6 flex flex-col h-screen">
-      <div className="text-2xl font-bold mb-6">MockAPI</div>
+      <div className="text-2xl font-bold mb-6"
+           onClick={() => navigate("/dashboard")}>
+        MockAPI
+      </div>
 
       <div className="text-sm text-slate-600 mb-2 font-medium">WORKSPACES</div>
 
@@ -99,14 +112,51 @@ export default function Sidebar({
                 {isOpen && wsProjects.length > 0 && (
                   <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
                     {wsProjects.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
-                      >
-                        <Folder className="w-4 h-4 text-slate-400" />
-                        {p.name}
-                      </div>
+                        <div
+                            key={p.id}
+                            className="flex flex-col"
+                        >
+                          <div
+                              className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
+                              onClick={() => toggleEndpoints(p.id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Folder className="w-4 h-4 text-slate-400" />
+                              {p.name}
+                            </div>
+                            <ChevronDown
+                                className={`w-4 h-4 text-slate-400 transition-transform ${
+                                    openEndpointsMap[p.id] ? "rotate-180" : ""
+                                }`}
+                            />
+                          </div>
+
+                          {openEndpointsMap[p.id] && (
+                              <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
+                                {endpoints
+                                    .filter((ep) => String(ep.project_id) === String(p.id))
+                                    .map((ep) => (
+                                        <div
+                                            key={ep.id}
+                                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
+                                            onClick={() => navigate(`/dashboard/${p.id}/endpoints/${ep.id}`)}
+                                        >
+                                          <span
+                                              className={`px-1 py-0.5 rounded text-[10px] font-medium ${
+                                                ep.method === "GET" ? "bg-green-100 text-green-700" 
+                                                    : ep.method === "POST" ? "bg-blue-100 text-blue-700"
+                                                        : ep.method === "PUT" ? "bg-orange-100 text-orange-700" 
+                                                            : "bg-red-100 text-red-700"
+                                              }`}
+                                          >
+                                            {ep.method}
+                                          </span>
+                                          {ep.name}
+                                        </div>
+                                    ))}
+                              </div>
+                          )}
+                        </div>
                     ))}
                   </div>
                 )}

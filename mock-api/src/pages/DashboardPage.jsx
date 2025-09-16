@@ -1,4 +1,4 @@
-"use client"
+  "use client"
 
 import React, { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -31,6 +31,7 @@ export default function DashboardPage() {
 
   const [workspaces, setWorkspaces] = useState([])
   const [projects, setProjects] = useState([])
+  const [endpoints, setEndpoints] = useState([])
   const [currentWsId, setCurrentWsId] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortOption, setSortOption] = useState("Recently created")
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchWorkspaces()
     fetchProjects()
+    fetchEndpoints()
   }, [])
 
   const fetchWorkspaces = () => {
@@ -68,6 +70,12 @@ export default function DashboardPage() {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => setProjects(data))
+  }
+
+  const fetchEndpoints = () => {
+    fetch(`${API_ROOT}/endpoints `)
+        .then((res) => res.json())
+        .then((data) => setEndpoints(data))
   }
 
   // 🔹 filter + sort projects
@@ -199,10 +207,15 @@ export default function DashboardPage() {
     })
   }
 
-  // 🔹 current project detail
+  // Current project detail
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null
+
+  // Filter endpoints for this project
+  const projectEndpoints = projectId
+      ? endpoints.filter((ep) => String(ep.project_id) === String(projectId))
+      : [];
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
@@ -212,6 +225,7 @@ export default function DashboardPage() {
           <Sidebar
             workspaces={workspaces}
             projects={projects}
+            endpoints={endpoints}
             current={currentWsId}
             setCurrent={setCurrentWsId}
             onAddWorkspace={handleAddWorkspace}
@@ -232,17 +246,64 @@ export default function DashboardPage() {
           <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNew(true)} />
 
           {currentProject ? (
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
-              <p className="text-slate-600">{currentProject.description}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => navigate("/dashboard")}
-              >
-                Back to all projects
-              </Button>
-            </div>
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
+                <p className="text-slate-600 mb-6">{currentProject.description}</p>
+
+                {/* 🔹 Show endpoints table */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">
+                    {projectEndpoints.length} Endpoints
+                  </h3>
+
+                  {projectEndpoints.length > 0 ? (
+                      <table className="w-full border border-slate-200 text-sm">
+                        <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Name</th>
+                          <th className="px-3 py-2 text-left">Method</th>
+                          <th className="px-3 py-2 text-left">Created At</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {projectEndpoints.map((ep) => (
+                            <tr
+                                key={ep.id}
+                                className="border-t hover:bg-slate-50 cursor-pointer"
+                            >
+                              <td className="px-3 py-2">{ep.name}</td>
+                              <td className="px-3 py-2">
+                    <span
+                        className={`px-2 py-1 rounded text-white text-xs font-medium
+                        ${ep.method === "GET" ? "bg-green-500" : ""}
+                        ${ep.method === "POST" ? "bg-blue-500" : ""}
+                        ${ep.method === "PUT" ? "bg-orange-500" : ""}
+                        ${ep.method === "DELETE" ? "bg-red-500" : ""}
+                      `}
+                    >
+                      {ep.method}
+                    </span>
+                              </td>
+                              <td className="px-3 py-2">
+                                {new Date(ep.created_at).toLocaleString()}
+                              </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                      </table>
+                  ) : (
+                      <p className="text-slate-500">No endpoints found for this project.</p>
+                  )}
+                </div>
+
+                <Button
+                    variant="outline"
+                    className="mt-6"
+                    onClick={() => navigate("/dashboard")}
+                >
+                  Back to all projects
+                </Button>
+              </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">

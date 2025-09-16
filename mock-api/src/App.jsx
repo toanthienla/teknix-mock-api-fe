@@ -1,13 +1,26 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
-
+import LoginPage from "./pages/Login";
+import SignupPage from "./pages/Signup";
+import ProjectEndpoints from "./pages/ProjectEndpoints.jsx";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-    
-    </Routes>
+      <Routes>
+          {/* Redirect root to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Auth pages */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+
+          {/* Dashboard routes */}
+          <Route path="/dashboard" element={<DashboardPage />} />
+
+          <Route path="/dashboard/:projectId" element={<ProjectEndpoints />}>
+          </Route>
+
+          {/*<Route path="test" element={<ProjectEndpoints />} />*/}
+      </Routes>
   );
 }
