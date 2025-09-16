@@ -212,11 +212,6 @@ export default function DashboardPage() {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null
 
-  // Filter endpoints for this project
-  const projectEndpoints = projectId
-      ? endpoints.filter((ep) => String(ep.project_id) === String(projectId))
-      : [];
-
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -227,7 +222,7 @@ export default function DashboardPage() {
             projects={projects}
             endpoints={endpoints}
             current={currentWsId}
-            setCurrent={setCurrentWsId}
+            setCurrentWS={setCurrentWsId}
             onAddWorkspace={handleAddWorkspace}
             onEditWorkspace={(id) => {
               const ws = workspaces.find((w) => w.id === id)
@@ -248,57 +243,10 @@ export default function DashboardPage() {
           {currentProject ? (
               <div>
                 <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
-                <p className="text-slate-600 mb-6">{currentProject.description}</p>
-
-                {/* 🔹 Show endpoints table */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">
-                    {projectEndpoints.length} Endpoints
-                  </h3>
-
-                  {projectEndpoints.length > 0 ? (
-                      <table className="w-full border border-slate-200 text-sm">
-                        <thead className="bg-slate-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left">Name</th>
-                          <th className="px-3 py-2 text-left">Method</th>
-                          <th className="px-3 py-2 text-left">Created At</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {projectEndpoints.map((ep) => (
-                            <tr
-                                key={ep.id}
-                                className="border-t hover:bg-slate-50 cursor-pointer"
-                            >
-                              <td className="px-3 py-2">{ep.name}</td>
-                              <td className="px-3 py-2">
-                    <span
-                        className={`px-2 py-1 rounded text-white text-xs font-medium
-                        ${ep.method === "GET" ? "bg-green-500" : ""}
-                        ${ep.method === "POST" ? "bg-blue-500" : ""}
-                        ${ep.method === "PUT" ? "bg-orange-500" : ""}
-                        ${ep.method === "DELETE" ? "bg-red-500" : ""}
-                      `}
-                    >
-                      {ep.method}
-                    </span>
-                              </td>
-                              <td className="px-3 py-2">
-                                {new Date(ep.created_at).toLocaleString()}
-                              </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                      </table>
-                  ) : (
-                      <p className="text-slate-500">No endpoints found for this project.</p>
-                  )}
-                </div>
-
+                <p className="text-slate-600">{currentProject.description}</p>
                 <Button
                     variant="outline"
-                    className="mt-6"
+                    className="mt-4"
                     onClick={() => navigate("/dashboard")}
                 >
                   Back to all projects

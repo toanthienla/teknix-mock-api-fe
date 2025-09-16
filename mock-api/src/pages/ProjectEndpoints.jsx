@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Separator} from '@/components/ui/separator';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -31,9 +31,9 @@ import EndpointCard from "@/components/EndpointCard.jsx";
 
 export default function Dashboard() {
     // const navigate = useNavigate()
-    const { projectId } = useParams()
-    // const [activeTab, setActiveTab] = useState("endpoints")
-    // const [logs, setLogs] = useState([])
+    const {projectId} = useParams()
+    const [activeTab, setActiveTab] = useState("endpoints")
+    const [logs, setLogs] = useState([])
 
     const [workspaces, setWorkspaces] = useState([])
     const [projects, setProjects] = useState([])
@@ -93,6 +93,14 @@ export default function Dashboard() {
             .then((data) => setEndpoints(data))
     }
 
+    const fetchLogs = () => {
+        fetch(`${API_ROOT}/logs`)
+            .then((res) => res.json())
+            .then((data) => setLogs(data))
+            .catch((err) => console.error("Error fetching logs:", err))
+    }
+
+
     // 🔹 filter + sort endpoints
     const currentEndpoints = endpoints.filter(
         (p) => String(p.project_id) === String(projectId)
@@ -132,31 +140,31 @@ export default function Dashboard() {
 
         fetch(`${API_ROOT}/workspaces`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(newWs),
         })
             .then((res) => res.json())
             .then((createdWs) => {
                 setWorkspaces((prev) => [...prev, createdWs])
                 setCurrentWsId(createdWs.id)
-                setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true })) // mở workspace mới
+                setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true})) // mở workspace mới
             })
     }
 
     const handleEditWorkspace = (id, name) => {
         fetch(`${API_ROOT}/workspaces/${id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, updated_at: new Date().toISOString() }),
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({name, updated_at: new Date().toISOString()}),
         }).then(() => {
             setWorkspaces((prev) =>
-                prev.map((w) => (w.id === id ? { ...w, name } : w))
+                prev.map((w) => (w.id === id ? {...w, name} : w))
             )
         })
     }
 
     const handleDeleteWorkspace = (id) => {
-        fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(() => {
+        fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"}).then(() => {
             setWorkspaces((prev) => prev.filter((w) => w.id !== id))
             if (currentWsId === id) setCurrentWsId(null)
         })
@@ -182,14 +190,14 @@ export default function Dashboard() {
 
         fetch(`${API_ROOT}/endpoints`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(newEndpoint),
         })
             .then((res) => res.json())
             .then((createdEndpoint) => {
                 // Thêm endpoint mới vào state trực tiếp
                 setEndpoints((prev) => [...prev, createdEndpoint])
-                setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true })) // mở workspace chứa project mới
+                setOpenProjectsMap((prev) => ({...prev, [currentWsId]: true})) // mở workspace chứa project mới
                 setNewEName("")
                 setNewEPath("")
                 setNewEMethod("")
@@ -218,21 +226,21 @@ export default function Dashboard() {
                 project_id: Number(projectId),
                 updated_at: new Date().toISOString(),
             }),
-        }) .then(() => {
-                setEndpoints((prev) =>
-                    prev.map((ep) =>
-                        ep.id === editId
-                            ? {...ep, name: editEName, endpoint_path: editEPath, method: editEMethod}
-                            : ep
-                    )
+        }).then(() => {
+            setEndpoints((prev) =>
+                prev.map((ep) =>
+                    ep.id === editId
+                        ? {...ep, name: editEName, endpoint_path: editEPath, method: editEMethod}
+                        : ep
                 )
+            )
             setOpenEdit(false)
         })
     }
 
     // 🔹 delete endpoint
     const handleDeleteEndpoint = (id) => {
-        fetch(`${API_ROOT}/endpoints/${id}`, { method: "DELETE" }).then(() => {
+        fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"}).then(() => {
             setEndpoints((prev) => prev.filter((p) => p.id !== id))
         })
     }
@@ -246,7 +254,7 @@ export default function Dashboard() {
                     projects={projects}
                     endpoints={endpoints}
                     current={currentWsId}
-                    setCurrent={setCurrentWsId}
+                    setCurrentWS={setCurrentWsId}
                     onAddWorkspace={handleAddWorkspace}
                     onEditWorkspace={(id) => {
                         const ws = workspaces.find((w) => w.id === id)
@@ -275,8 +283,9 @@ export default function Dashboard() {
                                         onChange={handleChange}
                                         className="pl-10 pr-4 py-2"
                                     />
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                                        <Search size={16} />
+                                    <div
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                                        <Search size={16}/>
                                     </div>
                                 </div>
                             </div>
@@ -289,7 +298,7 @@ export default function Dashboard() {
                         Active
                     </Button>
                     <Button className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1">
-                        <Play className="w-4 h-4" /> {/* Assuming a play icon for "Start all" */}
+                        <Play className="w-4 h-4"/> {/* Assuming a play icon for "Start all" */}
                         Start all
                     </Button>
                 </header>
@@ -298,184 +307,229 @@ export default function Dashboard() {
                 <div className="flex-1 items-center justify-between mb-4">
                     <div className="bg-white shadow p-6">
                         <div className="flex border-b border-gray-200 mb-4 text-gray-600">
-                            <Button variant="ghost" className="rounded-none border-b-2 border-blue-600 text-blue-600 px-4 py-2 -mb-px">Endpoints</Button>
-                            <Button variant="ghost" className="rounded-none px-4 py-2 -mb-px">Logs</Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => setActiveTab("endpoints")}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                            >
+                                Endpoints
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setActiveTab("logs")
+                                    fetchLogs()
+                                }}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                            >
+                                Logs
+                            </Button>
                         </div>
 
-                        <div className="mb-4">
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                                    {sortedEndpoints.length} Endpoints
-                                </h2>
+                        {activeTab === "endpoints" ? (
+                            <>
+                                {/* View all Endpoints */}
+                                <div className="mb-4">
+                                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                                        <h2 className="text-xl font-bold text-gray-800 mb-2">
+                                            {sortedEndpoints.length} Endpoints
+                                        </h2>
 
-                                {/* Filter + Sort + New Endpoint */}
-                                <div className="ml-auto flex items-center gap-2">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                                            >
-                                                All <ChevronDown className="w-4 h-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem>All</DropdownMenuItem>
-                                            <DropdownMenuItem>Active</DropdownMenuItem>
-                                            <DropdownMenuItem>Inactive</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                        {/* Filter + Sort + New Endpoint */}
+                                        <div className="ml-auto flex items-center gap-2">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                                                    >
+                                                        All <ChevronDown className="w-4 h-4"/>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem>All</DropdownMenuItem>
+                                                    <DropdownMenuItem>Active</DropdownMenuItem>
+                                                    <DropdownMenuItem>Inactive</DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
 
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                                            >
-                                                {sortOption} <ChevronsUpDown className="w-4 h-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
-                                                Recently created
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSortOption("Oldest first")}>
-                                                Oldest first
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSortOption("Alphabetical (A-Z)")}>
-                                                Alphabetical (A-Z)
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSortOption("Alphabetical (Z-A)")}>
-                                                Alphabetical (Z-A)
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                                                    >
+                                                        {sortOption} <ChevronsUpDown className="w-4 h-4"/>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
+                                                        Recently created
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setSortOption("Oldest first")}>
+                                                        Oldest first
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSortOption("Alphabetical (A-Z)")}>
+                                                        Alphabetical (A-Z)
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSortOption("Alphabetical (Z-A)")}>
+                                                        Alphabetical (Z-A)
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
 
-                                    {/* New Endpoint Button + Dialog */}
-                                    <Dialog open={openNew} onOpenChange={setOpenNew}>
-                                        <Button
-                                            onClick={() => setOpenNew(true)}
-                                            className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded-md"
-                                        >
-                                            + New Endpoint
-                                        </Button>
-                                        <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
-                                            <DialogHeader>
-                                                <DialogTitle>New Endpoint</DialogTitle>
-                                            </DialogHeader>
-
-                                            <h3 className="text-sm font-semibold text-slate-700 mt-2">Endpoint Detail</h3>
-                                            <div className="mt-2 space-y-4">
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
-                                                <Input
-                                                    placeholder=" Enter Endpoint Name"
-                                                    value={newEName}
-                                                    onChange={(e) => setNewEName(e.target.value)}
-                                                />
-
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
-                                                <Input
-                                                    placeholder="Type Here"
-                                                    value={newEPath}
-                                                    onChange={(e) => setNewEPath(e.target.value)}
-                                                />
-
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">Method</h3>
-                                                <Select value={newEMethod} onValueChange={setNewEMethod}>
-                                                    <SelectTrigger className="w-[180px]">
-                                                        <SelectValue placeholder="Select a method" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectGroup>
-                                                            <SelectLabel>Method</SelectLabel>
-                                                            <SelectItem value="GET">GET</SelectItem>
-                                                            <SelectItem value="POST">POST</SelectItem>
-                                                            <SelectItem value="PUT">PUT</SelectItem>
-                                                            <SelectItem value="DELETE">DELETE</SelectItem>
-                                                        </SelectGroup>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setOpenNew(false)}>
-                                                    Cancel
+                                            {/* New Endpoint Button + Dialog */}
+                                            <Dialog open={openNew} onOpenChange={setOpenNew}>
+                                                <Button
+                                                    onClick={() => setOpenNew(true)}
+                                                    className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded-md"
+                                                >
+                                                    + New Endpoint
                                                 </Button>
-                                                <Button onClick={handleCreateEndpoint}>Create</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
+                                                <DialogContent
+                                                    className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
+                                                    <DialogHeader>
+                                                        <DialogTitle>New Endpoint</DialogTitle>
+                                                    </DialogHeader>
+
+                                                    <h3 className="text-sm font-semibold text-slate-700 mt-2">Endpoint
+                                                        Detail</h3>
+                                                    <div className="mt-2 space-y-4">
+                                                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
+                                                        <Input
+                                                            placeholder=" Enter Endpoint Name"
+                                                            value={newEName}
+                                                            onChange={(e) => setNewEName(e.target.value)}
+                                                        />
+
+                                                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
+                                                        <Input
+                                                            placeholder="Type Here"
+                                                            value={newEPath}
+                                                            onChange={(e) => setNewEPath(e.target.value)}
+                                                        />
+
+                                                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Method</h3>
+                                                        <Select value={newEMethod} onValueChange={setNewEMethod}>
+                                                            <SelectTrigger className="w-[180px]">
+                                                                <SelectValue placeholder="Select a method"/>
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectGroup>
+                                                                    <SelectLabel>Method</SelectLabel>
+                                                                    <SelectItem value="GET">GET</SelectItem>
+                                                                    <SelectItem value="POST">POST</SelectItem>
+                                                                    <SelectItem value="PUT">PUT</SelectItem>
+                                                                    <SelectItem value="DELETE">DELETE</SelectItem>
+                                                                </SelectGroup>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <DialogFooter>
+                                                        <Button variant="outline" onClick={() => setOpenNew(false)}>
+                                                            Cancel
+                                                        </Button>
+                                                        <Button onClick={handleCreateEndpoint}>Create</Button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </div>
+
+                                    </div>
                                 </div>
 
-                            </div>
-                        </div>
-
-
-                        {/* Endpoint Table Header */}
-                        <div className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-2 text-xs font-medium text-gray-500 tracking-wide">
-                            <div className="pl-1">Aa</div>
-                            <div>Method</div>
-                            <div>Time & Date</div>
-                        </div>
-                        <Separator />
-
-                        {/* Endpoint Rows */}
-                        <div>
-                            {sortedEndpoints.map((endpoint) => (
-                                <EndpointCard
-                                    key={endpoint.id}
-                                    endpoint={endpoint}
-                                    onEdit={() => openEditEndpoint(endpoint)}
-                                    onDelete={() => handleDeleteEndpoint(endpoint.id)}
-                                />
-                            ))}
-                        </div>
-
-                        {/* Edit Endpoint Dialog */}
-                        <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                            <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
-                                <DialogHeader>
-                                    <DialogTitle>Edit Endpoint</DialogTitle>
-                                </DialogHeader>
-                                <h3 className="text-sm font-semibold text-slate-700 mt-2">Endpoint Detail</h3>
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
-                                    <Input
-                                        placeholder=" Enter Endpoint Name"
-                                        value={editEName}
-                                        onChange={(e) => setEditEName(e.target.value)}
-                                    />
-                                    <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
-                                    <Input
-                                        placeholder="/example/path/:number"
-                                        value={editEPath}
-                                        onChange={(e) => setEditEPath(e.target.value)}
-                                    />
-
-                                    <Select value={editEMethod} onValueChange={setEditEMethod}>
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Select a method" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Method</SelectLabel>
-                                                <SelectItem value="GET">Get</SelectItem>
-                                                <SelectItem value="PUT">Put</SelectItem>
-                                                <SelectItem value="POST">Post</SelectItem>
-                                                <SelectItem value="DELETE">Delete</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-
+                                {/* Endpoint Table Header */}
+                                <div
+                                    className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-2 text-xs font-medium text-gray-500 tracking-wide">
+                                    <div className="pl-1">Aa</div>
+                                    <div>Method</div>
+                                    <div>Time & Date</div>
                                 </div>
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setOpenEdit(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={handleUpdateEndpoint}>Update</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                                <Separator/>
+
+                                {/* Endpoint Rows */}
+                                <div>
+                                    {sortedEndpoints.map((endpoint) => (
+                                        <EndpointCard
+                                            key={endpoint.id}
+                                            endpoint={endpoint}
+                                            onEdit={() => openEditEndpoint(endpoint)}
+                                            onDelete={() => handleDeleteEndpoint(endpoint.id)}
+                                            onClick={() => navigate(`/dashboard/${projectId}/${endpoint.id}`)}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Edit Endpoint Dialog */}
+                                <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+                                    <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>Edit Endpoint</DialogTitle>
+                                        </DialogHeader>
+                                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Endpoint Detail</h3>
+                                        <div className="space-y-4">
+                                            <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
+                                            <Input
+                                                placeholder=" Enter Endpoint Name"
+                                                value={editEName}
+                                                onChange={(e) => setEditEName(e.target.value)}
+                                            />
+                                            <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
+                                            <Input
+                                                placeholder="/example/path/:number"
+                                                value={editEPath}
+                                                onChange={(e) => setEditEPath(e.target.value)}
+                                            />
+
+                                            <h3 className="text-sm font-semibold text-slate-700 mt-2">Method</h3>
+                                            <Select value={editEMethod} onValueChange={setEditEMethod}>
+                                                <SelectTrigger className="w-[180px]">
+                                                    <SelectValue placeholder="Select a method"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectLabel>Method</SelectLabel>
+                                                        <SelectItem value="GET">Get</SelectItem>
+                                                        <SelectItem value="PUT">Put</SelectItem>
+                                                        <SelectItem value="POST">Post</SelectItem>
+                                                        <SelectItem value="DELETE">Delete</SelectItem>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setOpenEdit(false)}>
+                                                Cancel
+                                            </Button>
+                                            <Button onClick={handleUpdateEndpoint}>Update</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </>
+                        ) : (
+                            <> {/* Logs */}
+                                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                                    Logs
+                                </h2>
+                                <div className="space-y-2">
+                                    {logs.map((log, i) => (
+                                        <div
+                                            key={i}
+                                            className="p-3 border rounded-md text-sm text-slate-700 bg-slate-50"
+                                        >
+                                            <div><b>Endpoint:</b> {log.endpoint_name || log.endpoint_id}</div>
+                                            <div><b>Method:</b> {log.method}</div>
+                                            <div><b>Status:</b> {log.status}</div>
+                                            <div><b>Time:</b> {new Date(log.created_at).toLocaleString()}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </main>
@@ -498,7 +552,7 @@ function Play(props) {
             strokeLinecap="round"
             strokeLinejoin="round"
         >
-            <polygon points="5 3 19 12 5 21 5 3" />
+            <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
     );
 }

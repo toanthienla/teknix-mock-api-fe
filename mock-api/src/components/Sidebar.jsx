@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export default function Sidebar({
   workspaces = [],
   current,
-  setCurrent,
+  setCurrentWS,
   onAddWorkspace,
   onEditWorkspace,
   onDeleteWorkspace,
@@ -44,7 +44,6 @@ export default function Sidebar({
     }));
   };
 
-
   return (
     <div className="p-6 flex flex-col h-screen">
       <div className="text-2xl font-bold mb-6"
@@ -73,8 +72,8 @@ export default function Sidebar({
                       : "hover:bg-slate-50 text-slate-700"
                   }`}
                   onClick={() => {
-                    setCurrent(ws.id);
-                    toggleProjects(ws.id);
+                    setCurrentWS(ws.id);
+                    navigate("/dashboard");
                   }}
                 >
                   <span className="flex items-center gap-3">
@@ -105,6 +104,10 @@ export default function Sidebar({
                       className={`w-4 h-4 text-slate-400 transition-transform ${
                         isOpen ? "rotate-180" : ""
                       }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleProjects(ws.id);
+                      }}
                     />
                   </div>
                 </div>
@@ -120,7 +123,11 @@ export default function Sidebar({
                               className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
                               onClick={() => toggleEndpoints(p.id)}
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2"
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   navigate(`/dashboard/${p.id}`)
+                                 }}>
                               <Folder className="w-4 h-4 text-slate-400" />
                               {p.name}
                             </div>

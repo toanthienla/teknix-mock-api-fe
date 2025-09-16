@@ -1,11 +1,12 @@
 import React from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2 } from "lucide-react"
+import {Button} from "@/components/ui/button"
+import {Badge} from "@/components/ui/badge"
+import {Pencil, Trash2} from "lucide-react"
 
-export default function EndpointRow({ endpoint, onEdit, onDelete }) {
+export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
     return (
-        <div className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-3 text-sm border-b border-gray-200">
+        <div className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-3 text-sm border-b border-gray-200"
+             onClick={onClick}>
             {/* Tên + Path */}
             <div className="flex flex-col">
                 <span className="font-medium text-gray-800">{endpoint.name}</span>
@@ -33,9 +34,17 @@ export default function EndpointRow({ endpoint, onEdit, onDelete }) {
 
             {/* Actions + Time */}
             <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
-          {new Date(endpoint.created_at).toLocaleString()}
-        </span>
+                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                    {new Date(endpoint.created_at).toLocaleString("VN-vi", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                    })}
+                </span>
+
                 <div className="flex items-center gap-2">
                     <Button
                         variant="ghost"
@@ -43,7 +52,7 @@ export default function EndpointRow({ endpoint, onEdit, onDelete }) {
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => onEdit(endpoint)}
                     >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="w-4 h-4"/>
                     </Button>
                     <Button
                         variant="ghost"
@@ -51,7 +60,7 @@ export default function EndpointRow({ endpoint, onEdit, onDelete }) {
                         className="h-7 w-7 text-gray-500 hover:text-red-600"
                         onClick={() => onDelete(endpoint.id)}
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4"/>
                     </Button>
                 </div>
             </div>
