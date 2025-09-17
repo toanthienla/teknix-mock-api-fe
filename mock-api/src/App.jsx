@@ -1,18 +1,15 @@
-import "./styles/index.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import DashboardPage from "./pages/DashboardPage";
 
-function App() {
+
+export default function App() {
   return (
-    <>
-      <button className="btn btn-neutral">Neutral</button>
-      <button className="btn btn-primary">Primary</button>
-      <button className="btn btn-secondary">Secondary</button>
-      <button className="btn btn-accent">Accent</button>
-      <button className="btn btn-info">Infos</button>
-      <button className="btn btn-success">Success</button>
-      <button className="btn btn-warning">Warning</button>
-      <button className="btn btn-error">Error</button>
-    </>
+
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+    
+    </Routes>
+
   );
 }
-
-export default App;
