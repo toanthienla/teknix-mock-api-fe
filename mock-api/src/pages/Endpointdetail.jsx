@@ -237,7 +237,7 @@ const DashboardPage = () => {
     let responseBodyObj = {};
     try {
       responseBodyObj = JSON.parse(responseBody);
-    } catch (error) {
+    } catch {
       alert("Invalid JSON in response body");
       return;
     }
@@ -298,7 +298,7 @@ const DashboardPage = () => {
     let responseBodyObj = {};
     try {
       responseBodyObj = JSON.parse(responseBody);
-    } catch (error) {
+    } catch {
       alert("Invalid JSON in response body");
       return;
     }
