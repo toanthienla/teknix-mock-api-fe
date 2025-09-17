@@ -101,12 +101,12 @@ export default function DashboardPage() {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
-  const validateWsName = (name, excludeId = null) => {
+const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
     if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-z][A-Za-z0-9]*( [A-Za-z0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 50) return "Workspace name max 50 chars";
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
+      return "Must start with a letter (A-Z, a-z, or Vietnamese), no special chars, single spaces allowed";
+    if (trimmed.length > 20) return "Workspace name max 20 chars";
     if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
       return "Workspace name already exists";
     return "";
@@ -183,46 +183,57 @@ export default function DashboardPage() {
       toast.error("Failed to delete workspace or its projects");
     }
   };
+const validateProject = (title, desc) => {
+  let valid = true;
+  setNewTitleError("");
+  setNewDescError("");
 
-  const validateProject = (title, desc) => {
-    let valid = true;
-    setNewTitleError("");
-    setNewDescError("");
+  const titleTrim = title.trim();
+  const descTrim = desc.trim();
 
-    const titleTrim = title.trim();
-    const descTrim = desc.trim();
+  if (!titleTrim) {
+    setNewTitleError("Project name cannot be empty");
+    valid = false;
+  } else if (titleTrim.length > 50) {
+    setNewTitleError("Project name cannot exceed 50 chars");
+    valid = false;
+  } 
+  
+  else if (/^[0-9]/.test(titleTrim)) {
+    setNewTitleError("Project name cannot start with a number");
+    valid = false;
+  } 
+  
+  else if (/ {2,}/.test(titleTrim)) {
+    setNewTitleError("Project name cannot contain multiple spaces");
+    valid = false;
+  } 
+ 
+  else if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+    setNewTitleError("Only letters, numbers, and spaces allowed (no special characters)");
+    valid = false;
+  }
 
-    if (!titleTrim) {
-      setNewTitleError("Project name cannot be empty");
-      valid = false;
-    } else if (titleTrim.length > 50) {
-      setNewTitleError("Project name cannot exceed 50 chars");
-      valid = false;
-    } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-      setNewTitleError("Must start with a letter, no special chars, single spaces allowed");
-      valid = false;
-    }
+  if (!descTrim) {
+    setNewDescError("Project description cannot be empty");
+    valid = false;
+  } else if (descTrim.length > 200) {
+    setNewDescError("Project description max 200 chars");
+    valid = false;
+  }
+  const duplicate = projects.some(
+    (p) =>
+      p.workspace_id === currentWsId &&
+      p.name.toLowerCase() === titleTrim.toLowerCase()
+  );
+  if (duplicate) {
+    setNewTitleError("Project name already exists in this workspace");
+    valid = false;
+  }
 
+  return valid;
+};
 
-    if (!descTrim) {
-      setNewDescError("Project description cannot be empty");
-      valid = false;
-    } else if (descTrim.length > 200) {
-      setNewDescError("Project description max 200 chars");
-      valid = false;
-    }
-
-    const duplicate = projects.some(
-      (p) =>
-        p.workspace_id === currentWsId &&
-        p.name.toLowerCase() === titleTrim.toLowerCase()
-    );
-    if (duplicate) {
-      setNewTitleError("Project name already exists in this workspace");
-      valid = false;
-    }
-    return valid;
-  };
 
   const handleCreateProject = () => {
     if (!validateProject(newTitle, newDesc)) return;
@@ -259,57 +270,78 @@ export default function DashboardPage() {
     setOpenEditProject(true);
   };
 
-  const handleUpdateProject = () => {
-    let valid = true;
-    setEditTitleError("");
-    setEditDescError("");
+ const handleUpdateProject = () => {
+  let valid = true;
+  setEditTitleError("");
+  setEditDescError("");
 
-    const titleTrim = editTitle.trim();
-    const descTrim = editDesc.trim();
+  const titleTrim = editTitle.trim();
+  const descTrim = editDesc.trim();
 
-    if (!titleTrim) {
-      setEditTitleError("Project name cannot be empty");
-      valid = false;
-    } else if (titleTrim.length > 50) {
-      setEditTitleError("Project name cannot exceed 50 chars");
-      valid = false;
-    } else if (!/^[A-Za-zÀ-ỹ0-9][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-      setEditTitleError("Must start with a letter, no special chars, single spaces allowed");
-      valid = false;
-    }
+  // --- Validate Name ---
+  if (!titleTrim) {
+    setEditTitleError("Project name cannot be empty");
+    valid = false;
+  } else if (titleTrim.length > 50) {
+    setEditTitleError("Project name cannot exceed 50 chars");
+    valid = false;
+  } else if (/^[0-9]/.test(titleTrim)) {
+    setEditTitleError("Project name cannot start with a number");
+    valid = false;
+  } else if (/ {2,}/.test(titleTrim)) {
+    setEditTitleError("Project name cannot contain multiple spaces");
+    valid = false;
+  } else if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+    setEditTitleError("Only letters, numbers, and spaces allowed (no special characters)");
+    valid = false;
+  }
 
+  // --- Duplicate Name Check ---
+  const duplicate = projects.some(
+    (p) =>
+      p.workspace_id === currentWsId &&
+      p.id !== editId &&
+      p.name.toLowerCase() === titleTrim.toLowerCase()
+  );
+  if (duplicate) {
+    setEditTitleError("Project name already exists in this workspace");
+    valid = false;
+  }
 
-    if (!descTrim) {
-      setEditDescError("Project description cannot be empty");
-      valid = false;
-    } else if (descTrim.length > 200) {
-      setEditDescError("Project description max 200 chars");
-      valid = false;
-    }
+  // --- Validate Description ---
+  if (!descTrim) {
+    setEditDescError("Project description cannot be empty");
+    valid = false;
+  } else if (descTrim.length > 200) {
+    setEditDescError("Project description max 200 chars");
+    valid = false;
+  }
 
-    if (!valid) return;
+  if (!valid) return;
 
-    fetch(`${API_ROOT}/projects/${editId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: editId,
-        name: titleTrim,
-        description: descTrim,
-        workspace_id: currentWsId,
-        updated_at: new Date().toISOString(),
-      }),
+  // --- Update project ---
+  fetch(`${API_ROOT}/projects/${editId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: editId,
+      name: titleTrim,
+      description: descTrim,
+      workspace_id: currentWsId,
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then((res) => res.json())
+    .then((updatedProject) => {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+      );
+      setOpenEditProject(false);
+      toast.success("Project updated successfully");
     })
-      .then((res) => res.json())
-      .then((updatedProject) => {
-        setProjects((prev) =>
-          prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-        );
-        setOpenEditProject(false);
-        toast.success("Project updated successfully");
-      })
-      .catch(() => toast.error("Failed to update project"));
-  };
+    .catch(() => toast.error("Failed to update project"));
+};
+
 
   const openDeleteProjectDialog = (id) => {
     setDeleteProjectId(id);
@@ -401,7 +433,7 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* New Project Dialog */}
+      
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -442,9 +474,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-
-
-      {/* Edit Project Dialog */}
       <Dialog open={openEditProject} onOpenChange={setOpenEditProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -484,8 +513,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-
-      {/* Delete Project */}
       <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
@@ -499,7 +526,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Workspace */}
+    
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
@@ -516,7 +543,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Workspace */}
       <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
