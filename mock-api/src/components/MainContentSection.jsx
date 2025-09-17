@@ -28,6 +28,27 @@ import {
   X
 } from 'lucide-react';
 
+const statusCodeData = [
+  {
+    code: "200",
+    name: "Success Response",
+    isDefault: true,
+    bgColor: "bg-slate-100",
+  },
+  {
+    code: "404",
+    name: "Not Found",
+    isDefault: false,
+    bgColor: "",
+  },
+  {
+    code: "500",
+    name: "Internal Server Error",
+    isDefault: false,
+    bgColor: "",
+  },
+];
+
 const EndpointDetail = () => {
   const [isActive, setIsActive] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -136,6 +157,31 @@ const EndpointDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Status Code Table */}
+        <Card className="p-4 border border-[#CBD5E1] rounded-lg">
+          <h3 className="text-xl font-semibold text-[#37352F] mb-4">Response Configurations</h3>
+          {statusCodeData.map((item, index) => (
+            <div key={index} className={`border-b border-neutral-200 ${item.bgColor} py-4`}>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Badge className={item.code === "200" ? "bg-green-100 text-green-800" : item.code === "404" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800"}>
+                    {item.code}
+                  </Badge>
+                  {item.isDefault && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      Default
+                    </Badge>
+                  )}
+                </div>
+                <Button variant="ghost" size="icon">
+                  <Ellipsis className="h-4 w-4 text-gray-500" />
+                </Button>
+              </div>
+              <div className="text-sm font-medium mt-2">{item.name}</div>
+            </div>
+          ))}
+        </Card>
 
         {/* Main Content */}
         <div className="flex-1 p-8 overflow-y-auto">
@@ -295,61 +341,6 @@ const EndpointDetail = () => {
             </div>
           </Card>
 
-          {/* Frame 71 - Responses Table */}
-          <div className="mt-8 border border-[#CBD5E1] rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-[#37352F] mb-4">Responses</h3>
-            
-            <div className="border border-[#CBD5E1] rounded-md">
-              <div className="grid grid-cols-12 gap-4 p-3 bg-gray-50 rounded-t-md">
-                <div className="col-span-1 text-sm font-medium text-[#0A0A0A]">ID</div>
-                <div className="col-span-3 text-sm font-medium text-[#0A0A0A]">Name</div>
-                <div className="col-span-2 text-sm font-medium text-[#0A0A0A]">Status Code</div>
-                <div className="col-span-4 text-sm font-medium text-[#0A0A0A]">Condition</div>
-                <div className="col-span-2 text-sm font-medium text-[#0A0A0A]">Actions</div>
-              </div>
-              
-              <div className="divide-y divide-[#E5E5E5]">
-                <div className="grid grid-cols-12 gap-4 p-3 items-center">
-                  <div className="col-span-1 text-sm">1</div>
-                  <div className="col-span-3 text-sm">Success</div>
-                  <div className="col-span-2">
-                    <Badge className="bg-green-100 text-green-800 border-0">200</Badge>
-                  </div>
-                  <div className="col-span-4 text-sm text-[#737373]">Default response</div>
-                  <div className="col-span-2 flex space-x-2">
-                    <Button variant="ghost" size="sm" className="h-8">Edit</Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-red-600">Delete</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-12 gap-4 p-3 items-center">
-                  <div className="col-span-1 text-sm">2</div>
-                  <div className="col-span-3 text-sm">Not Found</div>
-                  <div className="col-span-2">
-                    <Badge className="bg-yellow-100 text-yellow-800 border-0">404</Badge>
-                  </div>
-                  <div className="col-span-4 text-sm text-[#737373]">User not found</div>
-                  <div className="col-span-2 flex space-x-2">
-                    <Button variant="ghost" size="sm" className="h-8">Edit</Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-red-600">Delete</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-12 gap-4 p-3 items-center">
-                  <div className="col-span-1 text-sm">3</div>
-                  <div className="col-span-3 text-sm">Unauthorized</div>
-                  <div className="col-span-2">
-                    <Badge className="bg-red-100 text-red-800 border-0">401</Badge>
-                  </div>
-                  <div className="col-span-4 text-sm text-[#737373]">Authentication required</div>
-                  <div className="col-span-2 flex space-x-2">
-                    <Button variant="ghost" size="sm" className="h-8">Edit</Button>
-                    <Button variant="ghost" size="sm" className="h-8 text-red-600">Delete</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
