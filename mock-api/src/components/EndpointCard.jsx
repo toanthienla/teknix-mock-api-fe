@@ -31,14 +31,14 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                 <Badge
                     className={`px-2 py-0.5 text-xs font-semibold ${
                         method === "GET"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
                             : method === "POST"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
                                 : method === "PUT"
-                                    ? "bg-orange-100 text-orange-800"
+                                    ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
                                     : method === "DELETE"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
+                                        ? "bg-red-100 text-red-800 hover:bg-red-100"
+                                        : "bg-gray-100 text-gray-800 hover:bg-gray-100"
                     }`}
                 >
                     {method}

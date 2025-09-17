@@ -44,6 +44,8 @@ export default function Dashboard() {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortOption, setSortOption] = useState("Recently created")
     const [openProjectsMap, setOpenProjectsMap] = useState({}) // track open workspace project lists
+    const [openEndpointsMap, setOpenEndpointsMap] = useState({});
+
     const [query, setQuery] = useState("");
 
     const handleChange = (e) => {
@@ -412,7 +414,7 @@ export default function Dashboard() {
                     projects={projects}
                     endpoints={endpoints}
                     current={currentWsId}
-                    setCurrentWS={setCurrentWsId}
+                    setCurrent={setCurrentWsId}
                     onAddWorkspace={handleAddWorkspace}
                     onEditWorkspace={(id) => {
                         const ws = workspaces.find((w) => w.id === id)
@@ -423,6 +425,8 @@ export default function Dashboard() {
                     onDeleteWorkspace={handleDeleteWorkspace}
                     openProjectsMap={openProjectsMap}
                     setOpenProjectsMap={setOpenProjectsMap}
+                    openEndpointsMap={openEndpointsMap}
+                    setOpenEndpointsMap={setOpenEndpointsMap}
                 />
             </aside>
 
@@ -542,7 +546,7 @@ export default function Dashboard() {
                                             <Dialog open={openNew} onOpenChange={setOpenNew}>
                                                 <Button
                                                     onClick={() => setOpenNew(true)}
-                                                    className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded-md"
+                                                    className="bg-white text-black hover:bg-green-300 px-3 py-1 rounded-md"
                                                 >
                                                     + New Endpoint
                                                 </Button>

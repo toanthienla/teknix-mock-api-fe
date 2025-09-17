@@ -34,6 +34,7 @@ export default function DashboardPage() {
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [endpoints, setEndpoints] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
@@ -49,7 +50,7 @@ export default function DashboardPage() {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
-  const [wsName, setWsName] = useState("");
+  // const [wsName, setWsName] = useState("");
   const [wsError, setWsError] = useState("");
 
   const [newTitle, setNewTitle] = useState("");
@@ -188,7 +189,7 @@ const validateWsName = (name, excludeId = null) => {
 
       toast.success("Workspace and its projects deleted successfully");
     } catch (err) {
-      toast.error("Failed to delete workspace or its projects");
+      toast.error("Failed to delete workspace or its projects: " + err.message);
     }
   };
 const validateProject = (title, desc) => {
