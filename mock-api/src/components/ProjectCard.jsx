@@ -2,9 +2,11 @@ import React, { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import randomColor from "randomcolor";
+import editIcon from "@/assets/Edit Icon.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
 
 export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
-  const { id, name, description } = project; // <-- dùng name thay vì title
+  const { id, name, description } = project;
 
   const bgColor = useMemo(
     () =>
@@ -42,7 +44,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
             onEdit(project);
           }}
         >
-          <Pencil className="w-4 h-4" />
+           <img src={editIcon} alt="edit" className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
@@ -52,7 +54,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
             onDelete(id);
           }}
         >
-          <Trash2 className="w-4 h-4" />
+           <img src={deleteIcon} alt="delete" className="w-4 h-4" />
         </Button>
       </div>
     </div>

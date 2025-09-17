@@ -1,11 +1,11 @@
-  "use client"
+  "use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CheckCircle, AlertTriangle, Info } from "lucide-react";
 import { API_ROOT } from "../utils/constants";
 
 import {
@@ -51,19 +51,12 @@ export default function DashboardPage() {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
-  // const [wsName, setWsName] = useState("");
-  const [wsError, setWsError] = useState("");
-
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [newTitleError, setNewTitleError] = useState("");
-  const [newDescError, setNewDescError] = useState("");
 
   const [editId, setEditId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
-  const [editTitleError, setEditTitleError] = useState("");
-  const [editDescError, setEditDescError] = useState("");
 
   useEffect(() => {
     fetchWorkspaces()
@@ -71,6 +64,24 @@ export default function DashboardPage() {
     fetchEndpoints()
   }, [])
 
+  // -------------------- Toast Config --------------------
+  const toastConfig = {
+    success: { icon: <CheckCircle className="text-green-500" /> },
+    warning: { icon: <AlertTriangle className="text-yellow-500" /> },
+    info: { icon: <Info className="text-blue-500" /> },
+    error: { icon: <AlertTriangle className="text-red-500" /> },
+  };
+
+  const showToast = (type, message) => {
+    toast(message, {
+      ...toastConfig[type] || {},
+      position: "bottom-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+    });
+  };
+
+  // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
@@ -78,14 +89,14 @@ export default function DashboardPage() {
         setWorkspaces(data);
         if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
       })
-      .catch(() => toast.error("Failed to load workspaces"));
+      .catch(() => showToast("error", "Failed to load workspaces"));
   };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => setProjects(data))
-      .catch(() => toast.error("Failed to load projects"));
+      .catch(() => showToast("error", "Failed to load projects"));
   };
 
   const fetchEndpoints = () => {
@@ -94,7 +105,7 @@ export default function DashboardPage() {
         .then((data) => setEndpoints(data))
   }
 
-  // 🔹 filter + sort projects
+  // -------------------- Filtering & Sorting --------------------
   const currentProjects = projects.filter(
     (p) => String(p.workspace_id) === String(currentWsId)
   );
@@ -111,11 +122,12 @@ export default function DashboardPage() {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
-const validateWsName = (name, excludeId = null) => {
+  // -------------------- Workspace --------------------
+  const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
     if (!trimmed) return "Workspace name cannot be empty";
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter (A-Z, a-z, or Vietnamese), no special chars, single spaces allowed";
+      return "Must start with a letter, no special chars, single spaces allowed";
     if (trimmed.length > 20) return "Workspace name max 20 chars";
     if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
       return "Workspace name already exists";
@@ -125,7 +137,7 @@ const validateWsName = (name, excludeId = null) => {
   const handleAddWorkspace = (name) => {
     const err = validateWsName(name);
     if (err) {
-      toast.error(err);
+      showToast("warning", err);
       return;
     }
     fetch(`${API_ROOT}/workspaces`, {
@@ -142,15 +154,15 @@ const validateWsName = (name, excludeId = null) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        toast.success("Workspace created successfully");
+        showToast("success", "Workspace created successfully");
       })
-      .catch(() => toast.error("Failed to create workspace"));
+      .catch(() => showToast("error", "Failed to create workspace"));
   };
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
     if (err) {
-      setWsError(err);
+      showToast("warning", err);
       return;
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
@@ -165,10 +177,9 @@ const validateWsName = (name, excludeId = null) => {
         setOpenEditWs(false);
         setEditWsName("");
         setEditWsId(null);
-        setWsError("");
-        toast.success("Workspace updated successfully");
+        showToast("success", "Workspace updated successfully");
       })
-      .catch(() => toast.error("Failed to update workspace"));
+      .catch(() => showToast("error", "Failed to update workspace"));
   };
 
   const handleDeleteWorkspace = async (id) => {
@@ -176,7 +187,6 @@ const validateWsName = (name, excludeId = null) => {
       const res = await fetch(`${API_ROOT}/projects`);
       const allProjects = await res.json();
       const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
-
 
       await Promise.all(
         projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
@@ -188,62 +198,58 @@ const validateWsName = (name, excludeId = null) => {
       setProjects(prev => prev.filter(p => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
-      toast.success("Workspace and its projects deleted successfully");
-    } catch (err) {
-      toast.error("Failed to delete workspace or its projects: " + err.message);
+      showToast("success", "Workspace and its projects deleted successfully");
+    } catch () {
+      showToast("error", "Failed to delete workspace or its projects");
     }
   };
-const validateProject = (title, desc) => {
-  let valid = true;
-  setNewTitleError("");
-  setNewDescError("");
 
-  const titleTrim = title.trim();
-  const descTrim = desc.trim();
+  // -------------------- Project --------------------
+  const validateProject = (title, desc, editMode = false, editId = null) => {
+    const titleTrim = title.trim();
+    const descTrim = desc.trim();
 
-  if (!titleTrim) {
-    setNewTitleError("Project name cannot be empty");
-    valid = false;
-  } else if (titleTrim.length > 50) {
-    setNewTitleError("Project name cannot exceed 50 chars");
-    valid = false;
-  }
+    if (!titleTrim) {
+      showToast("warning", "Project name cannot be empty");
+      return false;
+    }
+    if (titleTrim.length > 50) {
+      showToast("warning", "Project name cannot exceed 50 chars");
+      return false;
+    }
+    if (/^[0-9]/.test(titleTrim)) {
+      showToast("warning", "Project name cannot start with a number");
+      return false;
+    }
+    if (/ {2,}/.test(titleTrim)) {
+      showToast("warning", "Project name cannot contain multiple spaces");
+      return false;
+    }
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+      showToast("warning", "Only letters, numbers, and spaces allowed (no special characters)");
+      return false;
+    }
+    if (!descTrim) {
+      showToast("info", "Project description cannot be empty");
+      return false;
+    }
+    if (descTrim.length > 200) {
+      showToast("warning", "Project description max 200 chars");
+      return false;
+    }
 
-  else if (/^[0-9]/.test(titleTrim)) {
-    setNewTitleError("Project name cannot start with a number");
-    valid = false;
-  }
-
-  else if (/ {2,}/.test(titleTrim)) {
-    setNewTitleError("Project name cannot contain multiple spaces");
-    valid = false;
-  }
-
-  else if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-    setNewTitleError("Only letters, numbers, and spaces allowed (no special characters)");
-    valid = false;
-  }
-
-  if (!descTrim) {
-    setNewDescError("Project description cannot be empty");
-    valid = false;
-  } else if (descTrim.length > 200) {
-    setNewDescError("Project description max 200 chars");
-    valid = false;
-  }
-  const duplicate = projects.some(
-    (p) =>
-      p.workspace_id === currentWsId &&
-      p.name.toLowerCase() === titleTrim.toLowerCase()
-  );
-  if (duplicate) {
-    setNewTitleError("Project name already exists in this workspace");
-    valid = false;
-  }
-
-  return valid;
-};
-
+    const duplicate = projects.some(
+      (p) =>
+        p.workspace_id === currentWsId &&
+        (!editMode || p.id !== editId) &&
+        p.name.toLowerCase() === titleTrim.toLowerCase()
+    );
+    if (duplicate) {
+      showToast("warning", "Project name already exists in this workspace");
+      return false;
+    }
+    return true;
+  };
 
   const handleCreateProject = () => {
     if (!validateProject(newTitle, newDesc)) return;
@@ -266,92 +272,50 @@ const validateProject = (title, desc) => {
         setNewTitle("");
         setNewDesc("");
         setOpenNewProject(false);
-        toast.success("Project created successfully");
+        showToast("success", "Project created successfully");
       })
-      .catch(() => toast.error("Failed to create project"));
+      .catch(() => showToast("error", "Failed to create project"));
   };
 
   const openEditProjectDialog = (p) => {
     setEditId(p.id);
     setEditTitle(p.name);
     setEditDesc(p.description || "");
-    setEditTitleError("");
-    setEditDescError("");
     setOpenEditProject(true);
   };
 
- const handleUpdateProject = () => {
-  let valid = true;
-  setEditTitleError("");
-  setEditDescError("");
+  const handleUpdateProject = () => {
+    const original = projects.find(p => p.id === editId);
+    if (!original) return;
 
-  const titleTrim = editTitle.trim();
-  const descTrim = editDesc.trim();
-
-  // --- Validate Name ---
-  if (!titleTrim) {
-    setEditTitleError("Project name cannot be empty");
-    valid = false;
-  } else if (titleTrim.length > 50) {
-    setEditTitleError("Project name cannot exceed 50 chars");
-    valid = false;
-  } else if (/^[0-9]/.test(titleTrim)) {
-    setEditTitleError("Project name cannot start with a number");
-    valid = false;
-  } else if (/ {2,}/.test(titleTrim)) {
-    setEditTitleError("Project name cannot contain multiple spaces");
-    valid = false;
-  } else if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-    setEditTitleError("Only letters, numbers, and spaces allowed (no special characters)");
-    valid = false;
-  }
-
-  // --- Duplicate Name Check ---
-  const duplicate = projects.some(
-    (p) =>
-      p.workspace_id === currentWsId &&
-      p.id !== editId &&
-      p.name.toLowerCase() === titleTrim.toLowerCase()
-  );
-  if (duplicate) {
-    setEditTitleError("Project name already exists in this workspace");
-    valid = false;
-  }
-
-  // --- Validate Description ---
-  if (!descTrim) {
-    setEditDescError("Project description cannot be empty");
-    valid = false;
-  } else if (descTrim.length > 200) {
-    setEditDescError("Project description max 200 chars");
-    valid = false;
-  }
-
-  if (!valid) return;
-
-  // --- Update project ---
-  fetch(`${API_ROOT}/projects/${editId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: editId,
-      name: titleTrim,
-      description: descTrim,
-      workspace_id: currentWsId,
-      updated_at: new Date().toISOString(),
-    }),
-  })
-    .then((res) => res.json())
-    .then((updatedProject) => {
-      setProjects((prev) =>
-        prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-      );
+    if (editTitle.trim() === (original.name || "") && editDesc.trim() === (original.description || "")) {
       setOpenEditProject(false);
-      toast.success("Project updated successfully");
-    })
-    .catch(() => toast.error("Failed to update project"));
-};
+      return;
+    }
 
+    if (!validateProject(editTitle, editDesc, true, editId)) return;
+
+    fetch(`${API_ROOT}/projects/${editId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editId,
+        name: editTitle.trim(),
+        description: editDesc.trim(),
+        workspace_id: currentWsId,
+        updated_at: new Date().toISOString(),
+      }),
+    })
+      .then((res) => res.json())
+      .then((updatedProject) => {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+        );
+        setOpenEditProject(false);
+        showToast("success", "Project updated successfully");
+      })
+      .catch(() => showToast("error", "Failed to update project"));
+  };
 
   const openDeleteProjectDialog = (id) => {
     setDeleteProjectId(id);
@@ -365,15 +329,16 @@ const validateProject = (title, desc) => {
         setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
         setDeleteProjectId(null);
         setOpenDeleteProject(false);
-        toast.success("Project deleted successfully");
+        showToast("success", "Project deleted successfully");
       })
-      .catch(() => toast.error("Failed to delete project"));
+      .catch(() => showToast("error", "Failed to delete project"));
   };
 
+  // -------------------- Render --------------------
   return (
     <div className="min-h-screen bg-white text-slate-800">
+      {/* Sidebar + Main */}
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-72 border-r border-slate-100 bg-white">
           <Sidebar
             workspaces={workspaces}
@@ -448,40 +413,45 @@ const validateProject = (title, desc) => {
         </main>
       </div>
 
-
+      {/* Dialogs */}
+      {/* New Project */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>New Project</DialogTitle>
           </DialogHeader>
-
           <div className="mt-2 space-y-4">
             <h3 className="text-sm font-semibold text-slate-700">Project Detail</h3>
-
             <div>
               <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCreateProject();
+                  }
+                }}
                 placeholder="Enter Project Name"
               />
-              {newTitleError && <p className="text-red-600 text-sm mt-1">{newTitleError}</p>}
             </div>
             <div>
               <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
               <Textarea
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleCreateProject();
+                  }
+                }}
                 placeholder="Type Here"
               />
-
-              <p className="text-right text-slate-400 text-xs mt-1">
-                {newDesc.length} / 200
-              </p>
-              {newDescError && <p className="text-red-600 text-sm mt-1">{newDescError}</p>}
+              <p className="text-right text-slate-400 text-xs mt-1">{newDesc.length} / 200</p>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNewProject(false)}>Cancel</Button>
             <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleCreateProject}>Create</Button>
@@ -489,30 +459,45 @@ const validateProject = (title, desc) => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Project */}
       <Dialog open={openEditProject} onOpenChange={setOpenEditProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="mt-2 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
-              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-              {editTitleError && <p className="text-red-600 text-sm mt-1">{editTitleError}</p>}
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleUpdateProject();
+                  }
+                }}
+                placeholder="Enter Project Name"
+              />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mt-2">Description</h3>
-              <Textarea value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
-              <p className="text-right text-slate-400 text-xs mt-1">
-                {editDesc.length} / 200
-              </p>
-              {editDescError && <p className="text-red-600 text-sm mt-1">{editDescError}</p>}
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
+              <Textarea
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleUpdateProject();
+                  }
+                }}
+                placeholder="Type Here"
+              />
+              <p className="text-right text-slate-400 text-xs mt-1">{editDesc.length} / 200</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEditProject(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setOpenEditProject(false)}>Cancel</Button>
             <Button
               className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               onClick={handleUpdateProject}
@@ -524,10 +509,10 @@ const validateProject = (title, desc) => {
               Update
             </Button>
           </DialogFooter>
-
         </DialogContent>
       </Dialog>
 
+      {/* Delete Project */}
       <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
@@ -536,42 +521,65 @@ const validateProject = (title, desc) => {
           <p>Are you sure you want to delete this project?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenDeleteProject(false)}>Cancel</Button>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleDeleteProject}>Delete</Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={handleDeleteProject}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
+      {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle>Edit Workspace</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
-            <Input value={editWsName} onChange={(e) => setEditWsName(e.target.value)} placeholder="Enter Workspace Name" />
-            {wsError && <p className="text-red-600 text-sm mt-1">{wsError}</p>}
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+              <Input
+                value={editWsName}
+                onChange={(e) => setEditWsName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleEditWorkspace();
+                  }
+                }}
+                placeholder="Enter workspace name"
+                autoFocus
+                className="h-10"
+              />
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
+            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Confirm Delete Workspace */}
       <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete this workspace? This will remove all projects inside.</p>
+          <p>Are you sure you want to delete this workspace and all its projects?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => { handleDeleteWorkspace(confirmDeleteWs); setConfirmDeleteWs(null); }}>Delete</Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                handleDeleteWorkspace(confirmDeleteWs);
+                setConfirmDeleteWs(null);
+              }}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} />
+      <ToastContainer position="bottom-right" autoClose={2000} hideProgressBar={false} />
     </div>
   );
 }

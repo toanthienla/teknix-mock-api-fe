@@ -13,15 +13,15 @@ export default function Topbar({ onSearch, onNewProject }) {
   };
 
   return (
-    <div className="flex items-center justify-between mb-6">
-     
-      <div className="flex-1 flex justify-center">
-        <div className="relative w-full max-w-md">
+    <div className="flex items-center justify-between bg-white px-6 py-3 border-b border-slate-200">
+    
+      <div className="flex justify-center flex-1">
+        <div className="relative w-[440px]">
           <Input
-            placeholder="Search projects..."
+            placeholder="Search"
             value={query}
             onChange={handleChange}
-            className="pl-10 pr-4 py-2"
+            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
           />
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
             <Search size={16} />
@@ -29,15 +29,12 @@ export default function Topbar({ onSearch, onNewProject }) {
         </div>
       </div>
 
-     
-      <div className="ml-4">
-        <Button
-          onClick={onNewProject} 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-        >
-          New Project
-        </Button>
-      </div>
+      <Button
+        onClick={onNewProject}
+        className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
+      >
+        New Project
+      </Button>
     </div>
   );
 }
