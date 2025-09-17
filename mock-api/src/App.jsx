@@ -3,6 +3,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
 import ProjectEndpoints from "./pages/ProjectEndpoints.jsx";
+import EndpointDetail from "@/pages/EndpointDetail.jsx";
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,26 +19,14 @@ export default function App() {
                 <Route path="/signup" element={<SignupPage/>}/>
 
                 {/* Dashboard routes */}
-                <Route path="/dashboard" element={<DashboardPage/>}/>
+                <Route path="/dashboard" element={<DashboardPage />}/>
 
-                <Route path="/dashboard/:projectId" element={<ProjectEndpoints/>}>
-                </Route>
+                <Route path="/dashboard/:projectId" element={<ProjectEndpoints/>}/>
 
-                {/*<Route path="test" element={<ProjectEndpoints />} />*/}
+                <Route path="/dashboard/:projectId/endpoint/:endpoint_id" element={<EndpointDetail/>}/>
             </Routes>
 
             <ToastContainer position="bottom-right" autoClose={3000} />
         </>
     );
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route
-        path="/dashboard/:projectId/endpoint/:endpoint_id"
-        element={<EndpointDetail />}
-      />
-    </Routes>
-  );
 }

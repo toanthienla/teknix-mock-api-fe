@@ -8,18 +8,18 @@ import folderIcon from "@/assets/folder-icon.svg";
 import WPIcon from "@/assets/WP.svg";
 
 export default function Sidebar({
-                                  workspaces = [],
-                                  current,
-                                  setCurrent,
-                                  endpoints = [],
-                                  onAddWorkspace,
-                                  onEditWorkspace,
-                                  onDeleteWorkspace,
-                                  projects = [],
-                                  openProjectsMap,
-                                  setOpenProjectsMap,
-                                  openEndpointsMap,
-                                  setOpenEndpointsMap,
+                                    workspaces = [],
+                                    current,
+                                    setCurrent,
+                                    endpoints = [],
+                                    onAddWorkspace,
+                                    onEditWorkspace,
+                                    onDeleteWorkspace,
+                                    projects = [],
+                                    openProjectsMap,
+                                    setOpenProjectsMap,
+                                    openEndpointsMap,
+                                    setOpenEndpointsMap,
                                 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");

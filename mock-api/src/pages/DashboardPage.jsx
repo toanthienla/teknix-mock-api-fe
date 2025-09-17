@@ -335,10 +335,6 @@ export default function DashboardPage() {
       .catch(() => showToast("error", "Failed to delete project"));
   };
 
-  const currentProject = projectId
-    ? projects.find((p) => String(p.id) === String(projectId))
-    : null;
-
   // -------------------- Render --------------------
   return (
     <div className="min-h-screen bg-white text-slate-800">
