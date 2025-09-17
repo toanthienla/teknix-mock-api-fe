@@ -122,11 +122,6 @@ export default function Sidebar({
                                   }}
                                   className="w-4 h-4 text-slate-400"
                               >
-                                <ChevronDown
-                                    className={`transition-transform duration-200 ${
-                                        isOpen ? "rotate-0" : "-rotate-90"
-                                    }`}
-                                />
                               </button>
                             </div>
                           </div>

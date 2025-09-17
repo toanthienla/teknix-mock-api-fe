@@ -214,8 +214,15 @@ export default function Dashboard() {
     useEffect(() => {
         fetchWorkspaces();
         fetchProjects();
-        fetchEndpoints();
+        fetchAllEndpoints();
     }, []);
+
+    useEffect(() => {
+        if (projectId) {
+            fetchEndpoints(projectId);
+        }
+    }, [projectId]);
+
 
     const fetchWorkspaces = () => {
         fetch(`${API_ROOT}/workspaces`)
@@ -232,11 +239,21 @@ export default function Dashboard() {
             .then((data) => setProjects(data))
     }
 
-    const fetchEndpoints = () => {
+    const fetchAllEndpoints = () => {
         fetch(`${API_ROOT}/endpoints`)
             .then((res) => res.json())
             .then((data) => setEndpoints(data))
-    }
+            .catch((err) => console.error("Error fetching all endpoints:", err));
+    };
+
+    const fetchEndpoints = (pid) => {
+        if (!pid) return;
+        fetch(`${API_ROOT}/endpoints?project_id=${pid}`)
+            .then((res) => res.json())
+            .then((data) => setEndpoints(data))
+            .catch((err) => console.error("Error fetching endpoints:", err));
+    };
+
 
     const fetchLogs = () => {
         fetch(`${API_ROOT}/logs`)
@@ -246,12 +263,9 @@ export default function Dashboard() {
     }
 
     // filter + sort endpoints
-    const currentEndpoints = endpoints.filter(
-        (p) => String(p.project_id) === String(projectId)
-    )
-    const filteredEndpoints = currentEndpoints.filter((p) =>
+    const filteredEndpoints = endpoints.filter((p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    );
 
     // sort endpoints based on sortOption
     let sortedEndpoints = [...filteredEndpoints]

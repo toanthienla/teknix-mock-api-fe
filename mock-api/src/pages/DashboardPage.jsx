@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
   const [openProjectsMap, setOpenProjectsMap] = useState({});
+  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
@@ -389,6 +390,8 @@ const validateProject = (title, desc) => {
             onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
             openProjectsMap={openProjectsMap}
             setOpenProjectsMap={setOpenProjectsMap}
+            openEndpointsMap={openEndpointsMap}
+            setOpenEndpointsMap={setOpenEndpointsMap}
           />
         </aside>
 
