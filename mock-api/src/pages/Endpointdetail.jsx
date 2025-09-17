@@ -1,0 +1,1061 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { API_ROOT } from "../utils/constants";
+import Sidebar from "../components/Sidebar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ChevronDown,
+  Search,
+  Plus,
+  Star,
+  Trash2,
+  Upload,
+  Code,
+  X,
+  MoreVerticalIcon,
+  Folder,
+  Globe,
+  Cog,
+  ChevronRight,
+  Ellipsis,
+  Settings,
+  User,
+  Mail,
+  Bell,
+  Menu,
+  GripVertical,
+} from "lucide-react";
+
+// Define the status codes
+const statusCodes = [
+  {
+    code: "100",
+    description: "Continue – Request received, continue with request.",
+  },
+  {
+    code: "101",
+    description:
+      "Switching Protocols – Protocol switching requested by client.",
+  },
+  {
+    code: "102",
+    description: "Processing – Request is being processed (WebDAV).",
+  },
+  { code: "200", description: "OK – Request succeeded." },
+  { code: "201", description: "Created – Resource created successfully." },
+  {
+    code: "202",
+    description:
+      "Accepted – Request accepted for processing (not completed yet).",
+  },
+  {
+    code: "204",
+    description: "No Content – Request succeeded, but no content returned.",
+  },
+  {
+    code: "206",
+    description:
+      "Partial Content – Partial response (used for range requests).",
+  },
+  {
+    code: "301",
+    description: "Moved Permanently – Resource has a new permanent URL.",
+  },
+  { code: "302", description: "Found – Temporary redirect." },
+  { code: "303", description: "See Other – Redirect with GET method." },
+  {
+    code: "304",
+    description: "Not Modified – Cached resource is still valid.",
+  },
+  {
+    code: "307",
+    description: "Temporary Redirect – Same as 302 but method is preserved.",
+  },
+  {
+    code: "308",
+    description: "Permanent Redirect – Same as 301 but method is preserved.",
+  },
+  { code: "400", description: "Bad Request – Invalid request syntax." },
+  { code: "401", description: "Unauthorized – Authentication required." },
+  {
+    code: "403",
+    description: "Forbidden – Client not allowed to access resource.",
+  },
+  { code: "404", description: "Not Found – Resource not found." },
+  {
+    code: "405",
+    description: "Method Not Allowed – HTTP method not supported.",
+  },
+  {
+    code: "408",
+    description: "Request Timeout – Client took too long to send request.",
+  },
+  {
+    code: "409",
+    description: "Conflict – Request conflicts with resource state.",
+  },
+  { code: "410", description: "Gone – Resource is permanently unavailable." },
+  {
+    code: "415",
+    description:
+      "Unsupported Media Type – Server does not support request format.",
+  },
+  { code: "429", description: "Too Many Requests – Rate limiting exceeded." },
+  { code: "500", description: "Internal Server Error – Generic server error." },
+  {
+    code: "501",
+    description: "Not Implemented – Server does not support functionality.",
+  },
+  {
+    code: "502",
+    description: "Bad Gateway – Invalid response from upstream server.",
+  },
+  {
+    code: "503",
+    description:
+      "Service Unavailable – Server temporarily overloaded/unavailable.",
+  },
+  {
+    code: "504",
+    description: "Gateway Timeout – Upstream server took too long.",
+  },
+  {
+    code: "505",
+    description:
+      "HTTP Version Not Supported – Server doesn’t support HTTP version.",
+  },
+];
+
+const DashboardPage = () => {
+  const [isActive, setIsActive] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [responseName, setResponseName] = useState("");
+  const [statusCode, setStatusCode] = useState("");
+  const [headerKey, setHeaderKey] = useState("");
+  const [headerValue, setHeaderValue] = useState("");
+  const [responseBody, setResponseBody] = useState("");
+  const [delay, setDelay] = useState("0");
+  const [workspaces, setWorkspaces] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [currentWsId, setCurrentWsId] = useState(null);
+  const [openProjectsMap, setOpenProjectsMap] = useState({});
+  const [statusData, setStatusData] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [selectedResponse, setSelectedResponse] = useState(null);
+  const [endpointResponses, setEndpointResponses] = useState([]);
+  const [endpoints, setEndpoints] = useState([]);
+  const [currentEndpointId, setCurrentEndpointId] = useState(1); // Default to Get Users endpoint
+  const [editingResponseId, setEditingResponseId] = useState(null); // Lưu ID của response đang chỉnh sửa
+
+  const fetchWorkspaces = () => {
+    fetch(`${API_ROOT}/workspaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        setWorkspaces(data);
+        if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
+      });
+  };
+
+  const fetchProjects = () => {
+    fetch(`${API_ROOT}/projects`)
+      .then((res) => res.json())
+      .then((data) => setProjects(data));
+  };
+
+  const fetchEndpoints = () => {
+    fetch(`${API_ROOT}/endpoints`)
+      .then((res) => res.json())
+      .then((data) => {
+        setEndpoints(data);
+        // Set default endpoint to Get Users (id: 1)
+        if (data.length > 0 && currentEndpointId === null) {
+          setCurrentEndpointId(1);
+        }
+      });
+  };
+
+  const fetchEndpointResponses = () => {
+    // Fetch responses for specific endpoint using query parameter
+    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${currentEndpointId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setEndpointResponses(data);
+
+        // Format data for Response Configurations
+        const statusDataFormatted = data.map((res) => ({
+          id: res.id,
+          code: res.status_code.toString(),
+          name: res.name,
+          isDefault: res.is_default,
+          bgColor: res.is_default ? "bg-slate-100" : "",
+        }));
+
+        setStatusData(statusDataFormatted);
+
+        // Set default selected response
+        if (data.length > 0) {
+          const defaultResponse = data.find((res) => res.is_default) || data[0];
+          setSelectedResponse(defaultResponse);
+          setResponseName(defaultResponse.name);
+          setStatusCode(defaultResponse.status_code.toString());
+          setResponseBody(
+            JSON.stringify(defaultResponse.response_body, null, 2)
+          );
+          setDelay(defaultResponse.delay_ms?.toString() || "0");
+        }
+      });
+  };
+
+  useEffect(() => {
+    fetchWorkspaces();
+    fetchProjects();
+    fetchEndpoints();
+  }, []);
+
+  useEffect(() => {
+    if (currentEndpointId) {
+      fetchEndpointResponses();
+    }
+  }, [currentEndpointId]);
+
+  const handleCreateResponse = () => {
+    // Parse response body từ chuỗi JSON
+    let responseBodyObj = {};
+    try {
+      responseBodyObj = JSON.parse(responseBody);
+    } catch {
+      alert("Invalid JSON in response body");
+      return;
+    }
+
+    // Xác định xem đây có phải là response đầu tiên cho endpoint không
+    const isFirstResponse = endpointResponses.length === 0;
+
+    // Tạo payload
+    const payload = {
+      endpoint_id: currentEndpointId,
+      name: responseName,
+      status_code: parseInt(statusCode),
+      response_body: responseBodyObj,
+      condition: {},
+      is_default: isFirstResponse,
+      delay_ms: parseInt(delay) || 0,
+    };
+
+    // Gửi POST request
+    fetch(`${API_ROOT}/endpoint_responses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to create response");
+        }
+        return res.json();
+      })
+      .then((newResponse) => {
+        console.log("New response created:", newResponse);
+
+        // Đóng dialog
+        setIsDialogOpen(false);
+
+        // Reset form
+        setResponseName("");
+        setStatusCode("200");
+        setHeaderKey("Content-Type");
+        setHeaderValue("application/json");
+        setResponseBody("");
+        setDelay("0");
+
+        // Refresh responses
+        fetchEndpointResponses();
+      })
+      .catch((error) => {
+        console.error("Error creating response:", error);
+        alert("Failed to create response: " + error.message);
+      });
+  };
+
+  const handleUpdateResponse = () => {
+    // Parse response body từ chuỗi JSON
+    let responseBodyObj = {};
+    try {
+      responseBodyObj = JSON.parse(responseBody);
+    } catch {
+      alert("Invalid JSON in response body");
+      return;
+    }
+
+    // Tạo payload
+    const payload = {
+      name: responseName,
+      status_code: parseInt(statusCode),
+      response_body: responseBodyObj,
+      condition: {},
+      is_default: selectedResponse?.is_default || false,
+      delay_ms: parseInt(delay) || 0,
+    };
+
+    // Gửi PUT request
+    fetch(`${API_ROOT}/endpoint_responses/${editingResponseId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to update response");
+        }
+        return res.json();
+      })
+      .then((updatedResponse) => {
+        console.log("Response updated:", updatedResponse);
+
+        // Cập nhật trực tiếp vào state thay vì fetch lại toàn bộ
+        setEndpointResponses((prevResponses) =>
+          prevResponses.map((response) =>
+            response.id === updatedResponse.id ? updatedResponse : response
+          )
+        );
+
+        // Cập nhật statusData
+        setStatusData((prevStatusData) =>
+          prevStatusData.map((status) =>
+            status.id === updatedResponse.id
+              ? {
+                  ...status,
+                  name: updatedResponse.name,
+                  code: updatedResponse.status_code.toString(),
+                }
+              : status
+          )
+        );
+
+        // Cập nhật selectedResponse
+        if (selectedResponse?.id === updatedResponse.id) {
+          setSelectedResponse(updatedResponse);
+        }
+
+        // Đóng dialog
+        setIsDialogOpen(false);
+        setEditingResponseId(null);
+      })
+      .catch((error) => {
+        console.error("Error updating response:", error);
+        alert("Failed to update response: " + error.message);
+      });
+  };
+
+  const handleDeleteResponse = () => {
+    if (!selectedResponse) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this response?"
+    );
+    if (!confirmed) return;
+
+    fetch(`${API_ROOT}/endpoint_responses/${selectedResponse.id}`, {
+      method: "DELETE",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to delete response");
+        }
+        return res.json();
+      })
+      .then(() => {
+        // Fetch lại danh sách responses sau khi xóa
+        fetchEndpointResponses();
+
+        // Nếu không còn response nào, reset form
+        if (endpointResponses.length === 1) {
+          setResponseName("");
+          setStatusCode("");
+          setHeaderKey("");
+          setHeaderValue("");
+          setResponseBody("");
+          setDelay("0");
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting response:", error);
+        alert("Failed to delete response: " + error.message);
+      });
+  };
+
+  const updatePriorities = (priorityUpdates) => {
+    fetch(`${API_ROOT}/endpoint_responses/priority`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(priorityUpdates),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to update priorities");
+        }
+        return res.json();
+      })
+      .then((updatedPriorities) => {
+        console.log("Priorities updated:", updatedPriorities);
+        // Có thể cập nhật state thêm nếu cần
+      })
+      .catch((error) => {
+        console.error("Error updating priorities:", error);
+        // Khôi phục state nếu cập nhật thất bại
+        fetchEndpointResponses();
+      });
+  };
+
+  const setDefaultResponse = (responseId) => {
+    fetch(`${API_ROOT}/endpoint_responses/${responseId}/set_default`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to set default response");
+        }
+        return res.json();
+      })
+      .then((updatedResponses) => {
+        console.log("Default response updated:", updatedResponses);
+
+        // Cập nhật state local với phản hồi từ server
+        setEndpointResponses((prevResponses) =>
+          prevResponses.map((response) => {
+            const updated = updatedResponses.find((r) => r.id === response.id);
+            return updated
+              ? { ...response, is_default: updated.is_default }
+              : response;
+          })
+        );
+
+        setStatusData((prevStatusData) =>
+          prevStatusData.map((status) => {
+            const updated = updatedResponses.find((r) => r.id === status.id);
+            return updated
+              ? { ...status, isDefault: updated.is_default }
+              : status;
+          })
+        );
+
+        // Cập nhật selectedResponse nếu cần
+        if (
+          selectedResponse &&
+          updatedResponses.some((r) => r.id === selectedResponse.id)
+        ) {
+          const updatedSelected = updatedResponses.find(
+            (r) => r.id === selectedResponse.id
+          );
+          setSelectedResponse({
+            ...selectedResponse,
+            is_default: updatedSelected.is_default,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error setting default response:", error);
+        // Khôi phục state nếu cập nhật thất bại
+        fetchEndpointResponses();
+      });
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+
+    if (draggedItem !== null && draggedItem !== dropIndex) {
+      const newStatusData = [...statusData];
+      const draggedItemContent = { ...newStatusData[draggedItem] };
+
+      // Xóa item khỏi vị trí cũ
+      newStatusData.splice(draggedItem, 1);
+      // Chèn item vào vị trí mới
+      newStatusData.splice(dropIndex, 0, draggedItemContent);
+
+      // Cập nhật state local ngay lập tức để UI phản hồi nhanh
+      setStatusData(newStatusData);
+
+      // Tạo payload cho cập nhật priority
+      const priorityUpdates = newStatusData.map((item, index) => ({
+        id: item.id,
+        endpoint_id: currentEndpointId,
+        priority: index + 1,
+      }));
+
+      // Cập nhật priority trên server
+      updatePriorities(priorityUpdates);
+
+      // Nếu item được kéo lên vị trí đầu tiên, set làm default response
+      if (dropIndex === 0) {
+        setDefaultResponse(draggedItemContent.id);
+      }
+    }
+
+    setDraggedItem(null);
+  };
+
+  const handleResponseSelect = (response) => {
+    // Use the detailed fetch instead of direct assignment
+    fetchEndpointResponseDetail(response.id);
+  };
+
+  const fetchEndpointResponseDetail = (responseId) => {
+    fetch(`${API_ROOT}/endpoint_responses/${responseId}`)
+      .then((res) => res.json())
+      .then((responseDetail) => {
+        setSelectedResponse(responseDetail);
+        setEditingResponseId(responseId); // Lưu ID của response đang chỉnh sửa
+        setResponseName(responseDetail.name);
+        setStatusCode(responseDetail.status_code.toString());
+        setResponseBody(JSON.stringify(responseDetail.response_body, null, 2));
+        setDelay(responseDetail.delay_ms?.toString() || "0");
+      })
+      .catch((error) => {
+        console.error("Error fetching response detail:", error);
+      });
+  };
+
+  const handleSaveResponse = () => {
+    if (editingResponseId) {
+      handleUpdateResponse();
+    } else {
+      handleCreateResponse();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white text-slate-800 flex">
+      {/* Sidebar */}
+      <aside className="w-72 border-r border-slate-100 bg-white">
+        <Sidebar
+          workspaces={workspaces}
+          projects={projects}
+          current={currentWsId}
+          setCurrent={setCurrentWsId}
+          onAddWorkspace={(name) => {
+            if (!name.trim()) return;
+            fetch(`${API_ROOT}/workspaces`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }),
+            })
+              .then((res) => res.json())
+              .then((createdWs) => {
+                setWorkspaces((prev) => [...prev, createdWs]);
+                setCurrentWsId(createdWs.id);
+                setOpenProjectsMap((prev) => ({
+                  ...prev,
+                  [createdWs.id]: true,
+                }));
+              });
+          }}
+          onEditWorkspace={(id) => {
+            const ws = workspaces.find((w) => w.id === id);
+            if (!ws) return;
+            const name = prompt("Edit workspace name", ws.name);
+            if (name)
+              fetch(`${API_ROOT}/workspaces/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name,
+                  updated_at: new Date().toISOString(),
+                }),
+              }).then(() =>
+                setWorkspaces((prev) =>
+                  prev.map((w) => (w.id === id ? { ...w, name } : w))
+                )
+              );
+          }}
+          onDeleteWorkspace={(id) => {
+            const confirmed = window.confirm(
+              "Are you sure you want to delete this workspace and all its projects?"
+            );
+            if (!confirmed) return;
+            fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" }).then(
+              () => {
+                setWorkspaces((prev) => prev.filter((w) => w.id !== id));
+                setProjects((prev) =>
+                  prev.filter((p) => p.workspace_id !== id)
+                );
+                if (currentWsId === id) setCurrentWsId(null);
+              }
+            );
+          }}
+          openProjectsMap={openProjectsMap}
+          setOpenProjectsMap={setOpenProjectsMap}
+        />
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 p-8 overflow-y-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="relative w-96">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search all portals"
+              className="pl-10 bg-[#F1F5F9] border-0"
+            />
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button
+              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" /> New response
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={isActive}
+                onCheckedChange={setIsActive}
+                className="data-[state=checked]:bg-[#2563EB]"
+              />
+              <Label className="text-sm font-medium text-[#0A0A0A]">
+                Is Active
+              </Label>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-transparent">
+              <TabsTrigger
+                value="summary"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+              >
+                Summary
+              </TabsTrigger>
+              <TabsTrigger
+                value="submissions"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+              >
+                Submissions
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="summary" className="mt-4">
+              <div className="border-b-2 border-[#37352F] w-20"></div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="flex gap-6">
+          {/* Response Configurations Card */}
+          <div className="w-1/3">
+            <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
+                <h3 className="text-lg font-semibold text-[#37352F]">
+                  Response Configurations
+                </h3>
+              </div>
+
+              <div className="p-4">
+                <div className="rounded-md border border-solid border-slate-300">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                        <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                          <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                              Status Code
+                            </div>
+                          </div>
+                        </TableHead>
+                        <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                          <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                            <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                                Name Response
+                              </div>
+                            </div>
+                          </div>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {statusData.map((status, index) => (
+                        <TableRow
+                          key={status.id || status.code}
+                          className={`${
+                            status.isDefault ? "bg-slate-100" : ""
+                          } border-b [border-bottom-style:solid] border-neutral-200 ${
+                            index === statusData.length - 1 ? "border-b-0" : ""
+                          } ${draggedItem === index ? "opacity-50" : ""} ${
+                            selectedResponse?.id === status.id
+                              ? "ring-2 ring-blue-500"
+                              : ""
+                          }`}
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={handleDragOver}
+                          onDragEnd={() => setDraggedItem(null)}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onClick={() => {
+                            const response = endpointResponses.find(
+                              (r) => r.id === status.id
+                            );
+                            if (response) handleResponseSelect(response);
+                          }}
+                        >
+                          <TableCell className="w-[119.2px] h-[49px] p-2">
+                            <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                {status.code}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                            <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                {status.name}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Endpoint Detail Card */}
+          <div className="w-2/3">
+            <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center">
+                  <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                    {endpoints.find((ep) => ep.id === currentEndpointId)
+                      ?.name || "Endpoint"}
+                  </h2>
+                  <Badge
+                    variant="outline"
+                    className="bg-[#D5FBD3] text-[#000000] border-0"
+                  >
+                    {endpoints.find((ep) => ep.id === currentEndpointId)
+                      ?.method || "GET"}
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="border-[#E5E5E5]"
+                    onClick={() => {
+                      if (selectedResponse) {
+                        setDefaultResponse(selectedResponse.id);
+                      }
+                    }}
+                  >
+                    <Star
+                      className={`h-4 w-4 ${
+                        selectedResponse?.is_default
+                          ? "text-yellow-500 fill-yellow-500"
+                          : "text-[#898883]"
+                      }`}
+                    />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="border-[#E5E5E5]"
+                    onClick={handleDeleteResponse}
+                  >
+                    <Trash2 className="h-4 w-4 text-[#898883]" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Status Info */}
+              <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
+                <p className="text-[#777671] font-medium">
+                  Status: This endpoint is active and receiving requests
+                </p>
+              </div>
+
+              {/* Form */}
+              <div className="space-y-6">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="response-name"
+                    className="text-right text-sm font-medium text-[#000000]"
+                  >
+                    Response Name
+                  </Label>
+                  <Input
+                    id="response-name"
+                    value={responseName}
+                    onChange={(e) => setResponseName(e.target.value)}
+                    className="col-span-3 border-[#CBD5E1] rounded-md"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="status-code"
+                    className="text-right text-sm font-medium text-[#000000]"
+                  >
+                    Status Code
+                  </Label>
+                  <Input
+                    id="status-code"
+                    value={statusCode}
+                    onChange={(e) => setStatusCode(e.target.value)}
+                    className="col-span-3 border-[#CBD5E1] rounded-md"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="response-header"
+                    className="text-right text-sm font-medium text-[#000000]"
+                  >
+                    Response Header
+                  </Label>
+                  <div className="col-span-3 flex space-x-2">
+                    <Input
+                      id="header-key"
+                      placeholder="Key"
+                      value={headerKey}
+                      onChange={(e) => setHeaderKey(e.target.value)}
+                      className="border-[#CBD5E1] rounded-md"
+                    />
+                    <Input
+                      id="header-value"
+                      placeholder="Value"
+                      value={headerValue}
+                      onChange={(e) => setHeaderValue(e.target.value)}
+                      className="border-[#CBD5E1] rounded-md"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4">
+                  <Label
+                    htmlFor="response-body"
+                    className="text-right pt-2 text-sm font-medium text-[#000000]"
+                  >
+                    Response Body
+                  </Label>
+                  <div className="col-span-3 space-y-2">
+                    <Textarea
+                      id="response-body"
+                      value={responseBody}
+                      onChange={(e) => setResponseBody(e.target.value)}
+                      className="font-mono h-60 border-[#CBD5E1] rounded-md"
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#E5E5E5]"
+                      >
+                        <Upload className="mr-2 h-4 w-4" /> Upload
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#E5E5E5]"
+                      >
+                        <Code className="mr-2 h-4 w-4" /> Format
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="delay"
+                    className="text-right text-sm font-medium text-[#000000]"
+                  >
+                    Delay (ms)
+                  </Label>
+                  <Input
+                    id="delay"
+                    value={delay}
+                    onChange={(e) => setDelay(e.target.value)}
+                    className="col-span-3 border-[#CBD5E1] rounded-md"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                    onClick={handleSaveResponse}
+                  >
+                    {editingResponseId ? "Update Response" : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* New Response Dialog */}
+        {isDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingResponseId ? "Edit Response" : "Create New Response"}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <Label
+                    htmlFor="new-response-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Response Name
+                  </Label>
+                  <Input
+                    id="new-response-name"
+                    placeholder="Enter response name"
+                    value={responseName}
+                    onChange={(e) => setResponseName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="new-status-code"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Status Code
+                  </Label>
+                  <select
+                    id="new-status-code"
+                    value={statusCode}
+                    onChange={(e) => setStatusCode(e.target.value)}
+                    className="w-full p-2 border border-[#CBD5E1] rounded-md"
+                  >
+                    {statusCodes.map((status) => (
+                      <option key={status.code} value={status.code}>
+                        {status.code} - {status.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Label className="block text-sm font-medium text-gray-700 mb-2">
+                    Header
+                  </Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Key"
+                      value={headerKey}
+                      onChange={(e) => setHeaderKey(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Value"
+                      value={headerValue}
+                      onChange={(e) => setHeaderValue(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="new-response-body"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Body
+                  </Label>
+                  <Textarea
+                    id="new-response-body"
+                    placeholder="Enter response body"
+                    value={responseBody}
+                    onChange={(e) => setResponseBody(e.target.value)}
+                    className="h-32 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="new-delay"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Delay (ms)
+                  </Label>
+                  <Input
+                    id="new-delay"
+                    placeholder="0"
+                    value={delay}
+                    onChange={(e) => setDelay(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setEditingResponseId(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveResponse}>
+                    {editingResponseId ? "Update" : "Create"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;

@@ -29,4 +29,15 @@ export default function App() {
             <ToastContainer position="bottom-right" autoClose={3000} />
         </>
     );
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route
+        path="/dashboard/:projectId/endpoint/:endpoint_id"
+        element={<EndpointDetail />}
+      />
+    </Routes>
+  );
 }

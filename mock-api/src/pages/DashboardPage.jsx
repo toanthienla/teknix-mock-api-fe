@@ -260,6 +260,7 @@ export default function DashboardPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -333,6 +334,10 @@ export default function DashboardPage() {
       })
       .catch(() => showToast("error", "Failed to delete project"));
   };
+
+  const currentProject = projectId
+    ? projects.find((p) => String(p.id) === String(projectId))
+    : null;
 
   // -------------------- Render --------------------
   return (
