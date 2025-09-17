@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Grid, Folder, Pencil, Trash2, Plus, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 export default function Sidebar({
   workspaces = [],
   current,
-  setCurrentWS,
+  setCurrent,
   onAddWorkspace,
   onEditWorkspace,
   onDeleteWorkspace,
@@ -17,8 +16,7 @@ export default function Sidebar({
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
-  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
-
+  const [isWsOpen, setIsWsOpen] = useState(true);
 
   const navigate = useNavigate();
 
@@ -46,164 +44,142 @@ export default function Sidebar({
 
   return (
     <div className="p-6 flex flex-col h-screen">
-      <div className="text-2xl font-bold mb-6"
-           onClick={() => navigate("/dashboard")}>
-        MockAPI
+
+      <div
+        className="flex items-center justify-between text-2xl font-bold mb-6 cursor-pointer select-none"
+        onClick={() => setIsWsOpen(!isWsOpen)}
+      >
+        <span>MockAPI</span>
+        <ChevronDown
+          className={`w-5 h-5 transition-transform duration-200 ${
+            isWsOpen ? "rotate-0" : "-rotate-90"
+          }`}
+        />
       </div>
 
-      <div className="text-sm text-slate-600 mb-2 font-medium">WORKSPACES</div>
 
-      <nav className="flex-1 overflow-auto">
-        <ul className="space-y-1">
-          {workspaces.map((ws) => {
-            const active = current === ws.id;
-            const isOpen = openProjectsMap[ws.id] || false;
+      {isWsOpen && (
+        <>
+          <div className="text-sm text-slate-600 mb-2 font-medium">WORKSPACES</div>
+          <nav className="flex-1 overflow-auto">
+            <ul className="space-y-1">
+              {workspaces.map((ws) => {
+                const active = current === ws.id;
+                const isOpen = openProjectsMap[ws.id] || false;
 
-            const wsProjects = projects.filter(
-              (p) => String(p.workspace_id) === String(ws.id)
-            );
+                const wsProjects = projects.filter(
+                  (p) => String(p.workspace_id) === String(ws.id)
+                );
 
-            return (
-              <li key={ws.id} className="group">
-                <div
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md cursor-pointer ${
-                    active
-                      ? "bg-slate-100 font-medium"
-                      : "hover:bg-slate-50 text-slate-700"
-                  }`}
-                  onClick={() => {
-                    setCurrentWS(ws.id);
-                    navigate("/dashboard");
-                  }}
-                >
-                  <span className="flex items-center gap-3">
-                    <Grid className="w-4 h-4" />
-                    <span>{ws.name}</span>
-                  </span>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditWorkspace(ws.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-700"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteWorkspace(ws.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform ${
-                        isOpen ? "rotate-180" : ""
+                return (
+                  <li key={ws.id} className="group">
+                    <div
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md cursor-pointer ${
+                        active ? "bg-slate-100 font-medium" : "hover:bg-slate-50 text-slate-700"
                       }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleProjects(ws.id);
+                    >
+
+                      <span
+                        className="flex items-center gap-3"
+                        onClick={() => setCurrent(ws.id)}
+                      >
+                        <Grid className="w-4 h-4" />
+                        <span>{ws.name}</span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditWorkspace(ws);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-700"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteWorkspace(ws.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-black hover:text-slate-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProjects(ws.id);
+                          }}
+                          className="w-4 h-4 text-slate-400"
+                        >
+                          <ChevronDown
+                            className={`transition-transform duration-200 ${
+                              isOpen ? "rotate-0" : "-rotate-90"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    {isOpen && wsProjects.length > 0 && (
+                      <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
+                        {wsProjects.map((p) => (
+                          <div
+                            key={p.id}
+                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
+                            onClick={() => navigate(`/dashboard/${p.id}`)}
+                          >
+                            <Folder className="w-4 h-4 text-slate-400" />
+                            {p.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+
+              <li className="mt-2">
+                {isAdding ? (
+                  <div className="relative w-full">
+                    <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      autoFocus
+                      placeholder="Type workspace name..."
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAdd();
+                        if (e.key === "Escape") {
+                          setIsAdding(false);
+                          setNewName("");
+                        }
                       }}
+                      onBlur={() => {
+                        setIsAdding(false);
+                        setNewName("");
+                      }}
+                      className="pl-8"
                     />
                   </div>
-                </div>
-
-                {isOpen && wsProjects.length > 0 && (
-                  <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
-                    {wsProjects.map((p) => (
-                        <div
-                            key={p.id}
-                            className="flex flex-col"
-                        >
-                          <div
-                              className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
-                              onClick={() => toggleEndpoints(p.id)}
-                          >
-                            <div className="flex items-center gap-2"
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   navigate(`/dashboard/${p.id}`)
-                                 }}>
-                              <Folder className="w-4 h-4 text-slate-400" />
-                              {p.name}
-                            </div>
-                            <ChevronDown
-                                className={`w-4 h-4 text-slate-400 transition-transform ${
-                                    openEndpointsMap[p.id] ? "rotate-180" : ""
-                                }`}
-                            />
-                          </div>
-
-                          {openEndpointsMap[p.id] && (
-                              <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
-                                {endpoints
-                                    .filter((ep) => String(ep.project_id) === String(p.id))
-                                    .map((ep) => (
-                                        <div
-                                            key={ep.id}
-                                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
-                                            onClick={() => navigate(`/dashboard/${p.id}/endpoints/${ep.id}`)}
-                                        >
-                                          <span
-                                              className={`px-1 py-0.5 rounded text-[10px] font-medium ${
-                                                ep.method === "GET" ? "bg-green-100 text-green-700" 
-                                                    : ep.method === "POST" ? "bg-blue-100 text-blue-700"
-                                                        : ep.method === "PUT" ? "bg-orange-100 text-orange-700" 
-                                                            : "bg-red-100 text-red-700"
-                                              }`}
-                                          >
-                                            {ep.method}
-                                          </span>
-                                          {ep.name}
-                                        </div>
-                                    ))}
-                              </div>
-                          )}
-                        </div>
-                    ))}
+                ) : (
+                  <div
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 text-black"
+                    onClick={() => setIsAdding(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>New Workspace</span>
                   </div>
                 )}
               </li>
-            );
-          })}
-
-          <li className="mt-2">
-            {isAdding ? (
-              <Input
-                autoFocus
-                placeholder="Workspace name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd();
-                  if (e.key === "Escape") {
-                    setIsAdding(false);
-                    setNewName("");
-                  }
-                }}
-                onBlur={() => {
-                  setIsAdding(false);
-                  setNewName("");
-                }}
-                className="w-full"
-              />
-            ) : (
-              <Button
-                variant="link"
-                className="w-full flex items-center gap-3 text-blue-600"
-                onClick={() => setIsAdding(true)}
-              >
-                <Plus className="w-4 h-4" />
-                New Workspace
-              </Button>
-            )}
-          </li>
-        </ul>
-      </nav>
+            </ul>
+          </nav>
+        </>
+      )}
     </div>
   );
 }
