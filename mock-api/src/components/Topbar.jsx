@@ -14,7 +14,7 @@ export default function Topbar({ onSearch, onNewProject }) {
 
   return (
     <div className="flex items-center justify-between bg-white px-6 py-3 border-b border-slate-200">
-    
+
       <div className="flex justify-center flex-1">
         <div className="relative w-[440px]">
           <Input

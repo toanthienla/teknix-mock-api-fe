@@ -260,6 +260,7 @@ export default function DashboardPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

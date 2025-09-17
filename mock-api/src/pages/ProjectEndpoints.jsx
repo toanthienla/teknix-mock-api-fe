@@ -47,6 +47,11 @@ export default function Dashboard() {
     const [openProjectsMap, setOpenProjectsMap] = useState({}) // track open workspace project lists
     const [openEndpointsMap, setOpenEndpointsMap] = useState({});
 
+    const [openEditWs, setOpenEditWs] = useState(false);
+    const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
+    const [editWsId, setEditWsId] = useState(null);
+    const [editWsName, setEditWsName] = useState("");
+
     const [query, setQuery] = useState("");
 
     const handleChange = (e) => {
@@ -281,66 +286,87 @@ export default function Dashboard() {
         sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name))
     }
 
-    // workspace actions
+    // -------------------- Workspace --------------------
+    const validateWsName = (name, excludeId = null) => {
+        const trimmed = name.trim();
+        if (!trimmed) return "Workspace name cannot be empty";
+        if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
+            return "Must start with a letter, no special chars, single spaces allowed";
+        if (trimmed.length > 20) return "Workspace name max 20 chars";
+        if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
+            return "Workspace name already exists";
+        return "";
+    };
+
     const handleAddWorkspace = (name) => {
-        if (!name.trim()) return
-
-        // Tự động tăng id
-        const maxId = workspaces.length > 0 ? Math.max(...workspaces.map(w => Number(w.id))) : 0
-        const newId = maxId + 1
-
-        const newWs = {
-            id: newId,
-            name,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+        const err = validateWsName(name);
+        if (err) {
+            toast.warning(err);
+            return;
         }
-
         fetch(`${API_ROOT}/workspaces`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(newWs),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name.trim(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            }),
         })
             .then((res) => res.json())
             .then((createdWs) => {
-                setWorkspaces((prev) => [...prev, createdWs])
-                setCurrentWsId(createdWs.id)
-                setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true})) // mở workspace mới
-
+                setWorkspaces((prev) => [...prev, createdWs]);
+                setCurrentWsId(createdWs.id);
+                setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
                 toast.success("Create workspace successfully!");
-            }) .catch((error) => {
-                console.error("Error creating workspace:", error.message);
-                toast.error("Failed to create workspace!");
-        })
-    }
+            })
+            .catch(() => toast.error("Failed to create workspace"));
+    };
 
-    const handleEditWorkspace = (id, name) => {
-        fetch(`${API_ROOT}/workspaces/${id}`, {
+    const handleEditWorkspace = () => {
+        const err = validateWsName(editWsName, editWsId);
+        if (err) {
+            toast.warning(err);
+            return;
+        }
+        fetch(`${API_ROOT}/workspaces/${editWsId}`, {
             method: "PUT",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({name, updated_at: new Date().toISOString()}),
-        }).then(() => {
-            setWorkspaces((prev) =>
-                prev.map((w) => (w.id === id ? {...w, name} : w))
-            )
-            toast.success("Update workspace successfully!");
-        }) .catch((error) => {
-            console.error("Error updating workspace:", error.message);
-            toast.error("Failed to update workspace!");
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: editWsName.trim(), updated_at: new Date().toISOString() }),
         })
-    }
+            .then(() => {
+                setWorkspaces((prev) =>
+                    prev.map((w) => (w.id === editWsId ? { ...w, name: editWsName.trim() } : w))
+                );
+                setOpenEditWs(false);
+                setEditWsName("");
+                setEditWsId(null);
+                toast.success("Update workspace successfully!");
+            })
+            .catch(() => toast.error("Failed to update workspace"));
+    };
 
-    const handleDeleteWorkspace = (id) => {
-        fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"}).then(() => {
-            setWorkspaces((prev) => prev.filter((w) => w.id !== id))
-            if (currentWsId === id) setCurrentWsId(null)
+    const handleDeleteWorkspace = async (id) => {
+        try {
+            const res = await fetch(`${API_ROOT}/projects`);
+            const allProjects = await res.json();
+            const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
+
+            await Promise.all(
+                projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
+            );
+
+            await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+
+            setWorkspaces(prev => prev.filter(w => w.id !== id));
+            setProjects(prev => prev.filter(p => p.workspace_id !== id));
+            if (currentWsId === id) setCurrentWsId(null);
 
             toast.success("Delete workspace successfully!");
-        }) .catch((error) => {
-            console.error("Error deleting workspace:", error.message);
+        } catch {
             toast.error("Failed to delete workspace!");
-        })
-    }
+        }
+    };
 
     // create endpoint
     const handleCreateEndpoint = () => {
@@ -451,13 +477,12 @@ export default function Dashboard() {
                     current={currentWsId}
                     setCurrent={setCurrentWsId}
                     onAddWorkspace={handleAddWorkspace}
-                    onEditWorkspace={(id) => {
-                        const ws = workspaces.find((w) => w.id === id)
-                        if (!ws) return
-                        const name = prompt("Edit workspace name", ws.name)
-                        if (name) handleEditWorkspace(id, name)
+                    onEditWorkspace={(ws) => {
+                        setEditWsId(ws.id);
+                        setEditWsName(ws.name);
+                        setOpenEditWs(true);
                     }}
-                    onDeleteWorkspace={handleDeleteWorkspace}
+                    onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
                     openProjectsMap={openProjectsMap}
                     setOpenProjectsMap={setOpenProjectsMap}
                     openEndpointsMap={openEndpointsMap}
@@ -663,7 +688,7 @@ export default function Dashboard() {
                                                 endpoint={e}
                                                 onEdit={() => openEditEndpoint(e)}
                                                 onDelete={() => handleDeleteEndpoint(e.id)}
-                                                onClick={() => navigate(`/dashboard/${projectId}/${e.id}`)}
+                                                onClick={() => navigate(`/dashboard/${projectId}/endpoint/${e.id}`)}
                                             />
                                         ))
                                     ) : (
@@ -719,6 +744,59 @@ export default function Dashboard() {
                                                 className="bg-blue-600 text-white hover:bg-blue-700"
                                                 onClick={handleUpdateEndpoint}>
                                                 Update
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+
+                                {/* Edit Workspace */}
+                                <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
+                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                                        <DialogHeader>
+                                            <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="mt-2 space-y-4">
+                                            <div>
+                                                <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+                                                <Input
+                                                    value={editWsName}
+                                                    onChange={(e) => setEditWsName(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            handleEditWorkspace();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter workspace name"
+                                                    autoFocus
+                                                    className="h-10"
+                                                />
+                                            </div>
+                                        </div>
+                                        <DialogFooter className="mt-4">
+                                            <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
+                                            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+
+                                {/* Confirm Delete Workspace */}
+                                <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>Delete Workspace</DialogTitle>
+                                        </DialogHeader>
+                                        <p>Are you sure you want to delete this workspace and all its projects?</p>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
+                                            <Button
+                                                className="bg-red-600 text-white hover:bg-red-700"
+                                                onClick={() => {
+                                                    handleDeleteWorkspace(confirmDeleteWs);
+                                                    setConfirmDeleteWs(null);
+                                                }}
+                                            >
+                                                Delete
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>
