@@ -39,6 +39,7 @@ export default function Dashboard() {
 
     const [workspaces, setWorkspaces] = useState([])
     const [projects, setProjects] = useState([])
+    const [allEndpoints, setAllEndpoints] = useState([])
     const [endpoints, setEndpoints] = useState([])
     const [currentWsId, setCurrentWsId] = useState(null)
     const [searchTerm, setSearchTerm] = useState("")
@@ -242,7 +243,7 @@ export default function Dashboard() {
     const fetchAllEndpoints = () => {
         fetch(`${API_ROOT}/endpoints`)
             .then((res) => res.json())
-            .then((data) => setEndpoints(data))
+            .then((data) => setAllEndpoints(data))
             .catch((err) => console.error("Error fetching all endpoints:", err));
     };
 
@@ -446,7 +447,7 @@ export default function Dashboard() {
                 <Sidebar
                     workspaces={workspaces}
                     projects={projects}
-                    endpoints={endpoints}
+                    endpoints={allEndpoints}
                     current={currentWsId}
                     setCurrent={setCurrentWsId}
                     onAddWorkspace={handleAddWorkspace}

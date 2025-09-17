@@ -199,7 +199,7 @@ export default function DashboardPage() {
       if (currentWsId === id) setCurrentWsId(null);
 
       showToast("success", "Workspace and its projects deleted successfully");
-    } catch () {
+    } catch {
       showToast("error", "Failed to delete workspace or its projects");
     }
   };
