@@ -85,59 +85,59 @@ export default function Dashboard() {
     const validateCreateEndpoint = (name, path, method) => {
         // Validate endpoint name
         if (!name.trim()) {
-            toast.error("Name is required");
+            toast.info("Name is required");
             return false;
         }
         if (name.trim().length > 20) {
-            toast.error("Name must be less than 20 characters");
+            toast.info("Name must be less than 20 characters");
             return false;
         }
         if (!validName.test(name)) {
-            toast.error("Name must start with a letter and contain only letters, numbers, a space, underscores and dashes");
+            toast.info("Name must start with a letter and contain only letters, numbers, a space, underscores and dashes");
             return false;
         }
         const duplicateName = endpoints.some(
             (ep) =>
-                ep.project_id === projectId &&
+                String(ep.project_id) === String(projectId) &&
                 ep.name.toLowerCase() === name.toLowerCase()
             );
         if (duplicateName) {
-            toast.error("Name already exists");
+            toast.warning("Name already exists");
             return false;
         }
 
         // Validate Path
         if (!path.trim()) {
-            toast.error("Path is required");
+            toast.info("Path is required");
             return false;
         }
         if (!path.startsWith("/")) {
-            toast.error("Path must start with '/'");
+            toast.info("Path must start with '/'");
             return false;
         }
         if (path.length > 1 && path.endsWith("/")) {
-            toast.error("Path must not end with '/'");
+            toast.info("Path must not end with '/'");
             return false;
         }
         if (!validPath.test(path.trim())) {
-            toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
+            toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
             return false;
         }
         // Check duplicate path + method
         const duplicateEndpoint = endpoints.some(
             (ep) =>
-                ep.project_id === projectId &&
-                ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
+                String(ep.project_id) === String(projectId) &&
+                ep.path.trim() === path.trim() &&
                 ep.method.toUpperCase() === method.toUpperCase()
         );
         if (duplicateEndpoint) {
-            toast.error(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
+            toast.warning(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
             return false;
         }
 
         // Validate method
         if (!method) {
-            toast.error("Method is required");
+            toast.info("Method is required");
             return false;
         }
 
@@ -148,62 +148,62 @@ export default function Dashboard() {
     const validateEditEndpoint = (id, name, path, method) => {
         // Validate endpoint name
         if (!name.trim()) {
-            toast.error("Name is required");
+            toast.info("Name is required");
             return false;
         }
         if (name.trim().length > 20) {
-            toast.error("Name must be less than 20 characters");
+            toast.info("Name must be less than 20 characters");
             return false;
         }
         if (!validName.test(name.trim())) {
-            toast.error("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
+            toast.info("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
             return false;
         }
         const duplicateName = endpoints.find(
             (ep) =>
                 ep.id !== id &&
-                ep.project_id === projectId &&
+                String(ep.project_id) === String(projectId) &&
                 ep.name.toLowerCase() === name.toLowerCase()
         );
         if (duplicateName) {
-            toast.error("Name already exists");
+            toast.warning("Name already exists");
             return false;
         }
 
         // Validate path
         if (!path.trim()) {
-            toast.error("Path is required");
+            toast.info("Path is required");
             return false;
         }
         if (!path.startsWith("/")) {
-            toast.error("Path must start with '/'");
+            toast.info("Path must start with '/'");
             return false;
         }
         if (path.length > 1 && path.endsWith("/")) {
-            toast.error("Path must not end with '/'");
+            toast.info("Path must not end with '/'");
             return false;
         }
 
         if (!validPath.test(path.trim())) {
-            toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
+            toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
             return false;
         }
 
         const duplicateEndpoint = endpoints.some(
             (ep) =>
                 ep.id !== id &&
-                ep.project_id === projectId &&
-                ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
+                String(ep.project_id) === String(projectId) &&
+                ep.path.trim() === path.trim() &&
                 ep.method.toUpperCase() === method.toUpperCase()
         );
         if (duplicateEndpoint) {
-            toast.error(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
+            toast.warning(`Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`);
             return false;
         }
 
         // Validate method
         if (!method) {
-            toast.error("Method is required");
+            toast.info("Method is required");
             return false;
         }
 
@@ -291,7 +291,12 @@ export default function Dashboard() {
                 setWorkspaces((prev) => [...prev, createdWs])
                 setCurrentWsId(createdWs.id)
                 setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true})) // mở workspace mới
-            })
+
+                toast.success("Create workspace successfully!");
+            }) .catch((error) => {
+                console.error("Error creating workspace:", error.message);
+                toast.error("Failed to create workspace!");
+        })
     }
 
     const handleEditWorkspace = (id, name) => {
@@ -303,6 +308,10 @@ export default function Dashboard() {
             setWorkspaces((prev) =>
                 prev.map((w) => (w.id === id ? {...w, name} : w))
             )
+            toast.success("Update workspace successfully!");
+        }) .catch((error) => {
+            console.error("Error updating workspace:", error.message);
+            toast.error("Failed to update workspace!");
         })
     }
 
@@ -310,6 +319,11 @@ export default function Dashboard() {
         fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"}).then(() => {
             setWorkspaces((prev) => prev.filter((w) => w.id !== id))
             if (currentWsId === id) setCurrentWsId(null)
+
+            toast.success("Delete workspace successfully!");
+        }) .catch((error) => {
+            console.error("Error deleting workspace:", error.message);
+            toast.error("Failed to delete workspace!");
         })
     }
 
@@ -352,7 +366,7 @@ export default function Dashboard() {
             })
             .catch((error) => {
                 console.error("Error creating endpoint:", error);
-                toast.error("Error creating endpoint!");
+                toast.error("Failed to create endpoint!");
             });
 
     }
@@ -393,6 +407,9 @@ export default function Dashboard() {
             setOpenEdit(false)
 
             toast.success("Update endpoint successfully!");
+        }) .catch((error) => {
+            console.error("Error updating endpoint:", error.message);
+            toast.error("Failed to update endpoint!");
         })
     }
 
@@ -400,9 +417,12 @@ export default function Dashboard() {
     const handleDeleteEndpoint = (id) => {
         fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"}).then(() => {
             setEndpoints((prev) => prev.filter((e) => e.id !== id))
-        })
 
-        toast.success("Delete endpoint successfully!");
+            toast.success("Delete endpoint successfully!");
+        }) .catch((error) => {
+            console.error("Error deleting endpoint:", error.message);
+            toast.error("Failed to delete endpoint!");
+        })
     }
 
     return (
@@ -591,10 +611,16 @@ export default function Dashboard() {
                                                     </div>
 
                                                     <DialogFooter>
-                                                        <Button variant="outline" onClick={() => setOpenNew(false)}>
+                                                        <Button
+                                                            className="text-black hover:text-red-600"
+                                                            variant="outline" onClick={() => setOpenNew(false)}>
                                                             Cancel
                                                         </Button>
-                                                        <Button onClick={handleCreateEndpoint}>Create</Button>
+                                                        <Button
+                                                            className="bg-blue-600 text-white hover:bg-blue-700"
+                                                            onClick={handleCreateEndpoint}>
+                                                            Create
+                                                        </Button>
                                                     </DialogFooter>
                                                 </DialogContent>
                                             </Dialog>
@@ -605,10 +631,11 @@ export default function Dashboard() {
 
                                 {/* Endpoint Table Header */}
                                 <div
-                                    className="grid grid-cols-[2fr_0.7fr_1fr] items-center py-2 text-xs font-medium text-gray-500 tracking-wide">
-                                    <div className="pl-1">Aa</div>
-                                    <div>Method</div>
-                                    <div>Time & Date</div>
+                                    className="grid grid-cols-12 items-center py-3 text-gray-500 font-semibold border-b border-gray-500 gap-4">
+                                    <div className="col-span-4">Aa</div>
+                                    <div className="col-span-4 col-start-5">Path</div>
+                                    <div className="col-start-9">Method</div>
+                                    <div className="col-span-3 col-start-10">Time & Date</div>
                                 </div>
                                 <Separator/>
 
@@ -668,10 +695,16 @@ export default function Dashboard() {
 
                                         </div>
                                         <DialogFooter>
-                                            <Button variant="outline" onClick={() => setOpenEdit(false)}>
+                                            <Button
+                                                className="text-black hover:text-red-600"
+                                                variant="outline" onClick={() => setOpenEdit(false)}>
                                                 Cancel
                                             </Button>
-                                            <Button onClick={handleUpdateEndpoint}>Update</Button>
+                                            <Button
+                                                className="bg-blue-600 text-white hover:bg-blue-700"
+                                                onClick={handleUpdateEndpoint}>
+                                                Update
+                                            </Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
