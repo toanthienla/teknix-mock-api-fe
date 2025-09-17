@@ -57,7 +57,7 @@ export default function Dashboard() {
     const [newEPath, setNewEPath] = useState("")
     const [newEMethod, setNewEMethod] = useState("")
 
-    // edit project state
+    // edit endpoint state
     const [editId, setEditId] = useState(null)
     const [editEName, setEditEName] = useState("")
     const [editEPath, setEditEPath] = useState("")
@@ -67,13 +67,21 @@ export default function Dashboard() {
     const [openNew, setOpenNew] = useState(false)
     const [openEdit, setOpenEdit] = useState(false)
 
-    // Use toast to validate
+    // Regex to check route + query
+    //     ^ … $                 : khớp toàn bộ chuỗi.
+    //     \/                    : path bắt buộc bắt đầu bằng /.
+    //     [a-zA-Z0-9\-_]*       : segment đầu tiên có thể rỗng hoặc là users, api_v1.
+    //     (\/[a-zA-Z0-9\-_]*)*  : cho phép nhiều segment, ví dụ /users/profile/details.
+    //     (\/:[a-zA-Z0-9\-_]+)* : cho phép parameter động, ví dụ /users/:id.
+    //
+    //     (?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)? : phần query string, ví dụ ?id=1&sort=asc.
+    const validPath = /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+    // Regex pattern for endpoint name
+    const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
+
+    // Validation for creating an endpoint
     const validateCreateEndpoint = (name, path, method) => {
-
         // Validate endpoint name
-        // Regex pattern
-        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_\-\s]*$/;
-
         if (!name.trim()) {
             toast.error("Name is required");
             return false;
@@ -82,23 +90,17 @@ export default function Dashboard() {
             toast.error("Name must be less than 20 characters");
             return false;
         }
-
-        if (!validPattern.test(name.trim())) {
-            toast.error("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
+        if (!validName.test(name)) {
+            toast.error("Name must start with a letter and contain only letters, numbers, a space, underscores and dashes");
             return false;
         }
-
-        const duplicateName = endpoints.find((ep) => ep.name.toLowerCase() === name.toLowerCase())
+        const duplicateName = endpoints.some(
+            (ep) =>
+                ep.project_id === projectId &&
+                ep.name.toLowerCase() === name.toLowerCase()
+            );
         if (duplicateName) {
             toast.error("Name already exists");
-            return false;
-        }
-
-        if (!path.trim()) {
-            toast.error("Path is required");
-            return false;
-        } else if (!path.startsWith("/")) {
-            toast.error("Path must start with '/'");
             return false;
         }
 
@@ -115,24 +117,14 @@ export default function Dashboard() {
             toast.error("Path must not end with '/'");
             return false;
         }
-
-        // Regex to check route + query
-        //     ^ … $ : khớp toàn bộ chuỗi.
-        //     \/ : path bắt buộc bắt đầu bằng /.
-        //     [a-zA-Z0-9\-_]* : segment đầu tiên có thể rỗng hoặc là users, api_v1.
-        //     (\/[a-zA-Z0-9\-_]*)* : cho phép nhiều segment, ví dụ /users/profile/details.
-        //     (\/:[a-zA-Z0-9\-_]+)* : cho phép parameter động, ví dụ /users/:id.
-        //     (?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)? : phần query string, ví dụ ?id=1&sort=asc.
-        const validPath = /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
-
         if (!validPath.test(path.trim())) {
             toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
             return false;
         }
-
         // Check duplicate path + method
         const duplicateEndpoint = endpoints.some(
             (ep) =>
+                ep.project_id === projectId &&
                 ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
                 ep.method.toUpperCase() === method.toUpperCase()
         );
@@ -141,6 +133,7 @@ export default function Dashboard() {
             return false;
         }
 
+        // Validate method
         if (!method) {
             toast.error("Method is required");
             return false;
@@ -152,8 +145,6 @@ export default function Dashboard() {
     // Validate for edit (note: exclude editing endpoint)
     const validateEditEndpoint = (id, name, path, method) => {
         // Validate endpoint name
-        const validPattern = /^[a-zA-Z_][a-zA-Z0-9_\-\s]*$/;
-
         if (!name.trim()) {
             toast.error("Name is required");
             return false;
@@ -162,12 +153,15 @@ export default function Dashboard() {
             toast.error("Name must be less than 20 characters");
             return false;
         }
-        if (!validPattern.test(name.trim())) {
+        if (!validName.test(name.trim())) {
             toast.error("Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes");
             return false;
         }
         const duplicateName = endpoints.find(
-            (ep) => ep.id !== id && ep.name.toLowerCase() === name.toLowerCase()
+            (ep) =>
+                ep.id !== id &&
+                ep.project_id === projectId &&
+                ep.name.toLowerCase() === name.toLowerCase()
         );
         if (duplicateName) {
             toast.error("Name already exists");
@@ -188,7 +182,6 @@ export default function Dashboard() {
             return false;
         }
 
-        const validPath = /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
         if (!validPath.test(path.trim())) {
             toast.error("Path format is invalid. Example: /users/:id or /users?id=2");
             return false;
@@ -197,6 +190,7 @@ export default function Dashboard() {
         const duplicateEndpoint = endpoints.some(
             (ep) =>
                 ep.id !== id &&
+                ep.project_id === projectId &&
                 ep.path.toLowerCase().trim() === path.toLowerCase().trim() &&
                 ep.method.toUpperCase() === method.toUpperCase()
         );
@@ -214,12 +208,12 @@ export default function Dashboard() {
         return true;
     };
 
-    // fetch workspaces + projects
+    // fetch workspaces + projects + endpoints
     useEffect(() => {
-        fetchWorkspaces()
-        fetchProjects()
-        fetchEndpoints()
-    }, [])
+        fetchWorkspaces();
+        fetchProjects();
+        fetchEndpoints();
+    }, []);
 
     const fetchWorkspaces = () => {
         fetch(`${API_ROOT}/workspaces`)
@@ -627,7 +621,7 @@ export default function Dashboard() {
                                             />
                                         ))
                                     ) : (
-                                        <p className="text-slate-500">No projects found.</p>
+                                        <p className="text-slate-500">No endpoints found.</p>
                                     )}
                                 </div>
 
