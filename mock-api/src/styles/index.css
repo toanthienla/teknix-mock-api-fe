@@ -9,6 +9,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -123,4 +125,8 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+button:hover,
+[role="tab"]:hover {
+  cursor: pointer;
 }

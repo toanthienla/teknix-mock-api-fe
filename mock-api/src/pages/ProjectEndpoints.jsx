@@ -545,11 +545,11 @@ export default function Dashboard() {
                             <div className="flex-1 flex justify-center">
                                 <div className="relative w-full max-w-md">
                                     <Input
-                                        placeholder="Search endpoints..."
-                                        value={query}
-                                        onChange={handleChange}
-                                        className="pl-10 pr-4 py-2"
-                                    />
+                                                placeholder="Search"
+                                                value={query}
+                                                onChange={handleChange}
+                                                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+                                              />
                                     <div
                                         className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                                         <Search size={16}/>
