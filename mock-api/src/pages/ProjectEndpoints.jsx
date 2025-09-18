@@ -1,7 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
-import {Separator} from '@/components/ui/separator';
+import {
+    Table,
+    TableHeader,
+    TableRow,
+    TableHead,
+    TableBody,
+} from "@/components/ui/table"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,6 +36,11 @@ import {
 import EndpointCard from "@/components/EndpointCard.jsx";
 
 import {toast} from 'react-toastify';
+import createIcon from "@/assets/create.svg";
+import pathIcon from "@/assets/path.svg";
+import methodIcon from "@/assets/method.svg"
+import timeIcon from "@/assets/time&date.svg"
+
 
 export default function Dashboard() {
     const navigate = useNavigate()
@@ -608,7 +619,12 @@ export default function Dashboard() {
                                                     onClick={() => setOpenNew(true)}
                                                     className="bg-white text-black hover:bg-green-300 px-3 py-1 rounded-md"
                                                 >
-                                                    + New Endpoint
+                                                    <img
+                                                        src={createIcon}
+                                                        alt="Create Icon"
+                                                        className="w-4 h-4 object-contain"
+                                                    />
+                                                    New Endpoint
                                                 </Button>
                                                 <DialogContent
                                                     className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
@@ -669,31 +685,62 @@ export default function Dashboard() {
                                     </div>
                                 </div>
 
-                                {/* Endpoint Table Header */}
-                                <div
-                                    className="grid grid-cols-12 items-center py-3 text-gray-500 font-semibold border-b border-gray-500 gap-4">
-                                    <div className="col-span-4">Aa</div>
-                                    <div className="col-span-4 col-start-5">Path</div>
-                                    <div className="col-start-9">Method</div>
-                                    <div className="col-span-3 col-start-10">Time & Date</div>
-                                </div>
-                                <Separator/>
+                                {/* Endpoint Table */}
+                                <div className="w-full overflow-x-auto">
+                                    <Table className="border-t border-b border-gray-300">
+                                        <TableHeader>
+                                            <TableRow className="border-b border-gray-300">
+                                                <TableHead className="w-1/3 border-r border-gray-300">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs">Aa</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/3 border-r border-gray-300">
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={pathIcon} alt="Path icon" className="w-4 h-4" />
+                                                        <span>Path</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/6 border-r border-gray-300 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <img src={methodIcon} alt="Method icon" className="w-4 h-4" />
+                                                        <span>Method</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/6">
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={timeIcon} alt="Time icon" className="w-4 h-4" />
+                                                        <span>Time & Date</span>
+                                                    </div>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
 
-                                {/* Endpoint Rows */}
-                                <div>
-                                    {sortedEndpoints?.length > 0 ? (
-                                        sortedEndpoints.map((e) => (
-                                            <EndpointCard
-                                                key={e.id}
-                                                endpoint={e}
-                                                onEdit={() => openEditEndpoint(e)}
-                                                onDelete={() => handleDeleteEndpoint(e.id)}
-                                                onClick={() => navigate(`/dashboard/${projectId}/endpoint/${e.id}`)}
-                                            />
-                                        ))
-                                    ) : (
-                                        <p className="text-slate-500">No endpoints found.</p>
-                                    )}
+                                        <TableBody>
+                                            {sortedEndpoints?.length > 0 ? (
+                                                sortedEndpoints.map((e) => (
+                                                    <EndpointCard
+                                                        key={e.id}
+                                                        endpoint={e}
+                                                        onEdit={() => openEditEndpoint(e)}
+                                                        onDelete={() => handleDeleteEndpoint(e.id)}
+                                                        onClick={() =>
+                                                            navigate(`/dashboard/${projectId}/endpoint/${e.id}`)
+                                                        }
+                                                    />
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableHead
+                                                        colSpan={4}
+                                                        className="text-center text-slate-500 py-4"
+                                                    >
+                                                        No endpoints found.
+                                                    </TableHead>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
                                 </div>
 
                                 {/* Edit Endpoint Dialog */}
