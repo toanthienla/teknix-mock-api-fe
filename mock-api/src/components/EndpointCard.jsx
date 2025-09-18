@@ -1,6 +1,8 @@
 import React from "react"
 import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
+import editIcon from "@/assets/Edit Icon.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
 import {Pencil, Trash2} from "lucide-react"
 import {
     AlertDialog,
@@ -35,7 +37,7 @@ export default function EndpointRow({ endpoint, onEdit, onDelete, onClick }) {
                         className="text-blue-600 hover:text-blue-800"
                         onClick={() => onEdit(endpoint)}
                     >
-                        <Pencil className="w-4 h-4" />
+                        <img src={editIcon} alt="edit" className="w-4 h-4" />
                     </Button>
 
                     <AlertDialog>
@@ -45,7 +47,7 @@ export default function EndpointRow({ endpoint, onEdit, onDelete, onClick }) {
                                 size="icon"
                                 className="h-7 w-7 text-gray-500 hover:text-red-600"
                             >
-                                <Trash2 className="w-4 h-4" />
+                               <img src={deleteIcon} alt="delete" className="w-4 h-4" />
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
