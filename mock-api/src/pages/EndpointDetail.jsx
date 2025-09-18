@@ -27,8 +27,15 @@ import {
   X,
   GripVertical,
 } from "lucide-react";
-import {toast} from "react-toastify";
-import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog.jsx";
+import { toast } from "react-toastify";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.jsx";
+import { useParams } from "react-router-dom";
 
 // Define the status codes
 const statusCodes = [
@@ -131,6 +138,8 @@ const statusCodes = [
 ];
 
 const DashboardPage = () => {
+  const { endpointId } = useParams();
+  const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isActive, setIsActive] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -148,10 +157,7 @@ const DashboardPage = () => {
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [endpointResponses, setEndpointResponses] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [currentEndpointId, setCurrentEndpointId] = useState(1); // Default to Get Users endpoint
   const [openEndpointsMap, setOpenEndpointsMap] = useState({});
-  const [editingResponseId, setEditingResponseId] = useState(null); // Lưu ID của response đang chỉnh sửa
-
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
@@ -177,16 +183,15 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         setEndpoints(data);
-        // Set default endpoint to Get Users (id: 1)
-        if (data.length > 0 && currentEndpointId === null) {
-          setCurrentEndpointId(1);
-        }
       });
   };
 
   const fetchEndpointResponses = () => {
+    // Đảm bảo endpoint_id luôn là string khi gọi API
+    const endpointIdStr = String(currentEndpointId);
+
     // Fetch responses for specific endpoint using query parameter
-    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${currentEndpointId}`)
+    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
         setEndpointResponses(data);
@@ -223,6 +228,16 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
+    if (endpointId) {
+      setCurrentEndpointId(String(endpointId));
+    }
+    // THÊM: Nếu không có endpointId từ URL, set default endpoint
+    else if (endpoints.length > 0 && currentEndpointId === null) {
+      setCurrentEndpointId(endpoints[0].id);
+    }
+  }, [endpointId, endpoints]);
+
+  useEffect(() => {
     if (currentEndpointId) {
       fetchEndpointResponses();
     }
@@ -235,7 +250,12 @@ const DashboardPage = () => {
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
       return "Must start with a letter, no special chars, single spaces allowed";
     if (trimmed.length > 20) return "Workspace name max 20 chars";
-    if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
+    if (
+      workspaces.some(
+        (w) =>
+          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+      )
+    )
       return "Workspace name already exists";
     return "";
   };
@@ -255,14 +275,14 @@ const DashboardPage = () => {
         updated_at: new Date().toISOString(),
       }),
     })
-        .then((res) => res.json())
-        .then((createdWs) => {
-          setWorkspaces((prev) => [...prev, createdWs]);
-          setCurrentWsId(createdWs.id);
-          setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-          toast.success("Create workspace successfully!");
-        })
-        .catch(() => toast.error("Failed to create workspace"));
+      .then((res) => res.json())
+      .then((createdWs) => {
+        setWorkspaces((prev) => [...prev, createdWs]);
+        setCurrentWsId(createdWs.id);
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        toast.success("Create workspace successfully!");
+      })
+      .catch(() => toast.error("Failed to create workspace"));
   };
 
   const handleEditWorkspace = () => {
@@ -274,173 +294,47 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editWsName.trim(), updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        name: editWsName.trim(),
+        updated_at: new Date().toISOString(),
+      }),
     })
-        .then(() => {
-          setWorkspaces((prev) =>
-              prev.map((w) => (w.id === editWsId ? { ...w, name: editWsName.trim() } : w))
-          );
-          setOpenEditWs(false);
-          setEditWsName("");
-          setEditWsId(null);
-          toast.success("Update workspace successfully!");
-        })
-        .catch(() => toast.error("Failed to update workspace"));
+      .then(() => {
+        setWorkspaces((prev) =>
+          prev.map((w) =>
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+          )
+        );
+        setOpenEditWs(false);
+        setEditWsName("");
+        setEditWsId(null);
+        toast.success("Update workspace successfully!");
+      })
+      .catch(() => toast.error("Failed to update workspace"));
   };
 
   const handleDeleteWorkspace = async (id) => {
     try {
       const res = await fetch(`${API_ROOT}/projects`);
       const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
+      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
 
       await Promise.all(
-          projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+        )
       );
 
       await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
-      setWorkspaces(prev => prev.filter(w => w.id !== id));
-      setProjects(prev => prev.filter(p => p.workspace_id !== id));
+      setWorkspaces((prev) => prev.filter((w) => w.id !== id));
+      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
       toast.success("Delete workspace successfully!");
     } catch {
       toast.error("Failed to delete workspace!");
     }
-  };
-
-  const handleCreateResponse = () => {
-    // Parse response body từ chuỗi JSON
-    let responseBodyObj = {};
-    try {
-      responseBodyObj = JSON.parse(responseBody);
-    } catch {
-      alert("Invalid JSON in response body");
-      return;
-    }
-
-    // Xác định xem đây có phải là response đầu tiên cho endpoint không
-    const isFirstResponse = endpointResponses.length === 0;
-
-    // Tạo payload
-    const payload = {
-      endpoint_id: currentEndpointId,
-      name: responseName,
-      status_code: parseInt(statusCode),
-      response_body: responseBodyObj,
-      condition: {},
-      is_default: isFirstResponse,
-      delay_ms: parseInt(delay) || 0,
-    };
-
-    // Gửi POST request
-    fetch(`${API_ROOT}/endpoint_responses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to create response");
-        }
-        return res.json();
-      })
-      .then((newResponse) => {
-        console.log("New response created:", newResponse);
-
-        // Đóng dialog
-        setIsDialogOpen(false);
-
-        // Reset form
-        setResponseName("");
-        setStatusCode("200");
-        setHeaderKey("Content-Type");
-        setHeaderValue("application/json");
-        setResponseBody("");
-        setDelay("0");
-
-        // Refresh responses
-        fetchEndpointResponses();
-      })
-      .catch((error) => {
-        console.error("Error creating response:", error);
-        alert("Failed to create response: " + error.message);
-      });
-  };
-
-  const handleUpdateResponse = () => {
-    // Parse response body từ chuỗi JSON
-    let responseBodyObj = {};
-    try {
-      responseBodyObj = JSON.parse(responseBody);
-    } catch {
-      alert("Invalid JSON in response body");
-      return;
-    }
-
-    // Tạo payload
-    const payload = {
-      name: responseName,
-      status_code: parseInt(statusCode),
-      response_body: responseBodyObj,
-      condition: {},
-      is_default: selectedResponse?.is_default || false,
-      delay_ms: parseInt(delay) || 0,
-    };
-
-    // Gửi PUT request
-    fetch(`${API_ROOT}/endpoint_responses/${editingResponseId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to update response");
-        }
-        return res.json();
-      })
-      .then((updatedResponse) => {
-        console.log("Response updated:", updatedResponse);
-
-        // Cập nhật trực tiếp vào state thay vì fetch lại toàn bộ
-        setEndpointResponses((prevResponses) =>
-          prevResponses.map((response) =>
-            response.id === updatedResponse.id ? updatedResponse : response
-          )
-        );
-
-        // Cập nhật statusData
-        setStatusData((prevStatusData) =>
-          prevStatusData.map((status) =>
-            status.id === updatedResponse.id
-              ? {
-                  ...status,
-                  name: updatedResponse.name,
-                  code: updatedResponse.status_code.toString(),
-                }
-              : status
-          )
-        );
-
-        // Cập nhật selectedResponse
-        if (selectedResponse?.id === updatedResponse.id) {
-          setSelectedResponse(updatedResponse);
-        }
-
-        // Đóng dialog
-        setIsDialogOpen(false);
-        setEditingResponseId(null);
-      })
-      .catch((error) => {
-        console.error("Error updating response:", error);
-        alert("Failed to update response: " + error.message);
-      });
   };
 
   const handleDeleteResponse = () => {
@@ -585,10 +479,10 @@ const DashboardPage = () => {
       // Cập nhật state local ngay lập tức để UI phản hồi nhanh
       setStatusData(newStatusData);
 
-      // Tạo payload cho cập nhật priority
+      // Tạo payload cho cập nhật priority - đảm bảo endpoint_id là string
       const priorityUpdates = newStatusData.map((item, index) => ({
         id: item.id,
-        endpoint_id: currentEndpointId,
+        endpoint_id: String(currentEndpointId), // Chuyển thành string
         priority: index + 1,
       }));
 
@@ -605,56 +499,115 @@ const DashboardPage = () => {
   };
 
   const handleResponseSelect = (response) => {
-    // Use the detailed fetch instead of direct assignment
-    fetchEndpointResponseDetail(response.id);
+    // Chỉ cần set selectedResponse, không cần fetch lại detail
+    setSelectedResponse(response);
+    setResponseName(response.name);
+    setStatusCode(response.status_code.toString());
+    setResponseBody(JSON.stringify(response.response_body, null, 2));
+    setDelay(response.delay_ms?.toString() || "0");
   };
 
-  const fetchEndpointResponseDetail = (responseId) => {
-    fetch(`${API_ROOT}/endpoint_responses/${responseId}`)
-      .then((res) => res.json())
-      .then((responseDetail) => {
-        setSelectedResponse(responseDetail);
-        setEditingResponseId(responseId); // Lưu ID của response đang chỉnh sửa
-        setResponseName(responseDetail.name);
-        setStatusCode(responseDetail.status_code.toString());
-        setResponseBody(JSON.stringify(responseDetail.response_body, null, 2));
-        setDelay(responseDetail.delay_ms?.toString() || "0");
-      })
-      .catch((error) => {
-        console.error("Error fetching response detail:", error);
-      });
+  const handleNewResponse = () => {
+    // Reset form khi tạo mới
+    setSelectedResponse(null);
+    setResponseName("");
+    setStatusCode("200");
+    setHeaderKey("Content-Type");
+    setHeaderValue("application/json");
+    setResponseBody("");
+    setDelay("0");
+    setIsDialogOpen(true);
   };
 
   const handleSaveResponse = () => {
-    if (editingResponseId) {
-      handleUpdateResponse();
-    } else {
-      handleCreateResponse();
+    // Parse response body
+    let responseBodyObj = {};
+    try {
+      responseBodyObj = JSON.parse(responseBody);
+    } catch {
+      alert("Invalid JSON in response body");
+      return;
     }
+
+    // Xác định is_default - chỉ set true nếu đây là response đầu tiên
+    const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
+
+    const payload = {
+      endpoint_id: currentEndpointId,
+      name: responseName,
+      status_code: parseInt(statusCode),
+      response_body: responseBodyObj,
+      condition: {},
+      is_default: selectedResponse
+        ? selectedResponse.is_default
+        : isFirstResponse,
+      delay_ms: parseInt(delay) || 0,
+    };
+
+    const method = selectedResponse ? "PUT" : "POST";
+    const url = selectedResponse
+      ? `${API_ROOT}/endpoint_responses/${selectedResponse.id}`
+      : `${API_ROOT}/endpoint_responses`;
+
+    fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(
+            `Failed to ${selectedResponse ? "update" : "create"} response`
+          );
+        return res.json();
+      })
+      .then(() => {
+        // Refresh responses
+        fetchEndpointResponses();
+
+        // Close dialog
+        setIsDialogOpen(false);
+
+        // Nếu là tạo mới, reset form hoàn toàn
+        if (!selectedResponse) {
+          setResponseName("");
+          setStatusCode("200");
+          setHeaderKey("Content-Type");
+          setHeaderValue("application/json");
+          setResponseBody("");
+          setDelay("0");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        alert(error.message);
+      });
   };
+
+  // ... phần còn lại ...
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
       <aside className="w-72 border-r border-slate-100 bg-white">
         <Sidebar
-            workspaces={workspaces}
-            projects={projects}
-            endpoints={endpoints}
-            current={currentWsId}
-            setCurrent={setCurrentWsId}
-            onAddWorkspace={handleAddWorkspace}
-            onEditWorkspace={(id) => {
-              const ws = workspaces.find((w) => w.id === id)
-              if (!ws) return
-              const name = prompt("Edit workspace name", ws.name)
-              if (name) handleEditWorkspace(id, name)
-            }}
-            onDeleteWorkspace={handleDeleteWorkspace}
-            openProjectsMap={openProjectsMap}
-            setOpenProjectsMap={setOpenProjectsMap}
-            openEndpointsMap={openEndpointsMap}
-            setOpenEndpointsMap={setOpenEndpointsMap}
+          workspaces={workspaces}
+          projects={projects}
+          endpoints={endpoints}
+          current={currentWsId}
+          setCurrent={setCurrentWsId}
+          onAddWorkspace={handleAddWorkspace}
+          onEditWorkspace={(id) => {
+            const ws = workspaces.find((w) => w.id === id);
+            if (!ws) return;
+            const name = prompt("Edit workspace name", ws.name);
+            if (name) handleEditWorkspace(id, name);
+          }}
+          onDeleteWorkspace={handleDeleteWorkspace}
+          openProjectsMap={openProjectsMap}
+          setOpenProjectsMap={setOpenProjectsMap}
+          openEndpointsMap={openEndpointsMap}
+          setOpenEndpointsMap={setOpenEndpointsMap}
         />
       </aside>
 
@@ -671,9 +624,10 @@ const DashboardPage = () => {
             />
           </div>
           <div className="flex items-center space-x-4">
+            {/* Nút New Response */}
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-              onClick={() => setIsDialogOpen(true)}
+              onClick={handleNewResponse} // SỬA TẠI ĐÂY
             >
               <Plus className="mr-2 h-4 w-4" /> New response
             </Button>
@@ -738,7 +692,7 @@ const DashboardPage = () => {
                         <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                           <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
                             <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                                 Name Response
                               </div>
                             </div>
@@ -954,12 +908,13 @@ const DashboardPage = () => {
                   />
                 </div>
 
+                {/* Nút Save duy nhất */}
                 <div className="flex justify-end">
                   <Button
                     className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
                     onClick={handleSaveResponse}
                   >
-                    {editingResponseId ? "Update Response" : "Save Changes"}
+                    Save Changes
                   </Button>
                 </div>
               </div>
@@ -971,48 +926,75 @@ const DashboardPage = () => {
         <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
           <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-slate-800">
+                Edit Workspace
+              </DialogTitle>
             </DialogHeader>
             <div className="mt-2 space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+                <label className="text-sm font-medium text-slate-700 block mb-1">
+                  Workspace Name
+                </label>
                 <Input
-                    value={editWsName}
-                    onChange={(e) => setEditWsName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleEditWorkspace();
-                      }
-                    }}
-                    placeholder="Enter workspace name"
-                    autoFocus
-                    className="h-10"
+                  value={editWsName}
+                  onChange={(e) => setEditWsName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleEditWorkspace();
+                    }
+                  }}
+                  placeholder="Enter workspace name"
+                  autoFocus
+                  className="h-10"
                 />
               </div>
             </div>
             <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-              <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenEditWs(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleEditWorkspace}
+              >
+                Update
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Confirm Delete Workspace */}
-        <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+        <Dialog
+          open={!!confirmDeleteWs}
+          onOpenChange={() => setConfirmDeleteWs(null)}
+        >
           <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
             <DialogHeader>
               <DialogTitle>Delete Workspace</DialogTitle>
             </DialogHeader>
-            <p>Are you sure you want to delete this workspace and all its projects?</p>
+            <p>
+              Are you sure you want to delete this workspace and all its
+              projects?
+            </p>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
               <Button
-                  className="bg-red-600 text-white hover:bg-red-700"
-                  onClick={() => {
-                    handleDeleteWorkspace(confirmDeleteWs);
-                    setConfirmDeleteWs(null);
-                  }}
+                variant="outline"
+                onClick={() => setConfirmDeleteWs(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  handleDeleteWorkspace(confirmDeleteWs);
+                  setConfirmDeleteWs(null);
+                }}
               >
                 Delete
               </Button>
@@ -1026,7 +1008,7 @@ const DashboardPage = () => {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingResponseId ? "Edit Response" : "Create New Response"}
+                  {selectedResponse ? "Edit Response" : "Create New Response"}
                 </h2>
                 <Button
                   variant="ghost"
@@ -1128,14 +1110,12 @@ const DashboardPage = () => {
                     variant="outline"
                     onClick={() => {
                       setIsDialogOpen(false);
-                      setEditingResponseId(null);
+                      setSelectedResponse(null);
                     }}
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveResponse}>
-                    {editingResponseId ? "Update" : "Create"}
-                  </Button>
+                  <Button onClick={handleSaveResponse}>Create</Button>
                 </div>
               </div>
             </div>

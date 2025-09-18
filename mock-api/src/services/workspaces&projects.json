@@ -156,6 +156,15 @@
       "project_id": 1,
       "created_at": "2025-09-17T07:00:22.819Z",
       "updated_at": "2025-09-17T07:00:22.819Z"
+    },
+    {
+      "id": "9",
+      "name": "hello",
+      "path": "/dash",
+      "method": "POST",
+      "project_id": 4,
+      "created_at": "2025-09-18T06:56:09.300Z",
+      "updated_at": "2025-09-18T06:56:09.300Z"
     }
   ],
   "endpoint_responses": [
@@ -170,10 +179,11 @@
       },
       "condition": {},
       "is_default": true,
-      "delay_ms": 0,
-      "id": "1"
+      "delay_ms": 0
     },
     {
+      "id": "2",
+      "endpoint_id": 1,
       "name": "Not Foundass",
       "status_code": 404,
       "response_body": {
@@ -181,10 +191,11 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0,
-      "id": "2"
+      "delay_ms": 0
     },
     {
+      "id": "14",
+      "endpoint_id": 1,
       "name": "Unauthorized",
       "status_code": 401,
       "response_body": {
@@ -192,10 +203,11 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0,
-      "id": "14"
+      "delay_ms": 0
     },
     {
+      "id": "15",
+      "endpoint_id": 1,
       "name": "Validation Error",
       "status_code": 400,
       "response_body": {
@@ -203,10 +215,11 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0,
-      "id": "15"
+      "delay_ms": 0
     },
     {
+      "id": "16",
+      "endpoint_id": 1,
       "name": "Internal Server Error",
       "status_code": 500,
       "response_body": {
@@ -214,8 +227,7 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0,
-      "id": "16"
+      "delay_ms": 0
     },
     {
       "id": "3",
@@ -346,19 +358,17 @@
       "updated_at": "2025-09-13T09:55:00Z"
     },
     {
-      "id": "7",
-      "endpoint_id": 5,
+      "endpoint_id": "5",
       "name": "Build Triggered",
       "status_code": 202,
       "response_body": {
         "status": "pending",
-        "buildId": "abc123"
+        "buildId": "aasabasc123"
       },
       "condition": {},
-      "priority": 1,
       "is_default": true,
-      "created_at": "2025-09-14T10:10:00Z",
-      "updated_at": "2025-09-14T10:20:00Z"
+      "delay_ms": 0,
+      "id": "7"
     },
     {
       "id": "8",
@@ -429,35 +439,31 @@
       "updated_at": "2025-09-15T08:35:00Z"
     },
     {
-      "id": "12",
-      "endpoint_id": 8,
+      "endpoint_id": "8",
       "name": "Test Case Run Success",
       "status_code": 200,
       "response_body": {
         "id": 101,
-        "result": "pass"
+        "result": "passas"
       },
       "condition": {},
-      "priority": 1,
       "is_default": true,
-      "created_at": "2025-09-15T09:10:00Z",
-      "updated_at": "2025-09-15T09:40:00Z"
+      "delay_ms": 0,
+      "id": "12"
     },
     {
-      "id": "13",
-      "endpoint_id": 8,
+      "endpoint_id": "8",
       "name": "Test Case Run Failed",
       "status_code": 200,
       "response_body": {
         "id": 101,
         "result": "fail",
-        "error": "Assertion error"
+        "error": "AEPssertion erasasasrasassaor"
       },
       "condition": {},
-      "priority": 2,
       "is_default": false,
-      "created_at": "2025-09-15T09:15:00Z",
-      "updated_at": "2025-09-15T09:45:00Z"
+      "delay_ms": 0,
+      "id": "13"
     },
     {
       "id": "7df7",
@@ -472,6 +478,8 @@
       "delay_ms": 0
     },
     {
+      "id": "5876",
+      "endpoint_id": 1,
       "name": "Hell",
       "status_code": 202,
       "response_body": {
@@ -480,8 +488,7 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0,
-      "id": "5876"
+      "delay_ms": 0
     },
     {
       "id": "f628",
@@ -497,6 +504,8 @@
       "delay_ms": 0
     },
     {
+      "id": "b5f1",
+      "endpoint_id": 1,
       "name": "Suprise",
       "status_code": 505,
       "response_body": {
@@ -504,8 +513,200 @@
       },
       "condition": {},
       "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "9",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "as",
+      "condition": {},
+      "is_default": false,
       "delay_ms": 0,
-      "id": "b5f1"
+      "id": "9bce"
+    },
+    {
+      "endpoint_id": "9",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "helasaslso",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "986f"
+    },
+    {
+      "id": "740b",
+      "endpoint_id": "9",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "hello",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "5",
+      "name": "Build Triggered",
+      "status_code": 202,
+      "response_body": {
+        "status": "pending",
+        "buildId": "abascaasasaasasasassasasass123"
+      },
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "587f"
+    },
+    {
+      "id": "2113",
+      "endpoint_id": "5",
+      "name": "as",
+      "status_code": 200,
+      "response_body": "hello",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "8",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "GasasG",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "5aca"
+    },
+    {
+      "endpoint_id": "9",
+      "name": "Sh",
+      "status_code": 307,
+      "response_body": "SHIUUUU",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "c501"
+    },
+    {
+      "endpoint_id": "9",
+      "name": "ANA",
+      "status_code": 304,
+      "response_body": "HUNGRY",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "7e23"
+    },
+    {
+      "id": "c7f7",
+      "endpoint_id": "9",
+      "name": "HAha",
+      "status_code": 206,
+      "response_body": "hina",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "9",
+      "name": "Hello",
+      "status_code": 202,
+      "response_body": "Supasas",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "d49c"
+    },
+    {
+      "id": "f61c",
+      "endpoint_id": "9",
+      "name": "Hello",
+      "status_code": 200,
+      "response_body": "What?",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "767e",
+      "endpoint_id": "9",
+      "name": "What",
+      "status_code": 200,
+      "response_body": "WHAT???",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "6dc7",
+      "endpoint_id": "9",
+      "name": "Haha",
+      "status_code": 200,
+      "response_body": "NANI?",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "ae57",
+      "endpoint_id": "6",
+      "name": "\"Huh?\"",
+      "status_code": 302,
+      "response_body": "Whatever",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "386b",
+      "endpoint_id": "8",
+      "name": "\"Sup\"",
+      "status_code": 200,
+      "response_body": "DUDE",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "5eea",
+      "endpoint_id": "8",
+      "name": "What?\"",
+      "status_code": 206,
+      "response_body": "Haha",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "8",
+      "name": "So?\"",
+      "status_code": 302,
+      "response_body": "Lol",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "id": "438e"
+    },
+    {
+      "id": "8730",
+      "endpoint_id": "8",
+      "name": "Hell",
+      "status_code": 308,
+      "response_body": "Nah",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "a0ae",
+      "endpoint_id": "8",
+      "name": "Hell",
+      "status_code": 301,
+      "response_body": "Sup",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
     }
   ]
 }
