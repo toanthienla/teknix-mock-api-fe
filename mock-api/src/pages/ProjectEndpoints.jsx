@@ -7,6 +7,7 @@ import {
     TableRow,
     TableHead,
     TableBody,
+    TableCell,
 } from "@/components/ui/table"
 import {
     DropdownMenu,
@@ -40,7 +41,9 @@ import createIcon from "@/assets/create.svg";
 import pathIcon from "@/assets/path.svg";
 import methodIcon from "@/assets/method.svg"
 import timeIcon from "@/assets/time&date.svg"
-
+import LogCard from "@/components/LogCard.jsx";
+import exportIcon from "@/assets/export.svg"
+import refreshIcon from "@/assets/refresh.svg"
 
 export default function Dashboard() {
     const navigate = useNavigate()
@@ -64,6 +67,10 @@ export default function Dashboard() {
     const [editWsName, setEditWsName] = useState("");
 
     const [query, setQuery] = useState("");
+
+    const [methodFilter, setMethodFilter] = useState("All Methods");
+    const [statusFilter, setStatusFilter] = useState("All Status");
+    const [timeFilter, setTimeFilter] = useState("All time");
 
     const handleChange = (e) => {
         const value = e.target.value;
@@ -271,13 +278,40 @@ export default function Dashboard() {
             .catch((err) => console.error("Error fetching endpoints:", err));
     };
 
-
     const fetchLogs = () => {
         fetch(`${API_ROOT}/logs`)
             .then((res) => res.json())
             .then((data) => setLogs(data))
             .catch((err) => console.error("Error fetching logs:", err))
     }
+
+    // Filter Logs
+    const filteredLogs = logs.filter((log) => {
+        const methodOk =
+            methodFilter === "All Methods" ||
+            log.method?.toUpperCase() === methodFilter.toUpperCase();
+
+        const statusOk =
+            statusFilter === "All Status" ||
+            String(log.status) === String(statusFilter);
+
+        let timeOk = true;
+        if (timeFilter && timeFilter !== "All time") {
+            const logTime = new Date(log.timestamp);
+            if (!isNaN(logTime)) {
+                const now = Date.now();
+                if (timeFilter === "Last 24 hours") {
+                    timeOk = logTime.getTime() >= now - 24 * 60 * 60 * 1000;
+                } else if (timeFilter === "Last 7 days") {
+                    timeOk = logTime.getTime() >= now - 7 * 24 * 60 * 60 * 1000;
+                } else if (timeFilter === "Last 30 days") {
+                    timeOk = logTime.getTime() >= now - 30 * 24 * 60 * 60 * 1000;
+                }
+            }
+        }
+
+        return methodOk && statusOk && timeOk;
+    });
 
     // filter + sort endpoints
     const filteredEndpoints = endpoints.filter((p) =>
@@ -539,11 +573,11 @@ export default function Dashboard() {
                 {/* Content Area */}
                 <div className="flex-1 items-center justify-between mb-4">
                     <div className="bg-white shadow p-6">
-                        <div className="flex border-b border-gray-200 mb-4 text-gray-600">
+                        <div className="flex border-b border-gray-200 mb-4 text-stone-500">
                             <Button
                                 variant="ghost"
                                 onClick={() => setActiveTab("endpoints")}
-                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
                             >
                                 Endpoints
                             </Button>
@@ -553,9 +587,19 @@ export default function Dashboard() {
                                     setActiveTab("logs")
                                     fetchLogs()
                                 }}
-                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
                             >
                                 Logs
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setActiveTab("statistic")
+                                    // fetchLogs()
+                                }}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "statistic" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
+                            >
+                                Statistic
                             </Button>
                         </div>
 
@@ -795,83 +839,168 @@ export default function Dashboard() {
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
-
-                                {/* Edit Workspace */}
-                                <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-                                        <DialogHeader>
-                                            <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="mt-2 space-y-4">
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
-                                                <Input
-                                                    value={editWsName}
-                                                    onChange={(e) => setEditWsName(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault();
-                                                            handleEditWorkspace();
-                                                        }
-                                                    }}
-                                                    placeholder="Enter workspace name"
-                                                    autoFocus
-                                                    className="h-10"
-                                                />
-                                            </div>
-                                        </div>
-                                        <DialogFooter className="mt-4">
-                                            <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-                                            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-
-                                {/* Confirm Delete Workspace */}
-                                <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
-                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-                                        <DialogHeader>
-                                            <DialogTitle>Delete Workspace</DialogTitle>
-                                        </DialogHeader>
-                                        <p>Are you sure you want to delete this workspace and all its projects?</p>
-                                        <DialogFooter>
-                                            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
-                                            <Button
-                                                className="bg-red-600 text-white hover:bg-red-700"
-                                                onClick={() => {
-                                                    handleDeleteWorkspace(confirmDeleteWs);
-                                                    setConfirmDeleteWs(null);
-                                                }}
-                                            >
-                                                Delete
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
                             </>
                         ) : (
                             <> {/* Logs */}
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                    Logs
-                                </h2>
-                                <div className="space-y-2">
-                                    {logs.map((log, i) => (
-                                        <div
-                                            key={i}
-                                            className="p-3 border rounded-md text-sm text-slate-700 bg-slate-50"
-                                        >
-                                            <div><b>Endpoint:</b> {log.endpoint_name || log.endpoint_id}</div>
-                                            <div><b>Method:</b> {log.method}</div>
-                                            <div><b>Status:</b> {log.status}</div>
-                                            <div><b>Time:</b> {new Date(log.created_at).toLocaleString()}</div>
+                                <div className="w-full overflow-x-auto">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex gap-2">
+                                            {/* Method Filter */}
+                                            <Select value={methodFilter} onValueChange={setMethodFilter}>
+                                                <SelectTrigger className="w-[140px]">
+                                                    <SelectValue placeholder="All Methods" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All Methods">All Methods</SelectItem>
+                                                    <SelectItem value="GET">GET</SelectItem>
+                                                    <SelectItem value="POST">POST</SelectItem>
+                                                    <SelectItem value="PUT">PUT</SelectItem>
+                                                    <SelectItem value="DELETE">DELETE</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            {/* Status Filter */}
+                                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                                <SelectTrigger className="w-[140px]">
+                                                    <SelectValue placeholder="All Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All Status">All Status</SelectItem>
+                                                    <SelectItem value="200">200</SelectItem>
+                                                    <SelectItem value="400">400</SelectItem>
+                                                    <SelectItem value="404">404</SelectItem>
+                                                    <SelectItem value="500">500</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            {/* Time Filter */}
+                                            <Select value={timeFilter} onValueChange={setTimeFilter}>
+                                                <SelectTrigger className="w-[160px]">
+                                                    <SelectValue placeholder="All time" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All time">All time</SelectItem>
+                                                    <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
+                                                    <SelectItem value="Last 7 days">Last 7 days</SelectItem>
+                                                    <SelectItem value="Last 30 days">Last 30 days</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    ))}
+
+                                        <div className="flex gap-2">
+                                            <Button variant="outline">
+                                                <img
+                                                    src={exportIcon}
+                                                    alt="Export Icon"
+                                                    className="w-4 h-4 object-contain"
+                                                />
+                                                Export
+                                            </Button>
+                                            <Button variant="outline" onClick={fetchLogs}>
+                                                <img
+                                                    src={refreshIcon}
+                                                    alt="Refresh Icon"
+                                                    className="w-4 h-4 object-contain"
+                                                />
+                                                Refresh
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="col-span-3">Timestamp</TableHead>
+                                                <TableHead className="col-span-1">Method</TableHead>
+                                                <TableHead className="col-span-2">Path</TableHead>
+                                                <TableHead className="col-span-2">Latency</TableHead>
+                                                <TableHead className="col-span-1">Status</TableHead>
+                                                <TableHead className="col-span-3">Matched Response</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+
+                                        <TableBody>
+                                            {logs.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={6}
+                                                        className="text-center text-slate-500 py-4"
+                                                    >
+                                                        No logs available.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : filteredLogs.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={6}
+                                                        className="text-center text-slate-500 py-4"
+                                                    >
+                                                        No logs match the selected filters.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                filteredLogs.map((log, i) => <LogCard key={i} log={log} />)
+                                            )}
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             </>
                         )}
                     </div>
                 </div>
             </main>
+            {/* Edit Workspace */}
+            <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
+                <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-2 space-y-4">
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+                            <Input
+                                value={editWsName}
+                                onChange={(e) => setEditWsName(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleEditWorkspace();
+                                    }
+                                }}
+                                placeholder="Enter workspace name"
+                                autoFocus
+                                className="h-10"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
+                        <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Confirm Delete Workspace */}
+            <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+                <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                        <DialogTitle>Delete Workspace</DialogTitle>
+                    </DialogHeader>
+                    <p>Are you sure you want to delete this workspace and all its projects?</p>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
+                        <Button
+                            className="bg-red-600 text-white hover:bg-red-700"
+                            onClick={() => {
+                                handleDeleteWorkspace(confirmDeleteWs);
+                                setConfirmDeleteWs(null);
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

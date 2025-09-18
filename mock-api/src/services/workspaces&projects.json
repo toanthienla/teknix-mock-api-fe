@@ -533,5 +533,56 @@
       "delay_ms": 0,
       "id": "b5f1"
     }
+  ],
+
+  "logs": [
+    {
+      "timestamp": "2025-09-10T12:00:00Z",
+      "method": "GET",
+      "path": "/api/users/12",
+      "latency": "142ms",
+      "status": 200,
+      "matched_response": "User Details - Success"
+    },
+    {
+      "timestamp": "2025-09-03T09:00:00Z",
+      "method": "GET",
+      "path": "/api/users/456",
+      "latency": "56ms",
+      "status": 404,
+      "matched_response": "User Not Found"
+    },
+    {
+      "timestamp": "2025-09-08T11:00:00Z",
+      "method": "PUT",
+      "path": "/api/users/2",
+      "latency": "234ms",
+      "status": 200,
+      "matched_response": "User Update - Success"
+    },
+    {
+      "timestamp": "2025-09-12T08:10:00Z",
+      "method": "DELETE",
+      "path": "/api/users/789",
+      "latency": "1245ms",
+      "status": 500,
+      "matched_response": "Internal Server Error"
+    },
+    {
+      "timestamp": "2025-09-16T02:01:00Z",
+      "method": "GET",
+      "path": "/api/users",
+      "latency": "78ms",
+      "status": 200,
+      "matched_response": "User List - Success"
+    },
+    {
+      "timestamp": "2025-09-18T02:07:00Z",
+      "method": "POST",
+      "path": "/api/users",
+      "latency": "167ms",
+      "status": 400,
+      "matched_response": "Invalid Request Data"
+    }
   ]
 }
