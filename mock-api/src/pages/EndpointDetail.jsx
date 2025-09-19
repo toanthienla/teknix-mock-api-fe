@@ -333,7 +333,7 @@ const Frame = () => {
 };
 
 const DashboardPage = () => {
-  const { endpointId } = useParams();
+   const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isActive, setIsActive] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -421,6 +421,18 @@ const DashboardPage = () => {
     fetchProjects();
     fetchEndpoints();
   }, []);
+   // Keep sidebar expanded when on endpoint detail
+  useEffect(() => {
+    if (!projectId) return;
+    const p = projects.find((proj) => String(proj.id) === String(projectId));
+    if (!p) return;
+
+    if (String(currentWsId) !== String(p.workspace_id)) {
+      setCurrentWsId(p.workspace_id);
+    }
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+  }, [projectId, projects, currentWsId]);
 
   useEffect(() => {
     if (endpointId) {

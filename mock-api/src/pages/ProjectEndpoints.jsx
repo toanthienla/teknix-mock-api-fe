@@ -257,6 +257,19 @@ export default function Dashboard() {
         }
     }, [projectId]);
 
+    // Keep sidebar expanded for selected project when navigating into project view
+    useEffect(() => {
+        if (!projectId || projects.length === 0) return;
+        const p = projects.find((proj) => String(proj.id) === String(projectId));
+        if (!p) return;
+
+        if (String(currentWsId) !== String(p.workspace_id)) {
+            setCurrentWsId(p.workspace_id);
+        }
+        setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+        setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    }, [projectId, projects, currentWsId]);
+
 
     const fetchWorkspaces = () => {
         fetch(`${API_ROOT}/workspaces`)
