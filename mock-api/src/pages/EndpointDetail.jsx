@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +32,8 @@ import {
   Code,
   X,
   GripVertical,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -36,6 +44,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
 import { useParams } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define the status codes
 const statusCodes = [
@@ -137,6 +152,186 @@ const statusCodes = [
   },
 ];
 
+const Frame = () => {
+  const [parameterRows, setParameterRows] = useState([
+    {
+      id: "rule-1",
+      type: "Route Parameter",
+      name: "",
+      value: "",
+    },
+  ]);
+
+  const [selectedRuleId, setSelectedRuleId] = useState(null);
+
+  const getPlaceholderText = (type) => {
+    switch (type) {
+      case "Route Parameter":
+        return "route parameter name";
+      case "Query parameter":
+        return "parameter name or object path";
+      case "Body":
+        return "object path (empty for full body)";
+      case "Header":
+        return "header name";
+      default:
+        return "route parameter name";
+    }
+  };
+
+  const handleTypeChange = (id, newType) => {
+    setParameterRows((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              type: newType,
+              // SỬA 3: Chỉ cập nhật name nếu đang rỗng hoặc là placeholder cũ
+              name:
+                row.name === "" || row.name === getPlaceholderText(row.type)
+                  ? ""
+                  : row.name,
+            }
+          : row
+      )
+    );
+  };
+
+  const handleAddRule = () => {
+    const newRow = {
+      id: `rule-${Date.now()}`,
+      type: "Route Parameter", // SỬA 2: Route Parameter là mặc định
+      name: "",
+      value: "",
+    };
+
+    setParameterRows((prevRows) => [...prevRows, newRow]);
+
+    setSelectedRuleId(newRow.id);
+  };
+
+  const handleRuleClick = (id, event) => {
+    if (event.target.closest("button")) {
+      return;
+    }
+
+    setSelectedRuleId(id);
+  };
+
+  // SỬA HÀM XÓA: NHẬN ID CỦA RULE CẦN XÓA THAY VÌ DÙNG selectedRuleId
+  const handleDeleteRule = (idToDelete) => {
+    setParameterRows((prevRows) => {
+      const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
+
+      // Đảm bảo luôn có ít nhất 1 rule
+      if (filteredRows.length === 0) {
+        return [
+          {
+            id: `rule-${Date.now()}`,
+            type: "Route Parameter",
+            name: "",
+            value: "",
+          },
+        ];
+      }
+
+      return filteredRows;
+    });
+
+    // Nếu rule bị xóa là rule đang được chọn, reset selectedRuleId
+    if (selectedRuleId === idToDelete) {
+      setSelectedRuleId(null);
+    }
+  };
+
+  return (
+    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-[#37352F]">Success Response</h1>
+      </div>
+
+      <div className="space-y-4">
+        {parameterRows.map((row) => (
+          <div
+            key={row.id}
+            onClick={(e) => handleRuleClick(row.id, e)}
+            className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
+              row.id === selectedRuleId ? "border-blue-600" : "border-slate-300"
+            }`}
+          >
+            <div className="w-[168px]">
+              <Select
+                value={row.type}
+                onValueChange={(value) => handleTypeChange(row.id, value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Route Parameter">
+                    Route Parameter
+                  </SelectItem>
+                  <SelectItem value="Query parameter">
+                    Query Parameter
+                  </SelectItem>
+                  <SelectItem value="Header">Header</SelectItem>
+                  <SelectItem value="Body">Body</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-blue-600 w-6 flex justify-center">=</div>
+
+            <Input
+              value={row.name}
+              onChange={(e) => {
+                setParameterRows((prev) =>
+                  prev.map((r) =>
+                    r.id === row.id ? { ...r, name: e.target.value } : r
+                  )
+                );
+              }}
+              className="w-[184px]"
+              placeholder={getPlaceholderText(row.type)} // SỬ DỤNG CHÍNH XÁC LÀM PLACEHOLDER
+            />
+
+            <Input
+              value={row.value}
+              onChange={(e) => {
+                setParameterRows((prev) =>
+                  prev.map((r) =>
+                    r.id === row.id ? { ...r, value: e.target.value } : r
+                  )
+                );
+              }}
+              className="w-[151px]"
+              placeholder="value"
+            />
+
+            {/* SỬA: TRUYỀN row.id VÀO HÀM XÓA */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation(); // NGĂN CHẶN SỰ KIỆN LAN TỎA
+                handleDeleteRule(row.id); // TRUYỀN ID CỦA RULE HIỆN TẠI
+              }}
+              disabled={parameterRows.length === 1}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ))}
+
+        <Button variant="outline" className="mt-2" onClick={handleAddRule}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add rule
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
 const DashboardPage = () => {
   const { endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
@@ -230,9 +425,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (endpointId) {
       setCurrentEndpointId(String(endpointId));
-    }
-    // THÊM: Nếu không có endpointId từ URL, set default endpoint
-    else if (endpoints.length > 0 && currentEndpointId === null) {
+    } else if (endpoints.length > 0 && currentEndpointId === null) {
       setCurrentEndpointId(endpoints[0].id);
     }
   }, [endpointId, endpoints]);
@@ -529,7 +722,6 @@ const DashboardPage = () => {
       return;
     }
 
-    // Xác định is_default - chỉ set true nếu đây là response đầu tiên
     const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
 
     const payload = {
@@ -584,8 +776,6 @@ const DashboardPage = () => {
       });
   };
 
-  // ... phần còn lại ...
-
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
@@ -627,7 +817,7 @@ const DashboardPage = () => {
             {/* Nút New Response */}
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-              onClick={handleNewResponse} // SỬA TẠI ĐÂY
+              onClick={handleNewResponse}
             >
               <Plus className="mr-2 h-4 w-4" /> New response
             </Button>
@@ -652,274 +842,371 @@ const DashboardPage = () => {
                 value="summary"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
               >
-                Summary
+                Header&Body
               </TabsTrigger>
               <TabsTrigger
                 value="submissions"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
               >
-                Submissions
+                Rules
               </TabsTrigger>
             </TabsList>
             <TabsContent value="summary" className="mt-4">
               <div className="border-b-2 border-[#37352F] w-20"></div>
-            </TabsContent>
-          </Tabs>
-        </div>
+              {/* Endpoint Detail Card */}
+              <div className="flex gap-6">
+                {/* Response Configurations Card */}
+                <div className="w-1/3">
+                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
+                      <h3 className="text-lg font-semibold text-[#37352F]">
+                        Response Configurations
+                      </h3>
+                    </div>
 
-        <div className="flex gap-6">
-          {/* Response Configurations Card */}
-          <div className="w-1/3">
-            <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
-                <h3 className="text-lg font-semibold text-[#37352F]">
-                  Response Configurations
-                </h3>
-              </div>
+                    <div className="p-4">
+                      <div className="rounded-md border border-solid border-slate-300">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                                    Status Code
+                                  </div>
+                                </div>
+                              </TableHead>
+                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                                      Name Response
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {statusData.map((status, index) => (
+                              <TableRow
+                                key={status.id || status.code}
+                                className={`${
+                                  status.isDefault ? "bg-slate-100" : ""
+                                } border-b [border-bottom-style:solid] border-neutral-200 ${
+                                  index === statusData.length - 1
+                                    ? "border-b-0"
+                                    : ""
+                                } ${
+                                  draggedItem === index ? "opacity-50" : ""
+                                } ${
+                                  selectedResponse?.id === status.id
+                                    ? "ring-2 ring-blue-500"
+                                    : ""
+                                }`}
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragOver={handleDragOver}
+                                onDragEnd={() => setDraggedItem(null)}
+                                onDrop={(e) => handleDrop(e, index)}
+                                onClick={() => {
+                                  const response = endpointResponses.find(
+                                    (r) => r.id === status.id
+                                  );
+                                  if (response) handleResponseSelect(response);
+                                }}
+                              >
+                                <TableCell className="w-[119.2px] h-[49px] p-2">
+                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                      {status.code}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                      {status.name}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
 
-              <div className="p-4">
-                <div className="rounded-md border border-solid border-slate-300">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                        <TableHead className="w-[119.2px] h-10 px-2 py-0">
-                          <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                              Status Code
-                            </div>
-                          </div>
-                        </TableHead>
-                        <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                          <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
-                            <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                                Name Response
-                              </div>
-                            </div>
-                          </div>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {statusData.map((status, index) => (
-                        <TableRow
-                          key={status.id || status.code}
-                          className={`${
-                            status.isDefault ? "bg-slate-100" : ""
-                          } border-b [border-bottom-style:solid] border-neutral-200 ${
-                            index === statusData.length - 1 ? "border-b-0" : ""
-                          } ${draggedItem === index ? "opacity-50" : ""} ${
-                            selectedResponse?.id === status.id
-                              ? "ring-2 ring-blue-500"
-                              : ""
-                          }`}
-                          draggable={true}
-                          onDragStart={(e) => handleDragStart(e, index)}
-                          onDragOver={handleDragOver}
-                          onDragEnd={() => setDraggedItem(null)}
-                          onDrop={(e) => handleDrop(e, index)}
+                {/* Endpoint Detail Card */}
+                <div className="w-2/3">
+                  <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex items-center">
+                        <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                          {endpoints.find((ep) => ep.id === currentEndpointId)
+                            ?.name || "Endpoint"}
+                        </h2>
+                        <Badge
+                          variant="outline"
+                          className="bg-[#D5FBD3] text-[#000000] border-0"
+                        >
+                          {endpoints.find((ep) => ep.id === currentEndpointId)
+                            ?.method || "GET"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-[#E5E5E5]"
                           onClick={() => {
-                            const response = endpointResponses.find(
-                              (r) => r.id === status.id
-                            );
-                            if (response) handleResponseSelect(response);
+                            if (selectedResponse) {
+                              setDefaultResponse(selectedResponse.id);
+                            }
                           }}
                         >
-                          <TableCell className="w-[119.2px] h-[49px] p-2">
-                            <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                              <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                {status.code}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                            <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                              <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                {status.name}
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Endpoint Detail Card */}
-          <div className="w-2/3">
-            <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center">
-                  <h2 className="text-2xl font-bold text-[#37352F] mr-4">
-                    {endpoints.find((ep) => ep.id === currentEndpointId)
-                      ?.name || "Endpoint"}
-                  </h2>
-                  <Badge
-                    variant="outline"
-                    className="bg-[#D5FBD3] text-[#000000] border-0"
-                  >
-                    {endpoints.find((ep) => ep.id === currentEndpointId)
-                      ?.method || "GET"}
-                  </Badge>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="border-[#E5E5E5]"
-                    onClick={() => {
-                      if (selectedResponse) {
-                        setDefaultResponse(selectedResponse.id);
-                      }
-                    }}
-                  >
-                    <Star
-                      className={`h-4 w-4 ${
-                        selectedResponse?.is_default
-                          ? "text-yellow-500 fill-yellow-500"
-                          : "text-[#898883]"
-                      }`}
-                    />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="border-[#E5E5E5]"
-                    onClick={handleDeleteResponse}
-                  >
-                    <Trash2 className="h-4 w-4 text-[#898883]" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Status Info */}
-              <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
-                <p className="text-[#777671] font-medium">
-                  Status: This endpoint is active and receiving requests
-                </p>
-              </div>
-
-              {/* Form */}
-              <div className="space-y-6">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="response-name"
-                    className="text-right text-sm font-medium text-[#000000]"
-                  >
-                    Response Name
-                  </Label>
-                  <Input
-                    id="response-name"
-                    value={responseName}
-                    onChange={(e) => setResponseName(e.target.value)}
-                    className="col-span-3 border-[#CBD5E1] rounded-md"
-                  />
-                </div>
-
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="status-code"
-                    className="text-right text-sm font-medium text-[#000000]"
-                  >
-                    Status Code
-                  </Label>
-                  <Input
-                    id="status-code"
-                    value={statusCode}
-                    onChange={(e) => setStatusCode(e.target.value)}
-                    className="col-span-3 border-[#CBD5E1] rounded-md"
-                  />
-                </div>
-
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="response-header"
-                    className="text-right text-sm font-medium text-[#000000]"
-                  >
-                    Response Header
-                  </Label>
-                  <div className="col-span-3 flex space-x-2">
-                    <Input
-                      id="header-key"
-                      placeholder="Key"
-                      value={headerKey}
-                      onChange={(e) => setHeaderKey(e.target.value)}
-                      className="border-[#CBD5E1] rounded-md"
-                    />
-                    <Input
-                      id="header-value"
-                      placeholder="Value"
-                      value={headerValue}
-                      onChange={(e) => setHeaderValue(e.target.value)}
-                      className="border-[#CBD5E1] rounded-md"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-4 gap-4">
-                  <Label
-                    htmlFor="response-body"
-                    className="text-right pt-2 text-sm font-medium text-[#000000]"
-                  >
-                    Response Body
-                  </Label>
-                  <div className="col-span-3 space-y-2">
-                    <Textarea
-                      id="response-body"
-                      value={responseBody}
-                      onChange={(e) => setResponseBody(e.target.value)}
-                      className="font-mono h-60 border-[#CBD5E1] rounded-md"
-                    />
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#E5E5E5]"
-                      >
-                        <Upload className="mr-2 h-4 w-4" /> Upload
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#E5E5E5]"
-                      >
-                        <Code className="mr-2 h-4 w-4" /> Format
-                      </Button>
+                          <Star
+                            className={`h-4 w-4 ${
+                              selectedResponse?.is_default
+                                ? "text-yellow-500 fill-yellow-500"
+                                : "text-[#898883]"
+                            }`}
+                          />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="border-[#E5E5E5]"
+                          onClick={handleDeleteResponse}
+                        >
+                          <Trash2 className="h-4 w-4 text-[#898883]" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label
-                    htmlFor="delay"
-                    className="text-right text-sm font-medium text-[#000000]"
-                  >
-                    Delay (ms)
-                  </Label>
-                  <Input
-                    id="delay"
-                    value={delay}
-                    onChange={(e) => setDelay(e.target.value)}
-                    className="col-span-3 border-[#CBD5E1] rounded-md"
-                  />
-                </div>
+                    {/* Status Info */}
+                    <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
+                      <p className="text-[#777671] font-medium">
+                        Status: This endpoint is active and receiving requests
+                      </p>
+                    </div>
 
-                {/* Nút Save duy nhất */}
-                <div className="flex justify-end">
-                  <Button
-                    className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                    onClick={handleSaveResponse}
-                  >
-                    Save Changes
-                  </Button>
+                    {/* Form */}
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="response-name"
+                          className="text-right text-sm font-medium text-[#000000]"
+                        >
+                          Response Name
+                        </Label>
+                        <Input
+                          id="response-name"
+                          value={responseName}
+                          onChange={(e) => setResponseName(e.target.value)}
+                          className="col-span-3 border-[#CBD5E1] rounded-md"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="status-code"
+                          className="text-right text-sm font-medium text-[#000000]"
+                        >
+                          Status Code
+                        </Label>
+                        <Input
+                          id="status-code"
+                          value={statusCode}
+                          onChange={(e) => setStatusCode(e.target.value)}
+                          className="col-span-3 border-[#CBD5E1] rounded-md"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="response-header"
+                          className="text-right text-sm font-medium text-[#000000]"
+                        >
+                          Response Header
+                        </Label>
+                        <div className="col-span-3 flex space-x-2">
+                          <Input
+                            id="header-key"
+                            placeholder="Key"
+                            value={headerKey}
+                            onChange={(e) => setHeaderKey(e.target.value)}
+                            className="border-[#CBD5E1] rounded-md"
+                          />
+                          <Input
+                            id="header-value"
+                            placeholder="Value"
+                            value={headerValue}
+                            onChange={(e) => setHeaderValue(e.target.value)}
+                            className="border-[#CBD5E1] rounded-md"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-4">
+                        <Label
+                          htmlFor="response-body"
+                          className="text-right pt-2 text-sm font-medium text-[#000000]"
+                        >
+                          Response Body
+                        </Label>
+                        <div className="col-span-3 space-y-2">
+                          <Textarea
+                            id="response-body"
+                            value={responseBody}
+                            onChange={(e) => setResponseBody(e.target.value)}
+                            className="font-mono h-60 border-[#CBD5E1] rounded-md"
+                          />
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E5]"
+                            >
+                              <Upload className="mr-2 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E5]"
+                            >
+                              <Code className="mr-2 h-4 w-4" /> Format
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="delay"
+                          className="text-right text-sm font-medium text-[#000000]"
+                        >
+                          Delay (ms)
+                        </Label>
+                        <Input
+                          id="delay"
+                          value={delay}
+                          onChange={(e) => setDelay(e.target.value)}
+                          className="col-span-3 border-[#CBD5E1] rounded-md"
+                        />
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                          onClick={handleSaveResponse}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
               </div>
-            </Card>
-          </div>
+            </TabsContent>
+            <TabsContent value="submissions" className="mt-4">
+              <div className="border-b-2 border-[#37352F] w-20"></div>
+
+              <div className="flex gap-6">
+                <div className="w-1/3">
+                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
+                      <h3 className="text-lg font-semibold text-[#37352F]">
+                        Response Configurations
+                      </h3>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="rounded-md border border-solid border-slate-300">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                                    Status Code
+                                  </div>
+                                </div>
+                              </TableHead>
+                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                                      Name Response
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {statusData.map((status, index) => (
+                              <TableRow
+                                key={status.id || status.code}
+                                className={`${
+                                  status.isDefault ? "bg-slate-100" : ""
+                                } border-b [border-bottom-style:solid] border-neutral-200 ${
+                                  index === statusData.length - 1
+                                    ? "border-b-0"
+                                    : ""
+                                } ${
+                                  draggedItem === index ? "opacity-50" : ""
+                                } ${
+                                  selectedResponse?.id === status.id
+                                    ? "ring-2 ring-blue-500"
+                                    : ""
+                                }`}
+                                draggable={true}
+                                onDragStart={(e) => handleDragStart(e, index)}
+                                onDragOver={handleDragOver}
+                                onDragEnd={() => setDraggedItem(null)}
+                                onDrop={(e) => handleDrop(e, index)}
+                                onClick={() => {
+                                  const response = endpointResponses.find(
+                                    (r) => r.id === status.id
+                                  );
+                                  if (response) handleResponseSelect(response);
+                                }}
+                              >
+                                <TableCell className="w-[119.2px] h-[49px] p-2">
+                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                      {status.code}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                      {status.name}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Thay thế Endpoint Detail Card bằng Frame */}
+                <div className="w-2/3">
+                  <Frame />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Edit Workspace */}
