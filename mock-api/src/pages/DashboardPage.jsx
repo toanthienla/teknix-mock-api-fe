@@ -129,14 +129,18 @@ export default function DashboardPage() {
   );
 
   let sortedProjects = [...filteredProjects];
-  if (sortOption === "A → Z") sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
-  if (sortOption === "Z → A") sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
+  if (sortOption === "A → Z")
+    sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
+  if (sortOption === "Z → A")
+    sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
-  const currentWorkspace = workspaces.find((w) => String(w.id) === String(currentWsId));
+  const currentWorkspace = workspaces.find(
+    (w) => String(w.id) === String(currentWsId)
+  );
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
@@ -147,7 +151,8 @@ export default function DashboardPage() {
     if (trimmed.length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
-        (w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+        (w) =>
+          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -157,7 +162,7 @@ export default function DashboardPage() {
   const handleAddWorkspace = (name) => {
     const err = validateWsName(name);
     if (err) {
-      showToast("warning", err);
+      toast.warning(err); // 🔥 trực tiếp toastify
       return;
     }
     fetch(`${API_ROOT}/workspaces`, {
@@ -174,15 +179,15 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        showToast("success", "Workspace created successfully");
+        toast.success("Workspace created successfully"); // 🔥
       })
-      .catch(() => showToast("error", "Failed to create workspace"));
+      .catch(() => toast.error("Failed to create workspace")); // 🔥
   };
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
     if (err) {
-      showToast("warning", err);
+      toast.warning(err); // 🔥
       return;
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
@@ -202,9 +207,9 @@ export default function DashboardPage() {
         setOpenEditWs(false);
         setEditWsName("");
         setEditWsId(null);
-        showToast("success", "Workspace updated successfully");
+        toast.success("Workspace updated successfully"); // 🔥
       })
-      .catch(() => showToast("error", "Failed to update workspace"));
+      .catch(() => toast.error("Failed to update workspace")); // 🔥
   };
 
   const handleDeleteWorkspace = async (id) => {
@@ -225,9 +230,9 @@ export default function DashboardPage() {
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
-      showToast("success", "Workspace and its projects deleted successfully");
+      toast.success("Workspace and its projects deleted successfully"); // 🔥
     } catch {
-      showToast("error", "Failed to delete workspace or its projects");
+      toast.error("Failed to delete workspace or its projects"); // 🔥
     }
   };
 
@@ -253,7 +258,10 @@ export default function DashboardPage() {
       return false;
     }
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-      showToast("warning", "Only letters, numbers, and spaces allowed (no special characters)");
+      showToast(
+        "warning",
+        "Only letters, numbers, and spaces allowed (no special characters)"
+      );
       return false;
     }
     if (!descTrim) {
@@ -393,11 +401,16 @@ export default function DashboardPage() {
 
         {/* Main */}
         <main className="flex-1 p-8">
-          <Topbar onSearch={setSearchTerm} onNewProject={() => setOpenNewProject(true)} />
+          <Topbar
+            onSearch={setSearchTerm}
+            onNewProject={() => setOpenNewProject(true)}
+          />
 
           {currentProject ? (
             <div>
-              <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
+              <h2 className="text-2xl font-semibold mb-4">
+                {currentProject.name}
+              </h2>
               <p className="text-slate-600">{currentProject.description}</p>
               <Button
                 variant="outline"
@@ -412,11 +425,13 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   {currentWorkspace && (
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                    <h2 className=" mt-4 text-3xl font-bold text-slate-900 mb-2">
                       {currentWorkspace.name}
                     </h2>
                   )}
-                  <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
+                  <h3 className="text-base text-slate-600 ml-2">
+                    All Projects
+                  </h3>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -429,7 +444,9 @@ export default function DashboardPage() {
                     align="end"
                     className="w-40 bg-white shadow-md rounded-md"
                   >
-                    <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("Recently created")}
+                    >
                       Recently created
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
@@ -469,9 +486,13 @@ export default function DashboardPage() {
             <DialogTitle>New Project</DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-700">Project Detail</h3>
+            <h3 className="text-sm font-semibold text-slate-700">
+              Project Detail
+            </h3>
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">
+                Name
+              </h4>
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
@@ -485,7 +506,9 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">
+                Description
+              </h4>
               <Textarea
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
@@ -497,12 +520,21 @@ export default function DashboardPage() {
                 }}
                 placeholder="Type Here"
               />
-              <p className="text-right text-slate-400 text-xs mt-1">{newDesc.length} / 200</p>
+              <p className="text-right text-slate-400 text-xs mt-1">
+                {newDesc.length} / 200
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenNewProject(false)}>Cancel</Button>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleCreateProject}>Create</Button>
+            <Button variant="outline" onClick={() => setOpenNewProject(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleCreateProject}
+            >
+              Create
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -515,7 +547,9 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="mt-2 space-y-4">
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mt-2">Name</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">
+                Name
+              </h4>
               <Input
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
@@ -529,7 +563,9 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mt-2">Description</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mt-2">
+                Description
+              </h4>
               <Textarea
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
@@ -541,17 +577,23 @@ export default function DashboardPage() {
                 }}
                 placeholder="Type Here"
               />
-              <p className="text-right text-slate-400 text-xs mt-1">{editDesc.length} / 200</p>
+              <p className="text-right text-slate-400 text-xs mt-1">
+                {editDesc.length} / 200
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEditProject(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpenEditProject(false)}>
+              Cancel
+            </Button>
             <Button
               className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               onClick={handleUpdateProject}
               disabled={
-                editTitle.trim() === (projects.find(p => p.id === editId)?.name || "") &&
-                editDesc.trim() === (projects.find(p => p.id === editId)?.description || "")
+                editTitle.trim() ===
+                  (projects.find((p) => p.id === editId)?.name || "") &&
+                editDesc.trim() ===
+                  (projects.find((p) => p.id === editId)?.description || "")
               }
             >
               Update
@@ -568,8 +610,18 @@ export default function DashboardPage() {
           </DialogHeader>
           <p>Are you sure you want to delete this project?</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDeleteProject(false)}>Cancel</Button>
-            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={handleDeleteProject}>Delete</Button>
+            <Button
+              variant="outline"
+              onClick={() => setOpenDeleteProject(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={handleDeleteProject}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -578,11 +630,15 @@ export default function DashboardPage() {
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-slate-800">
+              Edit Workspace
+            </DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+              <label className="text-sm font-medium text-slate-700 block mb-1">
+                Workspace Name
+              </label>
               <Input
                 value={editWsName}
                 onChange={(e) => setEditWsName(e.target.value)}
@@ -599,21 +655,40 @@ export default function DashboardPage() {
             </div>
           </div>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenEditWs(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleEditWorkspace}
+            >
+              Update
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Confirm Delete Workspace */}
-      <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+      <Dialog
+        open={!!confirmDeleteWs}
+        onOpenChange={() => setConfirmDeleteWs(null)}
+      >
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete this workspace and all its projects?</p>
+          <p>
+            Are you sure you want to delete this workspace and all its projects?
+          </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
+              Cancel
+            </Button>
             <Button
               className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => {
@@ -627,7 +702,11 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      <ToastContainer position="bottom-right" autoClose={2000} hideProgressBar={false} />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={2000}
+        hideProgressBar={false}
+      />
     </div>
   );
 }
