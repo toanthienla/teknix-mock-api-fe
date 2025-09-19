@@ -245,90 +245,98 @@ const Frame = () => {
   };
 
   return (
-    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#37352F]">Success Response</h1>
-      </div>
+    <div className="mt-15">
+      {" "}
+      {/* Thêm margin-top 20px */}
+      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#37352F]">
+            Success Response
+          </h1>
+        </div>
 
-      <div className="space-y-4">
-        {parameterRows.map((row) => (
-          <div
-            key={row.id}
-            onClick={(e) => handleRuleClick(row.id, e)}
-            className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
-              row.id === selectedRuleId ? "border-blue-600" : "border-slate-300"
-            }`}
-          >
-            <div className="w-[168px]">
-              <Select
-                value={row.type}
-                onValueChange={(value) => handleTypeChange(row.id, value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Route Parameter">
-                    Route Parameter
-                  </SelectItem>
-                  <SelectItem value="Query parameter">
-                    Query Parameter
-                  </SelectItem>
-                  <SelectItem value="Header">Header</SelectItem>
-                  <SelectItem value="Body">Body</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="text-blue-600 w-6 flex justify-center">=</div>
-
-            <Input
-              value={row.name}
-              onChange={(e) => {
-                setParameterRows((prev) =>
-                  prev.map((r) =>
-                    r.id === row.id ? { ...r, name: e.target.value } : r
-                  )
-                );
-              }}
-              className="w-[184px]"
-              placeholder={getPlaceholderText(row.type)} // SỬ DỤNG CHÍNH XÁC LÀM PLACEHOLDER
-            />
-
-            <Input
-              value={row.value}
-              onChange={(e) => {
-                setParameterRows((prev) =>
-                  prev.map((r) =>
-                    r.id === row.id ? { ...r, value: e.target.value } : r
-                  )
-                );
-              }}
-              className="w-[151px]"
-              placeholder="value"
-            />
-
-            {/* SỬA: TRUYỀN row.id VÀO HÀM XÓA */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation(); // NGĂN CHẶN SỰ KIỆN LAN TỎA
-                handleDeleteRule(row.id); // TRUYỀN ID CỦA RULE HIỆN TẠI
-              }}
-              disabled={parameterRows.length === 1}
+        <div className="space-y-4">
+          {parameterRows.map((row) => (
+            <div
+              key={row.id}
+              onClick={(e) => handleRuleClick(row.id, e)}
+              className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
+                row.id === selectedRuleId
+                  ? "border-blue-600"
+                  : "border-slate-300"
+              }`}
             >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+              <div className="w-[168px]">
+                <Select
+                  value={row.type}
+                  onValueChange={(value) => handleTypeChange(row.id, value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Route Parameter">
+                      Route Parameter
+                    </SelectItem>
+                    <SelectItem value="Query parameter">
+                      Query Parameter
+                    </SelectItem>
+                    <SelectItem value="Header">Header</SelectItem>
+                    <SelectItem value="Body">Body</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <Button variant="outline" className="mt-2" onClick={handleAddRule}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add rule
-        </Button>
-      </div>
-    </Card>
+              <div className="text-blue-600 w-6 flex justify-center">=</div>
+
+              <Input
+                value={row.name}
+                onChange={(e) => {
+                  setParameterRows((prev) =>
+                    prev.map((r) =>
+                      r.id === row.id ? { ...r, name: e.target.value } : r
+                    )
+                  );
+                }}
+                className="w-[184px]"
+                placeholder={getPlaceholderText(row.type)} // SỬ DỤNG CHÍNH XÁC LÀM PLACEHOLDER
+              />
+
+              <Input
+                value={row.value}
+                onChange={(e) => {
+                  setParameterRows((prev) =>
+                    prev.map((r) =>
+                      r.id === row.id ? { ...r, value: e.target.value } : r
+                    )
+                  );
+                }}
+                className="w-[151px]"
+                placeholder="value"
+              />
+
+              {/* SỬA: TRUYỀN row.id VÀO HÀM XÓA */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(); // NGĂN CHẶN SỰ KIỆN LAN TỎA
+                  handleDeleteRule(row.id); // TRUYỀN ID CỦA RULE HIỆN TẠI
+                }}
+                disabled={parameterRows.length === 1}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+
+          <Button variant="outline" className="mt-2" onClick={handleAddRule}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add rule
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 };
 
@@ -853,95 +861,83 @@ const DashboardPage = () => {
             </TabsList>
             <TabsContent value="summary" className="mt-4">
               <div className="border-b-2 border-[#37352F] w-20"></div>
-              {/* Endpoint Detail Card */}
               <div className="flex gap-6">
-                {/* Response Configurations Card */}
                 <div className="w-1/3">
-                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
-                      <h3 className="text-lg font-semibold text-[#37352F]">
-                        Response Configurations
-                      </h3>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="rounded-md border border-solid border-slate-300">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
-                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                                    Status Code
-                                  </div>
+                  {/* Response Configuration Table */}
+                  <div className="rounded-md border border-solid border-slate-300">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                          <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                            <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                                Status Code
+                              </div>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                            <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                              <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                                  Name Response
                                 </div>
-                              </TableHead>
-                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
-                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                                      Name Response
-                                    </div>
-                                  </div>
+                              </div>
+                            </div>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {statusData.map((status, index) => (
+                          <TableRow
+                            key={status.id || status.code}
+                            className={`${
+                              status.isDefault ? "bg-slate-100" : ""
+                            } border-b [border-bottom-style:solid] border-neutral-200 ${
+                              index === statusData.length - 1
+                                ? "border-b-0"
+                                : ""
+                            } ${draggedItem === index ? "opacity-50" : ""} ${
+                              selectedResponse?.id === status.id
+                                ? "ring-2 ring-blue-500"
+                                : ""
+                            }`}
+                            draggable={true}
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={handleDragOver}
+                            onDragEnd={() => setDraggedItem(null)}
+                            onDrop={(e) => handleDrop(e, index)}
+                            onClick={() => {
+                              const response = endpointResponses.find(
+                                (r) => r.id === status.id
+                              );
+                              if (response) handleResponseSelect(response);
+                            }}
+                          >
+                            <TableCell className="w-[119.2px] h-[49px] p-2">
+                              <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                  {status.code}
                                 </div>
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {statusData.map((status, index) => (
-                              <TableRow
-                                key={status.id || status.code}
-                                className={`${
-                                  status.isDefault ? "bg-slate-100" : ""
-                                } border-b [border-bottom-style:solid] border-neutral-200 ${
-                                  index === statusData.length - 1
-                                    ? "border-b-0"
-                                    : ""
-                                } ${
-                                  draggedItem === index ? "opacity-50" : ""
-                                } ${
-                                  selectedResponse?.id === status.id
-                                    ? "ring-2 ring-blue-500"
-                                    : ""
-                                }`}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragOver={handleDragOver}
-                                onDragEnd={() => setDraggedItem(null)}
-                                onDrop={(e) => handleDrop(e, index)}
-                                onClick={() => {
-                                  const response = endpointResponses.find(
-                                    (r) => r.id === status.id
-                                  );
-                                  if (response) handleResponseSelect(response);
-                                }}
-                              >
-                                <TableCell className="w-[119.2px] h-[49px] p-2">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.code}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.name}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  </Card>
+                              </div>
+                            </TableCell>
+                            <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                              <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                  {status.name}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
 
-                {/* Endpoint Detail Card */}
-                <div className="w-2/3">
+                <div className="w-2/3 mt-15">
+                  {" "}
+                  {/* Endpoint Detail Card container */}
                   <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex items-center">
@@ -1114,94 +1110,83 @@ const DashboardPage = () => {
             </TabsContent>
             <TabsContent value="submissions" className="mt-4">
               <div className="border-b-2 border-[#37352F] w-20"></div>
-
               <div className="flex gap-6">
                 <div className="w-1/3">
-                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
-                      <h3 className="text-lg font-semibold text-[#37352F]">
-                        Response Configurations
-                      </h3>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="rounded-md border border-solid border-slate-300">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
-                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                                    Status Code
-                                  </div>
+                  {/* Response Configuration Table */}
+                  <div className="rounded-md border border-solid border-slate-300">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                          <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                            <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                              <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                                Status Code
+                              </div>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                            <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                              <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                                  Name Response
                                 </div>
-                              </TableHead>
-                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
-                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                                      Name Response
-                                    </div>
-                                  </div>
+                              </div>
+                            </div>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {statusData.map((status, index) => (
+                          <TableRow
+                            key={status.id || status.code}
+                            className={`${
+                              status.isDefault ? "bg-slate-100" : ""
+                            } border-b [border-bottom-style:solid] border-neutral-200 ${
+                              index === statusData.length - 1
+                                ? "border-b-0"
+                                : ""
+                            } ${draggedItem === index ? "opacity-50" : ""} ${
+                              selectedResponse?.id === status.id
+                                ? "ring-2 ring-blue-500"
+                                : ""
+                            }`}
+                            draggable={true}
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragOver={handleDragOver}
+                            onDragEnd={() => setDraggedItem(null)}
+                            onDrop={(e) => handleDrop(e, index)}
+                            onClick={() => {
+                              const response = endpointResponses.find(
+                                (r) => r.id === status.id
+                              );
+                              if (response) handleResponseSelect(response);
+                            }}
+                          >
+                            <TableCell className="w-[119.2px] h-[49px] p-2">
+                              <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                  {status.code}
                                 </div>
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {statusData.map((status, index) => (
-                              <TableRow
-                                key={status.id || status.code}
-                                className={`${
-                                  status.isDefault ? "bg-slate-100" : ""
-                                } border-b [border-bottom-style:solid] border-neutral-200 ${
-                                  index === statusData.length - 1
-                                    ? "border-b-0"
-                                    : ""
-                                } ${
-                                  draggedItem === index ? "opacity-50" : ""
-                                } ${
-                                  selectedResponse?.id === status.id
-                                    ? "ring-2 ring-blue-500"
-                                    : ""
-                                }`}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragOver={handleDragOver}
-                                onDragEnd={() => setDraggedItem(null)}
-                                onDrop={(e) => handleDrop(e, index)}
-                                onClick={() => {
-                                  const response = endpointResponses.find(
-                                    (r) => r.id === status.id
-                                  );
-                                  if (response) handleResponseSelect(response);
-                                }}
-                              >
-                                <TableCell className="w-[119.2px] h-[49px] p-2">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.code}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.name}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  </Card>
+                              </div>
+                            </TableCell>
+                            <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                              <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                                <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                                  {status.name}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
 
-                {/* Thay thế Endpoint Detail Card bằng Frame */}
-                <div className="w-2/3">
+                <div className="w-2/3 mt-15">
+                  {" "}
+                  {/* Frame container */}
                   <Frame />
                 </div>
               </div>
