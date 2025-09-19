@@ -23,6 +23,12 @@
       "name": "QA Team",
       "created_at": "2025-09-04T14:00:00Z",
       "updated_at": "2025-09-14T17:00:00Z"
+    },
+    {
+      "id": "bf73",
+      "name": "wp",
+      "created_at": "2025-09-18T06:49:20.417Z",
+      "updated_at": "2025-09-18T06:49:20.420Z"
     }
   ],
   "projects": [
@@ -73,6 +79,22 @@
       "description": "Automate QA test cases",
       "created_at": "2025-09-11T10:00:00Z",
       "updated_at": "2025-09-15T09:00:00Z"
+    },
+    {
+      "id": "4398",
+      "name": "scscscs",
+      "description": "dv",
+      "workspace_id": "bf73",
+      "created_at": "2025-09-18T15:09:59.620Z",
+      "updated_at": "2025-09-18T15:09:59.620Z"
+    },
+    {
+      "id": "fe8d",
+      "name": "scs",
+      "description": "scs",
+      "workspace_id": "1",
+      "created_at": "2025-09-18T15:23:01.448Z",
+      "updated_at": "2025-09-18T15:23:01.448Z"
     }
   ],
   "endpoints": [
@@ -158,13 +180,31 @@
       "updated_at": "2025-09-17T07:00:22.819Z"
     },
     {
-      "id": "9",
-      "name": "hello",
-      "path": "/dash",
+      "id": "10",
+      "name": "aaaa",
+      "path": "/a",
       "method": "POST",
-      "project_id": 4,
-      "created_at": "2025-09-18T06:56:09.300Z",
-      "updated_at": "2025-09-18T06:56:09.300Z"
+      "project_id": 1,
+      "created_at": "2025-09-18T07:32:51.501Z",
+      "updated_at": "2025-09-18T07:32:51.501Z"
+    },
+    {
+      "id": "11",
+      "name": "bbb",
+      "path": "/b",
+      "method": "PUT",
+      "project_id": 1,
+      "created_at": "2025-09-18T07:32:58.121Z",
+      "updated_at": "2025-09-18T07:32:58.121Z"
+    },
+    {
+      "id": "12",
+      "name": "ccc",
+      "path": "/c",
+      "method": "DELETE",
+      "project_id": 1,
+      "created_at": "2025-09-18T07:33:05.165Z",
+      "updated_at": "2025-09-18T07:33:05.165Z"
     }
   ],
   "endpoint_responses": [
@@ -182,8 +222,6 @@
       "delay_ms": 0
     },
     {
-      "id": "2",
-      "endpoint_id": 1,
       "name": "Not Foundass",
       "status_code": 404,
       "response_body": {
@@ -191,11 +229,10 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "2"
     },
     {
-      "id": "14",
-      "endpoint_id": 1,
       "name": "Unauthorized",
       "status_code": 401,
       "response_body": {
@@ -203,11 +240,10 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "14"
     },
     {
-      "id": "15",
-      "endpoint_id": 1,
       "name": "Validation Error",
       "status_code": 400,
       "response_body": {
@@ -215,11 +251,10 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "15"
     },
     {
-      "id": "16",
-      "endpoint_id": 1,
       "name": "Internal Server Error",
       "status_code": 500,
       "response_body": {
@@ -227,7 +262,8 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "16"
     },
     {
       "id": "3",
@@ -358,17 +394,19 @@
       "updated_at": "2025-09-13T09:55:00Z"
     },
     {
-      "endpoint_id": "5",
+      "id": "7",
+      "endpoint_id": 5,
       "name": "Build Triggered",
       "status_code": 202,
       "response_body": {
         "status": "pending",
-        "buildId": "aasabasc123"
+        "buildId": "abc123"
       },
       "condition": {},
+      "priority": 1,
       "is_default": true,
-      "delay_ms": 0,
-      "id": "7"
+      "created_at": "2025-09-14T10:10:00Z",
+      "updated_at": "2025-09-14T10:20:00Z"
     },
     {
       "id": "8",
@@ -439,31 +477,35 @@
       "updated_at": "2025-09-15T08:35:00Z"
     },
     {
-      "endpoint_id": "8",
+      "id": "12",
+      "endpoint_id": 8,
       "name": "Test Case Run Success",
       "status_code": 200,
       "response_body": {
         "id": 101,
-        "result": "passas"
+        "result": "pass"
       },
       "condition": {},
+      "priority": 1,
       "is_default": true,
-      "delay_ms": 0,
-      "id": "12"
+      "created_at": "2025-09-15T09:10:00Z",
+      "updated_at": "2025-09-15T09:40:00Z"
     },
     {
-      "endpoint_id": "8",
+      "id": "13",
+      "endpoint_id": 8,
       "name": "Test Case Run Failed",
       "status_code": 200,
       "response_body": {
         "id": 101,
         "result": "fail",
-        "error": "AEPssertion erasasasrasassaor"
+        "error": "Assertion error"
       },
       "condition": {},
+      "priority": 2,
       "is_default": false,
-      "delay_ms": 0,
-      "id": "13"
+      "created_at": "2025-09-15T09:15:00Z",
+      "updated_at": "2025-09-15T09:45:00Z"
     },
     {
       "id": "7df7",
@@ -478,8 +520,6 @@
       "delay_ms": 0
     },
     {
-      "id": "5876",
-      "endpoint_id": 1,
       "name": "Hell",
       "status_code": 202,
       "response_body": {
@@ -488,7 +528,8 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "5876"
     },
     {
       "id": "f628",
@@ -504,8 +545,6 @@
       "delay_ms": 0
     },
     {
-      "id": "b5f1",
-      "endpoint_id": 1,
       "name": "Suprise",
       "status_code": 505,
       "response_body": {
@@ -513,190 +552,226 @@
       },
       "condition": {},
       "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "endpoint_id": "9",
-      "name": "HAha",
-      "status_code": 200,
-      "response_body": "as",
-      "condition": {},
-      "is_default": false,
       "delay_ms": 0,
-      "id": "9bce"
-    },
+      "id": "b5f1"
+    }
+  ],
+
+  "logs": [
     {
-      "endpoint_id": "9",
-      "name": "HAha",
-      "status_code": 200,
-      "response_body": "helasaslso",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "986f"
-    },
-    {
-      "id": "740b",
-      "endpoint_id": "9",
-      "name": "HAha",
-      "status_code": 200,
-      "response_body": "hello",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "endpoint_id": "5",
-      "name": "Build Triggered",
-      "status_code": 202,
-      "response_body": {
-        "status": "pending",
-        "buildId": "abascaasasaasasasassasasass123"
+      "id": 1,
+      "project_id": 1,
+      "endpoint_id": 201,
+      "endpoint_response_id": 301,
+      "request_method": "GET",
+      "request_path": "/api/users",
+      "request_headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer token123"
       },
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "587f"
+      "request_body": null,
+      "response_status_code": 200,
+      "response_body": {
+        "users": [
+          {"id": 1, "name": "Alice"},
+          {"id": 2, "name": "Bob"}
+        ]
+      },
+      "ip_address": "192.168.1.10",
+      "latency_ms": 123,
+      "created_at": "2025-09-19T08:30:00Z"
     },
     {
-      "id": "2113",
-      "endpoint_id": "5",
-      "name": "as",
-      "status_code": 200,
-      "response_body": "hello",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
+      "id": 2,
+      "project_id": 1,
+      "endpoint_id": 202,
+      "endpoint_response_id": 302,
+      "request_method": "POST",
+      "request_path": "/api/orders",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "user_id": 1,
+        "product_id": 55,
+        "quantity": 2
+      },
+      "response_status_code": 201,
+      "response_body": {
+        "order_id": 501,
+        "status": "created"
+      },
+      "ip_address": "203.0.113.45",
+      "latency_ms": 256,
+      "created_at": "2025-09-19T09:15:00Z"
     },
     {
-      "endpoint_id": "8",
-      "name": "HAha",
-      "status_code": 200,
-      "response_body": "GasasG",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "5aca"
+      "id": 3,
+      "project_id": 2,
+      "endpoint_id": 203,
+      "endpoint_response_id": 303,
+      "request_method": "DELETE",
+      "request_path": "/api/products/55",
+      "request_headers": {
+        "Authorization": "Bearer token456"
+      },
+      "request_body": null,
+      "response_status_code": 404,
+      "response_body": {
+        "error": "Product not found"
+      },
+      "ip_address": "198.51.100.23",
+      "latency_ms": 89,
+      "created_at": "2025-09-19T10:00:00Z"
     },
     {
-      "endpoint_id": "9",
-      "name": "Sh",
-      "status_code": 307,
-      "response_body": "SHIUUUU",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "c501"
+      "id": 4,
+      "project_id": 1,
+      "endpoint_id": 204,
+      "endpoint_response_id": 304,
+      "request_method": "PUT",
+      "request_path": "/api/users/1",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "name": "Alice Updated",
+        "email": "alice@example.com"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "id": 1,
+        "name": "Alice Updated",
+        "email": "alice@example.com"
+      },
+      "ip_address": "192.0.2.11",
+      "latency_ms": 175,
+      "created_at": "2025-09-19T10:45:00Z"
     },
     {
-      "endpoint_id": "9",
-      "name": "ANA",
-      "status_code": 304,
-      "response_body": "HUNGRY",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "7e23"
+      "id": 5,
+      "project_id": 3,
+      "endpoint_id": 205,
+      "endpoint_response_id": 305,
+      "request_method": "PATCH",
+      "request_path": "/api/orders/501",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "status": "shipped"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "order_id": 501,
+        "status": "shipped"
+      },
+      "ip_address": "203.0.113.46",
+      "latency_ms": 142,
+      "created_at": "2025-09-19T11:20:00Z"
     },
     {
-      "id": "c7f7",
-      "endpoint_id": "9",
-      "name": "HAha",
-      "status_code": 206,
-      "response_body": "hina",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
+      "id": 6,
+      "project_id": 4,
+      "endpoint_id": 206,
+      "endpoint_response_id": 306,
+      "request_method": "GET",
+      "request_path": "/api/products",
+      "request_headers": {
+        "Accept": "application/json"
+      },
+      "request_body": null,
+      "response_status_code": 500,
+      "response_body": {
+        "error": "Internal Server Error"
+      },
+      "ip_address": "198.51.100.24",
+      "latency_ms": 321,
+      "created_at": "2025-09-19T12:00:00Z"
     },
     {
-      "endpoint_id": "9",
-      "name": "Hello",
-      "status_code": 202,
-      "response_body": "Supasas",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "d49c"
+      "id": 7,
+      "project_id": 5,
+      "endpoint_id": 207,
+      "endpoint_response_id": 307,
+      "request_method": "GET",
+      "request_path": "/api/orders/999",
+      "request_headers": {
+        "Authorization": "Bearer token789"
+      },
+      "request_body": null,
+      "response_status_code": 404,
+      "response_body": {
+        "error": "Order not found"
+      },
+      "ip_address": "192.168.2.20",
+      "latency_ms": 67,
+      "created_at": "2025-09-19T12:40:00Z"
     },
     {
-      "id": "f61c",
-      "endpoint_id": "9",
-      "name": "Hello",
-      "status_code": 200,
-      "response_body": "What?",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
+      "id": 8,
+      "project_id": 6,
+      "endpoint_id": 208,
+      "endpoint_response_id": 308,
+      "request_method": "POST",
+      "request_path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "bob",
+        "password": "secret"
+      },
+      "response_status_code": 401,
+      "response_body": {
+        "error": "Unauthorized"
+      },
+      "ip_address": "203.0.113.47",
+      "latency_ms": 94,
+      "created_at": "2025-09-19T13:05:00Z"
     },
     {
-      "id": "767e",
-      "endpoint_id": "9",
-      "name": "What",
-      "status_code": 200,
-      "response_body": "WHAT???",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
+      "id": 9,
+      "project_id": 7,
+      "endpoint_id": 209,
+      "endpoint_response_id": 309,
+      "request_method": "GET",
+      "request_path": "/api/reports/daily",
+      "request_headers": {
+        "Accept": "application/json"
+      },
+      "request_body": null,
+      "response_status_code": 200,
+      "response_body": {
+        "report_date": "2025-09-19",
+        "sales": 1200,
+        "orders": 85
+      },
+      "ip_address": "192.0.2.12",
+      "latency_ms": 198,
+      "created_at": "2025-09-19T13:30:00Z"
     },
     {
-      "id": "6dc7",
-      "endpoint_id": "9",
-      "name": "Haha",
-      "status_code": 200,
-      "response_body": "NANI?",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "id": "ae57",
-      "endpoint_id": "6",
-      "name": "\"Huh?\"",
-      "status_code": 302,
-      "response_body": "Whatever",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "id": "386b",
-      "endpoint_id": "8",
-      "name": "\"Sup\"",
-      "status_code": 200,
-      "response_body": "DUDE",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "id": "5eea",
-      "endpoint_id": "8",
-      "name": "What?\"",
-      "status_code": 206,
-      "response_body": "Haha",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
-    },
-    {
-      "endpoint_id": "8",
-      "name": "So?\"",
-      "status_code": 302,
-      "response_body": "Lol",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "438e"
-    },
-    {
-      "id": "8730",
-      "endpoint_id": "8",
-      "name": "Hell",
-      "status_code": 308,
-      "response_body": "Nah",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
+      "id": 10,
+      "project_id": 8,
+      "endpoint_id": 210,
+      "endpoint_response_id": 310,
+      "request_method": "PUT",
+      "request_path": "/api/settings/theme",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "theme": "dark"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "theme": "dark",
+        "updated": true
+      },
+      "ip_address": "198.51.100.25",
+      "latency_ms": 110,
+      "created_at": "2025-09-19T14:00:00Z"
     }
   ]
 }
