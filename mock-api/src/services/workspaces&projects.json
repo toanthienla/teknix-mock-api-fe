@@ -697,16 +697,6 @@
       "condition": {},
       "is_default": false,
       "delay_ms": 0
-    },
-    {
-      "id": "a0ae",
-      "endpoint_id": "8",
-      "name": "Hell",
-      "status_code": 301,
-      "response_body": "Sup",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0
     }
   ]
 }
