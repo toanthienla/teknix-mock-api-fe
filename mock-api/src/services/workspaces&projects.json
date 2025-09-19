@@ -29,24 +29,6 @@
       "name": "wp",
       "created_at": "2025-09-18T06:49:20.417Z",
       "updated_at": "2025-09-18T06:49:20.420Z"
-    },
-    {
-      "id": "e0fa",
-      "name": "aaaa",
-      "created_at": "2025-09-19T05:08:07.005Z",
-      "updated_at": "2025-09-19T05:08:07.005Z"
-    },
-    {
-      "id": "eeac",
-      "name": "jdmgsk",
-      "created_at": "2025-09-19T05:08:13.469Z",
-      "updated_at": "2025-09-19T05:08:13.469Z"
-    },
-    {
-      "id": "546a",
-      "name": "xxxxxx",
-      "created_at": "2025-09-19T05:08:17.996Z",
-      "updated_at": "2025-09-19T05:08:17.996Z"
     }
   ],
   "projects": [
@@ -124,6 +106,15 @@
     }
   ],
   "endpoints": [
+    {
+      "id": "1",
+      "project_id": 1,
+      "name": "Get Users",
+      "method": "GET",
+      "path": "/users",
+      "created_at": "2025-09-12T08:00:00Z",
+      "updated_at": "2025-09-12T10:00:00Z"
+    },
     {
       "id": "2",
       "name": "Create Usera",
