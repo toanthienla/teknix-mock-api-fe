@@ -1,4 +1,4 @@
-  "use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -59,10 +59,24 @@ export default function DashboardPage() {
   const [editDesc, setEditDesc] = useState("");
 
   useEffect(() => {
-    fetchWorkspaces()
-    fetchProjects()
-    fetchEndpoints()
-  }, [])
+    fetchWorkspaces();
+    fetchProjects();
+    fetchEndpoints();
+  }, []);
+
+  // ✅ thêm useEffect này để khi đổi projectId thì giữ nguyên workspace
+  useEffect(() => {
+    if (projectId && projects.length > 0) {
+      const project = projects.find((p) => String(p.id) === String(projectId));
+      if (project) {
+        setCurrentWsId(project.workspace_id);
+        setOpenProjectsMap((prev) => ({
+          ...prev,
+          [project.workspace_id]: true, // expand workspace chứa project
+        }));
+      }
+    }
+  }, [projectId, projects]);
 
   // -------------------- Toast Config --------------------
   const toastConfig = {
@@ -74,7 +88,7 @@ export default function DashboardPage() {
 
   const showToast = (type, message) => {
     toast(message, {
-      ...toastConfig[type] || {},
+      ...(toastConfig[type] || {}),
       position: "bottom-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -101,9 +115,9 @@ export default function DashboardPage() {
 
   const fetchEndpoints = () => {
     fetch(`${API_ROOT}/endpoints `)
-        .then((res) => res.json())
-        .then((data) => setEndpoints(data))
-  }
+      .then((res) => res.json())
+      .then((data) => setEndpoints(data));
+  };
 
   // -------------------- Filtering & Sorting --------------------
   const currentProjects = projects.filter(
@@ -122,6 +136,8 @@ export default function DashboardPage() {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
+  const currentWorkspace = workspaces.find((w) => String(w.id) === String(currentWsId));
+
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
@@ -129,7 +145,11 @@ export default function DashboardPage() {
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
       return "Must start with a letter, no special chars, single spaces allowed";
     if (trimmed.length > 20) return "Workspace name max 20 chars";
-    if (workspaces.some((w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId))
+    if (
+      workspaces.some(
+        (w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+      )
+    )
       return "Workspace name already exists";
     return "";
   };
@@ -168,11 +188,16 @@ export default function DashboardPage() {
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editWsName.trim(), updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        name: editWsName.trim(),
+        updated_at: new Date().toISOString(),
+      }),
     })
       .then(() => {
         setWorkspaces((prev) =>
-          prev.map((w) => (w.id === editWsId ? { ...w, name: editWsName.trim() } : w))
+          prev.map((w) =>
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+          )
         );
         setOpenEditWs(false);
         setEditWsName("");
@@ -186,16 +211,18 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API_ROOT}/projects`);
       const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
+      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
 
       await Promise.all(
-        projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+        )
       );
 
       await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
-      setWorkspaces(prev => prev.filter(w => w.id !== id));
-      setProjects(prev => prev.filter(p => p.workspace_id !== id));
+      setWorkspaces((prev) => prev.filter((w) => w.id !== id));
+      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
       showToast("success", "Workspace and its projects deleted successfully");
@@ -286,10 +313,13 @@ export default function DashboardPage() {
   };
 
   const handleUpdateProject = () => {
-    const original = projects.find(p => p.id === editId);
+    const original = projects.find((p) => p.id === editId);
     if (!original) return;
 
-    if (editTitle.trim() === (original.name || "") && editDesc.trim() === (original.description || "")) {
+    if (
+      editTitle.trim() === (original.name || "") &&
+      editDesc.trim() === (original.description || "")
+    ) {
       setOpenEditProject(false);
       return;
     }
@@ -369,14 +399,25 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-2xl font-semibold mb-4">{currentProject.name}</h2>
               <p className="text-slate-600">{currentProject.description}</p>
-              <Button variant="outline" className="mt-4" onClick={() => navigate("/dashboard")}>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => navigate("/dashboard")}
+              >
                 Back to all projects
               </Button>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">All Projects</h2>
+                <div>
+                  {currentWorkspace && (
+                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                      {currentWorkspace.name}
+                    </h2>
+                  )}
+                  <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
@@ -384,12 +425,19 @@ export default function DashboardPage() {
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 bg-white shadow-md rounded-md">
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-40 bg-white shadow-md rounded-md"
+                  >
                     <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
                       Recently created
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>A → Z</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>Z → A</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
+                      A → Z
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
+                      Z → A
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -413,7 +461,6 @@ export default function DashboardPage() {
           )}
         </main>
       </div>
-
       {/* Dialogs */}
       {/* New Project */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>

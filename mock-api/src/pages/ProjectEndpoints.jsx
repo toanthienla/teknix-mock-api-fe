@@ -1,7 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
-import {Separator} from '@/components/ui/separator';
+import {
+    Table,
+    TableHeader,
+    TableRow,
+    TableHead,
+    TableBody,
+    TableCell,
+} from "@/components/ui/table"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,6 +37,13 @@ import {
 import EndpointCard from "@/components/EndpointCard.jsx";
 
 import {toast} from 'react-toastify';
+import createIcon from "@/assets/create.svg";
+import pathIcon from "@/assets/path.svg";
+import methodIcon from "@/assets/method.svg"
+import timeIcon from "@/assets/time&date.svg"
+import LogCard from "@/components/LogCard.jsx";
+import exportIcon from "@/assets/export.svg"
+import refreshIcon from "@/assets/refresh.svg"
 
 export default function Dashboard() {
     const navigate = useNavigate()
@@ -54,6 +68,10 @@ export default function Dashboard() {
 
     const [query, setQuery] = useState("");
 
+    const [methodFilter, setMethodFilter] = useState("All Methods");
+    const [statusFilter, setStatusFilter] = useState("All Status");
+    const [timeFilter, setTimeFilter] = useState("All time");
+
     const handleChange = (e) => {
         const value = e.target.value;
         setQuery(value);
@@ -74,6 +92,10 @@ export default function Dashboard() {
     // dialogs
     const [openNew, setOpenNew] = useState(false)
     const [openEdit, setOpenEdit] = useState(false)
+
+    // state cho pagination
+    const [page, setPage] = useState(1)
+    const [rowsPerPage, setRowsPerPage] = useState(10)
 
     // Regex to check route + query
     //     ^ … $                 : khớp toàn bộ chuỗi.
@@ -106,7 +128,7 @@ export default function Dashboard() {
             (ep) =>
                 String(ep.project_id) === String(projectId) &&
                 ep.name.toLowerCase() === name.toLowerCase()
-            );
+        );
         if (duplicateName) {
             toast.warning("Name already exists");
             return false;
@@ -260,13 +282,60 @@ export default function Dashboard() {
             .catch((err) => console.error("Error fetching endpoints:", err));
     };
 
-
     const fetchLogs = () => {
         fetch(`${API_ROOT}/logs`)
             .then((res) => res.json())
             .then((data) => setLogs(data))
             .catch((err) => console.error("Error fetching logs:", err))
     }
+
+    // Filter logs
+    const filteredLogs = logs.filter((log) => {
+        const projectOk = String(log.project_id) === String(projectId);
+
+        const methodOk =
+            methodFilter === "All Methods" ||
+            log.request_method?.toUpperCase() === methodFilter.toUpperCase();
+
+        const statusOk =
+            statusFilter === "All Status" ||
+            String(log.response_status_code) === String(statusFilter);
+
+        let timeOk = true;
+        if (timeFilter && timeFilter !== "All time") {
+            const logTime = new Date(log.created_at);
+            if (!isNaN(logTime)) {
+                const now = Date.now();
+                if (timeFilter === "Last 24 hours") {
+                    timeOk = logTime.getTime() >= now - 24 * 60 * 60 * 1000;
+                } else if (timeFilter === "Last 7 days") {
+                    timeOk = logTime.getTime() >= now - 7 * 24 * 60 * 60 * 1000;
+                } else if (timeFilter === "Last 30 days") {
+                    timeOk = logTime.getTime() >= now - 30 * 24 * 60 * 60 * 1000;
+                }
+            }
+        }
+
+        console.log(
+            log.project_id,
+            log.request_method,
+            log.response_status_code,
+            projectOk,
+            methodOk,
+            statusOk,
+            timeOk
+        )
+
+        return projectOk && methodOk && statusOk && timeOk;
+    });
+
+    const totalPages = Math.ceil(filteredLogs.length / rowsPerPage)
+
+    // logs hiển thị theo trang
+    const paginatedLogs = filteredLogs.slice(
+        (page - 1) * rowsPerPage,
+        page * rowsPerPage
+    )
 
     // filter + sort endpoints
     const filteredEndpoints = endpoints.filter((p) =>
@@ -306,7 +375,7 @@ export default function Dashboard() {
         }
         fetch(`${API_ROOT}/workspaces`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 name: name.trim(),
                 created_at: new Date().toISOString(),
@@ -317,7 +386,7 @@ export default function Dashboard() {
             .then((createdWs) => {
                 setWorkspaces((prev) => [...prev, createdWs]);
                 setCurrentWsId(createdWs.id);
-                setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+                setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
                 toast.success("Create workspace successfully!");
             })
             .catch(() => toast.error("Failed to create workspace"));
@@ -331,12 +400,12 @@ export default function Dashboard() {
         }
         fetch(`${API_ROOT}/workspaces/${editWsId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: editWsName.trim(), updated_at: new Date().toISOString() }),
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({name: editWsName.trim(), updated_at: new Date().toISOString()}),
         })
             .then(() => {
                 setWorkspaces((prev) =>
-                    prev.map((w) => (w.id === editWsId ? { ...w, name: editWsName.trim() } : w))
+                    prev.map((w) => (w.id === editWsId ? {...w, name: editWsName.trim()} : w))
                 );
                 setOpenEditWs(false);
                 setEditWsName("");
@@ -353,10 +422,10 @@ export default function Dashboard() {
             const projectsToDelete = allProjects.filter(p => p.workspace_id === id);
 
             await Promise.all(
-                projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" }))
+                projectsToDelete.map(p => fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"}))
             );
 
-            await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+            await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
             setWorkspaces(prev => prev.filter(w => w.id !== id));
             setProjects(prev => prev.filter(p => p.workspace_id !== id));
@@ -448,7 +517,7 @@ export default function Dashboard() {
             setOpenEdit(false)
 
             toast.success("Update endpoint successfully!");
-        }) .catch((error) => {
+        }).catch((error) => {
             console.error("Error updating endpoint:", error.message);
             toast.error("Failed to update endpoint!");
         })
@@ -460,7 +529,7 @@ export default function Dashboard() {
             setEndpoints((prev) => prev.filter((e) => e.id !== id))
 
             toast.success("Delete endpoint successfully!");
-        }) .catch((error) => {
+        }).catch((error) => {
             console.error("Error deleting endpoint:", error.message);
             toast.error("Failed to delete endpoint!");
         })
@@ -500,10 +569,10 @@ export default function Dashboard() {
                             <div className="flex-1 flex justify-center">
                                 <div className="relative w-full max-w-md">
                                     <Input
-                                        placeholder="Search endpoints..."
+                                        placeholder="Search"
                                         value={query}
                                         onChange={handleChange}
-                                        className="pl-10 pr-4 py-2"
+                                        className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
                                     />
                                     <div
                                         className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
@@ -528,11 +597,11 @@ export default function Dashboard() {
                 {/* Content Area */}
                 <div className="flex-1 items-center justify-between mb-4">
                     <div className="bg-white shadow p-6">
-                        <div className="flex border-b border-gray-200 mb-4 text-gray-600">
+                        <div className="flex border-b border-gray-200 mb-4 text-stone-500">
                             <Button
                                 variant="ghost"
                                 onClick={() => setActiveTab("endpoints")}
-                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
                             >
                                 Endpoints
                             </Button>
@@ -542,9 +611,19 @@ export default function Dashboard() {
                                     setActiveTab("logs")
                                     fetchLogs()
                                 }}
-                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs" ? "border-b-2 border-blue-600 text-blue-600" : ""}`}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
                             >
                                 Logs
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setActiveTab("statistic")
+                                    // fetchLogs()
+                                }}
+                                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "statistic" ? "border-b-2 border-stone-900 text-stone-900" : ""}`}
+                            >
+                                Statistic
                             </Button>
                         </div>
 
@@ -608,7 +687,12 @@ export default function Dashboard() {
                                                     onClick={() => setOpenNew(true)}
                                                     className="bg-white text-black hover:bg-green-300 px-3 py-1 rounded-md"
                                                 >
-                                                    + New Endpoint
+                                                    <img
+                                                        src={createIcon}
+                                                        alt="Create Icon"
+                                                        className="w-4 h-4 object-contain"
+                                                    />
+                                                    New Endpoint
                                                 </Button>
                                                 <DialogContent
                                                     className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg">
@@ -669,31 +753,62 @@ export default function Dashboard() {
                                     </div>
                                 </div>
 
-                                {/* Endpoint Table Header */}
-                                <div
-                                    className="grid grid-cols-12 items-center py-3 text-gray-500 font-semibold border-b border-gray-500 gap-4">
-                                    <div className="col-span-4">Aa</div>
-                                    <div className="col-span-4 col-start-5">Path</div>
-                                    <div className="col-start-9">Method</div>
-                                    <div className="col-span-3 col-start-10">Time & Date</div>
-                                </div>
-                                <Separator/>
+                                {/* Endpoint Table */}
+                                <div className="w-full overflow-x-auto">
+                                    <Table className="border-t border-b border-gray-300">
+                                        <TableHeader>
+                                            <TableRow className="border-b border-gray-300">
+                                                <TableHead className="w-1/3 border-r border-gray-300">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs">Aa</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/3 border-r border-gray-300">
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
+                                                        <span>Path</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/6 border-r border-gray-300 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <img src={methodIcon} alt="Method icon" className="w-4 h-4"/>
+                                                        <span>Method</span>
+                                                    </div>
+                                                </TableHead>
+                                                <TableHead className="w-1/6">
+                                                    <div className="flex items-center gap-2">
+                                                        <img src={timeIcon} alt="Time icon" className="w-4 h-4"/>
+                                                        <span>Time & Date</span>
+                                                    </div>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
 
-                                {/* Endpoint Rows */}
-                                <div>
-                                    {sortedEndpoints?.length > 0 ? (
-                                        sortedEndpoints.map((e) => (
-                                            <EndpointCard
-                                                key={e.id}
-                                                endpoint={e}
-                                                onEdit={() => openEditEndpoint(e)}
-                                                onDelete={() => handleDeleteEndpoint(e.id)}
-                                                onClick={() => navigate(`/dashboard/${projectId}/endpoint/${e.id}`)}
-                                            />
-                                        ))
-                                    ) : (
-                                        <p className="text-slate-500">No endpoints found.</p>
-                                    )}
+                                        <TableBody>
+                                            {sortedEndpoints?.length > 0 ? (
+                                                sortedEndpoints.map((e) => (
+                                                    <EndpointCard
+                                                        key={e.id}
+                                                        endpoint={e}
+                                                        onEdit={() => openEditEndpoint(e)}
+                                                        onDelete={() => handleDeleteEndpoint(e.id)}
+                                                        onClick={() =>
+                                                            navigate(`/dashboard/${projectId}/endpoint/${e.id}`)
+                                                        }
+                                                    />
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableHead
+                                                        colSpan={4}
+                                                        className="text-center text-slate-500 py-4"
+                                                    >
+                                                        No endpoints found.
+                                                    </TableHead>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
                                 </div>
 
                                 {/* Edit Endpoint Dialog */}
@@ -748,83 +863,254 @@ export default function Dashboard() {
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
+                            </>
+                        ) : activeTab === "logs" ? (
+                            <> {/* Logs */}
+                                <div className="w-full overflow-x-auto">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex gap-2">
+                                            {/* Method Filter */}
+                                            <Select value={methodFilter} onValueChange={setMethodFilter}>
+                                                <SelectTrigger className="w-[140px]">
+                                                    <SelectValue placeholder="All Methods"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All Methods">All Methods</SelectItem>
+                                                    <SelectItem value="GET">GET</SelectItem>
+                                                    <SelectItem value="POST">POST</SelectItem>
+                                                    <SelectItem value="PUT">PUT</SelectItem>
+                                                    <SelectItem value="DELETE">DELETE</SelectItem>
+                                                </SelectContent>
+                                            </Select>
 
-                                {/* Edit Workspace */}
-                                <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-                                        <DialogHeader>
-                                            <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="mt-2 space-y-4">
-                                            <div>
-                                                <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
-                                                <Input
-                                                    value={editWsName}
-                                                    onChange={(e) => setEditWsName(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault();
-                                                            handleEditWorkspace();
-                                                        }
-                                                    }}
-                                                    placeholder="Enter workspace name"
-                                                    autoFocus
-                                                    className="h-10"
-                                                />
-                                            </div>
+                                            {/* Status Filter */}
+                                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                                <SelectTrigger className="w-[140px]">
+                                                    <SelectValue placeholder="All Status"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All Status">All Status</SelectItem>
+                                                    <SelectItem value="200">200</SelectItem>
+                                                    <SelectItem value="400">400</SelectItem>
+                                                    <SelectItem value="404">404</SelectItem>
+                                                    <SelectItem value="500">500</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            {/* Time Filter */}
+                                            <Select value={timeFilter} onValueChange={setTimeFilter}>
+                                                <SelectTrigger className="w-[160px]">
+                                                    <SelectValue placeholder="All time"/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="All time">All time</SelectItem>
+                                                    <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
+                                                    <SelectItem value="Last 7 days">Last 7 days</SelectItem>
+                                                    <SelectItem value="Last 30 days">Last 30 days</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <DialogFooter className="mt-4">
-                                            <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-                                            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
 
-                                {/* Confirm Delete Workspace */}
-                                <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
-                                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-                                        <DialogHeader>
-                                            <DialogTitle>Delete Workspace</DialogTitle>
-                                        </DialogHeader>
-                                        <p>Are you sure you want to delete this workspace and all its projects?</p>
-                                        <DialogFooter>
-                                            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
-                                            <Button
-                                                className="bg-red-600 text-white hover:bg-red-700"
-                                                onClick={() => {
-                                                    handleDeleteWorkspace(confirmDeleteWs);
-                                                    setConfirmDeleteWs(null);
+                                        <div className="flex gap-2">
+                                            <Button variant="outline">
+                                                <img
+                                                    src={exportIcon}
+                                                    alt="Export Icon"
+                                                    className="w-4 h-4 object-contain"
+                                                />
+                                                Export
+                                            </Button>
+                                            <Button variant="outline" onClick={fetchLogs}>
+                                                <img
+                                                    src={refreshIcon}
+                                                    alt="Refresh Icon"
+                                                    className="w-4 h-4 object-contain"
+                                                />
+                                                Refresh
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="col-span-3">Timestamp</TableHead>
+                                                <TableHead className="col-span-1">Method</TableHead>
+                                                <TableHead className="col-span-2">Path</TableHead>
+                                                <TableHead className="col-span-2">Latency</TableHead>
+                                                <TableHead className="col-span-1">Status</TableHead>
+                                                <TableHead className="col-span-3">Matched Response</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+
+                                        <TableBody>
+                                            {logs.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center text-slate-500 py-4">
+                                                        No logs available.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : filteredLogs.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center text-slate-500 py-4">
+                                                        No logs match the selected filters.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
+                                            )}
+                                        </TableBody>
+                                    </Table>
+
+                                    <div className="flex items-center justify-end mt-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm">Rows per page</span>
+                                            <Select
+                                                value={rowsPerPage.toString()}
+                                                onValueChange={(val) => {
+                                                    setRowsPerPage(Number(val))
+                                                    setPage(1) // reset về trang 1 khi đổi size
                                                 }}
                                             >
-                                                Delete
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </>
-                        ) : (
-                            <> {/* Logs */}
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                    Logs
-                                </h2>
-                                <div className="space-y-2">
-                                    {logs.map((log, i) => (
-                                        <div
-                                            key={i}
-                                            className="p-3 border rounded-md text-sm text-slate-700 bg-slate-50"
-                                        >
-                                            <div><b>Endpoint:</b> {log.endpoint_name || log.endpoint_id}</div>
-                                            <div><b>Method:</b> {log.method}</div>
-                                            <div><b>Status:</b> {log.status}</div>
-                                            <div><b>Time:</b> {new Date(log.created_at).toLocaleString()}</div>
+                                                <SelectTrigger className="w-[80px]">
+                                                    <SelectValue/>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[5, 10, 20, 50].map((size) => (
+                                                        <SelectItem key={size} value={size.toString()}>
+                                                            {size}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    ))}
+
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={page === 1}
+                                                onClick={() => setPage((p) => p - 1)}
+                                            >
+                                                ‹
+                                            </Button>
+                                            <span className="text-sm">
+                                                Page {page} of {totalPages || 1}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={page === totalPages || totalPages === 0}
+                                                onClick={() => setPage((p) => p + 1)}
+                                            >
+                                                ›
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </>
-                        )}
+                        ) : activeTab === "statistic" ? (
+                            <> {/* Statistic content */}
+                                <div className="p-4">
+                                    <h2 className="text-xl font-bold mb-4">Statistics</h2>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        {/* Method Count */}
+                                        <div className="border rounded-lg p-4 shadow-sm">
+                                            <h3 className="text-lg font-semibold mb-2">Requests by Method</h3>
+                                            <ul className="space-y-1 text-sm">
+                                                {["GET", "POST", "PUT", "DELETE"].map((method) => {
+                                                    const count = logs.filter(
+                                                        (log) => String(log.project_id) === String(projectId) &&
+                                                            log.request_method === method
+                                                    ).length;
+                                                    return (
+                                                        <li key={method} className="flex justify-between">
+                                                            <span>{method}</span>
+                                                            <span className="font-mono">{count}</span>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+
+                                        {/* Status Count */}
+                                        <div className="border rounded-lg p-4 shadow-sm">
+                                            <h3 className="text-lg font-semibold mb-2">Responses by Status</h3>
+                                            <ul className="space-y-1 text-sm">
+                                                {[200, 201, 400, 401, 403, 404, 500].map((status) => {
+                                                    const count = logs.filter(
+                                                        (log) => log.project_id === projectId && log.response_status_code === status
+                                                    ).length;
+                                                    return (
+                                                        <li key={status} className="flex justify-between">
+                                                            <span>{status}</span>
+                                                            <span className="font-mono">{count}</span>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : null}
                     </div>
                 </div>
             </main>
+            {/* Edit Workspace */}
+            <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
+                <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-slate-800">Edit Workspace</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-2 space-y-4">
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 block mb-1">Workspace Name</label>
+                            <Input
+                                value={editWsName}
+                                onChange={(e) => setEditWsName(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleEditWorkspace();
+                                    }
+                                }}
+                                placeholder="Enter workspace name"
+                                autoFocus
+                                className="h-10"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
+                        <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700"
+                                onClick={handleEditWorkspace}>Update</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Confirm Delete Workspace */}
+            <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
+                <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                        <DialogTitle>Delete Workspace</DialogTitle>
+                    </DialogHeader>
+                    <p>Are you sure you want to delete this workspace and all its projects?</p>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
+                        <Button
+                            className="bg-red-600 text-white hover:bg-red-700"
+                            onClick={() => {
+                                handleDeleteWorkspace(confirmDeleteWs);
+                                setConfirmDeleteWs(null);
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
