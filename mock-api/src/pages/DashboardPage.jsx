@@ -139,97 +139,98 @@ export default function DashboardPage() {
   const currentWorkspace = workspaces.find((w) => String(w.id) === String(currentWsId));
 
   // -------------------- Workspace --------------------
-  const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
-    if (
-      workspaces.some(
-        (w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
-      )
+const validateWsName = (name, excludeId = null) => {
+  const trimmed = name.trim();
+  if (!trimmed) return "Workspace name cannot be empty";
+  if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
+    return "Must start with a letter, no special chars, single spaces allowed";
+  if (trimmed.length > 20) return "Workspace name max 20 chars";
+  if (
+    workspaces.some(
+      (w) => w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
     )
-      return "Workspace name already exists";
-    return "";
-  };
+  )
+    return "Workspace name already exists";
+  return "";
+};
 
-  const handleAddWorkspace = (name) => {
-    const err = validateWsName(name);
-    if (err) {
-      showToast("warning", err);
-      return;
-    }
-    fetch(`${API_ROOT}/workspaces`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }),
+const handleAddWorkspace = (name) => {
+  const err = validateWsName(name);
+  if (err) {
+    toast.warning(err); // 🔥 trực tiếp toastify
+    return;
+  }
+  fetch(`${API_ROOT}/workspaces`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.trim(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then((res) => res.json())
+    .then((createdWs) => {
+      setWorkspaces((prev) => [...prev, createdWs]);
+      setCurrentWsId(createdWs.id);
+      setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+      toast.success("Workspace created successfully"); // 🔥
     })
-      .then((res) => res.json())
-      .then((createdWs) => {
-        setWorkspaces((prev) => [...prev, createdWs]);
-        setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        showToast("success", "Workspace created successfully");
-      })
-      .catch(() => showToast("error", "Failed to create workspace"));
-  };
+    .catch(() => toast.error("Failed to create workspace")); // 🔥
+};
 
-  const handleEditWorkspace = () => {
-    const err = validateWsName(editWsName, editWsId);
-    if (err) {
-      showToast("warning", err);
-      return;
-    }
-    fetch(`${API_ROOT}/workspaces/${editWsId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: editWsName.trim(),
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then(() => {
-        setWorkspaces((prev) =>
-          prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
-          )
-        );
-        setOpenEditWs(false);
-        setEditWsName("");
-        setEditWsId(null);
-        showToast("success", "Workspace updated successfully");
-      })
-      .catch(() => showToast("error", "Failed to update workspace"));
-  };
-
-  const handleDeleteWorkspace = async (id) => {
-    try {
-      const res = await fetch(`${API_ROOT}/projects`);
-      const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
-
-      await Promise.all(
-        projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+const handleEditWorkspace = () => {
+  const err = validateWsName(editWsName, editWsId);
+  if (err) {
+    toast.warning(err); // 🔥
+    return;
+  }
+  fetch(`${API_ROOT}/workspaces/${editWsId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: editWsName.trim(),
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then(() => {
+      setWorkspaces((prev) =>
+        prev.map((w) =>
+          w.id === editWsId ? { ...w, name: editWsName.trim() } : w
         )
       );
+      setOpenEditWs(false);
+      setEditWsName("");
+      setEditWsId(null);
+      toast.success("Workspace updated successfully"); // 🔥
+    })
+    .catch(() => toast.error("Failed to update workspace")); // 🔥
+};
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+const handleDeleteWorkspace = async (id) => {
+  try {
+    const res = await fetch(`${API_ROOT}/projects`);
+    const allProjects = await res.json();
+    const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
 
-      setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
-      if (currentWsId === id) setCurrentWsId(null);
+    await Promise.all(
+      projectsToDelete.map((p) =>
+        fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+      )
+    );
 
-      showToast("success", "Workspace and its projects deleted successfully");
-    } catch {
-      showToast("error", "Failed to delete workspace or its projects");
-    }
-  };
+    await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+
+    setWorkspaces((prev) => prev.filter((w) => w.id !== id));
+    setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
+    if (currentWsId === id) setCurrentWsId(null);
+
+    toast.success("Workspace and its projects deleted successfully"); // 🔥
+  } catch {
+    toast.error("Failed to delete workspace or its projects"); // 🔥
+  }
+};
+
 
   // -------------------- Project --------------------
   const validateProject = (title, desc, editMode = false, editId = null) => {
@@ -412,7 +413,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   {currentWorkspace && (
-                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                    <h2 className=" mt-4 text-3xl font-bold text-slate-900 mb-2">
                       {currentWorkspace.name}
                     </h2>
                   )}
