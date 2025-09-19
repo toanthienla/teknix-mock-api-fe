@@ -559,52 +559,219 @@
 
   "logs": [
     {
-      "timestamp": "2025-09-10T12:00:00Z",
-      "method": "GET",
-      "path": "/api/users/12",
-      "latency": "142ms",
-      "status": 200,
-      "matched_response": "User Details - Success"
+      "id": 1,
+      "project_id": 1,
+      "endpoint_id": 201,
+      "endpoint_response_id": 301,
+      "request_method": "GET",
+      "request_path": "/api/users",
+      "request_headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer token123"
+      },
+      "request_body": null,
+      "response_status_code": 200,
+      "response_body": {
+        "users": [
+          {"id": 1, "name": "Alice"},
+          {"id": 2, "name": "Bob"}
+        ]
+      },
+      "ip_address": "192.168.1.10",
+      "latency_ms": 123,
+      "created_at": "2025-09-19T08:30:00Z"
     },
     {
-      "timestamp": "2025-09-03T09:00:00Z",
-      "method": "GET",
-      "path": "/api/users/456",
-      "latency": "56ms",
-      "status": 404,
-      "matched_response": "User Not Found"
+      "id": 2,
+      "project_id": 1,
+      "endpoint_id": 202,
+      "endpoint_response_id": 302,
+      "request_method": "POST",
+      "request_path": "/api/orders",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "user_id": 1,
+        "product_id": 55,
+        "quantity": 2
+      },
+      "response_status_code": 201,
+      "response_body": {
+        "order_id": 501,
+        "status": "created"
+      },
+      "ip_address": "203.0.113.45",
+      "latency_ms": 256,
+      "created_at": "2025-09-19T09:15:00Z"
     },
     {
-      "timestamp": "2025-09-08T11:00:00Z",
-      "method": "PUT",
-      "path": "/api/users/2",
-      "latency": "234ms",
-      "status": 200,
-      "matched_response": "User Update - Success"
+      "id": 3,
+      "project_id": 2,
+      "endpoint_id": 203,
+      "endpoint_response_id": 303,
+      "request_method": "DELETE",
+      "request_path": "/api/products/55",
+      "request_headers": {
+        "Authorization": "Bearer token456"
+      },
+      "request_body": null,
+      "response_status_code": 404,
+      "response_body": {
+        "error": "Product not found"
+      },
+      "ip_address": "198.51.100.23",
+      "latency_ms": 89,
+      "created_at": "2025-09-19T10:00:00Z"
     },
     {
-      "timestamp": "2025-09-12T08:10:00Z",
-      "method": "DELETE",
-      "path": "/api/users/789",
-      "latency": "1245ms",
-      "status": 500,
-      "matched_response": "Internal Server Error"
+      "id": 4,
+      "project_id": 1,
+      "endpoint_id": 204,
+      "endpoint_response_id": 304,
+      "request_method": "PUT",
+      "request_path": "/api/users/1",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "name": "Alice Updated",
+        "email": "alice@example.com"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "id": 1,
+        "name": "Alice Updated",
+        "email": "alice@example.com"
+      },
+      "ip_address": "192.0.2.11",
+      "latency_ms": 175,
+      "created_at": "2025-09-19T10:45:00Z"
     },
     {
-      "timestamp": "2025-09-16T02:01:00Z",
-      "method": "GET",
-      "path": "/api/users",
-      "latency": "78ms",
-      "status": 200,
-      "matched_response": "User List - Success"
+      "id": 5,
+      "project_id": 3,
+      "endpoint_id": 205,
+      "endpoint_response_id": 305,
+      "request_method": "PATCH",
+      "request_path": "/api/orders/501",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "status": "shipped"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "order_id": 501,
+        "status": "shipped"
+      },
+      "ip_address": "203.0.113.46",
+      "latency_ms": 142,
+      "created_at": "2025-09-19T11:20:00Z"
     },
     {
-      "timestamp": "2025-09-18T02:07:00Z",
-      "method": "POST",
-      "path": "/api/users",
-      "latency": "167ms",
-      "status": 400,
-      "matched_response": "Invalid Request Data"
+      "id": 6,
+      "project_id": 4,
+      "endpoint_id": 206,
+      "endpoint_response_id": 306,
+      "request_method": "GET",
+      "request_path": "/api/products",
+      "request_headers": {
+        "Accept": "application/json"
+      },
+      "request_body": null,
+      "response_status_code": 500,
+      "response_body": {
+        "error": "Internal Server Error"
+      },
+      "ip_address": "198.51.100.24",
+      "latency_ms": 321,
+      "created_at": "2025-09-19T12:00:00Z"
+    },
+    {
+      "id": 7,
+      "project_id": 5,
+      "endpoint_id": 207,
+      "endpoint_response_id": 307,
+      "request_method": "GET",
+      "request_path": "/api/orders/999",
+      "request_headers": {
+        "Authorization": "Bearer token789"
+      },
+      "request_body": null,
+      "response_status_code": 404,
+      "response_body": {
+        "error": "Order not found"
+      },
+      "ip_address": "192.168.2.20",
+      "latency_ms": 67,
+      "created_at": "2025-09-19T12:40:00Z"
+    },
+    {
+      "id": 8,
+      "project_id": 6,
+      "endpoint_id": 208,
+      "endpoint_response_id": 308,
+      "request_method": "POST",
+      "request_path": "/api/login",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "username": "bob",
+        "password": "secret"
+      },
+      "response_status_code": 401,
+      "response_body": {
+        "error": "Unauthorized"
+      },
+      "ip_address": "203.0.113.47",
+      "latency_ms": 94,
+      "created_at": "2025-09-19T13:05:00Z"
+    },
+    {
+      "id": 9,
+      "project_id": 7,
+      "endpoint_id": 209,
+      "endpoint_response_id": 309,
+      "request_method": "GET",
+      "request_path": "/api/reports/daily",
+      "request_headers": {
+        "Accept": "application/json"
+      },
+      "request_body": null,
+      "response_status_code": 200,
+      "response_body": {
+        "report_date": "2025-09-19",
+        "sales": 1200,
+        "orders": 85
+      },
+      "ip_address": "192.0.2.12",
+      "latency_ms": 198,
+      "created_at": "2025-09-19T13:30:00Z"
+    },
+    {
+      "id": 10,
+      "project_id": 8,
+      "endpoint_id": 210,
+      "endpoint_response_id": 310,
+      "request_method": "PUT",
+      "request_path": "/api/settings/theme",
+      "request_headers": {
+        "Content-Type": "application/json"
+      },
+      "request_body": {
+        "theme": "dark"
+      },
+      "response_status_code": 200,
+      "response_body": {
+        "theme": "dark",
+        "updated": true
+      },
+      "ip_address": "198.51.100.25",
+      "latency_ms": 110,
+      "created_at": "2025-09-19T14:00:00Z"
     }
   ]
 }

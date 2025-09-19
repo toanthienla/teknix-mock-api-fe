@@ -3,7 +3,6 @@ import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
-import {Pencil, Trash2} from "lucide-react"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,65 +15,67 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-import { TableRow, TableCell } from "@/components/ui/table"
+import {TableRow, TableCell} from "@/components/ui/table"
 
-export default function EndpointRow({ endpoint, onEdit, onDelete, onClick }) {
-    const { id, name, path, method } = endpoint
+export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
+    const {id, name, path, method} = endpoint
 
     return (
         <TableRow className="border-b border-gray-300">
             {/* Name + Actions */}
             <TableCell className="w-1/3 border-r border-gray-300">
                 <div className="flex items-center justify-between">
-          <span
-              className="font-semibold text-gray-800 cursor-pointer"
-              onClick={onClick}
-          >
-            {name}
-          </span>
-
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-800"
-                        onClick={() => onEdit(endpoint)}
+                    <span
+                        className="font-semibold text-gray-800 cursor-pointer"
+                        onClick={onClick}
                     >
-                        <img src={editIcon} alt="edit" className="w-4 h-4" />
-                    </Button>
+                        {name}
+                    </span>
 
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-gray-500 hover:text-red-600"
-                            >
-                               <img src={deleteIcon} alt="delete" className="w-4 h-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete endpoint data from our servers.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="text-black hover:text-red-600">
-                                    Cancel
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                    className="bg-blue-600 text-white hover:bg-blue-700"
-                                    onClick={() => onDelete(id)}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-800"
+                            onClick={() => onEdit(endpoint)}
+                        >
+                            <img src={editIcon} alt="edit" className="w-4 h-4"/>
+                        </Button>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-gray-500 hover:text-red-600"
                                 >
-                                    Continue
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                                    <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete endpoint data from
+                                        our servers.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="text-black hover:text-red-600">
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-blue-600 text-white hover:bg-blue-700"
+                                        onClick={() => onDelete(id)}
+                                    >
+                                        Continue
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </div>
-            </div>
+            </TableCell>
 
             {/* Path */}
             <TableCell className="w-1/3 font-semibold text-gray-800 border-r border-gray-300">{path}</TableCell>
