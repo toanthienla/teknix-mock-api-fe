@@ -34,17 +34,6 @@ export default function LogCard({ log }) {
 
     const { created_at, request_method, request_path, latency_ms, response_status_code, response_body } = log;
 
-    // Status's color
-    // const statusColors = {
-    //     200: "text-green-600",
-    //     201: "text-green-600",
-    //     400: "text-yellow-600",
-    //     401: "text-yellow-600",
-    //     403: "text-yellow-600",
-    //     404: "text-orange-600",
-    //     500: "text-red-600",
-    // };
-
     return (
         <TableRow>
             <TableCell>

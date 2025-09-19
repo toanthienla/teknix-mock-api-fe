@@ -12,7 +12,7 @@ export default function App() {
     <>
       <Routes>
         {/* Redirect root to login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         {/* Auth pages */}
         <Route path="/login" element={<LoginPage />} />
