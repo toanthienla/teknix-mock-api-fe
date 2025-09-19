@@ -15,7 +15,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import {
     ChevronDown,
     ChevronsUpDown, Search,
@@ -34,8 +40,8 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select.jsx"
-import EndpointCard from "@/components/EndpointCard.jsx";
 
+import EndpointCard from "@/components/EndpointCard.jsx";
 import {toast} from 'react-toastify';
 import createIcon from "@/assets/create.svg";
 import pathIcon from "@/assets/path.svg";
@@ -315,17 +321,6 @@ export default function Dashboard() {
                 }
             }
         }
-
-        console.log(
-            log.project_id,
-            log.request_method,
-            log.response_status_code,
-            projectOk,
-            methodOk,
-            statusOk,
-            timeOk
-        )
-
         return projectOk && methodOk && statusOk && timeOk;
     });
 
@@ -444,7 +439,7 @@ export default function Dashboard() {
         }
 
         // Tự động tăng id
-        const maxId = endpoints.length > 0 ? Math.max(...endpoints.map(ep => Number(ep.id))) : 0
+        const maxId = allEndpoints.length > 0 ? Math.max(...allEndpoints.map(ep => Number(ep.id))) : 0
         const newId = (maxId + 1).toString()
 
         const newEndpoint = {
@@ -452,7 +447,7 @@ export default function Dashboard() {
             name: newEName,
             path: newEPath,
             method: newEMethod,
-            project_id: Number(projectId),
+            project_id: String(projectId),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         }
@@ -472,6 +467,7 @@ export default function Dashboard() {
                 setNewEMethod("");
                 setOpenNew(false);
 
+                fetchAllEndpoints();
                 toast.success("Create endpoint successfully!");
             })
             .catch((error) => {
@@ -565,7 +561,6 @@ export default function Dashboard() {
                 <header className="bg-white border-b border-gray-200 p-4 flex items-center shadow-sm z-10">
                     <div className="relative flex-grow mr-4">
                         <div className="flex items-center justify-between mb-6">
-
                             <div className="flex-1 flex justify-center">
                                 <div className="relative w-full max-w-md">
                                     <Input
@@ -597,6 +592,37 @@ export default function Dashboard() {
                 {/* Content Area */}
                 <div className="flex-1 items-center justify-between mb-4">
                     <div className="bg-white shadow p-6">
+                        {/* Breadcrumb hiển thị Workspace / Project */}
+                        <div className="mb-4">
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    {(() => {
+                                        const project = projects.find(p => String(p.id) === String(projectId));
+                                        const workspace = project ? workspaces.find(w =>
+                                            String(w.id) === String(project.workspace_id)) : null;
+                                        return (
+                                            <>
+                                                {workspace && (
+                                                    <BreadcrumbItem>
+                                                        <BreadcrumbLink>
+                                                            {workspace.name}
+                                                        </BreadcrumbLink>
+                                                    </BreadcrumbItem>
+                                                )}
+                                                {workspace && <BreadcrumbSeparator />}
+                                                {project && (
+                                                    <BreadcrumbItem>
+                                                        <BreadcrumbLink>
+                                                            {project.name}
+                                                        </BreadcrumbLink>
+                                                    </BreadcrumbItem>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </div>
                         <div className="flex border-b border-gray-200 mb-4 text-stone-500">
                             <Button
                                 variant="ghost"
@@ -953,7 +979,7 @@ export default function Dashboard() {
                                             ) : filteredLogs.length === 0 ? (
                                                 <TableRow>
                                                     <TableCell colSpan={6} className="text-center text-slate-500 py-4">
-                                                        No logs match the selected filters.
+                                                        No logs found.
                                                     </TableCell>
                                                 </TableRow>
                                             ) : (
