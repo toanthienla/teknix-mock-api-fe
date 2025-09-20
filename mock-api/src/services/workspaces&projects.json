@@ -248,10 +248,11 @@
       "delay_ms": 0
     },
     {
+      "endpoint_id": "5",
       "name": "Not Foundass",
       "status_code": 404,
       "response_body": {
-        "error": "Userss not found 2"
+        "error": "Userss not foundsadsadsadsadsadas 2"
       },
       "condition": {},
       "is_default": false,
@@ -259,10 +260,11 @@
       "id": "2"
     },
     {
+      "endpoint_id": "5",
       "name": "Unauthorized",
       "status_code": 401,
       "response_body": {
-        "error": "Unassuthorasized access"
+        "error": "Unassutasxwwwhorasized access"
       },
       "condition": {},
       "is_default": false,
@@ -565,11 +567,31 @@
       "delay_ms": 0
     },
     {
-      "id": "bbf1",
+      "id": "5b0d",
       "endpoint_id": "5",
-      "name": "Wassup?",
-      "status_code": 304,
-      "response_body": "Yeah?",
+      "name": "Hell",
+      "status_code": 200,
+      "response_body": "Well",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "6785",
+      "endpoint_id": "5",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "Yeah",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "451f",
+      "endpoint_id": "6",
+      "name": "What?",
+      "status_code": 200,
+      "response_body": "Ok?",
       "condition": {},
       "is_default": false,
       "delay_ms": 0
