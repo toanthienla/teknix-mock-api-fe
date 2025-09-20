@@ -1095,7 +1095,7 @@ const DashboardPage = () => {
 
                 {/* TabsContent */}
                 <TabsContent value="summary" className="mt-0">
-                  <div className="border-b-2 border-[#37352F] w-20"></div>
+                  <div></div>
                   <div className="mt-2">
                     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                       <div className="flex justify-between items-center mb-6">
@@ -1259,7 +1259,7 @@ const DashboardPage = () => {
                 </TabsContent>
 
                 <TabsContent value="submissions" className="mt-0">
-                  <div className="border-b-2 border-[#37352F] w-20"></div>
+                  <div></div>
                   <div className="mt-2">
                     <Frame responseName={selectedResponse?.name} />
                   </div>
