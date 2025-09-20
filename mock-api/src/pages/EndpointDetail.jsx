@@ -816,75 +816,6 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb>
-            <BreadcrumbList>
-              {(() => {
-                const currentEndpoint = endpoints.find(
-                  (ep) => ep.id === currentEndpointId
-                );
-                const currentProject = currentEndpoint
-                  ? projects.find(
-                      (p) => String(p.id) === String(currentEndpoint.project_id)
-                    )
-                  : null;
-                const currentWorkspace = currentProject
-                  ? workspaces.find(
-                      (w) =>
-                        String(w.id) === String(currentProject.workspace_id)
-                    )
-                  : null;
-
-                return (
-                  <>
-                    {currentWorkspace && (
-                      <>
-                        <BreadcrumbItem>
-                          <BreadcrumbLink
-                            href="/dashboard"
-                            className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                          >
-                            {currentWorkspace.name}
-                          </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator>
-                          <ChevronRight className="h-4 w-4 text-slate-400" />
-                        </BreadcrumbSeparator>
-                      </>
-                    )}
-                    {currentProject && (
-                      <>
-                        <BreadcrumbItem>
-                          <BreadcrumbLink
-                            href={`/dashboard/${currentProject.id}`}
-                            className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                          >
-                            {currentProject.name}
-                          </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator>
-                          <ChevronRight className="h-4 w-4 text-slate-400" />
-                        </BreadcrumbSeparator>
-                      </>
-                    )}
-                    {currentEndpoint && (
-                      <BreadcrumbItem>
-                        <BreadcrumbLink
-                          href="#"
-                          className="text-sm font-medium text-slate-900"
-                        >
-                          {currentEndpoint.name}
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                    )}
-                  </>
-                );
-              })()}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="relative w-96">
@@ -895,6 +826,79 @@ const DashboardPage = () => {
               className="pl-10 bg-[#F1F5F9] border-0"
             />
           </div>
+
+          {/* Breadcrumb Navigation - Đặt ở giữa */}
+          <div className="flex-1 mx-4 overflow-hidden">
+            <div className="mb-0">
+              <Breadcrumb>
+                <BreadcrumbList className="overflow-hidden whitespace-nowrap text-ellipsis">
+                  {(() => {
+                    const currentEndpoint = endpoints.find(
+                      (ep) => ep.id === currentEndpointId
+                    );
+                    const currentProject = currentEndpoint
+                      ? projects.find(
+                          (p) =>
+                            String(p.id) === String(currentEndpoint.project_id)
+                        )
+                      : null;
+                    const currentWorkspace = currentProject
+                      ? workspaces.find(
+                          (w) =>
+                            String(w.id) === String(currentProject.workspace_id)
+                        )
+                      : null;
+
+                    return (
+                      <>
+                        {currentWorkspace && (
+                          <>
+                            <BreadcrumbItem>
+                              <BreadcrumbLink
+                                href="/dashboard"
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                              >
+                                {currentWorkspace.name}
+                              </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            </BreadcrumbSeparator>
+                          </>
+                        )}
+                        {currentProject && (
+                          <>
+                            <BreadcrumbItem>
+                              <BreadcrumbLink
+                                href={`/dashboard/${currentProject.id}`}
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                              >
+                                {currentProject.name}
+                              </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            </BreadcrumbSeparator>
+                          </>
+                        )}
+                        {currentEndpoint && (
+                          <BreadcrumbItem>
+                            <BreadcrumbLink
+                              href="#"
+                              className="text-sm font-medium text-slate-900"
+                            >
+                              {currentEndpoint.name}
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                        )}
+                      </>
+                    );
+                  })()}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-4">
             {/* Nút New Response */}
             <Button
@@ -908,8 +912,9 @@ const DashboardPage = () => {
 
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-6">
-            {/* Display Endpoint Name and Method above Tabs */}
+          {/* Container chung cho cả hai phần */}
+          <div className="flex justify-between items-center mb-6">
+            {/* Phần bên trái - Display Endpoint Name and Method */}
             <div className="flex items-center">
               <h2 className="text-2xl font-bold text-[#37352F] mr-4">
                 {endpoints.find((ep) => ep.id === currentEndpointId)?.name ||
@@ -923,9 +928,37 @@ const DashboardPage = () => {
                   "GET"}
               </Badge>
             </div>
+
+            {/* Phần bên phải - Form Status Info */}
+            <div className="flex-1 max-w-[707px] ml-8">
+              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+                <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1">
+                  api/user
+                </div>
+                <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
+                  <div className="w-[21px] h-[20px] relative">
+                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
+                      <path
+                        d="M7.5 10H13.5M10.5 7V13"
+                        stroke="#777671"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="10.5"
+                        cy="10"
+                        r="8"
+                        stroke="#777671"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Container chung cho cả navigation và content */}
           <div className="flex gap-6">
             {/* Cột trái - Response Configuration */}
             <div className="w-1/3">
@@ -1286,7 +1319,7 @@ const DashboardPage = () => {
 
         {/* New Response Dialog */}
         {isDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
