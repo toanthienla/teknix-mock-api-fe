@@ -595,21 +595,16 @@ const DashboardPage = () => {
           prevResponses.map((response) => {
             const updated = updatedResponses.find((r) => r.id === response.id);
             return updated
-              ? { ...response, priority: updated.priority } // Chỉ cập nhật priority
+              ? { ...response, priority: updated.priority }
               : response;
           })
         );
 
-        // Cập nhật statusData dựa trên endpointResponses mới (đồng bộ thứ tự)
+        // Cập nhật statusData dựa trên updatedResponses (sửa lỗi ở đây)
         setStatusData((prevStatusData) =>
           prevStatusData.map((status) => {
-            const updatedResponse = endpointResponses.find(
-              (r) => r.id === status.id
-            ); // Sử dụng endpointResponses đã cập nhật
-            return {
-              ...status,
-              priority: updatedResponse?.priority || status.priority, // Đồng bộ priority nếu cần hiển thị
-            };
+            const updated = updatedResponses.find((r) => r.id === status.id);
+            return updated ? { ...status, priority: updated.priority } : status;
           })
         );
 
@@ -628,10 +623,6 @@ const DashboardPage = () => {
   };
 
   const setDefaultResponse = (responseId) => {
-    // Tìm response được chọn
-    const selectedResponse = endpointResponses.find((r) => r.id === responseId);
-    if (!selectedResponse) return;
-
     // Gọi API đúng endpoint theo yêu cầu
     fetch(`${API_ROOT}/endpoint_responses/${responseId}/set_default`, {
       method: "PUT",
@@ -648,68 +639,38 @@ const DashboardPage = () => {
       .then((updatedResponses) => {
         console.log("Default response updated:", updatedResponses);
 
-        // Đảm bảo updatedResponses là mảng hợp lệ
-        if (!Array.isArray(updatedResponses) || updatedResponses.length === 0) {
-          // Nếu server không trả về dữ liệu đầy đủ, tự xử lý ở client
-          const newEndpointResponses = endpointResponses.map((response) => ({
-            ...response,
-            is_default: response.id === responseId,
-          }));
+        // Cập nhật endpointResponses với dữ liệu từ server
+        setEndpointResponses((prevResponses) =>
+          prevResponses.map((response) => {
+            const updated = updatedResponses.find((r) => r.id === response.id);
+            return updated
+              ? { ...response, is_default: updated.is_default }
+              : response;
+          })
+        );
 
-          // Cập nhật endpointResponses
-          setEndpointResponses(newEndpointResponses);
+        // Cập nhật statusData
+        setStatusData((prevStatusData) =>
+          prevStatusData.map((status) => {
+            const updated = updatedResponses.find((r) => r.id === status.id);
+            return updated
+              ? { ...status, isDefault: updated.is_default }
+              : status;
+          })
+        );
 
-          // Cập nhật statusData
-          setStatusData(
-            statusData.map((status) => ({
-              ...status,
-              isDefault: status.id === responseId,
-            }))
+        // Cập nhật selectedResponse nếu cần
+        if (
+          selectedResponse &&
+          updatedResponses.some((r) => r.id === responseId)
+        ) {
+          const updatedSelected = updatedResponses.find(
+            (r) => r.id === responseId
           );
-
-          // Cập nhật selectedResponse
-          if (selectedResponse) {
-            setSelectedResponse({
-              ...selectedResponse,
-              is_default: true,
-            });
-          }
-        } else {
-          // Cập nhật endpointResponses với dữ liệu từ server
-          setEndpointResponses((prevResponses) =>
-            prevResponses.map((response) => {
-              const updated = updatedResponses.find(
-                (r) => r.id === response.id
-              );
-              return updated
-                ? { ...response, is_default: updated.is_default }
-                : response;
-            })
-          );
-
-          // Cập nhật statusData
-          setStatusData((prevStatusData) =>
-            prevStatusData.map((status) => {
-              const updated = updatedResponses.find((r) => r.id === status.id);
-              return updated
-                ? { ...status, isDefault: updated.is_default }
-                : status;
-            })
-          );
-
-          // Cập nhật selectedResponse
-          if (
-            selectedResponse &&
-            updatedResponses.some((r) => r.id === selectedResponse.id)
-          ) {
-            const updatedSelected = updatedResponses.find(
-              (r) => r.id === selectedResponse.id
-            );
-            setSelectedResponse({
-              ...selectedResponse,
-              is_default: updatedSelected.is_default,
-            });
-          }
+          setSelectedResponse({
+            ...selectedResponse,
+            is_default: updatedSelected.is_default,
+          });
         }
 
         // Thêm toast thông báo thành công
