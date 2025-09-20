@@ -1014,6 +1014,16 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             </TableCell>
+                            {/* Thêm cột Default badge */}
+                            <TableCell className="w-[80px] h-[49px] p-2">
+                              {status.isDefault && (
+                                <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                                  <span className="text-xs font-medium text-[#0A0A0A]">
+                                    Default
+                                  </span>
+                                </div>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1252,6 +1262,16 @@ const DashboardPage = () => {
                                   {status.name}
                                 </div>
                               </div>
+                            </TableCell>
+                            {/* Thêm cột Default badge */}
+                            <TableCell className="w-[80px] h-[49px] p-2">
+                              {status.isDefault && (
+                                <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                                  <span className="text-xs font-medium text-[#0A0A0A]">
+                                    Default
+                                  </span>
+                                </div>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
