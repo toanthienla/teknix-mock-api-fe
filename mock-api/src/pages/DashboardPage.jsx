@@ -556,7 +556,7 @@ export default function DashboardPage() {
                     <ProjectCard
                       key={p.id}
                       project={p}
-                      onOpen={() => navigate(`/dashboard/${p.id}`)}
+                      onClick={() => navigate(`/dashboard/${p.id}`)}
                       onEdit={() => openEditProjectDialog(p)}
                       onDelete={() => openDeleteProjectDialog(p.id)}
                     />
