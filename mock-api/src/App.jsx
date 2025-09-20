@@ -29,7 +29,7 @@ export default function App() {
         />
       </Routes>
 
-      <ToastContainer position="bottom-right" autoClose={3000} />
+      <ToastContainer position="bottom-right" autoClose={3000} theme="colored" />
     </>
   );
 }
