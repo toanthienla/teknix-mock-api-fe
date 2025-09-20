@@ -22,6 +22,11 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card"
 import { ChevronDown, ChevronsUpDown, Search } from "lucide-react";
 import Sidebar from "@/components/Sidebar.jsx";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,6 +34,7 @@ import { API_ROOT } from "@/utils/constants.js";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -52,6 +58,10 @@ import timeIcon from "@/assets/time&date.svg";
 import LogCard from "@/components/LogCard.jsx";
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
+import errorIcon from "@/assets/errors.svg";
+import slowIcon from "@/assets/slow.svg";
+import clientErrorIcon from "@/assets/client_errors.svg";
+import successIcon from "@/assets/success.svg";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -776,6 +786,9 @@ export default function Dashboard() {
                         >
                           <DialogHeader>
                             <DialogTitle>New Endpoint</DialogTitle>
+                            <DialogDescription>
+                              Fill in details to create a new endpoint.
+                            </DialogDescription>
                           </DialogHeader>
 
                           <h3 className="text-sm font-semibold text-slate-700 mt-2">
@@ -1135,57 +1148,78 @@ export default function Dashboard() {
                 </div>
               </>
             ) : activeTab === "statistic" ? (
-              <> {/* Statistic content */}
-                <div className="p-4">
-                  <h2 className="text-xl font-bold mb-4">Statistics</h2>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Method Count */}
-                    <div className="border rounded-lg p-4 shadow-sm">
-                      <h3 className="text-lg font-semibold mb-2">
-                        Requests by Method
-                      </h3>
-                      <ul className="space-y-1 text-sm">
-                        {["GET", "POST", "PUT", "DELETE"].map((method) => {
-                          const count = logs.filter(
-                            (log) =>
-                              String(log.project_id) === String(projectId) &&
-                              log.request_method === method
-                          ).length;
-                          return (
-                            <li key={method} className="flex justify-between">
-                              <span>{method}</span>
-                              <span className="font-mono">{count}</span>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                <div className="p-6">
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold">Total Request Today</h2>
+                    <p className="text-muted-foreground">MockAPI</p>
+                    <div className="text-6xl font-extrabold my-2">
+                      {logs.filter(log => String(log.project_id) === String(projectId)).length}
                     </div>
+                    <p className="text-muted-foreground">ENDPOINTS/DAY</p>
+                  </div>
 
-                    {/* Status Count */}
-                    <div className="border rounded-lg p-4 shadow-sm">
-                      <h3 className="text-lg font-semibold mb-2">
-                        Responses by Status
-                      </h3>
-                      <ul className="space-y-1 text-sm">
-                        {[200, 201, 400, 401, 403, 404, 500].map((status) => {
-                          const count = logs.filter(
-                            (log) =>
-                              log.project_id === projectId &&
-                              log.response_status_code === status
-                          ).length;
-                          return (
-                            <li key={status} className="flex justify-between">
-                              <span>{status}</span>
-                              <span className="font-mono">{count}</span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Quick Filters */}
+                    <Card>
+                      <CardHeader>
+                        <h3 className="text-lg font-semibold">Quick Filters</h3>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex justify-between items-center">
+                            <img src={errorIcon} alt="Errors icon" className="w-4 h-4" />
+                            <span className="flex items-center gap-2 text-red-500">Errors (5xx)</span>
+                            <span className="text-stone-600">
+                              {filteredLogs.filter(l => l.response_status_code >= 500).length}
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center">
+                            <img src={slowIcon} alt="Slow icon" className="w-4 h-4" />
+                            <span className="flex items-center gap-2 text-yellow-500">Slow Requests</span>
+                            <span className="text-stone-600">
+                              {filteredLogs.filter(l => l.latency > 1000).length}</span>
+                          </li>
+                          <li className="flex justify-between items-center">
+                            <img src={clientErrorIcon} alt="Client Errors icon" className="w-4 h-4" />
+                            <span className="flex items-center gap-2 text-orange-500">Client Errors (4xx)</span>
+                            <span className="text-stone-600">
+                              {filteredLogs.filter(l => String(l.response_status_code).startsWith("4")).length}
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center">
+                            <img src={successIcon} alt="Success icon" className="w-4 h-4" />
+                            <span className="flex items-center gap-2 text-green-600">Success (2xx)</span>
+                            <span className="text-stone-600">
+                              {filteredLogs.filter(l => String(l.response_status_code).startsWith("2")).length}
+                            </span>
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {/* All Endpoints Filters */}
+                    <Card>
+                      <CardHeader>
+                        <h3 className="text-lg font-semibold">All Endpoints Filters</h3>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2 text-sm">
+                          {endpoints.map((ep) => (
+                              <li key={ep.id} className="flex justify-between items-center">
+                                <span className="flex items-center gap-2">
+                                  <Badge variant="outline" className="w-2 h-2 rounded-full p-0" />
+                                  {ep.path}
+                                </span>
+                                <span className="text-stone-600">
+                                  {filteredLogs.filter(l => l.endpoint_id === ep.id).length}
+                                </span>
+                              </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
-              </>
             ) : null}
           </div>
         </div>
