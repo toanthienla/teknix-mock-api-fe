@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [sortOption, setSortOption] = useState("Recently created");
   const [openProjectsMap, setOpenProjectsMap] = useState({});
   const [openEndpointsMap, setOpenEndpointsMap] = useState({});
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
@@ -107,7 +108,7 @@ export default function DashboardPage() {
   };
 
   const fetchEndpoints = () => {
-    fetch(`${API_ROOT}/endpoints `)
+    fetch(`${API_ROOT}/endpoints`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
   };
@@ -471,7 +472,11 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-white text-slate-800">
       {/* Sidebar + Main */}
       <div className="flex">
-        <aside className="w-72 border-r border-slate-100 bg-white">
+        <aside
+          className={`border-r border-slate-100 bg-white transition-all duration-300 ${
+            isSidebarCollapsed ? "w-20" : "w-64"
+          }`}
+        >
           <Sidebar
             workspaces={workspaces}
             projects={projects}
@@ -489,11 +494,17 @@ export default function DashboardPage() {
             setOpenProjectsMap={setOpenProjectsMap}
             openEndpointsMap={openEndpointsMap}
             setOpenEndpointsMap={setOpenEndpointsMap}
+            isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
+            setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
           />
         </aside>
 
         {/* Main */}
-        <main className="flex-1 p-8">
+        <main
+          className={`p-8 transition-all duration-300 ${
+            isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
+          }`}
+        >
           <Topbar
             onSearch={setSearchTerm}
             onNewProject={() => setOpenNewProject(true)}
@@ -653,10 +664,9 @@ export default function DashboardPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    // Nếu không thay đổi thì thoát
                     if (
-                      editTitle.trim() === (projects.find(p => p.id === editId)?.name || "") &&
-                      editDesc.trim() === (projects.find(p => p.id === editId)?.description || "")
+                      editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
+                      editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
                     ) {
                       setOpenEditProject(false);
                     } else {
@@ -680,10 +690,9 @@ export default function DashboardPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    // Nếu không thay đổi thì thoát
                     if (
-                      editTitle.trim() === (projects.find(p => p.id === editId)?.name || "") &&
-                      editDesc.trim() === (projects.find(p => p.id === editId)?.description || "")
+                      editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
+                      editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
                     ) {
                       setOpenEditProject(false);
                     } else {
@@ -706,8 +715,8 @@ export default function DashboardPage() {
               className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleUpdateProject}
               disabled={
-                editTitle.trim() === (projects.find(p => p.id === editId)?.name || "") &&
-                editDesc.trim() === (projects.find(p => p.id === editId)?.description || "")
+                editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
+                editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
               }
             >
               Update
@@ -715,7 +724,6 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
 
       {/* Delete Project */}
       <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
@@ -766,7 +774,6 @@ export default function DashboardPage() {
               Update
             </Button>
           </DialogFooter>
-
         </DialogContent>
       </Dialog>
 
@@ -801,5 +808,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-

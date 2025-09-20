@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, ChevronLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import WPIcon from "@/assets/WP.svg";
 import settingIcon from "@/assets/Settings Icon.svg";
+import logoIcon from "@/assets/mockapi.svg";
 
 export default function Sidebar({
   workspaces = [],
@@ -21,24 +22,23 @@ export default function Sidebar({
   setOpenProjectsMap,
   openEndpointsMap,
   setOpenEndpointsMap,
+  isCollapsed,
+  setIsCollapsed, // Nhận props để đồng bộ trạng thái
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [rightClickActionId, setRightClickActionId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 }); // ✅ thêm state menuPos
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
 
   const navigate = useNavigate();
   const actionMenuRef = useRef(null);
-  const inputRef = useRef(null); // ✅ thêm ref cho input
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Đóng context menu nếu click ra ngoài
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) {
         setRightClickActionId(null);
       }
-
-      // Đóng input nếu click ra ngoài
       if (inputRef.current && !inputRef.current.contains(e.target)) {
         setIsAdding(false);
         setNewName("");
@@ -71,12 +71,11 @@ export default function Sidebar({
     }));
   };
 
-  // ✅ sửa lại để tính toán vị trí context menu theo chuột
   const handleRightClick = (e, wsId) => {
     e.preventDefault();
 
-    const menuWidth = 176; // ~ w-44 (44 * 4px)
-    const menuHeight = 120; // chiều cao ước lượng
+    const menuWidth = 176;
+    const menuHeight = 120;
     const padding = 10;
 
     let x = e.clientX + 10;
@@ -85,7 +84,6 @@ export default function Sidebar({
     if (x + menuWidth > window.innerWidth) {
       x = e.clientX - menuWidth - padding;
     }
-
     if (y + menuHeight > window.innerHeight) {
       y = e.clientY - menuHeight - padding;
     }
@@ -95,14 +93,47 @@ export default function Sidebar({
   };
 
   return (
-    <div className="p-6 flex flex-col h-screen bg-white">
-      <div
-        className="text-2xl font-bold mb-6 text-slate-900 cursor-pointer hover:text-slate-700"
-        onClick={() => navigate("/dashboard")}
-      >
-        MockAPI
+    <div
+      className={`p-2 flex flex-col h-screen bg-white transition-all duration-300 ${
+        isCollapsed ? "w-20" : "w-64"
+      }`}
+    >
+      <div className="flex items-center mb-6">
+        <div
+          className="cursor-pointer flex items-center"
+          onClick={() => navigate("/dashboard")}
+        >
+          {!isCollapsed ? (
+            <span className="text-2xl font-bold text-slate-900 hover:text-slate-700">
+              MockAPI
+            </span>
+          ) : (
+            <img
+              src={logoIcon}
+              alt="Logo"
+              className="w-8 h-8 object-contain"
+            />
+          )}
+        </div>
+        <div
+          className="ml-2 cursor-pointer"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          <ChevronLeft
+            className={`w-6 h-6 text-slate-900 transition-transform ${
+              isCollapsed ? "rotate-180" : ""
+            }`}
+          />
+        </div>
       </div>
-      <div className="text-sm text-slate-700 mb-2 font-medium">WORKSPACES</div>
+
+      <div
+        className={`text-sm text-slate-700 mb-2 font-medium ${
+          isCollapsed ? "hidden" : ""
+        }`}
+      >
+        WORKSPACES
+      </div>
       <nav className="flex-1 overflow-auto">
         <ul className="space-y-1">
           {workspaces.map((ws) => {
@@ -131,13 +162,12 @@ export default function Sidebar({
                     <img
                       src={WPIcon}
                       alt="WP icon"
-                      className="w-4 h-4 object-contain"
+                      className="w-10 h-4 object-contain"
                     />
-                    <span>{ws.name}</span>
+                    <span className={isCollapsed ? "hidden" : ""}>{ws.name}</span>
                   </span>
                 </div>
 
-                {/* ✅ context menu dùng fixed + menuPos */}
                 {isActionOpen && (
                   <div
                     ref={actionMenuRef}
@@ -172,14 +202,16 @@ export default function Sidebar({
                   </div>
                 )}
 
-                {/* Projects + Endpoints */}
                 {isOpen && wsProjects.length > 0 && (
-                  <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
+                  <div
+                    className={`ml-8 mt-1 space-y-1 text-sm text-slate-600 ${
+                      isCollapsed ? "hidden" : ""
+                    }`}
+                  >
                     {wsProjects.map((p) => {
                       const isEpOpen = openEndpointsMap[p.id] || false;
                       return (
                         <div key={p.id}>
-                          {/* Project row */}
                           <div
                             className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
                             onClick={() => navigate(`/dashboard/${p.id}`)}
@@ -209,7 +241,6 @@ export default function Sidebar({
                             />
                           </div>
 
-                          {/* Endpoints */}
                           {isEpOpen && (
                             <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
                               {endpoints
@@ -227,20 +258,16 @@ export default function Sidebar({
                                       )
                                     }
                                   >
-
                                     <img
                                       src={settingIcon}
                                       alt={ep.method}
                                       className="w-5 h-5 object-contain"
                                     />
-
                                     {ep.name}
                                   </div>
                                 ))}
                             </div>
                           )}
-
-
                         </div>
                       );
                     })}
@@ -250,13 +277,12 @@ export default function Sidebar({
             );
           })}
 
-          {/* Add Workspace */}
           <li className="mt-2">
             {isAdding ? (
               <div className="relative w-full">
                 <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                 <Input
-                  ref={inputRef} // ✅ thêm ref vào input
+                  ref={inputRef}
                   autoFocus
                   placeholder="Type workspace name..."
                   value={newName}
@@ -273,11 +299,13 @@ export default function Sidebar({
               </div>
             ) : (
               <div
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 hover:text-slate-900 text-slate-900 font-medium"
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 hover:text-slate-900 text-slate-900 font-medium ${
+                  isCollapsed ? "justify-center" : ""
+                }`}
                 onClick={() => setIsAdding(true)}
               >
                 <Plus className="w-4 h-4" />
-                <span>New Workspace</span>
+                <span className={isCollapsed ? "hidden" : ""}>New Workspace</span>
               </div>
             )}
           </li>
