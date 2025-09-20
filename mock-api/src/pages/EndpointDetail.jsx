@@ -2,14 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +26,6 @@ import {
   Code,
   X,
   GripVertical,
-  Check,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -366,6 +358,9 @@ const DashboardPage = () => {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
+  // Thêm state để lưu trữ trạng thái trước khi drag
+  const [previousStatusData, setPreviousStatusData] = useState([]);
+
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
@@ -559,6 +554,9 @@ const DashboardPage = () => {
         // Fetch lại danh sách responses sau khi xóa
         fetchEndpointResponses();
 
+        // Thêm toast thông báo thành công
+        toast.success("Response deleted successfully!");
+
         // Nếu không còn response nào, reset form
         if (endpointResponses.length === 1) {
           setResponseName("");
@@ -571,7 +569,7 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error("Error deleting response:", error);
-        alert("Failed to delete response: " + error.message);
+        toast.error("Failed to delete response: " + error.message);
       });
   };
 
@@ -589,18 +587,52 @@ const DashboardPage = () => {
         }
         return res.json();
       })
-      .then((updatedPriorities) => {
-        console.log("Priorities updated:", updatedPriorities);
-        // Có thể cập nhật state thêm nếu cần
+      .then((updatedResponses) => {
+        console.log("Priorities updated:", updatedResponses);
+
+        // Cập nhật endpointResponses với priority mới từ server
+        setEndpointResponses((prevResponses) =>
+          prevResponses.map((response) => {
+            const updated = updatedResponses.find((r) => r.id === response.id);
+            return updated
+              ? { ...response, priority: updated.priority } // Chỉ cập nhật priority
+              : response;
+          })
+        );
+
+        // Cập nhật statusData dựa trên endpointResponses mới (đồng bộ thứ tự)
+        setStatusData((prevStatusData) =>
+          prevStatusData.map((status) => {
+            const updatedResponse = endpointResponses.find(
+              (r) => r.id === status.id
+            ); // Sử dụng endpointResponses đã cập nhật
+            return {
+              ...status,
+              priority: updatedResponse?.priority || status.priority, // Đồng bộ priority nếu cần hiển thị
+            };
+          })
+        );
+
+        // Thêm toast thông báo thành công
+        toast.success("Response priorities updated successfully!");
       })
       .catch((error) => {
         console.error("Error updating priorities:", error);
+
         // Khôi phục state nếu cập nhật thất bại
-        fetchEndpointResponses();
+        setStatusData(previousStatusData);
+
+        // Thêm toast thông báo lỗi
+        toast.error("Failed to update response priorities: " + error.message);
       });
   };
 
   const setDefaultResponse = (responseId) => {
+    // Tìm response được chọn
+    const selectedResponse = endpointResponses.find((r) => r.id === responseId);
+    if (!selectedResponse) return;
+
+    // Gọi API đúng endpoint theo yêu cầu
     fetch(`${API_ROOT}/endpoint_responses/${responseId}/set_default`, {
       method: "PUT",
       headers: {
@@ -616,41 +648,77 @@ const DashboardPage = () => {
       .then((updatedResponses) => {
         console.log("Default response updated:", updatedResponses);
 
-        // Cập nhật state local với phản hồi từ server
-        setEndpointResponses((prevResponses) =>
-          prevResponses.map((response) => {
-            const updated = updatedResponses.find((r) => r.id === response.id);
-            return updated
-              ? { ...response, is_default: updated.is_default }
-              : response;
-          })
-        );
+        // Đảm bảo updatedResponses là mảng hợp lệ
+        if (!Array.isArray(updatedResponses) || updatedResponses.length === 0) {
+          // Nếu server không trả về dữ liệu đầy đủ, tự xử lý ở client
+          const newEndpointResponses = endpointResponses.map((response) => ({
+            ...response,
+            is_default: response.id === responseId,
+          }));
 
-        setStatusData((prevStatusData) =>
-          prevStatusData.map((status) => {
-            const updated = updatedResponses.find((r) => r.id === status.id);
-            return updated
-              ? { ...status, isDefault: updated.is_default }
-              : status;
-          })
-        );
+          // Cập nhật endpointResponses
+          setEndpointResponses(newEndpointResponses);
 
-        // Cập nhật selectedResponse nếu cần
-        if (
-          selectedResponse &&
-          updatedResponses.some((r) => r.id === selectedResponse.id)
-        ) {
-          const updatedSelected = updatedResponses.find(
-            (r) => r.id === selectedResponse.id
+          // Cập nhật statusData
+          setStatusData(
+            statusData.map((status) => ({
+              ...status,
+              isDefault: status.id === responseId,
+            }))
           );
-          setSelectedResponse({
-            ...selectedResponse,
-            is_default: updatedSelected.is_default,
-          });
+
+          // Cập nhật selectedResponse
+          if (selectedResponse) {
+            setSelectedResponse({
+              ...selectedResponse,
+              is_default: true,
+            });
+          }
+        } else {
+          // Cập nhật endpointResponses với dữ liệu từ server
+          setEndpointResponses((prevResponses) =>
+            prevResponses.map((response) => {
+              const updated = updatedResponses.find(
+                (r) => r.id === response.id
+              );
+              return updated
+                ? { ...response, is_default: updated.is_default }
+                : response;
+            })
+          );
+
+          // Cập nhật statusData
+          setStatusData((prevStatusData) =>
+            prevStatusData.map((status) => {
+              const updated = updatedResponses.find((r) => r.id === status.id);
+              return updated
+                ? { ...status, isDefault: updated.is_default }
+                : status;
+            })
+          );
+
+          // Cập nhật selectedResponse
+          if (
+            selectedResponse &&
+            updatedResponses.some((r) => r.id === selectedResponse.id)
+          ) {
+            const updatedSelected = updatedResponses.find(
+              (r) => r.id === selectedResponse.id
+            );
+            setSelectedResponse({
+              ...selectedResponse,
+              is_default: updatedSelected.is_default,
+            });
+          }
         }
+
+        // Thêm toast thông báo thành công
+        toast.success("Default response updated successfully!");
       })
       .catch((error) => {
         console.error("Error setting default response:", error);
+        toast.error("Failed to set default response: " + error.message);
+
         // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
       });
@@ -658,6 +726,7 @@ const DashboardPage = () => {
 
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
+    setPreviousStatusData([...statusData]); // Lưu trạng thái để khôi phục nếu lỗi
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -680,20 +749,15 @@ const DashboardPage = () => {
       // Cập nhật state local ngay lập tức để UI phản hồi nhanh
       setStatusData(newStatusData);
 
-      // Tạo payload cho cập nhật priority - đảm bảo endpoint_id là string
+      // Tạo payload cho cập nhật priority (đúng định dạng API)
       const priorityUpdates = newStatusData.map((item, index) => ({
         id: item.id,
-        endpoint_id: String(currentEndpointId), // Chuyển thành string
-        priority: index + 1,
+        endpoint_id: String(currentEndpointId),
+        priority: index + 1, // Priority theo thứ tự mới (bắt đầu từ 1)
       }));
 
       // Cập nhật priority trên server
-      updatePriorities(priorityUpdates);
-
-      // Nếu item được kéo lên vị trí đầu tiên, set làm default response
-      if (dropIndex === 0) {
-        setDefaultResponse(draggedItemContent.id);
-      }
+      updatePriorities(priorityUpdates, newStatusData);
     }
 
     setDraggedItem(null);
@@ -731,7 +795,7 @@ const DashboardPage = () => {
     try {
       responseBodyObj = JSON.parse(responseBody);
     } catch {
-      alert("Invalid JSON in response body");
+      toast.error("Invalid JSON in response body");
       return;
     }
 
@@ -773,6 +837,13 @@ const DashboardPage = () => {
         // Close dialog
         setIsDialogOpen(false);
 
+        // Thêm toast thông báo thành công
+        if (selectedResponse) {
+          toast.success("Response updated successfully!");
+        } else {
+          toast.success("New response created successfully!");
+        }
+
         // Nếu là tạo mới, reset form hoàn toàn
         if (!selectedResponse) {
           setResponseName("");
@@ -785,7 +856,7 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error(error);
-        alert(error.message);
+        toast.error(error.message);
       });
   };
 
