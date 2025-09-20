@@ -186,7 +186,6 @@ const Frame = () => {
           ? {
               ...row,
               type: newType,
-              // SỬA 3: Chỉ cập nhật name nếu đang rỗng hoặc là placeholder cũ
               name:
                 row.name === "" || row.name === getPlaceholderText(row.type)
                   ? ""
@@ -200,7 +199,7 @@ const Frame = () => {
   const handleAddRule = () => {
     const newRow = {
       id: `rule-${Date.now()}`,
-      type: "Route Parameter", // SỬA 2: Route Parameter là mặc định
+      type: "Route Parameter",
       name: "",
       value: "",
     };
@@ -218,12 +217,10 @@ const Frame = () => {
     setSelectedRuleId(id);
   };
 
-  // SỬA HÀM XÓA: NHẬN ID CỦA RULE CẦN XÓA THAY VÌ DÙNG selectedRuleId
   const handleDeleteRule = (idToDelete) => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
-      // Đảm bảo luôn có ít nhất 1 rule
       if (filteredRows.length === 0) {
         return [
           {
@@ -238,7 +235,6 @@ const Frame = () => {
       return filteredRows;
     });
 
-    // Nếu rule bị xóa là rule đang được chọn, reset selectedRuleId
     if (selectedRuleId === idToDelete) {
       setSelectedRuleId(null);
     }
@@ -292,7 +288,7 @@ const Frame = () => {
                 );
               }}
               className="w-[184px]"
-              placeholder={getPlaceholderText(row.type)} // SỬ DỤNG CHÍNH XÁC LÀM PLACEHOLDER
+              placeholder={getPlaceholderText(row.type)}
             />
 
             <Input
@@ -308,13 +304,12 @@ const Frame = () => {
               placeholder="value"
             />
 
-            {/* SỬA: TRUYỀN row.id VÀO HÀM XÓA */}
             <Button
               variant="ghost"
               size="sm"
               onClick={(e) => {
-                e.stopPropagation(); // NGĂN CHẶN SỰ KIỆN LAN TỎA
-                handleDeleteRule(row.id); // TRUYỀN ID CỦA RULE HIỆN TẠI
+                e.stopPropagation();
+                handleDeleteRule(row.id);
               }}
               disabled={parameterRows.length === 1}
             >
@@ -333,7 +328,7 @@ const Frame = () => {
 };
 
 const DashboardPage = () => {
-   const { projectId, endpointId } = useParams();
+  const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isActive, setIsActive] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -357,6 +352,7 @@ const DashboardPage = () => {
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
 
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
@@ -382,16 +378,13 @@ const DashboardPage = () => {
   };
 
   const fetchEndpointResponses = () => {
-    // Đảm bảo endpoint_id luôn là string khi gọi API
     const endpointIdStr = String(currentEndpointId);
 
-    // Fetch responses for specific endpoint using query parameter
     fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
         setEndpointResponses(data);
 
-        // Format data for Response Configurations
         const statusDataFormatted = data.map((res) => ({
           id: res.id,
           code: res.status_code.toString(),
@@ -402,7 +395,6 @@ const DashboardPage = () => {
 
         setStatusData(statusDataFormatted);
 
-        // Set default selected response
         if (data.length > 0) {
           const defaultResponse = data.find((res) => res.is_default) || data[0];
           setSelectedResponse(defaultResponse);
@@ -421,7 +413,7 @@ const DashboardPage = () => {
     fetchProjects();
     fetchEndpoints();
   }, []);
-   // Keep sidebar expanded when on endpoint detail
+
   useEffect(() => {
     if (!projectId) return;
     const p = projects.find((proj) => String(proj.id) === String(projectId));
@@ -448,7 +440,6 @@ const DashboardPage = () => {
     }
   }, [currentEndpointId]);
 
-  // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
     if (!trimmed) return "Workspace name cannot be empty";
@@ -560,10 +551,8 @@ const DashboardPage = () => {
         return res.json();
       })
       .then(() => {
-        // Fetch lại danh sách responses sau khi xóa
         fetchEndpointResponses();
 
-        // Nếu không còn response nào, reset form
         if (endpointResponses.length === 1) {
           setResponseName("");
           setStatusCode("");
@@ -595,11 +584,9 @@ const DashboardPage = () => {
       })
       .then((updatedPriorities) => {
         console.log("Priorities updated:", updatedPriorities);
-        // Có thể cập nhật state thêm nếu cần
       })
       .catch((error) => {
         console.error("Error updating priorities:", error);
-        // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
       });
   };
@@ -620,7 +607,6 @@ const DashboardPage = () => {
       .then((updatedResponses) => {
         console.log("Default response updated:", updatedResponses);
 
-        // Cập nhật state local với phản hồi từ server
         setEndpointResponses((prevResponses) =>
           prevResponses.map((response) => {
             const updated = updatedResponses.find((r) => r.id === response.id);
@@ -639,7 +625,6 @@ const DashboardPage = () => {
           })
         );
 
-        // Cập nhật selectedResponse nếu cần
         if (
           selectedResponse &&
           updatedResponses.some((r) => r.id === selectedResponse.id)
@@ -655,7 +640,6 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error("Error setting default response:", error);
-        // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
       });
   };
@@ -676,25 +660,19 @@ const DashboardPage = () => {
       const newStatusData = [...statusData];
       const draggedItemContent = { ...newStatusData[draggedItem] };
 
-      // Xóa item khỏi vị trí cũ
       newStatusData.splice(draggedItem, 1);
-      // Chèn item vào vị trí mới
       newStatusData.splice(dropIndex, 0, draggedItemContent);
 
-      // Cập nhật state local ngay lập tức để UI phản hồi nhanh
       setStatusData(newStatusData);
 
-      // Tạo payload cho cập nhật priority - đảm bảo endpoint_id là string
       const priorityUpdates = newStatusData.map((item, index) => ({
         id: item.id,
-        endpoint_id: String(currentEndpointId), // Chuyển thành string
+        endpoint_id: String(currentEndpointId),
         priority: index + 1,
       }));
 
-      // Cập nhật priority trên server
       updatePriorities(priorityUpdates);
 
-      // Nếu item được kéo lên vị trí đầu tiên, set làm default response
       if (dropIndex === 0) {
         setDefaultResponse(draggedItemContent.id);
       }
@@ -704,7 +682,6 @@ const DashboardPage = () => {
   };
 
   const handleResponseSelect = (response) => {
-    // Chỉ cần set selectedResponse, không cần fetch lại detail
     setSelectedResponse(response);
     setResponseName(response.name);
     setStatusCode(response.status_code.toString());
@@ -713,7 +690,6 @@ const DashboardPage = () => {
   };
 
   const handleNewResponse = () => {
-    // Reset form khi tạo mới
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
@@ -725,7 +701,6 @@ const DashboardPage = () => {
   };
 
   const handleSaveResponse = () => {
-    // Parse response body
     let responseBodyObj = {};
     try {
       responseBodyObj = JSON.parse(responseBody);
@@ -766,13 +741,10 @@ const DashboardPage = () => {
         return res.json();
       })
       .then(() => {
-        // Refresh responses
         fetchEndpointResponses();
 
-        // Close dialog
         setIsDialogOpen(false);
 
-        // Nếu là tạo mới, reset form hoàn toàn
         if (!selectedResponse) {
           setResponseName("");
           setStatusCode("200");
@@ -791,7 +763,11 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
-      <aside className="w-72 border-r border-slate-100 bg-white">
+      <aside
+        className={`border-r border-slate-100 bg-white transition-all duration-300 ${
+          isSidebarCollapsed ? "w-20" : "w-72"
+        }`}
+      >
         <Sidebar
           workspaces={workspaces}
           projects={projects}
@@ -810,11 +786,17 @@ const DashboardPage = () => {
           setOpenProjectsMap={setOpenProjectsMap}
           openEndpointsMap={openEndpointsMap}
           setOpenEndpointsMap={setOpenEndpointsMap}
+          isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
+          setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
         />
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div
+        className={`p-8 transition-all duration-300 ${
+          isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
+        } overflow-y-auto`}
+      >
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="relative w-96">
@@ -826,7 +808,6 @@ const DashboardPage = () => {
             />
           </div>
           <div className="flex items-center space-x-4">
-            {/* Nút New Response */}
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
               onClick={handleNewResponse}
