@@ -563,6 +563,16 @@
       "condition": {},
       "is_default": false,
       "delay_ms": 0
+    },
+    {
+      "id": "bbf1",
+      "endpoint_id": "5",
+      "name": "Wassup?",
+      "status_code": 304,
+      "response_body": "Yeah?",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
     }
   ],
   "logs": [

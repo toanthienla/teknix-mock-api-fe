@@ -160,7 +160,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = () => {
+const Frame = ({ responseName }) => {
   const [parameterRows, setParameterRows] = useState([
     {
       id: "rule-1",
@@ -194,7 +194,6 @@ const Frame = () => {
           ? {
               ...row,
               type: newType,
-              // SỬA 3: Chỉ cập nhật name nếu đang rỗng hoặc là placeholder cũ
               name:
                 row.name === "" || row.name === getPlaceholderText(row.type)
                   ? ""
@@ -208,7 +207,7 @@ const Frame = () => {
   const handleAddRule = () => {
     const newRow = {
       id: `rule-${Date.now()}`,
-      type: "Route Parameter", // SỬA 2: Route Parameter là mặc định
+      type: "Route Parameter",
       name: "",
       value: "",
     };
@@ -226,12 +225,10 @@ const Frame = () => {
     setSelectedRuleId(id);
   };
 
-  // SỬA HÀM XÓA: NHẬN ID CỦA RULE CẦN XÓA THAY VÌ DÙNG selectedRuleId
   const handleDeleteRule = (idToDelete) => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
-      // Đảm bảo luôn có ít nhất 1 rule
       if (filteredRows.length === 0) {
         return [
           {
@@ -246,7 +243,6 @@ const Frame = () => {
       return filteredRows;
     });
 
-    // Nếu rule bị xóa là rule đang được chọn, reset selectedRuleId
     if (selectedRuleId === idToDelete) {
       setSelectedRuleId(null);
     }
@@ -254,12 +250,10 @@ const Frame = () => {
 
   return (
     <div className="mt-15">
-      {" "}
-      {/* Thêm margin-top 20px */}
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
-            Success Response
+            {responseName || "No Response Selected"}
           </h1>
         </div>
 
@@ -307,7 +301,7 @@ const Frame = () => {
                   );
                 }}
                 className="w-[184px]"
-                placeholder={getPlaceholderText(row.type)} // SỬ DỤNG CHÍNH XÁC LÀM PLACEHOLDER
+                placeholder={getPlaceholderText(row.type)}
               />
 
               <Input
@@ -323,13 +317,12 @@ const Frame = () => {
                 placeholder="value"
               />
 
-              {/* SỬA: TRUYỀN row.id VÀO HÀM XÓA */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation(); // NGĂN CHẶN SỰ KIỆN LAN TỎA
-                  handleDeleteRule(row.id); // TRUYỀN ID CỦA RULE HIỆN TẠI
+                  e.stopPropagation();
+                  handleDeleteRule(row.id);
                 }}
                 disabled={parameterRows.length === 1}
               >
@@ -1268,8 +1261,8 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="w-2/3 mt-15">
-                  {/* Frame container */}
-                  <Frame />
+                  {/* Frame container với responseName được truyền vào */}
+                  <Frame responseName={selectedResponse?.name} />
                 </div>
               </div>
             </TabsContent>
