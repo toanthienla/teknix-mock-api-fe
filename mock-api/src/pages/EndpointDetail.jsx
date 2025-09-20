@@ -51,6 +51,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { ChevronRight } from "lucide-react";
 
 // Define the status codes
 const statusCodes = [
@@ -811,6 +819,75 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              {(() => {
+                const currentEndpoint = endpoints.find(
+                  (ep) => ep.id === currentEndpointId
+                );
+                const currentProject = currentEndpoint
+                  ? projects.find(
+                      (p) => String(p.id) === String(currentEndpoint.project_id)
+                    )
+                  : null;
+                const currentWorkspace = currentProject
+                  ? workspaces.find(
+                      (w) =>
+                        String(w.id) === String(currentProject.workspace_id)
+                    )
+                  : null;
+
+                return (
+                  <>
+                    {currentWorkspace && (
+                      <>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink
+                            href="/dashboard"
+                            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                          >
+                            {currentWorkspace.name}
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator>
+                          <ChevronRight className="h-4 w-4 text-slate-400" />
+                        </BreadcrumbSeparator>
+                      </>
+                    )}
+                    {currentProject && (
+                      <>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink
+                            href={`/dashboard/${currentProject.id}`}
+                            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                          >
+                            {currentProject.name}
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator>
+                          <ChevronRight className="h-4 w-4 text-slate-400" />
+                        </BreadcrumbSeparator>
+                      </>
+                    )}
+                    {currentEndpoint && (
+                      <BreadcrumbItem>
+                        <BreadcrumbLink
+                          href="#"
+                          className="text-sm font-medium text-slate-900"
+                        >
+                          {currentEndpoint.name}
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    )}
+                  </>
+                );
+              })()}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="relative w-96">
