@@ -921,6 +921,22 @@ const DashboardPage = () => {
 
         {/* Navigation Tabs */}
         <div className="mb-6">
+          <div className="flex items-center justify-between mb-6">
+            {/* Display Endpoint Name and Method above Tabs */}
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                {endpoints.find((ep) => ep.id === currentEndpointId)?.name ||
+                  "Endpoint"}
+              </h2>
+              <Badge
+                variant="outline"
+                className="bg-[#D5FBD3] text-[#000000] border-0"
+              >
+                {endpoints.find((ep) => ep.id === currentEndpointId)?.method ||
+                  "GET"}
+              </Badge>
+            </div>
+          </div>
           <Tabs defaultValue="summary" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-transparent">
               <TabsTrigger
@@ -1013,23 +1029,13 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="w-2/3 mt-15">
-                  {" "}
                   {/* Endpoint Detail Card container */}
                   <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                     <div className="flex justify-between items-center mb-6">
-                      <div className="flex items-center">
-                        <h2 className="text-2xl font-bold text-[#37352F] mr-4">
-                          {endpoints.find((ep) => ep.id === currentEndpointId)
-                            ?.name || "Endpoint"}
-                        </h2>
-                        <Badge
-                          variant="outline"
-                          className="bg-[#D5FBD3] text-[#000000] border-0"
-                        >
-                          {endpoints.find((ep) => ep.id === currentEndpointId)
-                            ?.method || "GET"}
-                        </Badge>
-                      </div>
+                      {/* Display Response Name instead of Endpoint Name */}
+                      <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                        {selectedResponse?.name || "No Response Selected"}
+                      </h2>
                       <div className="flex items-center space-x-2">
                         <Button
                           variant="outline"
@@ -1262,7 +1268,6 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="w-2/3 mt-15">
-                  {" "}
                   {/* Frame container */}
                   <Frame />
                 </div>
@@ -1353,7 +1358,7 @@ const DashboardPage = () => {
 
         {/* New Response Dialog */}
         {isDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
