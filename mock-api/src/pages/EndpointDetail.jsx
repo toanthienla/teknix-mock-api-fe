@@ -2,14 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +26,6 @@ import {
   Code,
   X,
   GripVertical,
-  Check,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -51,6 +43,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { ChevronRight } from "lucide-react";
 
 // Define the status codes
 const statusCodes = [
@@ -152,17 +152,127 @@ const statusCodes = [
   },
 ];
 
-const Frame = () => {
-  const [parameterRows, setParameterRows] = useState([
-    {
-      id: "rule-1",
-      type: "Route Parameter",
-      name: "",
-      value: "",
-    },
-  ]);
+const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+  const [parameterRows, setParameterRows] = useState([]);
 
+  // Thêm state để lưu lỗi cho từng rule
+  const [errors, setErrors] = useState({});
   const [selectedRuleId, setSelectedRuleId] = useState(null);
+
+  // Hàm validate rule
+  const validateRule = (row) => {
+    const newErrors = {};
+
+    // Kiểm tra name không được trống
+    if (!row.name.trim()) {
+      newErrors.name = "Name cannot be empty";
+    }
+    // Kiểm tra name không chứa khoảng trắng cho Route Parameter
+    else if (row.type === "Route Parameter" && /\s/.test(row.name)) {
+      newErrors.name = "Route parameter name cannot contain spaces";
+    }
+
+    // Kiểm tra value không được trống
+    if (!row.value.trim()) {
+      newErrors.value = "Value cannot be empty";
+    }
+    // Kiểm tra value là JSON hợp lệ cho Body
+    else if (row.type === "Body") {
+      try {
+        JSON.parse(row.value);
+      } catch {
+        newErrors.value = "Value must be valid JSON";
+      }
+    }
+
+    return newErrors;
+  };
+
+  // Hàm validate tất cả rules
+  const validateAllRules = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    parameterRows.forEach((row) => {
+      const rowErrors = validateRule(row);
+      if (Object.keys(rowErrors).length > 0) {
+        allErrors[row.id] = rowErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  // Initialize rows from selectedResponse if available
+  useEffect(() => {
+    if (selectedResponse?.condition) {
+      const condition = selectedResponse.condition;
+      const newRows = [];
+
+      // Process params
+      if (condition.params) {
+        Object.entries(condition.params).forEach(([key, value], index) => {
+          newRows.push({
+            id: `param-${index}`,
+            type: "Route Parameter",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process query
+      if (condition.query) {
+        Object.entries(condition.query).forEach(([key, value], index) => {
+          newRows.push({
+            id: `query-${index}`,
+            type: "Query parameter",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process headers
+      if (condition.headers) {
+        Object.entries(condition.headers).forEach(([key, value], index) => {
+          newRows.push({
+            id: `header-${index}`,
+            type: "Header",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process body
+      if (condition.body) {
+        Object.entries(condition.body).forEach(([key, value], index) => {
+          newRows.push({
+            id: `body-${index}`,
+            type: "Body",
+            name: key,
+            value:
+              typeof value === "string"
+                ? value
+                : JSON.stringify(value, null, 2),
+          });
+        });
+      }
+
+      setParameterRows(newRows);
+
+      // Validate all rules after initialization
+      setTimeout(() => {
+        validateAllRules();
+      }, 0);
+    } else {
+      // Nếu không có condition, đặt parameterRows thành mảng rỗng
+      setParameterRows([]);
+    }
+  }, [selectedResponse]);
 
   const getPlaceholderText = (type) => {
     switch (type) {
@@ -194,9 +304,27 @@ const Frame = () => {
           : row
       )
     );
+
+    // Validate rule after type change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule(row);
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
   };
 
   const handleAddRule = () => {
+    // Validate all rules before adding new one
+    if (!validateAllRules()) {
+      toast.error("Please fix errors before adding new rule");
+      return;
+    }
+
     const newRow = {
       id: `rule-${Date.now()}`,
       type: "Route Parameter",
@@ -205,7 +333,6 @@ const Frame = () => {
     };
 
     setParameterRows((prevRows) => [...prevRows, newRow]);
-
     setSelectedRuleId(newRow.id);
   };
 
@@ -213,7 +340,6 @@ const Frame = () => {
     if (event.target.closest("button")) {
       return;
     }
-
     setSelectedRuleId(id);
   };
 
@@ -221,15 +347,18 @@ const Frame = () => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
-      if (filteredRows.length === 0) {
-        return [
-          {
-            id: `rule-${Date.now()}`,
-            type: "Route Parameter",
-            name: "",
-            value: "",
-          },
-        ];
+      // Update errors state after deletion
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[idToDelete];
+        return newErrors;
+      });
+
+      // Only show toast when actually deleting a rule and not the reset case
+      if (filteredRows.length < prevRows.length) {
+        setTimeout(() => {
+          toast.success("Rule deleted successfully!");
+        }, 0);
       }
 
       return filteredRows;
@@ -240,97 +369,206 @@ const Frame = () => {
     }
   };
 
+  const handleNameChange = (id, value) => {
+    setParameterRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+    );
+
+    // Validate rule after name change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule({ ...row, name: value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
+  };
+
+  const handleValueChange = (id, value) => {
+    setParameterRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, value } : r))
+    );
+
+    // Validate rule after value change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule({ ...row, value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
+  };
+
+  // Prepare condition object for API
+  const prepareCondition = () => {
+    const condition = {};
+
+    parameterRows.forEach((row) => {
+      if (!row.name.trim() && !row.value.trim()) return;
+
+      let key = row.name.trim();
+      let value = row.value.trim();
+
+      // Try to parse value as JSON, fallback to string
+      try {
+        value = JSON.parse(value);
+      } catch {
+        // Keep as string if not valid JSON
+      }
+
+      switch (row.type) {
+        case "Route Parameter":
+          if (!condition.params) condition.params = {};
+          condition.params[key] = value;
+          break;
+        case "Query parameter":
+          if (!condition.query) condition.query = {};
+          condition.query[key] = value;
+          break;
+        case "Header":
+          if (!condition.headers) condition.headers = {};
+          condition.headers[key] = value;
+          break;
+        case "Body":
+          if (!condition.body) condition.body = {};
+          condition.body[key] = value;
+          break;
+      }
+    });
+
+    return condition;
+  };
+
+  // Notify parent when rules change
+  useEffect(() => {
+    if (onUpdateRules) {
+      onUpdateRules(prepareCondition());
+    }
+  }, [parameterRows]);
+
+  const handleSave = () => {
+    if (!validateAllRules()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    onSave();
+  };
+
   return (
-    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#37352F]">Success Response</h1>
-      </div>
+    <div>
+      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#37352F]">
+            {responseName || "No Response Selected"}
+          </h1>
+        </div>
 
-      <div className="space-y-4">
-        {parameterRows.map((row) => (
-          <div
-            key={row.id}
-            onClick={(e) => handleRuleClick(row.id, e)}
-            className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
-              row.id === selectedRuleId ? "border-blue-600" : "border-slate-300"
-            }`}
-          >
-            <div className="w-[168px]">
-              <Select
-                value={row.type}
-                onValueChange={(value) => handleTypeChange(row.id, value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Route Parameter">
-                    Route Parameter
-                  </SelectItem>
-                  <SelectItem value="Query parameter">
-                    Query Parameter
-                  </SelectItem>
-                  <SelectItem value="Header">Header</SelectItem>
-                  <SelectItem value="Body">Body</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="text-blue-600 w-6 flex justify-center">=</div>
-
-            <Input
-              value={row.name}
-              onChange={(e) => {
-                setParameterRows((prev) =>
-                  prev.map((r) =>
-                    r.id === row.id ? { ...r, name: e.target.value } : r
-                  )
-                );
-              }}
-              className="w-[184px]"
-              placeholder={getPlaceholderText(row.type)}
-            />
-
-            <Input
-              value={row.value}
-              onChange={(e) => {
-                setParameterRows((prev) =>
-                  prev.map((r) =>
-                    r.id === row.id ? { ...r, value: e.target.value } : r
-                  )
-                );
-              }}
-              className="w-[151px]"
-              placeholder="value"
-            />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteRule(row.id);
-              }}
-              disabled={parameterRows.length === 1}
+        <div className="space-y-4">
+          {parameterRows.map((row) => (
+            <div
+              key={row.id}
+              onClick={(e) => handleRuleClick(row.id, e)}
+              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
+                row.id === selectedRuleId
+                  ? "border-blue-600"
+                  : "border-slate-300"
+              }`}
             >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-[168px]">
+                  <Select
+                    value={row.type}
+                    onValueChange={(value) => handleTypeChange(row.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Route Parameter">
+                        Route Parameter
+                      </SelectItem>
+                      <SelectItem value="Query parameter">
+                        Query Parameter
+                      </SelectItem>
+                      <SelectItem value="Header">Header</SelectItem>
+                      <SelectItem value="Body">Body</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <Button variant="outline" className="mt-2" onClick={handleAddRule}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add rule
-        </Button>
-      </div>
-    </Card>
+                <div className="text-blue-600 w-6 flex justify-center">=</div>
+
+                <Input
+                  value={row.name}
+                  onChange={(e) => handleNameChange(row.id, e.target.value)}
+                  className={`w-[184px] ${
+                    errors[row.id]?.name ? "border-red-500" : ""
+                  }`}
+                  placeholder={getPlaceholderText(row.type)}
+                />
+
+                <Input
+                  value={row.value}
+                  onChange={(e) => handleValueChange(row.id, e.target.value)}
+                  className={`w-[151px] ${
+                    errors[row.id]?.value ? "border-red-500" : ""
+                  }`}
+                  placeholder="value"
+                />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRule(row.id);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Hiển thị lỗi */}
+              {(errors[row.id]?.name || errors[row.id]?.value) && (
+                <div className="text-red-500 text-xs mt-1 pl-2">
+                  {errors[row.id]?.name || errors[row.id]?.value}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
+          <div className="flex justify-between items-center mt-4">
+            <Button variant="outline" onClick={handleAddRule}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add rule
+            </Button>
+
+            {selectedResponse && (
+              <Button
+                className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                onClick={handleSave}
+              >
+                Save Changes
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };
 
 const DashboardPage = () => {
-  const { projectId, endpointId } = useParams();
+  const { endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
-  const [isActive, setIsActive] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
   const [statusCode, setStatusCode] = useState("");
@@ -353,6 +591,12 @@ const DashboardPage = () => {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
+
+  // Thêm state để lưu trữ trạng thái trước khi drag
+  const [previousStatusData, setPreviousStatusData] = useState([]);
+
+  // Thêm state để lưu condition
+  const [responseCondition, setResponseCondition] = useState({});
 
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
@@ -378,13 +622,16 @@ const DashboardPage = () => {
   };
 
   const fetchEndpointResponses = () => {
+    // Đảm bảo endpoint_id luôn là string khi gọi API
     const endpointIdStr = String(currentEndpointId);
 
+    // Fetch responses for specific endpoint using query parameter
     fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
         setEndpointResponses(data);
 
+        // Format data for Response Configurations
         const statusDataFormatted = data.map((res) => ({
           id: res.id,
           code: res.status_code.toString(),
@@ -395,7 +642,8 @@ const DashboardPage = () => {
 
         setStatusData(statusDataFormatted);
 
-        if (data.length > 0) {
+        // Chỉ set default selected response nếu chưa có response nào được chọn
+        if (!selectedResponse && data.length > 0) {
           const defaultResponse = data.find((res) => res.is_default) || data[0];
           setSelectedResponse(defaultResponse);
           setResponseName(defaultResponse.name);
@@ -404,6 +652,33 @@ const DashboardPage = () => {
             JSON.stringify(defaultResponse.response_body, null, 2)
           );
           setDelay(defaultResponse.delay_ms?.toString() || "0");
+        } else if (selectedResponse) {
+          // Nếu đã có response được chọn, kiểm tra xem nó vẫn tồn tại trong data mới
+          const existingResponse = data.find(
+            (res) => res.id === selectedResponse.id
+          );
+          if (existingResponse) {
+            // Cập nhật thông tin response được chọn với dữ liệu mới từ server
+            setSelectedResponse(existingResponse);
+            setResponseName(existingResponse.name);
+            setStatusCode(existingResponse.status_code.toString());
+            setResponseBody(
+              JSON.stringify(existingResponse.response_body, null, 2)
+            );
+            setDelay(existingResponse.delay_ms?.toString() || "0");
+          }
+          // Nếu response được chọn không còn tồn tại, chọn response default hoặc response đầu tiên
+          else if (data.length > 0) {
+            const defaultResponse =
+              data.find((res) => res.is_default) || data[0];
+            setSelectedResponse(defaultResponse);
+            setResponseName(defaultResponse.name);
+            setStatusCode(defaultResponse.status_code.toString());
+            setResponseBody(
+              JSON.stringify(defaultResponse.response_body, null, 2)
+            );
+            setDelay(defaultResponse.delay_ms?.toString() || "0");
+          }
         }
       });
   };
@@ -413,18 +688,6 @@ const DashboardPage = () => {
     fetchProjects();
     fetchEndpoints();
   }, []);
-
-  useEffect(() => {
-    if (!projectId) return;
-    const p = projects.find((proj) => String(proj.id) === String(projectId));
-    if (!p) return;
-
-    if (String(currentWsId) !== String(p.workspace_id)) {
-      setCurrentWsId(p.workspace_id);
-    }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
-  }, [projectId, projects, currentWsId]);
 
   useEffect(() => {
     if (endpointId) {
@@ -440,6 +703,7 @@ const DashboardPage = () => {
     }
   }, [currentEndpointId]);
 
+  // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
     if (!trimmed) return "Workspace name cannot be empty";
@@ -551,8 +815,13 @@ const DashboardPage = () => {
         return res.json();
       })
       .then(() => {
+        // Fetch lại danh sách responses sau khi xóa
         fetchEndpointResponses();
 
+        // Thêm toast thông báo thành công
+        toast.success("Response deleted successfully!");
+
+        // Nếu không còn response nào, reset form
         if (endpointResponses.length === 1) {
           setResponseName("");
           setStatusCode("");
@@ -563,8 +832,8 @@ const DashboardPage = () => {
         }
       })
       .catch((error) => {
-        console.error("Error deleting response:", error);
-        alert("Failed to delete response: " + error.message);
+        console.error("Error deleting response:", error.message);
+        toast.error("Failed to delete response!");
       });
   };
 
@@ -582,16 +851,43 @@ const DashboardPage = () => {
         }
         return res.json();
       })
-      .then((updatedPriorities) => {
-        console.log("Priorities updated:", updatedPriorities);
+      .then((updatedResponses) => {
+        console.log("Priorities updated:", updatedResponses);
+
+        // Cập nhật endpointResponses với priority mới từ server
+        setEndpointResponses((prevResponses) =>
+          prevResponses.map((response) => {
+            const updated = updatedResponses.find((r) => r.id === response.id);
+            return updated
+              ? { ...response, priority: updated.priority }
+              : response;
+          })
+        );
+
+        // Cập nhật statusData dựa trên updatedResponses (sửa lỗi ở đây)
+        setStatusData((prevStatusData) =>
+          prevStatusData.map((status) => {
+            const updated = updatedResponses.find((r) => r.id === status.id);
+            return updated ? { ...status, priority: updated.priority } : status;
+          })
+        );
+
+        // Thêm toast thông báo thành công
+        toast.success("Response priorities updated successfully!");
       })
       .catch((error) => {
         console.error("Error updating priorities:", error);
-        fetchEndpointResponses();
+
+        // Khôi phục state nếu cập nhật thất bại
+        setStatusData(previousStatusData);
+
+        // Thêm toast thông báo lỗi
+        toast.error("Failed to update response priorities!");
       });
   };
 
   const setDefaultResponse = (responseId) => {
+    // Gọi API đúng endpoint theo yêu cầu
     fetch(`${API_ROOT}/endpoint_responses/${responseId}/set_default`, {
       method: "PUT",
       headers: {
@@ -607,6 +903,7 @@ const DashboardPage = () => {
       .then((updatedResponses) => {
         console.log("Default response updated:", updatedResponses);
 
+        // Cập nhật endpointResponses với dữ liệu từ server
         setEndpointResponses((prevResponses) =>
           prevResponses.map((response) => {
             const updated = updatedResponses.find((r) => r.id === response.id);
@@ -616,6 +913,7 @@ const DashboardPage = () => {
           })
         );
 
+        // Cập nhật statusData
         setStatusData((prevStatusData) =>
           prevStatusData.map((status) => {
             const updated = updatedResponses.find((r) => r.id === status.id);
@@ -625,27 +923,35 @@ const DashboardPage = () => {
           })
         );
 
+        // Cập nhật selectedResponse nếu cần
         if (
           selectedResponse &&
-          updatedResponses.some((r) => r.id === selectedResponse.id)
+          updatedResponses.some((r) => r.id === responseId)
         ) {
           const updatedSelected = updatedResponses.find(
-            (r) => r.id === selectedResponse.id
+            (r) => r.id === responseId
           );
           setSelectedResponse({
             ...selectedResponse,
             is_default: updatedSelected.is_default,
           });
         }
+
+        // Thêm toast thông báo thành công
+        toast.success("Default response updated successfully!");
       })
       .catch((error) => {
         console.error("Error setting default response:", error);
+        toast.error("Failed to set default response!");
+
+        // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
       });
   };
 
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
+    setPreviousStatusData([...statusData]); // Lưu trạng thái để khôi phục nếu lỗi
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -660,36 +966,44 @@ const DashboardPage = () => {
       const newStatusData = [...statusData];
       const draggedItemContent = { ...newStatusData[draggedItem] };
 
+      // Xóa item khỏi vị trí cũ
       newStatusData.splice(draggedItem, 1);
+      // Chèn item vào vị trí mới
       newStatusData.splice(dropIndex, 0, draggedItemContent);
 
+      // Cập nhật state local ngay lập tức để UI phản hồi nhanh
       setStatusData(newStatusData);
 
+      // Tạo payload cho cập nhật priority (đúng định dạng API)
       const priorityUpdates = newStatusData.map((item, index) => ({
         id: item.id,
         endpoint_id: String(currentEndpointId),
-        priority: index + 1,
+        priority: index + 1, // Priority theo thứ tự mới (bắt đầu từ 1)
       }));
 
-      updatePriorities(priorityUpdates);
-
-      if (dropIndex === 0) {
-        setDefaultResponse(draggedItemContent.id);
-      }
+      // Cập nhật priority trên server
+      updatePriorities(priorityUpdates, newStatusData);
     }
 
     setDraggedItem(null);
   };
 
   const handleResponseSelect = (response) => {
-    setSelectedResponse(response);
-    setResponseName(response.name);
-    setStatusCode(response.status_code.toString());
-    setResponseBody(JSON.stringify(response.response_body, null, 2));
-    setDelay(response.delay_ms?.toString() || "0");
+    // Gọi API riêng cho response được chọn
+    fetch(`${API_ROOT}/endpoint_responses/${response.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSelectedResponse(data);
+        setResponseName(data.name);
+        setStatusCode(data.status_code.toString());
+        setResponseBody(JSON.stringify(data.response_body, null, 2));
+        setDelay(data.delay_ms?.toString() || "0");
+      })
+      .catch(console.error);
   };
 
   const handleNewResponse = () => {
+    // Reset form khi tạo mới
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
@@ -701,11 +1015,12 @@ const DashboardPage = () => {
   };
 
   const handleSaveResponse = () => {
+    // Parse response body
     let responseBodyObj = {};
     try {
       responseBodyObj = JSON.parse(responseBody);
     } catch {
-      alert("Invalid JSON in response body");
+      toast.error("Invalid JSON in response body");
       return;
     }
 
@@ -716,7 +1031,7 @@ const DashboardPage = () => {
       name: responseName,
       status_code: parseInt(statusCode),
       response_body: responseBodyObj,
-      condition: {},
+      condition: responseCondition, // Thêm condition vào payload
       is_default: selectedResponse
         ? selectedResponse.is_default
         : isFirstResponse,
@@ -740,11 +1055,21 @@ const DashboardPage = () => {
           );
         return res.json();
       })
-      .then(() => {
+      .then((updatedResponse) => {
+        // Refresh responses
         fetchEndpointResponses();
 
+        // Close dialog
         setIsDialogOpen(false);
 
+        // Thêm toast thông báo thành công
+        if (selectedResponse) {
+          toast.success("Response updated successfully!");
+        } else {
+          toast.success("New response created successfully!");
+        }
+
+        // Nếu là tạo mới, reset form hoàn toàn
         if (!selectedResponse) {
           setResponseName("");
           setStatusCode("200");
@@ -753,21 +1078,30 @@ const DashboardPage = () => {
           setResponseBody("");
           setDelay("0");
         }
+
+        setSelectedResponse(updatedResponse);
+        setResponseCondition(updatedResponse.condition || {});
       })
       .catch((error) => {
         console.error(error);
-        alert(error.message);
+        toast.error(error.message);
       });
   };
+
+  useEffect(() => {
+    if (selectedResponse) {
+      setResponseCondition(selectedResponse.condition || {});
+    }
+  }, [selectedResponse]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
-      <aside
-        className={`border-r border-slate-100 bg-white transition-all duration-300 ${
-          isSidebarCollapsed ? "w-20" : "w-72"
-        }`}
-      >
+        <aside
+            className={`border-r border-slate-100 bg-white transition-all duration-300 ${
+                isSidebarCollapsed ? "w-20" : "w-72"
+            }`}
+        >
         <Sidebar
           workspaces={workspaces}
           projects={projects}
@@ -807,399 +1141,422 @@ const DashboardPage = () => {
               className="pl-10 bg-[#F1F5F9] border-0"
             />
           </div>
+
+          {/* Breadcrumb Navigation - Đặt ở giữa */}
+          <div className="flex-1 mx-4 overflow-hidden">
+            <div className="mb-0">
+              <Breadcrumb>
+                <BreadcrumbList className="overflow-hidden whitespace-nowrap text-ellipsis">
+                  {(() => {
+                    const currentEndpoint = endpoints.find(
+                      (ep) => ep.id === currentEndpointId
+                    );
+                    const currentProject = currentEndpoint
+                      ? projects.find(
+                          (p) =>
+                            String(p.id) === String(currentEndpoint.project_id)
+                        )
+                      : null;
+                    const currentWorkspace = currentProject
+                      ? workspaces.find(
+                          (w) =>
+                            String(w.id) === String(currentProject.workspace_id)
+                        )
+                      : null;
+
+                    return (
+                      <>
+                        {currentWorkspace && (
+                          <>
+                            <BreadcrumbItem>
+                              <BreadcrumbLink
+                                href="/dashboard"
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                              >
+                                {currentWorkspace.name}
+                              </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            </BreadcrumbSeparator>
+                          </>
+                        )}
+                        {currentProject && (
+                          <>
+                            <BreadcrumbItem>
+                              <BreadcrumbLink
+                                href={`/dashboard/${currentProject.id}`}
+                                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                              >
+                                {currentProject.name}
+                              </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            </BreadcrumbSeparator>
+                          </>
+                        )}
+                        {currentEndpoint && (
+                          <BreadcrumbItem>
+                            <BreadcrumbLink
+                              href="#"
+                              className="text-sm font-medium text-slate-900"
+                            >
+                              {currentEndpoint.name}
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                        )}
+                      </>
+                    );
+                  })()}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-4">
+            {/* Nút New Response */}
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
               onClick={handleNewResponse}
             >
               <Plus className="mr-2 h-4 w-4" /> New response
             </Button>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={isActive}
-                onCheckedChange={setIsActive}
-                className="data-[state=checked]:bg-[#2563EB]"
-              />
-              <Label className="text-sm font-medium text-[#0A0A0A]">
-                Is Active
-              </Label>
-            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
         <div className="mb-6">
-          <Tabs defaultValue="summary" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-transparent">
-              <TabsTrigger
-                value="summary"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+          {/* Container chung cho cả hai phần */}
+          <div className="flex justify-between items-center mb-6">
+            {/* Phần bên trái - Display Endpoint Name and Method */}
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                {endpoints.find((ep) => ep.id === currentEndpointId)?.name ||
+                  "Endpoint"}
+              </h2>
+              <Badge
+                variant="outline"
+                className="bg-[#D5FBD3] text-[#000000] border-0"
               >
-                Header&Body
-              </TabsTrigger>
-              <TabsTrigger
-                value="submissions"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-              >
-                Rules
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="summary" className="mt-4">
-              <div className="border-b-2 border-[#37352F] w-20"></div>
-              {/* Endpoint Detail Card */}
-              <div className="flex gap-6">
-                {/* Response Configurations Card */}
-                <div className="w-1/3">
-                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
-                      <h3 className="text-lg font-semibold text-[#37352F]">
-                        Response Configurations
-                      </h3>
-                    </div>
+                {endpoints.find((ep) => ep.id === currentEndpointId)?.method ||
+                  "GET"}
+              </Badge>
+            </div>
 
-                    <div className="p-4">
-                      <div className="rounded-md border border-solid border-slate-300">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
-                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                                    Status Code
-                                  </div>
-                                </div>
-                              </TableHead>
-                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
-                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                                      Name Response
-                                    </div>
-                                  </div>
-                                </div>
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {statusData.map((status, index) => (
-                              <TableRow
-                                key={status.id || status.code}
-                                className={`${
-                                  status.isDefault ? "bg-slate-100" : ""
-                                } border-b [border-bottom-style:solid] border-neutral-200 ${
-                                  index === statusData.length - 1
-                                    ? "border-b-0"
-                                    : ""
-                                } ${
-                                  draggedItem === index ? "opacity-50" : ""
-                                } ${
-                                  selectedResponse?.id === status.id
-                                    ? "ring-2 ring-blue-500"
-                                    : ""
-                                }`}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragOver={handleDragOver}
-                                onDragEnd={() => setDraggedItem(null)}
-                                onDrop={(e) => handleDrop(e, index)}
-                                onClick={() => {
-                                  const response = endpointResponses.find(
-                                    (r) => r.id === status.id
-                                  );
-                                  if (response) handleResponseSelect(response);
-                                }}
-                              >
-                                <TableCell className="w-[119.2px] h-[49px] p-2">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.code}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.name}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  </Card>
+            {/* Phần bên phải - Form Status Info */}
+            <div className="flex-1 max-w-[707px] ml-8">
+              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+                <div
+                    className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5"
+                >
+                  {endpoints.find((ep) => ep.id === currentEndpointId)?.path || "-"}
                 </div>
+                <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
+                  <div className="w-[21px] h-[20px] relative">
+                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
+                      <path
+                        d="M7.5 10H13.5M10.5 7V13"
+                        stroke="#777671"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="10.5"
+                        cy="10"
+                        r="8"
+                        stroke="#777671"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                {/* Endpoint Detail Card */}
-                <div className="w-2/3">
-                  <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-                    <div className="flex justify-between items-center mb-6">
-                      <div className="flex items-center">
-                        <h2 className="text-2xl font-bold text-[#37352F] mr-4">
-                          {endpoints.find((ep) => ep.id === currentEndpointId)
-                            ?.name || "Endpoint"}
-                        </h2>
-                        <Badge
-                          variant="outline"
-                          className="bg-[#D5FBD3] text-[#000000] border-0"
-                        >
-                          {endpoints.find((ep) => ep.id === currentEndpointId)
-                            ?.method || "GET"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="border-[#E5E5E5]"
-                          onClick={() => {
-                            if (selectedResponse) {
-                              setDefaultResponse(selectedResponse.id);
-                            }
-                          }}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              selectedResponse?.is_default
-                                ? "text-yellow-500 fill-yellow-500"
-                                : "text-[#898883]"
-                            }`}
-                          />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="border-[#E5E5E5]"
-                          onClick={handleDeleteResponse}
-                        >
-                          <Trash2 className="h-4 w-4 text-[#898883]" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Status Info */}
-                    <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
-                      <p className="text-[#777671] font-medium">
-                        Status: This endpoint is active and receiving requests
-                      </p>
-                    </div>
-
-                    {/* Form */}
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label
-                          htmlFor="response-name"
-                          className="text-right text-sm font-medium text-[#000000]"
-                        >
-                          Response Name
-                        </Label>
-                        <Input
-                          id="response-name"
-                          value={responseName}
-                          onChange={(e) => setResponseName(e.target.value)}
-                          className="col-span-3 border-[#CBD5E1] rounded-md"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label
-                          htmlFor="status-code"
-                          className="text-right text-sm font-medium text-[#000000]"
-                        >
-                          Status Code
-                        </Label>
-                        <Input
-                          id="status-code"
-                          value={statusCode}
-                          onChange={(e) => setStatusCode(e.target.value)}
-                          className="col-span-3 border-[#CBD5E1] rounded-md"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label
-                          htmlFor="response-header"
-                          className="text-right text-sm font-medium text-[#000000]"
-                        >
-                          Response Header
-                        </Label>
-                        <div className="col-span-3 flex space-x-2">
-                          <Input
-                            id="header-key"
-                            placeholder="Key"
-                            value={headerKey}
-                            onChange={(e) => setHeaderKey(e.target.value)}
-                            className="border-[#CBD5E1] rounded-md"
-                          />
-                          <Input
-                            id="header-value"
-                            placeholder="Value"
-                            value={headerValue}
-                            onChange={(e) => setHeaderValue(e.target.value)}
-                            className="border-[#CBD5E1] rounded-md"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4">
-                        <Label
-                          htmlFor="response-body"
-                          className="text-right pt-2 text-sm font-medium text-[#000000]"
-                        >
-                          Response Body
-                        </Label>
-                        <div className="col-span-3 space-y-2">
-                          <Textarea
-                            id="response-body"
-                            value={responseBody}
-                            onChange={(e) => setResponseBody(e.target.value)}
-                            className="font-mono h-60 border-[#CBD5E1] rounded-md"
-                          />
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E5]"
-                            >
-                              <Upload className="mr-2 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E5]"
-                            >
-                              <Code className="mr-2 h-4 w-4" /> Format
-                            </Button>
+          <div className="flex gap-6">
+            {/* Cột trái - Response Configuration */}
+            <div className="w-1/3">
+              {/* Response Configuration Table */}
+              <div className="rounded-md border border-solid border-slate-300">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                      <TableHead className="w-[119.2px] h-10 px-2 py-0">
+                        <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
+                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                            Status Code
                           </div>
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label
-                          htmlFor="delay"
-                          className="text-right text-sm font-medium text-[#000000]"
-                        >
-                          Delay (ms)
-                        </Label>
-                        <Input
-                          id="delay"
-                          value={delay}
-                          onChange={(e) => setDelay(e.target.value)}
-                          className="col-span-3 border-[#CBD5E1] rounded-md"
-                        />
-                      </div>
-
-                      <div className="flex justify-end">
-                        <Button
-                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                          onClick={handleSaveResponse}
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
+                      </TableHead>
+                      <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
+                        <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
+                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                              Name Response
+                            </div>
+                          </div>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {statusData.map((status, index) => (
+                      <TableRow
+                        key={status.id || status.code}
+                        className={`${
+                          status.isDefault ? "bg-slate-100" : ""
+                        } border-b [border-bottom-style:solid] border-neutral-200 ${
+                          index === statusData.length - 1 ? "border-b-0" : ""
+                        } ${draggedItem === index ? "opacity-50" : ""} ${
+                          selectedResponse?.id === status.id
+                            ? "ring-2 ring-blue-500"
+                            : ""
+                        }`}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={handleDragOver}
+                        onDragEnd={() => setDraggedItem(null)}
+                        onDrop={(e) => handleDrop(e, index)}
+                        onClick={() => {
+                          const response = endpointResponses.find(
+                            (r) => r.id === status.id
+                          );
+                          if (response) handleResponseSelect(response);
+                        }}
+                      >
+                        <TableCell className="w-[119.2px] h-[49px] p-2">
+                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                              {status.code}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
+                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                              {status.name}
+                            </div>
+                          </div>
+                        </TableCell>
+                        {/* Thêm cột Default badge */}
+                        <TableCell className="w-[80px] h-[49px] p-2">
+                          {status.isDefault && (
+                            <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                              <span className="text-xs font-medium text-[#0A0A0A]">
+                                Default
+                              </span>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </TabsContent>
-            <TabsContent value="submissions" className="mt-4">
-              <div className="border-b-2 border-[#37352F] w-20"></div>
+            </div>
 
-              <div className="flex gap-6">
-                <div className="w-1/3">
-                  <Card className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-[#CBD5E1]">
-                      <h3 className="text-lg font-semibold text-[#37352F]">
-                        Response Configurations
-                      </h3>
-                    </div>
+            {/* Cột phải - Navigation và Content */}
+            <div className="w-2/3">
+              {/* Navigation Tabs */}
+              <Tabs defaultValue="summary" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-transparent mb-4">
+                  <TabsTrigger
+                    value="summary"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                  >
+                    Header&Body
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="submissions"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                  >
+                    Rules
+                  </TabsTrigger>
+                </TabsList>
 
-                    <div className="p-4">
-                      <div className="rounded-md border border-solid border-slate-300">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                              <TableHead className="w-[119.2px] h-10 px-2 py-0">
-                                <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                                  <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                                    Status Code
-                                  </div>
-                                </div>
-                              </TableHead>
-                              <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                                <div className="flex w-[92.99px] h-10 items-center px-3 py-2 relative rounded-md">
-                                  <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                                      Name Response
-                                    </div>
-                                  </div>
-                                </div>
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {statusData.map((status, index) => (
-                              <TableRow
-                                key={status.id || status.code}
-                                className={`${
-                                  status.isDefault ? "bg-slate-100" : ""
-                                } border-b [border-bottom-style:solid] border-neutral-200 ${
-                                  index === statusData.length - 1
-                                    ? "border-b-0"
-                                    : ""
-                                } ${
-                                  draggedItem === index ? "opacity-50" : ""
-                                } ${
-                                  selectedResponse?.id === status.id
-                                    ? "ring-2 ring-blue-500"
-                                    : ""
-                                }`}
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, index)}
-                                onDragOver={handleDragOver}
-                                onDragEnd={() => setDraggedItem(null)}
-                                onDrop={(e) => handleDrop(e, index)}
-                                onClick={() => {
-                                  const response = endpointResponses.find(
-                                    (r) => r.id === status.id
-                                  );
-                                  if (response) handleResponseSelect(response);
-                                }}
+                {/* TabsContent */}
+                <TabsContent value="summary" className="mt-0">
+                  <div></div>
+                  <div className="mt-2">
+                    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                      <div className="flex justify-between items-center mb-6">
+                        {/* Display Response Name instead of Endpoint Name */}
+                        <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+                          {selectedResponse?.name || "No Response Selected"}
+                        </h2>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="border-[#E5E5E5]"
+                            onClick={() => {
+                              if (selectedResponse) {
+                                setDefaultResponse(selectedResponse.id);
+                              }
+                            }}
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                selectedResponse?.is_default
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-[#898883]"
+                              }`}
+                            />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="border-[#E5E5E5]"
+                            onClick={handleDeleteResponse}
+                          >
+                            <Trash2 className="h-4 w-4 text-[#898883]" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Status Info */}
+                      <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
+                        <p className="text-[#777671] font-medium">
+                          Status: This endpoint is active and receiving requests
+                        </p>
+                      </div>
+
+                      {/* Form */}
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label
+                            htmlFor="response-name"
+                            className="text-right text-sm font-medium text-[#000000]"
+                          >
+                            Response Name
+                          </Label>
+                          <Input
+                            id="response-name"
+                            value={responseName}
+                            onChange={(e) => setResponseName(e.target.value)}
+                            className="col-span-3 border-[#CBD5E1] rounded-md"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label
+                            htmlFor="status-code"
+                            className="text-right text-sm font-medium text-[#000000]"
+                          >
+                            Status Code
+                          </Label>
+                          <Input
+                            id="status-code"
+                            value={statusCode}
+                            onChange={(e) => setStatusCode(e.target.value)}
+                            className="col-span-3 border-[#CBD5E1] rounded-md"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label
+                            htmlFor="response-header"
+                            className="text-right text-sm font-medium text-[#000000]"
+                          >
+                            Response Header
+                          </Label>
+                          <div className="col-span-3 flex space-x-2">
+                            <Input
+                              id="header-key"
+                              placeholder="Key"
+                              value={headerKey}
+                              onChange={(e) => setHeaderKey(e.target.value)}
+                              className="border-[#CBD5E1] rounded-md"
+                            />
+                            <Input
+                              id="header-value"
+                              placeholder="Value"
+                              value={headerValue}
+                              onChange={(e) => setHeaderValue(e.target.value)}
+                              className="border-[#CBD5E1] rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-4">
+                          <Label
+                            htmlFor="response-body"
+                            className="text-right pt-2 text-sm font-medium text-[#000000]"
+                          >
+                            Response Body
+                          </Label>
+                          <div className="col-span-3 space-y-2">
+                            <Textarea
+                              id="response-body"
+                              value={responseBody}
+                              onChange={(e) => setResponseBody(e.target.value)}
+                              className="font-mono h-60 border-[#CBD5E1] rounded-md"
+                            />
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E5]"
                               >
-                                <TableCell className="w-[119.2px] h-[49px] p-2">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.code}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                                  <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                                    <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
-                                      {status.name}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
+                                <Upload className="mr-2 h-4 w-4" /> Upload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E5]"
+                              >
+                                <Code className="mr-2 h-4 w-4" /> Format
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
 
-                {/* Thay thế Endpoint Detail Card bằng Frame */}
-                <div className="w-2/3">
-                  <Frame />
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label
+                            htmlFor="delay"
+                            className="text-right text-sm font-medium text-[#000000]"
+                          >
+                            Delay (ms)
+                          </Label>
+                          <Input
+                            id="delay"
+                            value={delay}
+                            onChange={(e) => setDelay(e.target.value)}
+                            className="col-span-3 border-[#CBD5E1] rounded-md"
+                          />
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button
+                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            onClick={handleSaveResponse}
+                          >
+                            Save Changes
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="submissions" className="mt-0">
+                  <div></div>
+                  <div className="mt-2">
+                    <Frame
+                      responseName={selectedResponse?.name}
+                      selectedResponse={selectedResponse}
+                      onUpdateRules={setResponseCondition}
+                      onSave={handleSaveResponse} // Truyền hàm handleSaveResponse vào Frame
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
 
         {/* Edit Workspace */}
@@ -1284,7 +1641,7 @@ const DashboardPage = () => {
 
         {/* New Response Dialog */}
         {isDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
