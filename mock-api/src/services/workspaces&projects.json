@@ -328,20 +328,21 @@
       "id": "17"
     },
     {
-      "id": "18",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Invalid Email",
       "status_code": 400,
       "response_body": {
-        "error": "Invalid email format"
+        "error": "Invalid email formawasst"
       },
       "condition": {
-        "invalid_email": true
+        "params": {
+          "nice": "ok",
+          "so": "what do you think?"
+        }
       },
-      "priority": 3,
       "is_default": false,
-      "created_at": "2025-09-16T02:09:00Z",
-      "updated_at": "2025-09-16T02:10:00Z"
+      "delay_ms": 0,
+      "id": "18"
     },
     {
       "endpoint_id": "3",
@@ -596,33 +597,6 @@
       "condition": {},
       "is_default": false,
       "delay_ms": 0
-    },
-    {
-      "endpoint_id": "2",
-      "name": "Hello?",
-      "status_code": 200,
-      "response_body": "ok",
-      "condition": {
-        "params": {
-          "ok": "nevermind"
-        },
-        "body": {
-          "Shit": "ok"
-        }
-      },
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "b899"
-    },
-    {
-      "endpoint_id": "2",
-      "name": "Yeah",
-      "status_code": 301,
-      "response_body": "What?",
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "ba3f"
     }
   ],
   "logs": [

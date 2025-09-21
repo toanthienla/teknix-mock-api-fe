@@ -287,6 +287,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
+      // Chỉ hiển thị toast khi thực sự xóa được rule và không phải là trường hợp reset rule cuối cùng
+      if (filteredRows.length < prevRows.length && prevRows.length > 1) {
+        // Sử dụng setTimeout để đảm bảo toast chỉ được gọi một lần
+        setTimeout(() => {
+          toast.success("Rule deleted successfully!");
+        }, 0);
+      }
+
       if (filteredRows.length === 0) {
         return [
           {
@@ -521,8 +529,8 @@ const DashboardPage = () => {
 
         setStatusData(statusDataFormatted);
 
-        // Set default selected response
-        if (data.length > 0) {
+        // Chỉ set default selected response nếu chưa có response nào được chọn
+        if (!selectedResponse && data.length > 0) {
           const defaultResponse = data.find((res) => res.is_default) || data[0];
           setSelectedResponse(defaultResponse);
           setResponseName(defaultResponse.name);
@@ -531,6 +539,33 @@ const DashboardPage = () => {
             JSON.stringify(defaultResponse.response_body, null, 2)
           );
           setDelay(defaultResponse.delay_ms?.toString() || "0");
+        } else if (selectedResponse) {
+          // Nếu đã có response được chọn, kiểm tra xem nó vẫn tồn tại trong data mới
+          const existingResponse = data.find(
+            (res) => res.id === selectedResponse.id
+          );
+          if (existingResponse) {
+            // Cập nhật thông tin response được chọn với dữ liệu mới từ server
+            setSelectedResponse(existingResponse);
+            setResponseName(existingResponse.name);
+            setStatusCode(existingResponse.status_code.toString());
+            setResponseBody(
+              JSON.stringify(existingResponse.response_body, null, 2)
+            );
+            setDelay(existingResponse.delay_ms?.toString() || "0");
+          }
+          // Nếu response được chọn không còn tồn tại, chọn response default hoặc response đầu tiên
+          else if (data.length > 0) {
+            const defaultResponse =
+              data.find((res) => res.is_default) || data[0];
+            setSelectedResponse(defaultResponse);
+            setResponseName(defaultResponse.name);
+            setStatusCode(defaultResponse.status_code.toString());
+            setResponseBody(
+              JSON.stringify(defaultResponse.response_body, null, 2)
+            );
+            setDelay(defaultResponse.delay_ms?.toString() || "0");
+          }
         }
       });
   };
