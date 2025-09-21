@@ -302,11 +302,7 @@
         "id": 2,
         "username": "new_user"
       },
-      "condition": {
-        "params": {
-          "Yes": "admin"
-        }
-      },
+      "condition": {},
       "is_default": true,
       "delay_ms": 0,
       "id": "3"
@@ -318,11 +314,7 @@
       "response_body": {
         "error": "Username already exists"
       },
-      "condition": {
-        "params": {
-          "ok": "yeah"
-        }
-      },
+      "condition": {},
       "is_default": false,
       "delay_ms": 0,
       "id": "17"
@@ -334,12 +326,7 @@
       "response_body": {
         "error": "Invalid email formawasst"
       },
-      "condition": {
-        "params": {
-          "nice": "ok",
-          "so": "what do you think?"
-        }
-      },
+      "condition": {},
       "is_default": false,
       "delay_ms": 0,
       "id": "18"

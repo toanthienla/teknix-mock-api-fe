@@ -152,17 +152,58 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
-  const [parameterRows, setParameterRows] = useState([
-    {
-      id: "rule-1",
-      type: "Route Parameter",
-      name: "",
-      value: "",
-    },
-  ]);
+const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+  const [parameterRows, setParameterRows] = useState([]);
 
+  // Thêm state để lưu lỗi cho từng rule
+  const [errors, setErrors] = useState({});
   const [selectedRuleId, setSelectedRuleId] = useState(null);
+
+  // Hàm validate rule
+  const validateRule = (row) => {
+    const newErrors = {};
+
+    // Kiểm tra name không được trống
+    if (!row.name.trim()) {
+      newErrors.name = "Name cannot be empty";
+    }
+    // Kiểm tra name không chứa khoảng trắng cho Route Parameter
+    else if (row.type === "Route Parameter" && /\s/.test(row.name)) {
+      newErrors.name = "Route parameter name cannot contain spaces";
+    }
+
+    // Kiểm tra value không được trống
+    if (!row.value.trim()) {
+      newErrors.value = "Value cannot be empty";
+    }
+    // Kiểm tra value là JSON hợp lệ cho Body
+    else if (row.type === "Body") {
+      try {
+        JSON.parse(row.value);
+      } catch {
+        newErrors.value = "Value must be valid JSON";
+      }
+    }
+
+    return newErrors;
+  };
+
+  // Hàm validate tất cả rules
+  const validateAllRules = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    parameterRows.forEach((row) => {
+      const rowErrors = validateRule(row);
+      if (Object.keys(rowErrors).length > 0) {
+        allErrors[row.id] = rowErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
 
   // Initialize rows from selectedResponse if available
   useEffect(() => {
@@ -213,22 +254,23 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
             id: `body-${index}`,
             type: "Body",
             name: key,
-            value: String(value),
+            value:
+              typeof value === "string"
+                ? value
+                : JSON.stringify(value, null, 2),
           });
         });
       }
 
-      // Add default row if no conditions
-      if (newRows.length === 0) {
-        newRows.push({
-          id: `rule-${Date.now()}`,
-          type: "Route Parameter",
-          name: "",
-          value: "",
-        });
-      }
-
       setParameterRows(newRows);
+
+      // Validate all rules after initialization
+      setTimeout(() => {
+        validateAllRules();
+      }, 0);
+    } else {
+      // Nếu không có condition, đặt parameterRows thành mảng rỗng
+      setParameterRows([]);
     }
   }, [selectedResponse]);
 
@@ -262,9 +304,27 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
           : row
       )
     );
+
+    // Validate rule after type change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule(row);
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
   };
 
   const handleAddRule = () => {
+    // Validate all rules before adding new one
+    if (!validateAllRules()) {
+      toast.error("Please fix errors before adding new rule");
+      return;
+    }
+
     const newRow = {
       id: `rule-${Date.now()}`,
       type: "Route Parameter",
@@ -287,23 +347,18 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
-      // Chỉ hiển thị toast khi thực sự xóa được rule và không phải là trường hợp reset rule cuối cùng
-      if (filteredRows.length < prevRows.length && prevRows.length > 1) {
-        // Sử dụng setTimeout để đảm bảo toast chỉ được gọi một lần
+      // Update errors state after deletion
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[idToDelete];
+        return newErrors;
+      });
+
+      // Only show toast when actually deleting a rule and not the reset case
+      if (filteredRows.length < prevRows.length) {
         setTimeout(() => {
           toast.success("Rule deleted successfully!");
         }, 0);
-      }
-
-      if (filteredRows.length === 0) {
-        return [
-          {
-            id: `rule-${Date.now()}`,
-            type: "Route Parameter",
-            name: "",
-            value: "",
-          },
-        ];
       }
 
       return filteredRows;
@@ -312,6 +367,42 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
     if (selectedRuleId === idToDelete) {
       setSelectedRuleId(null);
     }
+  };
+
+  const handleNameChange = (id, value) => {
+    setParameterRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+    );
+
+    // Validate rule after name change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule({ ...row, name: value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
+  };
+
+  const handleValueChange = (id, value) => {
+    setParameterRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, value } : r))
+    );
+
+    // Validate rule after value change
+    setTimeout(() => {
+      const row = parameterRows.find((r) => r.id === id);
+      if (row) {
+        const rowErrors = validateRule({ ...row, value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: rowErrors,
+        }));
+      }
+    }, 0);
   };
 
   // Prepare condition object for API
@@ -361,6 +452,15 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
     }
   }, [parameterRows]);
 
+  const handleSave = () => {
+    if (!validateAllRules()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    onSave();
+  };
+
   return (
     <div>
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
@@ -375,79 +475,91 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
             <div
               key={row.id}
               onClick={(e) => handleRuleClick(row.id, e)}
-              className={`flex items-center gap-2 p-3 rounded-md border cursor-pointer ${
+              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
                 row.id === selectedRuleId
                   ? "border-blue-600"
                   : "border-slate-300"
               }`}
             >
-              <div className="w-[168px]">
-                <Select
-                  value={row.type}
-                  onValueChange={(value) => handleTypeChange(row.id, value)}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-[168px]">
+                  <Select
+                    value={row.type}
+                    onValueChange={(value) => handleTypeChange(row.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Route Parameter">
+                        Route Parameter
+                      </SelectItem>
+                      <SelectItem value="Query parameter">
+                        Query Parameter
+                      </SelectItem>
+                      <SelectItem value="Header">Header</SelectItem>
+                      <SelectItem value="Body">Body</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="text-blue-600 w-6 flex justify-center">=</div>
+
+                <Input
+                  value={row.name}
+                  onChange={(e) => handleNameChange(row.id, e.target.value)}
+                  className={`w-[184px] ${
+                    errors[row.id]?.name ? "border-red-500" : ""
+                  }`}
+                  placeholder={getPlaceholderText(row.type)}
+                />
+
+                <Input
+                  value={row.value}
+                  onChange={(e) => handleValueChange(row.id, e.target.value)}
+                  className={`w-[151px] ${
+                    errors[row.id]?.value ? "border-red-500" : ""
+                  }`}
+                  placeholder="value"
+                />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRule(row.id);
+                  }}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Route Parameter">
-                      Route Parameter
-                    </SelectItem>
-                    <SelectItem value="Query parameter">
-                      Query Parameter
-                    </SelectItem>
-                    <SelectItem value="Header">Header</SelectItem>
-                    <SelectItem value="Body">Body</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
 
-              <div className="text-blue-600 w-6 flex justify-center">=</div>
-
-              <Input
-                value={row.name}
-                onChange={(e) => {
-                  setParameterRows((prev) =>
-                    prev.map((r) =>
-                      r.id === row.id ? { ...r, name: e.target.value } : r
-                    )
-                  );
-                }}
-                className="w-[184px]"
-                placeholder={getPlaceholderText(row.type)}
-              />
-
-              <Input
-                value={row.value}
-                onChange={(e) => {
-                  setParameterRows((prev) =>
-                    prev.map((r) =>
-                      r.id === row.id ? { ...r, value: e.target.value } : r
-                    )
-                  );
-                }}
-                className="w-[151px]"
-                placeholder="value"
-              />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteRule(row.id);
-                }}
-                disabled={parameterRows.length === 1}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {/* Hiển thị lỗi */}
+              {(errors[row.id]?.name || errors[row.id]?.value) && (
+                <div className="text-red-500 text-xs mt-1 pl-2">
+                  {errors[row.id]?.name || errors[row.id]?.value}
+                </div>
+              )}
             </div>
           ))}
 
-          <Button variant="outline" className="mt-2" onClick={handleAddRule}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add rule
-          </Button>
+          {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
+          <div className="flex justify-between items-center mt-4">
+            <Button variant="outline" onClick={handleAddRule}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add rule
+            </Button>
+
+            {selectedResponse && (
+              <Button
+                className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                onClick={handleSave}
+              >
+                Save Changes
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
     </div>
@@ -719,8 +831,8 @@ const DashboardPage = () => {
         }
       })
       .catch((error) => {
-        console.error("Error deleting response:", error);
-        toast.error("Failed to delete response: " + error.message);
+        console.error("Error deleting response:", error.message);
+        toast.error("Failed to delete response!");
       });
   };
 
@@ -769,7 +881,7 @@ const DashboardPage = () => {
         setStatusData(previousStatusData);
 
         // Thêm toast thông báo lỗi
-        toast.error("Failed to update response priorities: " + error.message);
+        toast.error("Failed to update response priorities!");
       });
   };
 
@@ -829,7 +941,7 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error("Error setting default response:", error);
-        toast.error("Failed to set default response: " + error.message);
+        toast.error("Failed to set default response!");
 
         // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
@@ -1124,8 +1236,10 @@ const DashboardPage = () => {
             {/* Phần bên phải - Form Status Info */}
             <div className="flex-1 max-w-[707px] ml-8">
               <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
-                <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1">
-                  api/user
+                <div
+                    className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5"
+                >
+                  {endpoints.find((ep) => ep.id === currentEndpointId)?.path || "-"}
                 </div>
                 <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
                   <div className="w-[21px] h-[20px] relative">
@@ -1425,18 +1539,8 @@ const DashboardPage = () => {
                       responseName={selectedResponse?.name}
                       selectedResponse={selectedResponse}
                       onUpdateRules={setResponseCondition}
+                      onSave={handleSaveResponse} // Truyền hàm handleSaveResponse vào Frame
                     />
-                    {/* Thêm nút Save Changes dưới Frame */}
-                    {selectedResponse && (
-                      <div className="flex justify-end mt-4">
-                        <Button
-                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                          onClick={handleSaveResponse}
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </TabsContent>
               </Tabs>
