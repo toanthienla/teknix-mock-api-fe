@@ -302,26 +302,30 @@
         "id": 2,
         "username": "new_user"
       },
-      "condition": {},
+      "condition": {
+        "params": {
+          "Yes": "admin"
+        }
+      },
       "is_default": true,
       "delay_ms": 0,
       "id": "3"
     },
     {
-      "id": "17",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Duplicate Username",
       "status_code": 409,
       "response_body": {
         "error": "Username already exists"
       },
       "condition": {
-        "username_exists": true
+        "params": {
+          "ok": "yeah"
+        }
       },
-      "priority": 2,
       "is_default": false,
-      "created_at": "2025-09-16T02:07:00Z",
-      "updated_at": "2025-09-16T02:08:00Z"
+      "delay_ms": 0,
+      "id": "17"
     },
     {
       "id": "18",
@@ -594,14 +598,21 @@
       "delay_ms": 0
     },
     {
-      "id": "b899",
       "endpoint_id": "2",
       "name": "Hello?",
       "status_code": 200,
       "response_body": "ok",
-      "condition": {},
+      "condition": {
+        "params": {
+          "ok": "nevermind"
+        },
+        "body": {
+          "Shit": "ok"
+        }
+      },
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "b899"
     },
     {
       "endpoint_id": "2",

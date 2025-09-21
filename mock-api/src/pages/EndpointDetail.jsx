@@ -152,7 +152,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({ responseName }) => {
+const Frame = ({ responseName, selectedResponse, onUpdateRules }) => {
   const [parameterRows, setParameterRows] = useState([
     {
       id: "rule-1",
@@ -163,6 +163,74 @@ const Frame = ({ responseName }) => {
   ]);
 
   const [selectedRuleId, setSelectedRuleId] = useState(null);
+
+  // Initialize rows from selectedResponse if available
+  useEffect(() => {
+    if (selectedResponse?.condition) {
+      const condition = selectedResponse.condition;
+      const newRows = [];
+
+      // Process params
+      if (condition.params) {
+        Object.entries(condition.params).forEach(([key, value], index) => {
+          newRows.push({
+            id: `param-${index}`,
+            type: "Route Parameter",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process query
+      if (condition.query) {
+        Object.entries(condition.query).forEach(([key, value], index) => {
+          newRows.push({
+            id: `query-${index}`,
+            type: "Query parameter",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process headers
+      if (condition.headers) {
+        Object.entries(condition.headers).forEach(([key, value], index) => {
+          newRows.push({
+            id: `header-${index}`,
+            type: "Header",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Process body
+      if (condition.body) {
+        Object.entries(condition.body).forEach(([key, value], index) => {
+          newRows.push({
+            id: `body-${index}`,
+            type: "Body",
+            name: key,
+            value: String(value),
+          });
+        });
+      }
+
+      // Add default row if no conditions
+      if (newRows.length === 0) {
+        newRows.push({
+          id: `rule-${Date.now()}`,
+          type: "Route Parameter",
+          name: "",
+          value: "",
+        });
+      }
+
+      setParameterRows(newRows);
+    }
+  }, [selectedResponse]);
 
   const getPlaceholderText = (type) => {
     switch (type) {
@@ -205,7 +273,6 @@ const Frame = ({ responseName }) => {
     };
 
     setParameterRows((prevRows) => [...prevRows, newRow]);
-
     setSelectedRuleId(newRow.id);
   };
 
@@ -213,7 +280,6 @@ const Frame = ({ responseName }) => {
     if (event.target.closest("button")) {
       return;
     }
-
     setSelectedRuleId(id);
   };
 
@@ -239,6 +305,53 @@ const Frame = ({ responseName }) => {
       setSelectedRuleId(null);
     }
   };
+
+  // Prepare condition object for API
+  const prepareCondition = () => {
+    const condition = {};
+
+    parameterRows.forEach((row) => {
+      if (!row.name.trim() && !row.value.trim()) return;
+
+      let key = row.name.trim();
+      let value = row.value.trim();
+
+      // Try to parse value as JSON, fallback to string
+      try {
+        value = JSON.parse(value);
+      } catch {
+        // Keep as string if not valid JSON
+      }
+
+      switch (row.type) {
+        case "Route Parameter":
+          if (!condition.params) condition.params = {};
+          condition.params[key] = value;
+          break;
+        case "Query parameter":
+          if (!condition.query) condition.query = {};
+          condition.query[key] = value;
+          break;
+        case "Header":
+          if (!condition.headers) condition.headers = {};
+          condition.headers[key] = value;
+          break;
+        case "Body":
+          if (!condition.body) condition.body = {};
+          condition.body[key] = value;
+          break;
+      }
+    });
+
+    return condition;
+  };
+
+  // Notify parent when rules change
+  useEffect(() => {
+    if (onUpdateRules) {
+      onUpdateRules(prepareCondition());
+    }
+  }, [parameterRows]);
 
   return (
     <div>
@@ -360,6 +473,9 @@ const DashboardPage = () => {
 
   // Thêm state để lưu trữ trạng thái trước khi drag
   const [previousStatusData, setPreviousStatusData] = useState([]);
+
+  // Thêm state để lưu condition
+  const [responseCondition, setResponseCondition] = useState({});
 
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
@@ -767,7 +883,7 @@ const DashboardPage = () => {
       name: responseName,
       status_code: parseInt(statusCode),
       response_body: responseBodyObj,
-      condition: {},
+      condition: responseCondition, // Thêm condition vào payload
       is_default: selectedResponse
         ? selectedResponse.is_default
         : isFirstResponse,
@@ -791,7 +907,7 @@ const DashboardPage = () => {
           );
         return res.json();
       })
-      .then(() => {
+      .then((updatedResponse) => {
         // Refresh responses
         fetchEndpointResponses();
 
@@ -814,12 +930,21 @@ const DashboardPage = () => {
           setResponseBody("");
           setDelay("0");
         }
+
+        setSelectedResponse(updatedResponse);
+        setResponseCondition(updatedResponse.condition || {});
       })
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
       });
   };
+
+  useEffect(() => {
+    if (selectedResponse) {
+      setResponseCondition(selectedResponse.condition || {});
+    }
+  }, [selectedResponse]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
@@ -1261,7 +1386,22 @@ const DashboardPage = () => {
                 <TabsContent value="submissions" className="mt-0">
                   <div></div>
                   <div className="mt-2">
-                    <Frame responseName={selectedResponse?.name} />
+                    <Frame
+                      responseName={selectedResponse?.name}
+                      selectedResponse={selectedResponse}
+                      onUpdateRules={setResponseCondition}
+                    />
+                    {/* Thêm nút Save Changes dưới Frame */}
+                    {selectedResponse && (
+                      <div className="flex justify-end mt-4">
+                        <Button
+                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                          onClick={handleSaveResponse}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
