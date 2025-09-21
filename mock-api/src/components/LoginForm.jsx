@@ -11,9 +11,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export function LoginForm({
-                              className,
-                              ...props
-                          }) {
+  className,
+  ...props
+}) {
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>

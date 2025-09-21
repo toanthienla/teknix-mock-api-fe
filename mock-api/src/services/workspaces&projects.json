@@ -82,10 +82,19 @@
     },
     {
       "id": "4398",
-      "name": "quản",
+      "name": "scscscs",
       "description": "dv",
       "workspace_id": "bf73",
-      "updated_at": "2025-09-19T10:45:33.213Z"
+      "created_at": "2025-09-18T15:09:59.620Z",
+      "updated_at": "2025-09-18T15:09:59.620Z"
+    },
+    {
+      "id": "fe8d",
+      "name": "scs",
+      "description": "scs",
+      "workspace_id": "1",
+      "created_at": "2025-09-18T15:23:01.448Z",
+      "updated_at": "2025-09-18T15:23:01.448Z"
     },
     {
       "id": "7c63",
@@ -94,14 +103,6 @@
       "workspace_id": "e0fa",
       "created_at": "2025-09-19T07:14:44.504Z",
       "updated_at": "2025-09-19T07:14:44.504Z"
-    },
-    {
-      "id": "e9c9",
-      "name": "scs",
-      "description": "scs",
-      "workspace_id": "1",
-      "created_at": "2025-09-20T02:12:12.555Z",
-      "updated_at": "2025-09-20T02:12:12.555Z"
     }
   ],
   "endpoints": [
@@ -234,23 +235,24 @@
   ],
   "endpoint_responses": [
     {
-      "id": "1",
-      "endpoint_id": 1,
+      "endpoint_id": "1",
       "name": "Success",
       "status_code": 200,
       "response_body": {
         "id": 1,
-        "username": "john_doe"
+        "username": "john_doasse"
       },
       "condition": {},
       "is_default": true,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "1"
     },
     {
+      "endpoint_id": "5",
       "name": "Not Foundass",
       "status_code": 404,
       "response_body": {
-        "error": "Userss not found 2"
+        "error": "Userss not foundsadsadsadsadsadas 2"
       },
       "condition": {},
       "is_default": false,
@@ -258,10 +260,11 @@
       "id": "2"
     },
     {
+      "endpoint_id": "5",
       "name": "Unauthorized",
       "status_code": 401,
       "response_body": {
-        "error": "Unassuthorasized access"
+        "error": "Unassutasxwwwhorasized access"
       },
       "condition": {},
       "is_default": false,
@@ -280,6 +283,7 @@
       "id": "15"
     },
     {
+      "endpoint_id": "3",
       "name": "Internal Server Error",
       "status_code": 500,
       "response_body": {
@@ -291,8 +295,7 @@
       "id": "16"
     },
     {
-      "id": "3",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Created",
       "status_code": 201,
       "response_body": {
@@ -300,46 +303,36 @@
         "username": "new_user"
       },
       "condition": {},
-      "priority": 1,
       "is_default": true,
-      "created_at": "2025-09-12T09:00:00Z",
-      "updated_at": "2025-09-12T09:15:00Z"
+      "delay_ms": 0,
+      "id": "3"
     },
     {
-      "id": "17",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Duplicate Username",
       "status_code": 409,
       "response_body": {
         "error": "Username already exists"
       },
-      "condition": {
-        "username_exists": true
-      },
-      "priority": 2,
+      "condition": {},
       "is_default": false,
-      "created_at": "2025-09-16T02:07:00Z",
-      "updated_at": "2025-09-16T02:08:00Z"
+      "delay_ms": 0,
+      "id": "17"
     },
     {
-      "id": "18",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Invalid Email",
       "status_code": 400,
       "response_body": {
-        "error": "Invalid email format"
+        "error": "Invalid email formawasst"
       },
-      "condition": {
-        "invalid_email": true
-      },
-      "priority": 3,
+      "condition": {},
       "is_default": false,
-      "created_at": "2025-09-16T02:09:00Z",
-      "updated_at": "2025-09-16T02:10:00Z"
+      "delay_ms": 0,
+      "id": "18"
     },
     {
-      "id": "4",
-      "endpoint_id": 3,
+      "endpoint_id": "3",
       "name": "Success",
       "status_code": 200,
       "response_body": [
@@ -355,10 +348,9 @@
         }
       ],
       "condition": {},
-      "priority": 1,
       "is_default": true,
-      "created_at": "2025-09-13T09:30:00Z",
-      "updated_at": "2025-09-13T09:45:00Z"
+      "delay_ms": 0,
+      "id": "4"
     },
     {
       "id": "19",
@@ -502,8 +494,7 @@
       "updated_at": "2025-09-15T08:35:00Z"
     },
     {
-      "id": "12",
-      "endpoint_id": 8,
+      "endpoint_id": "8",
       "name": "Test Case Run Success",
       "status_code": 200,
       "response_body": {
@@ -511,14 +502,12 @@
         "result": "pass"
       },
       "condition": {},
-      "priority": 1,
       "is_default": true,
-      "created_at": "2025-09-15T09:10:00Z",
-      "updated_at": "2025-09-15T09:40:00Z"
+      "delay_ms": 0,
+      "id": "12"
     },
     {
-      "id": "13",
-      "endpoint_id": 8,
+      "endpoint_id": "8",
       "name": "Test Case Run Failed",
       "status_code": 200,
       "response_body": {
@@ -527,10 +516,9 @@
         "error": "Assertion error"
       },
       "condition": {},
-      "priority": 2,
       "is_default": false,
-      "created_at": "2025-09-15T09:15:00Z",
-      "updated_at": "2025-09-15T09:45:00Z"
+      "delay_ms": 0,
+      "id": "13"
     },
     {
       "id": "7df7",
@@ -545,18 +533,6 @@
       "delay_ms": 0
     },
     {
-      "name": "Hell",
-      "status_code": 202,
-      "response_body": {
-        "id": 1,
-        "username": "johnassas_sdoe"
-      },
-      "condition": {},
-      "is_default": false,
-      "delay_ms": 0,
-      "id": "5876"
-    },
-    {
       "id": "f628",
       "endpoint_id": 1,
       "name": "Hell",
@@ -565,20 +541,56 @@
         "id": 1,
         "username": "john_doasse"
       },
+      "condition": {
+        "params": {
+          "aa": "aa"
+        },
+        "headers": {
+          "a": 2
+        }
+      },
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "id": "a09e",
+      "endpoint_id": "6",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "Huh?",
       "condition": {},
       "is_default": false,
       "delay_ms": 0
     },
     {
-      "name": "Suprise",
-      "status_code": 505,
-      "response_body": {
-        "error": "Unexpecteaasssaasasd error oqccurred"
-      },
+      "id": "5b0d",
+      "endpoint_id": "5",
+      "name": "Hell",
+      "status_code": 200,
+      "response_body": "Well",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
+    },
+    {
+      "endpoint_id": "5",
+      "name": "HAha",
+      "status_code": 200,
+      "response_body": "Yeah",
       "condition": {},
       "is_default": false,
       "delay_ms": 0,
-      "id": "b5f1"
+      "id": "6785"
+    },
+    {
+      "id": "451f",
+      "endpoint_id": "6",
+      "name": "What?",
+      "status_code": 200,
+      "response_body": "Ok?",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0
     }
   ],
   "logs": [
