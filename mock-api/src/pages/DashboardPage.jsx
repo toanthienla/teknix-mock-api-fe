@@ -471,11 +471,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       {/* Sidebar + Main */}
-      <div className="flex">
+      <div className="flex min-h-screen bg-white">
         <aside
-          className={`border-r border-slate-100 bg-white transition-all duration-300 ${
-            isSidebarCollapsed ? "w-20" : "w-64"
-          }`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${isSidebarCollapsed ? "w-28" : "w-64"}`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -494,18 +492,24 @@ export default function DashboardPage() {
             setOpenProjectsMap={setOpenProjectsMap}
             openEndpointsMap={openEndpointsMap}
             setOpenEndpointsMap={setOpenEndpointsMap}
-            isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
-            setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+            onAddProject={() => setOpenNewProject(true)}
           />
         </aside>
 
         {/* Main */}
         <main
-          className={`p-8 transition-all duration-300 ${
-            isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
-          }`}
+          className="p-8 flex-1 transition-all duration-300"
         >
           <Topbar
+            breadcrumb={
+              currentWorkspace
+                ? currentProject
+                  ? [currentWorkspace.name, currentProject.name]
+                  : [currentWorkspace.name]
+                : []
+            }
             onSearch={setSearchTerm}
             onNewProject={() => setOpenNewProject(true)}
           />
