@@ -35,8 +35,10 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
+
   const [openProjectsMap, setOpenProjectsMap] = useState({});
   const [openEndpointsMap, setOpenEndpointsMap] = useState({});
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
@@ -513,6 +515,7 @@ export default function DashboardPage() {
             onSearch={setSearchTerm}
             onNewProject={() => setOpenNewProject(true)}
             showNewProjectButton={true}
+            showNewResponseButton={false}
           />
 
           {currentProject ? (

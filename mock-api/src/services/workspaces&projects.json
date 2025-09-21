@@ -541,7 +541,14 @@
         "id": 1,
         "username": "john_doasse"
       },
-      "condition": {},
+      "condition": {
+        "params": {
+          "aa": "aa"
+        },
+        "headers": {
+          "a": 2
+        }
+      },
       "is_default": false,
       "delay_ms": 0
     },

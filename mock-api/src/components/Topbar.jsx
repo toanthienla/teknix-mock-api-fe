@@ -11,7 +11,14 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export default function Topbar({breadcrumb = [], onSearch, onNewProject, showNewProjectButton}) {
+export default function Topbar({
+    breadcrumb = [],
+    onSearch,
+    onNewProject,
+    onNewResponse,
+    showNewProjectButton,
+    showNewResponseButton
+}) {
     const [query, setQuery] = useState("");
 
     const handleChange = (e) => {
@@ -46,21 +53,31 @@ export default function Topbar({breadcrumb = [], onSearch, onNewProject, showNew
                 }
             >
                 {breadcrumb.length > 0 && (
-                    <div className="bg-slate-100 px-4 py-2 rounded-md">
+                    <div className="bg-slate-100 px-4 py-2 rounded-md min-w-[250px] max-w-[100%] overflow-hidden">
                         <Breadcrumb>
-                            <BreadcrumbList>
-                                {breadcrumb.map((item, idx) => (
-                                    <React.Fragment key={idx}>
-                                        <BreadcrumbItem>
-                                            {idx === breadcrumb.length - 1 ? (
-                                                <BreadcrumbPage>{item}</BreadcrumbPage>
-                                            ) : (
-                                                <BreadcrumbLink href="/dashboard">{item}</BreadcrumbLink>
-                                            )}
-                                        </BreadcrumbItem>
-                                        {idx < breadcrumb.length - 1 && <BreadcrumbSeparator />}
-                                    </React.Fragment>
-                                ))}
+                            <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
+                                {breadcrumb.map((item, idx) => {
+                                    const isLast = idx === breadcrumb.length - 1;
+                                    return (
+                                        <React.Fragment key={idx}>
+                                            <BreadcrumbItem
+                                                className={`whitespace-nowrap overflow-hidden min-w-0 ${
+                                                    isLast ? "" : "truncate"
+                                                }`}
+                                                title={item} // hover sẽ hiện full text
+                                            >
+                                                {isLast ? (
+                                                    <BreadcrumbPage className="font-medium text-slate-900">
+                                                        {item}
+                                                    </BreadcrumbPage>
+                                                ) : (
+                                                    <BreadcrumbLink href="/dashboard">{item}</BreadcrumbLink>
+                                                )}
+                                            </BreadcrumbItem>
+                                            {!isLast && <BreadcrumbSeparator />}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>
@@ -75,6 +92,18 @@ export default function Topbar({breadcrumb = [], onSearch, onNewProject, showNew
                         className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
                     >
                         New Project
+                    </Button>
+                </div>
+            )}
+
+            {/* New Response Button */}
+            {showNewResponseButton && (
+                <div className="flex-1 flex justify-end">
+                    <Button
+                        onClick={onNewResponse}
+                        className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
+                    >
+                        New Response
                     </Button>
                 </div>
             )}

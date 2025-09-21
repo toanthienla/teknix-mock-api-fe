@@ -564,9 +564,7 @@ export default function Dashboard() {
             <div className="flex">
                 {/* Sidebar */}
                 <aside
-                    className={`border-r border-slate-100 bg-white transition-all duration-300 ${
-                        isSidebarCollapsed ? "w-20" : "w-72"
-                    }`}
+                    className={`border-r border-slate-100 bg-white transition-all duration-300`}
                 >
                     <Sidebar
                         workspaces={workspaces}
@@ -606,8 +604,8 @@ export default function Dashboard() {
                                 : []
                         }
                         onSearch={setSearchTerm}
-                        // onNewProject={() => setOpenNewProject(true)}
                         showNewProjectButton={false}
+                        showNewResponseButton={false}
                     />
 
                     {/* Content Area */}
