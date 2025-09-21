@@ -512,6 +512,7 @@ export default function DashboardPage() {
             }
             onSearch={setSearchTerm}
             onNewProject={() => setOpenNewProject(true)}
+            showNewProjectButton={true}
           />
 
           {currentProject ? (

@@ -20,7 +20,7 @@ import {
     CardContent,
     CardHeader,
 } from "@/components/ui/card"
-import {ChevronDown, ChevronsUpDown, Search} from "lucide-react";
+import { ChevronDown, ChevronsUpDown } from "lucide-react";
 import Sidebar from "@/components/Sidebar.jsx";
 import {useNavigate, useParams} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
@@ -43,6 +43,7 @@ import {
     SelectValue,
 } from "@/components/ui/select.jsx";
 import EndpointCard from "@/components/EndpointCard.jsx";
+import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import createIcon from "@/assets/create.svg";
 import pathIcon from "@/assets/path.svg";
@@ -77,17 +78,17 @@ export default function Dashboard() {
     const [editWsId, setEditWsId] = useState(null);
     const [editWsName, setEditWsName] = useState("");
 
-    const [query, setQuery] = useState("");
-
     const [methodFilter, setMethodFilter] = useState("All Methods");
     const [statusFilter, setStatusFilter] = useState("All Status");
     const [timeFilter, setTimeFilter] = useState("All time");
 
-    const handleChange = (e) => {
-        const value = e.target.value;
-        setQuery(value);
-        if (setSearchTerm) setSearchTerm(value);
-    };
+    const currentProject = projectId
+        ? projects.find((p) => String(p.id) === String(projectId))
+        : null;
+
+    const currentWorkspace = workspaces.find(
+        (w) => String(w.id) === String(currentWsId)
+    );
 
     // new endpoint state
     const [newEName, setNewEName] = useState("");
@@ -596,36 +597,18 @@ export default function Dashboard() {
                     }`}
                 >
                     {/* Top Navbar */}
-                    <header className="bg-white border-b border-gray-200 p-4 flex items-center z-10">
-                        <div className="relative flex-grow mr-4">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex-1 flex justify-center">
-                                    <div className="relative w-full max-w-md">
-                                        <Input
-                                            placeholder="Search"
-                                            value={query}
-                                            onChange={handleChange}
-                                            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-                                        />
-                                        <div
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                                            <Search size={16}/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <Button variant="outline" className="mr-2 flex items-center gap-1">
-                                    <Badge className="bg-blue-500 text-white px-2 py-0.5 rounded-lg text-xs">
-                                        {sortedEndpoints.length}
-                                    </Badge>
-                                    Active
-                                </Button>
-                                <Button className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1">
-                                    <Play className="w-4 h-4"/> {/* Assuming a play icon for "Start all" */}
-                                    Start all
-                                </Button>
-                            </div>
-                        </div>
-                    </header>
+                    <Topbar
+                        breadcrumb={
+                            currentWorkspace
+                                ? currentProject
+                                    ? [currentWorkspace.name, currentProject.name]
+                                    : [currentWorkspace.name]
+                                : []
+                        }
+                        onSearch={setSearchTerm}
+                        // onNewProject={() => setOpenNewProject(true)}
+                        showNewProjectButton={false}
+                    />
 
                     {/* Content Area */}
                     <div className="flex-1 items-center justify-between mb-4">
@@ -1270,25 +1253,5 @@ export default function Dashboard() {
                 </DialogContent>
             </Dialog>
         </div>
-    );
-}
-
-// Placeholder for Play icon, assuming it comes from lucide-react or similar
-function Play(props) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polygon points="5 3 19 12 5 21 5 3"/>
-        </svg>
     );
 }
