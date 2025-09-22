@@ -98,11 +98,7 @@ export default function DashboardPage() {
       if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
     })
     .catch(() =>
-      toast.error("Failed to load workspaces", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      })
+      toast.error("Failed to load workspaces")
     );
 };
 
@@ -111,11 +107,7 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => setProjects(data))
       .catch(() =>
-        toast.error("Failed to load projects", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to load projects")
       );
   };
 
@@ -168,11 +160,7 @@ export default function DashboardPage() {
   const handleAddWorkspace = (name) => {
     const err = validateWsName(name);
     if (err) {
-      toast.warning(err, {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning(err);
       return;
     }
     fetch(`${API_ROOT}/workspaces`, {
@@ -189,29 +177,17 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        toast.success("Workspace created successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Workspace created successfully");
       })
       .catch(() =>
-        toast.error("Failed to create workspace", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to create workspace")
       );
   };
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
     if (err) {
-      toast.warning(err, {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning(err);
       return;
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
@@ -231,18 +207,10 @@ export default function DashboardPage() {
         setOpenEditWs(false);
         setEditWsName("");
         setEditWsId(null);
-        toast.success("Workspace updated successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Workspace updated successfully");
       })
       .catch(() =>
-        toast.error("Failed to update workspace", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to update workspace")
       );
   };
 
@@ -266,17 +234,9 @@ export default function DashboardPage() {
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
-      toast.success("Workspace and its projects deleted successfully", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.success("Workspace and its projects deleted successfully");
     } catch {
-      toast.error("Failed to delete workspace or its projects", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.error("Failed to delete workspace or its projects");
     }
   };
 
@@ -286,62 +246,32 @@ export default function DashboardPage() {
     const descTrim = desc.trim();
 
     if (!titleTrim) {
-      toast.warning("Project name cannot be empty", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot be empty");
       return false;
     }
     if (titleTrim.length > 50) {
-      toast.warning("Project name cannot exceed 50 chars", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot exceed 50 chars");
       return false;
     }
     if (/^[0-9]/.test(titleTrim)) {
-      toast.warning("Project name cannot start with a number", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot start with a number");
       return false;
     }
     if (/ {2,}/.test(titleTrim)) {
-      toast.warning("Project name cannot contain multiple spaces", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot contain multiple spaces");
       return false;
     }
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
       toast.warning(
-        "Only letters, numbers, and spaces allowed (no special characters)",
-        {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        }
-      );
+        "Only letters, numbers, and spaces allowed (no special characters)");
       return false;
     }
     if (!descTrim) {
-      toast.info("Project description cannot be empty", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.info("Project description cannot be empty");
       return false;
     }
     if (descTrim.length > 200) {
-      toast.warning("Project description max 200 chars", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project description max 200 chars");
       return false;
     }
 
@@ -352,11 +282,7 @@ export default function DashboardPage() {
         p.name.toLowerCase() === titleTrim.toLowerCase()
     );
     if (duplicate) {
-      toast.warning("Project name already exists in this workspace", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name already exists in this workspace");
       return false;
     }
     return true;
@@ -384,18 +310,10 @@ export default function DashboardPage() {
         setNewTitle("");
         setNewDesc("");
         setOpenNewProject(false);
-        toast.success("Project created successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project created successfully");
       })
       .catch(() =>
-        toast.error("Failed to create project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to create project")
       );
   };
 
@@ -437,18 +355,10 @@ export default function DashboardPage() {
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
         );
         setOpenEditProject(false);
-        toast.success("Project updated successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project updated successfully",);
       })
       .catch(() =>
-        toast.error("Failed to update project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to update project")
       );
   };
 
@@ -464,18 +374,10 @@ export default function DashboardPage() {
         setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
         setDeleteProjectId(null);
         setOpenDeleteProject(false);
-        toast.success("Project deleted successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project deleted successfully");
       })
       .catch(() =>
-        toast.error("Failed to delete project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to delete project")
       );
   };
 

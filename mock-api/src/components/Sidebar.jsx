@@ -135,9 +135,6 @@ export default function Sidebar({
         </button>
       </div>
 
-
-
-
       {/* Main Content */}
       <div className={`flex-1 overflow-auto p-2 ${isCollapsed ? "hidden" : ""}`}>
         <div className="text-sm text-slate-700 mb-2 font-medium">WORKSPACES</div>

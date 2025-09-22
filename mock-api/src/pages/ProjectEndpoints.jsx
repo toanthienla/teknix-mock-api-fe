@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -15,11 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card"
 import { ChevronDown, ChevronsUpDown } from "lucide-react";
 import Sidebar from "@/components/Sidebar.jsx";
 import { useNavigate, useParams } from "react-router-dom";
@@ -52,10 +46,6 @@ import timeIcon from "@/assets/time&date.svg";
 import LogCard from "@/components/LogCard.jsx";
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
-import errorIcon from "@/assets/errors.svg";
-import slowIcon from "@/assets/slow.svg";
-import clientErrorIcon from "@/assets/client_errors.svg";
-import successIcon from "@/assets/success.svg";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -593,8 +583,8 @@ export default function Dashboard() {
             setOpenProjectsMap={setOpenProjectsMap}
             openEndpointsMap={openEndpointsMap}
             setOpenEndpointsMap={setOpenEndpointsMap}
-            isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
-            setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
           />
         </aside>
 
@@ -646,18 +636,6 @@ export default function Dashboard() {
                     }`}
                 >
                   Logs
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setActiveTab("statistic");
-                  }}
-                  className={`rounded-none px-4 py-2 -mb-px ${activeTab === "statistic"
-                      ? "border-b-2 border-stone-900 text-stone-900"
-                      : ""
-                    }`}
-                >
-                  Statistic
                 </Button>
               </div>
 
@@ -1113,80 +1091,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </>
-              ) : activeTab === "statistic" ? (
-                <div className="p-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold">Total Request Today</h2>
-                    <p className="text-muted-foreground">MockAPI</p>
-                    <div className="text-6xl font-extrabold my-2">
-                      {logs.filter(log => String(log.project_id) === String(projectId)).length}
-                    </div>
-                    <p className="text-muted-foreground">ENDPOINTS/DAY</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Quick Filters */}
-                    <Card>
-                      <CardHeader>
-                        <h3 className="text-lg font-semibold">Quick Filters</h3>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex justify-between items-center">
-                            <img src={errorIcon} alt="Errors icon" className="w-4 h-4" />
-                            <span className="flex items-center gap-2 text-red-500">Errors (5xx)</span>
-                            <span className="text-stone-600">
-                              {filteredLogs.filter(l => l.response_status_code >= 500).length}
-                            </span>
-                          </li>
-                          <li className="flex justify-between items-center">
-                            <img src={slowIcon} alt="Slow icon" className="w-4 h-4" />
-                            <span className="flex items-center gap-2 text-yellow-500">Slow Requests</span>
-                            <span className="text-stone-600">
-                              {filteredLogs.filter(l => l.latency > 1000).length}</span>
-                          </li>
-                          <li className="flex justify-between items-center">
-                            <img src={clientErrorIcon} alt="Client Errors icon"
-                              className="w-4 h-4" />
-                            <span className="flex items-center gap-2 text-orange-500">Client Errors (4xx)</span>
-                            <span className="text-stone-600">
-                              {filteredLogs.filter(l => String(l.response_status_code).startsWith("4")).length}
-                            </span>
-                          </li>
-                          <li className="flex justify-between items-center">
-                            <img src={successIcon} alt="Success icon" className="w-4 h-4" />
-                            <span className="flex items-center gap-2 text-green-600">Success (2xx)</span>
-                            <span className="text-stone-600">
-                              {filteredLogs.filter(l => String(l.response_status_code).startsWith("2")).length}
-                            </span>
-                          </li>
-                        </ul>
-                      </CardContent>
-                    </Card>
-
-                    {/* All Endpoints Filters */}
-                    <Card>
-                      <CardHeader>
-                        <h3 className="text-lg font-semibold">All Endpoints Filters</h3>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2 text-sm">
-                          {endpoints.map((ep) => (
-                            <li key={ep.id} className="flex justify-between items-center">
-                              <span className="flex items-center gap-2">
-                                <Badge variant="outline" className="w-2 h-2 rounded-full p-0" />
-                                {ep.path}
-                              </span>
-                              <span className="text-stone-600">
-                                {filteredLogs.filter(l => l.endpoint_id === ep.id).length}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
               ) : null}
             </div>
           </div>

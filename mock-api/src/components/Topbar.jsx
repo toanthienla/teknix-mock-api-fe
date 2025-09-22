@@ -27,8 +27,15 @@ export default function Topbar({
         if (onSearch) onSearch(value);
     };
 
+    // const handleSelectWorkspace = (wsId) => {
+    //     setCurrentWsId(wsId);
+    //     localStorage.setItem("currentWorkspace", wsId);
+    //     if (onWorkspaceChange) onWorkspaceChange(wsId);
+    //     navigate("/dashboard"); // chuyển về dashboard
+    // };
+
     return (
-        <div className=" h-12 relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
+        <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
             {/* Search */}
             <div className="flex-1 flex items-center">
                 <div className="relative w-[250px]">
@@ -64,14 +71,14 @@ export default function Topbar({
                                                 className={`whitespace-nowrap overflow-hidden min-w-0 ${
                                                     isLast ? "" : "truncate"
                                                 }`}
-                                                title={item} // hover sẽ hiện full text
+                                                title={item.label}
                                             >
-                                                {isLast ? (
+                                                {isLast || !item.href ? (
                                                     <BreadcrumbPage className="font-medium text-slate-900">
-                                                        {item}
+                                                        {item.label}
                                                     </BreadcrumbPage>
                                                 ) : (
-                                                    <BreadcrumbLink href="/dashboard">{item}</BreadcrumbLink>
+                                                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
                                                 )}
                                             </BreadcrumbItem>
                                             {!isLast && <BreadcrumbSeparator />}
