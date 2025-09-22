@@ -727,6 +727,12 @@ export default function Dashboard() {
                                                     </Button>
                                                     <DialogContent
                                                         className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                e.preventDefault();
+                                                                handleCreateEndpoint();
+                                                            }
+                                                        }}
                                                     >
                                                         <DialogHeader>
                                                             <DialogTitle>New Endpoint</DialogTitle>
@@ -746,12 +752,6 @@ export default function Dashboard() {
                                                                 placeholder=" Enter Endpoint Name"
                                                                 value={newEName}
                                                                 onChange={(e) => setNewEName(e.target.value)}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault();
-                                                                        handleCreateEndpoint();
-                                                                    }
-                                                                }}
                                                             />
 
                                                             <h3 className="text-sm font-semibold text-slate-700 mt-2">
@@ -761,12 +761,6 @@ export default function Dashboard() {
                                                                 placeholder="/example/path/:number"
                                                                 value={newEPath}
                                                                 onChange={(e) => setNewEPath(e.target.value)}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault();
-                                                                        handleCreateEndpoint();
-                                                                    }
-                                                                }}
                                                             />
 
                                                             <h3 className="text-sm font-semibold text-slate-700 mt-2">
@@ -775,24 +769,11 @@ export default function Dashboard() {
                                                             <Select
                                                                 value={newEMethod}
                                                                 onValueChange={setNewEMethod}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault();
-                                                                        handleCreateEndpoint();
-                                                                    }
-                                                                }}
                                                             >
                                                                 <SelectTrigger className="w-[180px]">
                                                                     <SelectValue placeholder="Select a method"/>
                                                                 </SelectTrigger>
-                                                                <SelectContent
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === "Enter") {
-                                                                            e.preventDefault();
-                                                                            handleCreateEndpoint();
-                                                                        }
-                                                                    }}
-                                                                >
+                                                                <SelectContent>
                                                                     <SelectGroup>
                                                                         <SelectLabel>Method</SelectLabel>
                                                                         <SelectItem value="GET">GET</SelectItem>
