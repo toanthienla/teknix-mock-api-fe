@@ -34,7 +34,9 @@ export default function DashboardPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [currentWsId, setCurrentWsId] = useState(null);
+  const [currentWsId, setCurrentWsId] = useState(
+  () => localStorage.getItem("currentWorkspace") || null
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
@@ -78,6 +80,11 @@ export default function DashboardPage() {
       }
     }
   }, [projectId, projects]);
+
+  useEffect(() => {
+  const savedWs = localStorage.getItem("currentWorkspace");
+  if (savedWs) setCurrentWsId(savedWs);
+}, []);
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
@@ -486,6 +493,7 @@ export default function DashboardPage() {
             endpoints={endpoints}
             current={currentWsId}
             setCurrent={setCurrentWsId}
+            onWorkspaceChange={setCurrentWsId} // nhận wsId từ Sidebar
             onAddWorkspace={handleAddWorkspace}
             onEditWorkspace={(ws) => {
               setEditWsId(ws.id);

@@ -13,6 +13,7 @@ export default function Sidebar({
   workspaces = [],
   current,
   setCurrent,
+  onWorkspaceChange,
   endpoints = [],
   onAddWorkspace,
   onEditWorkspace,
@@ -34,6 +35,17 @@ export default function Sidebar({
   const navigate = useNavigate();
   const actionMenuRef = useRef(null);
   const inputRef = useRef(null);
+
+  const [currentWsId, setCurrentWsId] = useState(
+    () => localStorage.getItem("currentWorkspace") || null
+  );
+
+  const handleSelectWorkspace = (wsId) => {
+    setCurrentWsId(wsId);
+    localStorage.setItem("currentWorkspace", wsId);
+    if (onWorkspaceChange) onWorkspaceChange(wsId);
+    navigate("/dashboard"); // chuyển về dashboard
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -156,7 +168,11 @@ export default function Sidebar({
                       alt="WP icon"
                       className="w-5 h-5 object-contain"
                     />
-                    <span>{ws.name}</span>
+                    <span 
+                      key={ws.id}
+                      onClick={() => handleSelectWorkspace(ws.id)}
+                    >
+                      {ws.name}</span>
                   </span>
                   <ChevronDown
                     onClick={(e) => {
