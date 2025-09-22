@@ -1107,6 +1107,8 @@ const DashboardPage = () => {
     }
   }, [selectedResponse]);
 
+  const [proxyUrl, setProxyUrl] = useState("");
+
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
@@ -1301,7 +1303,7 @@ const DashboardPage = () => {
             <div className="w-2/3">
               {/* Navigation Tabs */}
               <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-transparent mb-4">
+                <TabsList className="grid w-full grid-cols-3 bg-transparent mb-4">
                   <TabsTrigger
                     value="summary"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
@@ -1313,6 +1315,12 @@ const DashboardPage = () => {
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
                     Rules
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="proxy"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                  >
+                    Proxy
                   </TabsTrigger>
                 </TabsList>
 
@@ -1506,6 +1514,43 @@ const DashboardPage = () => {
                       onSave={handleSaveResponse} // Truyền hàm handleSaveResponse vào Frame
                     />
                   </div>
+                </TabsContent>
+
+                <TabsContent value="proxy" className="mt-0">
+                  <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                    <div className="space-y-6">
+                      <div className="flex flex-col items-start gap-2.5">
+                        <Label
+                          htmlFor="proxy-url"
+                          className="text-sm font-medium text-[#000000] font-inter"
+                        >
+                          Forward proxy URL
+                        </Label>
+                        <div className="flex flex-col items-start gap-[10px] w-full max-w-[590px]">
+                          <div className="flex flex-row items-center gap-[16px] w-full">
+                            <Input
+                              id="proxy-url"
+                              placeholder="Enter proxy URL"
+                              value={proxyUrl}
+                              onChange={(e) => setProxyUrl(e.target.value)}
+                              className="w-full h-[36px] border-[#CBD5E1] rounded-md bg-white text-[#9CA3AF] placeholder:text-[#9CA3AF]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                          onClick={() => {
+                            // Thêm logic lưu proxy ở đây nếu cần
+                            toast.success("Proxy URL saved!");
+                          }}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
