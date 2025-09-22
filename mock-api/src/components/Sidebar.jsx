@@ -99,7 +99,7 @@ export default function Sidebar({
         }`}
     >
       {/* Header with Logo and Collapse Button */}
-      <div className="h-12 flex items-center justify-between px-4 bg-white relative border-b border-slate-200">
+      <div className="h-16 flex items-center justify-between px-4 bg-white relative border-b border-slate-200 ">
         {/* Border phải giả */}
         <div className="absolute top-0 right-0 h-full w-px bg-slate-200"></div>
 
@@ -107,7 +107,7 @@ export default function Sidebar({
           className="cursor-pointer flex items-center flex-shrink-0"
           onClick={() => navigate("/dashboard")}
         >
-          <span className="text-2xl font-bold text-slate-900 whitespace-nowrap">
+          <span className="text-2xl font-bold text-slate-900 whitespace-nowrap leading-[56px]">
             MockAPI
           </span>
         </div>
