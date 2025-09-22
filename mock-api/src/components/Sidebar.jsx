@@ -142,12 +142,11 @@ export default function Sidebar({
               <li key={ws.id} className="group relative">
                 <div
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${active
-                      ? "bg-slate-100 font-semibold text-slate-900"
-                      : "hover:bg-slate-50 text-slate-800 font-medium"
+                    ? "bg-slate-100 font-semibold text-slate-900"
+                    : "hover:bg-slate-50 text-slate-800 font-medium"
                     }`}
                   onClick={() => {
-                    setCurrent(ws.id);
-                    toggleProjects(ws.id);
+                    setCurrent(ws.id);  // chỉ chọn workspace thôi
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
                 >
@@ -161,8 +160,8 @@ export default function Sidebar({
                   </span>
                   <ChevronDown
                     onClick={(e) => {
-                      e.stopPropagation();
-                      toggleProjects(ws.id);
+                      e.stopPropagation();     // không cho lan lên onClick cha
+                      toggleProjects(ws.id);   // chỉ bấm icon mới expand/collapse
                     }}
                     className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-0" : "-rotate-90"
                       }`}

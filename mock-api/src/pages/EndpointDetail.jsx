@@ -195,7 +195,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
         setErrors(allErrors);
         return isValid;
     };
-
+    
     // Initialize rows from selectedResponse if available
     useEffect(() => {
         if (selectedResponse?.condition) {
@@ -599,14 +599,25 @@ const DashboardPage = () => {
         (w) => String(w.id) === String(currentWsId)
     );
 
-    const fetchWorkspaces = () => {
-        fetch(`${API_ROOT}/workspaces`)
-            .then((res) => res.json())
-            .then((data) => {
-                setWorkspaces(data);
-                if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-            });
-    };
+ const fetchWorkspaces = () => {
+  fetch(`${API_ROOT}/workspaces`)
+    .then((res) => res.json())
+    .then((data) => {
+      const sorted = data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+      setWorkspaces(sorted);
+      if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+    })
+    .catch(() =>
+      toast.error("Failed to load workspaces", {
+        position: "bottom-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+      })
+    );
+};
+
 
     const fetchProjects = () => {
         fetch(`${API_ROOT}/projects`)
@@ -703,6 +714,21 @@ const DashboardPage = () => {
             fetchEndpointResponses();
         }
     }, [currentEndpointId]);
+
+     // Keep sidebar expanded when on endpoint detail
+  useEffect(() => {
+    if (!projectId) return;
+    const p = projects.find((proj) => String(proj.id) === String(projectId));
+    if (!p) return;
+
+    if (String(currentWsId) !== String(p.workspace_id)) {
+      setCurrentWsId(p.workspace_id);
+    }
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+  }, [projectId, projects, currentWsId]);
+
+  
 
     // -------------------- Workspace --------------------
     const validateWsName = (name, excludeId = null) => {
