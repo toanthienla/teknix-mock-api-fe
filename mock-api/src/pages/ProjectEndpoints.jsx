@@ -746,6 +746,12 @@ export default function Dashboard() {
                                                                 placeholder=" Enter Endpoint Name"
                                                                 value={newEName}
                                                                 onChange={(e) => setNewEName(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        handleCreateEndpoint();
+                                                                    }
+                                                                }}
                                                             />
 
                                                             <h3 className="text-sm font-semibold text-slate-700 mt-2">
@@ -755,6 +761,12 @@ export default function Dashboard() {
                                                                 placeholder="/example/path/:number"
                                                                 value={newEPath}
                                                                 onChange={(e) => setNewEPath(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        handleCreateEndpoint();
+                                                                    }
+                                                                }}
                                                             />
 
                                                             <h3 className="text-sm font-semibold text-slate-700 mt-2">
@@ -763,11 +775,24 @@ export default function Dashboard() {
                                                             <Select
                                                                 value={newEMethod}
                                                                 onValueChange={setNewEMethod}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        handleCreateEndpoint();
+                                                                    }
+                                                                }}
                                                             >
                                                                 <SelectTrigger className="w-[180px]">
                                                                     <SelectValue placeholder="Select a method"/>
                                                                 </SelectTrigger>
-                                                                <SelectContent>
+                                                                <SelectContent
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Enter") {
+                                                                            e.preventDefault();
+                                                                            handleCreateEndpoint();
+                                                                        }
+                                                                    }}
+                                                                >
                                                                     <SelectGroup>
                                                                         <SelectLabel>Method</SelectLabel>
                                                                         <SelectItem value="GET">GET</SelectItem>
@@ -863,6 +888,12 @@ export default function Dashboard() {
                                     <Dialog open={openEdit} onOpenChange={setOpenEdit}>
                                         <DialogContent
                                             className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    handleUpdateEndpoint();
+                                                }
+                                            }}
                                         >
                                             <DialogHeader>
                                                 <DialogTitle>Edit Endpoint</DialogTitle>
@@ -898,10 +929,10 @@ export default function Dashboard() {
                                                     <SelectContent>
                                                         <SelectGroup>
                                                             <SelectLabel>Method</SelectLabel>
-                                                            <SelectItem value="GET">Get</SelectItem>
-                                                            <SelectItem value="PUT">Put</SelectItem>
-                                                            <SelectItem value="POST">Post</SelectItem>
-                                                            <SelectItem value="DELETE">Delete</SelectItem>
+                                                            <SelectItem value="GET">GET</SelectItem>
+                                                            <SelectItem value="PUT">PUT</SelectItem>
+                                                            <SelectItem value="POST">POST</SelectItem>
+                                                            <SelectItem value="DELETE">DELETE</SelectItem>
                                                         </SelectGroup>
                                                     </SelectContent>
                                                 </Select>
