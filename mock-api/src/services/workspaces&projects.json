@@ -540,8 +540,7 @@
       "delay_ms": 0
     },
     {
-      "id": "f628",
-      "endpoint_id": 1,
+      "endpoint_id": "1",
       "name": "Hell",
       "status_code": 301,
       "response_body": {
@@ -557,7 +556,8 @@
         }
       },
       "is_default": false,
-      "delay_ms": 0
+      "delay_ms": 0,
+      "id": "f628"
     },
     {
       "id": "a09e",

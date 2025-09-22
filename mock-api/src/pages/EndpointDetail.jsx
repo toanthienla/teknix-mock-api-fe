@@ -551,6 +551,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 };
 
 const DashboardPage = () => {
+  // Thêm state để lưu lỗi response name
+  const [responseNameError, setResponseNameError] = useState("");
   const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -794,6 +796,12 @@ const DashboardPage = () => {
   const handleDeleteResponse = () => {
     if (!selectedResponse) return;
 
+    // Thêm kiểm tra response mặc định
+    if (selectedResponse.is_default) {
+      toast.warning("Cannot delete default response");
+      return;
+    }
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this response?"
     );
@@ -819,7 +827,7 @@ const DashboardPage = () => {
         if (endpointResponses.length === 1) {
           setResponseName("");
           setStatusCode("");
-          setHeaderKey("");
+          setHeaderKey("Content-Type");
           setHeaderValue("");
           setResponseBody("");
           setDelay("0");
@@ -1017,6 +1025,17 @@ const DashboardPage = () => {
       toast.error("Invalid JSON in response body");
       return;
     }
+
+    // Validate response name
+    const trimmedName = responseName.trim();
+    if (!trimmedName) {
+      setResponseNameError("Name cannot be empty");
+      toast.error("Response name cannot be empty");
+      return;
+    }
+
+    // Reset lỗi nếu có
+    setResponseNameError("");
 
     const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
 
@@ -1331,8 +1350,15 @@ const DashboardPage = () => {
                             size="icon"
                             className="border-[#E5E5E5]"
                             onClick={handleDeleteResponse}
+                            disabled={selectedResponse?.is_default} // Thêm disabled prop
                           >
-                            <Trash2 className="h-4 w-4 text-[#898883]" />
+                            <Trash2
+                              className={`h-4 w-4 ${
+                                selectedResponse?.is_default
+                                  ? "text-gray-400"
+                                  : "text-[#898883]"
+                              }`}
+                            />
                           </Button>
                         </div>
                       </div>
@@ -1361,12 +1387,27 @@ const DashboardPage = () => {
                           >
                             Status Code
                           </Label>
-                          <Input
-                            id="status-code"
-                            value={statusCode}
-                            onChange={(e) => setStatusCode(e.target.value)}
-                            className="col-span-3 border-[#CBD5E1] rounded-md"
-                          />
+                          <div className="col-span-3">
+                            <Select
+                              value={statusCode}
+                              onValueChange={(value) => setStatusCode(value)}
+                            >
+                              <SelectTrigger className="border-[#CBD5E1] rounded-md">
+                                <SelectValue placeholder="Select status code" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                                {statusCodes.map((status) => (
+                                  <SelectItem
+                                    key={status.code}
+                                    value={status.code}
+                                  >
+                                    {status.code} -{" "}
+                                    {status.description.split("–")[0]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -1568,7 +1609,15 @@ const DashboardPage = () => {
                   placeholder="Enter response name"
                   value={responseName}
                   onChange={(e) => setResponseName(e.target.value)}
+                  className={`w-full ${
+                    responseNameError ? "border-red-500" : ""
+                  }`}
                 />
+                {responseNameError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {responseNameError}
+                  </p>
+                )}
               </div>
 
               <div>
