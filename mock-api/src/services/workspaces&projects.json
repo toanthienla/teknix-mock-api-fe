@@ -314,7 +314,14 @@
       "response_body": {
         "error": "Username already exists"
       },
-      "condition": {},
+      "condition": {
+        "params": {
+          "Toyota": 123
+        },
+        "query": {
+          "Hello": 321
+        }
+      },
       "is_default": false,
       "delay_ms": 0,
       "id": "17"
