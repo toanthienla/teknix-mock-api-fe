@@ -558,7 +558,6 @@ const DashboardPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
   const [statusCode, setStatusCode] = useState("");
-  const [headerKey, setHeaderKey] = useState("");
   const [headerValue, setHeaderValue] = useState("");
   const [responseBody, setResponseBody] = useState("");
   const [delay, setDelay] = useState("0");
@@ -827,7 +826,6 @@ const DashboardPage = () => {
         if (endpointResponses.length === 1) {
           setResponseName("");
           setStatusCode("");
-          setHeaderKey("Content-Type");
           setHeaderValue("");
           setResponseBody("");
           setDelay("0");
@@ -1009,7 +1007,6 @@ const DashboardPage = () => {
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
-    setHeaderKey("Content-Type");
     setHeaderValue("application/json");
     setResponseBody("");
     setDelay("0");
@@ -1086,7 +1083,6 @@ const DashboardPage = () => {
         if (!selectedResponse) {
           setResponseName("");
           setStatusCode("200");
-          setHeaderKey("Content-Type");
           setHeaderValue("application/json");
           setResponseBody("");
           setDelay("0");
@@ -1302,16 +1298,16 @@ const DashboardPage = () => {
             {/* Cột phải - Navigation và Content */}
             <div className="w-2/3">
               {/* Navigation Tabs */}
-              <Tabs defaultValue="summary" className="w-full">
+              <Tabs defaultValue="Header&Body" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 bg-transparent mb-4">
                   <TabsTrigger
-                    value="summary"
+                    value="Header&Body"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
                     Header&Body
                   </TabsTrigger>
                   <TabsTrigger
-                    value="submissions"
+                    value="Rules"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
                     Rules
@@ -1325,7 +1321,7 @@ const DashboardPage = () => {
                 </TabsList>
 
                 {/* TabsContent */}
-                <TabsContent value="summary" className="mt-0">
+                <TabsContent value="Header&Body" className="mt-0">
                   <div></div>
                   <div className="mt-2">
                     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
@@ -1425,14 +1421,8 @@ const DashboardPage = () => {
                           >
                             Response Header
                           </Label>
-                          <div className="col-span-3 flex space-x-2">
-                            <Input
-                              id="header-key"
-                              placeholder="Key"
-                              value={headerKey}
-                              onChange={(e) => setHeaderKey(e.target.value)}
-                              className="border-[#CBD5E1] rounded-md"
-                            />
+                          <div className="col-span-3 flex items-center space-x-2">
+                            <Label htmlFor="header-value">Content-Type:</Label>
                             <Input
                               id="header-value"
                               placeholder="Value"
@@ -1504,7 +1494,7 @@ const DashboardPage = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="submissions" className="mt-0">
+                <TabsContent value="Rules" className="mt-0">
                   <div></div>
                   <div className="mt-2">
                     <Frame
@@ -1683,12 +1673,8 @@ const DashboardPage = () => {
 
               <div>
                 <Label>Header</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Key"
-                    value={headerKey}
-                    onChange={(e) => setHeaderKey(e.target.value)}
-                  />
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="header-value">Content-Type:</Label>
                   <Input
                     placeholder="Value"
                     value={headerValue}
