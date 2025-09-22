@@ -13,6 +13,7 @@ export default function Sidebar({
   workspaces = [],
   current,
   setCurrent,
+  onWorkspaceChange,
   endpoints = [],
   onAddWorkspace,
   onEditWorkspace,
@@ -34,6 +35,17 @@ export default function Sidebar({
   const navigate = useNavigate();
   const actionMenuRef = useRef(null);
   const inputRef = useRef(null);
+
+  const [currentWsId, setCurrentWsId] = useState(
+    () => localStorage.getItem("currentWorkspace") || null
+  );
+
+  const handleSelectWorkspace = (wsId) => {
+    setCurrentWsId(wsId);
+    localStorage.setItem("currentWorkspace", wsId);
+    if (onWorkspaceChange) onWorkspaceChange(wsId);
+    navigate("/dashboard"); // chuyển về dashboard
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -95,11 +107,11 @@ export default function Sidebar({
 
   return (
     <div
-      className={`flex flex-col h-screen bg-white transition-all duration-300 r ${isCollapsed ? "w-fit" : "w-64"
+      className={`flex flex-col h-screen bg-white transition-all duration-300 r w-64
         }`}
     >
       {/* Header with Logo and Collapse Button */}
-      <div className="h-16 flex items-center justify-between px-4 bg-white relative border-b border-slate-200 ">
+      <div className=" flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
         {/* Border phải giả */}
         <div className="absolute top-0 right-0 h-full w-px bg-slate-200"></div>
 
@@ -142,12 +154,11 @@ export default function Sidebar({
               <li key={ws.id} className="group relative">
                 <div
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${active
-                      ? "bg-slate-100 font-semibold text-slate-900"
-                      : "hover:bg-slate-50 text-slate-800 font-medium"
+                    ? "bg-slate-100 font-semibold text-slate-900"
+                    : "hover:bg-slate-50 text-slate-800 font-medium"
                     }`}
                   onClick={() => {
-                    setCurrent(ws.id);
-                    toggleProjects(ws.id);
+                    setCurrent(ws.id);  // chỉ chọn workspace thôi
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
                 >
@@ -157,12 +168,16 @@ export default function Sidebar({
                       alt="WP icon"
                       className="w-5 h-5 object-contain"
                     />
-                    <span>{ws.name}</span>
+                    <span 
+                      key={ws.id}
+                      onClick={() => handleSelectWorkspace(ws.id)}
+                    >
+                      {ws.name}</span>
                   </span>
                   <ChevronDown
                     onClick={(e) => {
-                      e.stopPropagation();
-                      toggleProjects(ws.id);
+                      e.stopPropagation();     // không cho lan lên onClick cha
+                      toggleProjects(ws.id);   // chỉ bấm icon mới expand/collapse
                     }}
                     className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-0" : "-rotate-90"
                       }`}

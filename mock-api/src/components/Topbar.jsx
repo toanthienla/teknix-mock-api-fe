@@ -28,7 +28,7 @@ export default function Topbar({
     };
 
     return (
-        <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
+        <div className=" h-12 relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
             {/* Search */}
             <div className="flex-1 flex items-center">
                 <div className="relative w-[250px]">
@@ -36,7 +36,7 @@ export default function Topbar({
                         placeholder="Search"
                         value={query}
                         onChange={handleChange}
-                        className="pl-9 pr-3 h-12 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+                        className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                         <Search size={16} />

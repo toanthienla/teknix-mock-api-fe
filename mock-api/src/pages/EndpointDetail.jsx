@@ -195,7 +195,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
         setErrors(allErrors);
         return isValid;
     };
-
+    
     // Initialize rows from selectedResponse if available
     useEffect(() => {
         if (selectedResponse?.condition) {
@@ -599,14 +599,25 @@ const DashboardPage = () => {
         (w) => String(w.id) === String(currentWsId)
     );
 
-    const fetchWorkspaces = () => {
-        fetch(`${API_ROOT}/workspaces`)
-            .then((res) => res.json())
-            .then((data) => {
-                setWorkspaces(data);
-                if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-            });
-    };
+ const fetchWorkspaces = () => {
+  fetch(`${API_ROOT}/workspaces`)
+    .then((res) => res.json())
+    .then((data) => {
+      const sorted = data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+      setWorkspaces(sorted);
+      if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+    })
+    .catch(() =>
+      toast.error("Failed to load workspaces", {
+        position: "bottom-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+      })
+    );
+};
+
 
     const fetchProjects = () => {
         fetch(`${API_ROOT}/projects`)
@@ -703,6 +714,21 @@ const DashboardPage = () => {
             fetchEndpointResponses();
         }
     }, [currentEndpointId]);
+
+     // Keep sidebar expanded when on endpoint detail
+  useEffect(() => {
+    if (!projectId) return;
+    const p = projects.find((proj) => String(proj.id) === String(projectId));
+    if (!p) return;
+
+    if (String(currentWsId) !== String(p.workspace_id)) {
+      setCurrentWsId(p.workspace_id);
+    }
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+  }, [projectId, projects, currentWsId]);
+
+  
 
     // -------------------- Workspace --------------------
     const validateWsName = (name, excludeId = null) => {
@@ -1099,7 +1125,7 @@ const DashboardPage = () => {
         <div className="min-h-screen bg-white text-slate-800 flex">
             {/* Sidebar */}
             <aside
-                className={`border-r border-slate-100 bg-white transition-all duration-300`}
+                 className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
             >
                 <Sidebar
                     workspaces={workspaces}
@@ -1125,9 +1151,7 @@ const DashboardPage = () => {
 
             {/* Main Content */}
             <div
-                className={`p-8 transition-all duration-300 ${
-                    isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
-                } overflow-y-auto`}
+                className="pt-8 flex-1 transition-all duration-300"
             >
                 {/* Header */}
                 <Topbar
@@ -1152,7 +1176,11 @@ const DashboardPage = () => {
                 />
 
                 {/* Navigation Tabs */}
-                <div className="mb-6 mt-2">
+                <div
+            className={`transition-all duration-300 px-8 pt-4 pb-8
+    ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"}
+  `}
+          >
                     {/* Container chung cho cả hai phần */}
                     <div className="flex justify-between items-center mb-6">
                         {/* Phần bên trái - Display Endpoint Name and Method */}
