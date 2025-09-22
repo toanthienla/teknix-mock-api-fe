@@ -17,14 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import {
-    Plus,
-    Star,
-    Trash2,
-    Upload,
-    Code,
-    GripVertical,
-} from "lucide-react";
+import {Plus, Star, Trash2, Upload, Code, GripVertical} from "lucide-react";
 import {toast} from "react-toastify";
 import {
     Dialog,
@@ -558,12 +551,13 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
 };
 
 const DashboardPage = () => {
+    // Thêm state để lưu lỗi response name
+    const [responseNameError, setResponseNameError] = useState("");
     const {projectId, endpointId} = useParams();
     const [currentEndpointId, setCurrentEndpointId] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [responseName, setResponseName] = useState("");
     const [statusCode, setStatusCode] = useState("");
-    const [headerKey, setHeaderKey] = useState("");
     const [headerValue, setHeaderValue] = useState("");
     const [responseBody, setResponseBody] = useState("");
     const [delay, setDelay] = useState("0");
@@ -595,9 +589,9 @@ const DashboardPage = () => {
         ? projects.find((p) => String(p.id) === String(projectId))
         : null;
 
-    const currentWorkspace = workspaces.find(
-        (w) => String(w.id) === String(currentWsId)
-    );
+    const currentWorkspace = currentWsId
+        ? workspaces.find((w) => String(w.id) === String(currentProject.workspace_id))
+        : null;
 
     const fetchWorkspaces = () => {
         fetch(`${API_ROOT}/workspaces`)
@@ -704,6 +698,19 @@ const DashboardPage = () => {
         }
     }, [currentEndpointId]);
 
+    // Keep sidebar expanded when on endpoint detail
+    useEffect(() => {
+        if (!projectId) return;
+        const p = projects.find((proj) => String(proj.id) === String(projectId));
+        if (!p) return;
+
+        if (String(currentWsId) !== String(p.workspace_id)) {
+            setCurrentWsId(p.workspace_id);
+        }
+        setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+        setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    }, [projectId, projects, currentWsId]);
+
     // -------------------- Workspace --------------------
     const validateWsName = (name, excludeId = null) => {
         const trimmed = name.trim();
@@ -801,6 +808,12 @@ const DashboardPage = () => {
     const handleDeleteResponse = () => {
         if (!selectedResponse) return;
 
+        // Thêm kiểm tra response mặc định
+        if (selectedResponse.is_default) {
+            toast.warning("Cannot delete default response");
+            return;
+        }
+
         const confirmed = window.confirm(
             "Are you sure you want to delete this response?"
         );
@@ -826,7 +839,6 @@ const DashboardPage = () => {
                 if (endpointResponses.length === 1) {
                     setResponseName("");
                     setStatusCode("");
-                    setHeaderKey("");
                     setHeaderValue("");
                     setResponseBody("");
                     setDelay("0");
@@ -858,7 +870,7 @@ const DashboardPage = () => {
                 // Cập nhật endpointResponses với priority mới từ server
                 setEndpointResponses((prevResponses) =>
                     prevResponses.map((response) => {
-                        const updated = updatedResponses.find((r) => r.id === response.id);
+                        const updated = updatedResponses.find((r) => String(r.id) === String(response.id));
                         return updated
                             ? {...response, priority: updated.priority}
                             : response;
@@ -868,7 +880,7 @@ const DashboardPage = () => {
                 // Cập nhật statusData dựa trên updatedResponses (sửa lỗi ở đây)
                 setStatusData((prevStatusData) =>
                     prevStatusData.map((status) => {
-                        const updated = updatedResponses.find((r) => r.id === status.id);
+                        const updated = updatedResponses.find((r) => String(r.id) === String(status.id));
                         return updated ? {...status, priority: updated.priority} : status;
                     })
                 );
@@ -907,7 +919,7 @@ const DashboardPage = () => {
                 // Cập nhật endpointResponses với dữ liệu từ server
                 setEndpointResponses((prevResponses) =>
                     prevResponses.map((response) => {
-                        const updated = updatedResponses.find((r) => r.id === response.id);
+                        const updated = updatedResponses.find((r) => String(r.id) === String(response.id));
                         return updated
                             ? {...response, is_default: updated.is_default}
                             : response;
@@ -917,7 +929,7 @@ const DashboardPage = () => {
                 // Cập nhật statusData
                 setStatusData((prevStatusData) =>
                     prevStatusData.map((status) => {
-                        const updated = updatedResponses.find((r) => r.id === status.id);
+                        const updated = updatedResponses.find((r) => String(r.id) === String(status.id));
                         return updated
                             ? {...status, isDefault: updated.is_default}
                             : status;
@@ -1008,7 +1020,6 @@ const DashboardPage = () => {
         setSelectedResponse(null);
         setResponseName("");
         setStatusCode("200");
-        setHeaderKey("Content-Type");
         setHeaderValue("application/json");
         setResponseBody("");
         setDelay("0");
@@ -1024,6 +1035,17 @@ const DashboardPage = () => {
             toast.error("Invalid JSON in response body");
             return;
         }
+
+        // Validate response name
+        const trimmedName = responseName.trim();
+        if (!trimmedName) {
+            setResponseNameError("Name cannot be empty");
+            toast.error("Response name cannot be empty");
+            return;
+        }
+
+        // Reset lỗi nếu có
+        setResponseNameError("");
 
         const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
 
@@ -1074,7 +1096,6 @@ const DashboardPage = () => {
                 if (!selectedResponse) {
                     setResponseName("");
                     setStatusCode("200");
-                    setHeaderKey("Content-Type");
                     setHeaderValue("application/json");
                     setResponseBody("");
                     setDelay("0");
@@ -1094,6 +1115,8 @@ const DashboardPage = () => {
             setResponseCondition(selectedResponse.condition || {});
         }
     }, [selectedResponse]);
+
+    const [proxyUrl, setProxyUrl] = useState("");
 
     return (
         <div className="min-h-screen bg-white text-slate-800 flex">
@@ -1137,12 +1160,37 @@ const DashboardPage = () => {
                             ? currentProject
                                 ? currentEndpointId
                                     ? [
-                                        currentWorkspace.name,
-                                        currentProject.name,
-                                        endpoints.find((ep) => ep.id === currentEndpointId)?.name || "Endpoint"
+                                        {
+                                            label: currentWorkspace.name,
+                                            href: "/dashboard", // workspace chỉ cần /dashboard
+                                        },
+                                        {
+                                            label: currentProject.name,
+                                            href: `/dashboard/${currentProject.id}`,
+                                        },
+                                        {
+                                            label:
+                                                endpoints.find((ep) => String(ep.id) === String(currentEndpointId))
+                                                    ?.name || "Endpoint",
+                                            href: null, // endpoint không có link
+                                        },
                                     ]
-                                    : [currentWorkspace.name, currentProject.name]
-                                : [currentWorkspace.name]
+                                    : [
+                                        {
+                                            label: currentWorkspace.name,
+                                            href: "/dashboard",
+                                        },
+                                        {
+                                            label: currentProject.name,
+                                            href: `/dashboard/${currentProject.id}`,
+                                        },
+                                    ]
+                                : [
+                                    {
+                                        label: currentWorkspace.name,
+                                        href: "/dashboard",
+                                    },
+                                ]
                             : []
                     }
                     onSearch={setSearchTerm}
@@ -1158,14 +1206,14 @@ const DashboardPage = () => {
                         {/* Phần bên trái - Display Endpoint Name and Method */}
                         <div className="flex items-center">
                             <h2 className="text-2xl font-bold text-[#37352F] mr-4">
-                                {endpoints.find((ep) => ep.id === currentEndpointId)?.name ||
+                                {endpoints.find((ep) => String(ep.id) === String(currentEndpointId))?.name ||
                                     "Endpoint"}
                             </h2>
                             <Badge
                                 variant="outline"
                                 className="bg-[#D5FBD3] text-[#000000] border-0"
                             >
-                                {endpoints.find((ep) => ep.id === currentEndpointId)?.method ||
+                                {endpoints.find((ep) => String(ep.id) === String(currentEndpointId))?.method ||
                                     "GET"}
                             </Badge>
                         </div>
@@ -1175,9 +1223,9 @@ const DashboardPage = () => {
                             <div
                                 className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
                                 <div
-                                    className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5"
-                                >
-                                    {endpoints.find((ep) => ep.id === currentEndpointId)?.path || "-"}
+                                    className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
+                                    {endpoints.find((ep) => String(ep.id) === String(currentEndpointId))?.path ||
+                                        "-"}
                                 </div>
                                 <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
                                     <div className="w-[21px] h-[20px] relative">
@@ -1284,9 +1332,9 @@ const DashboardPage = () => {
                                                     {status.isDefault && (
                                                         <div
                                                             className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
-                                                        <span className="text-xs font-medium text-[#0A0A0A]">
-                                                            Default
-                                                        </span>
+                              <span className="text-xs font-medium text-[#0A0A0A]">
+                                Default
+                              </span>
                                                         </div>
                                                     )}
                                                 </TableCell>
@@ -1300,24 +1348,30 @@ const DashboardPage = () => {
                         {/* Cột phải - Navigation và Content */}
                         <div className="w-2/3">
                             {/* Navigation Tabs */}
-                            <Tabs defaultValue="summary" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 bg-transparent mb-4">
+                            <Tabs defaultValue="Header&Body" className="w-full">
+                                <TabsList className="grid w-full grid-cols-3 bg-transparent mb-4">
                                     <TabsTrigger
-                                        value="summary"
+                                        value="Header&Body"
                                         className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                                     >
                                         Header&Body
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        value="submissions"
+                                        value="Rules"
                                         className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                                     >
                                         Rules
                                     </TabsTrigger>
+                                    <TabsTrigger
+                                        value="proxy"
+                                        className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                                    >
+                                        Proxy
+                                    </TabsTrigger>
                                 </TabsList>
 
                                 {/* TabsContent */}
-                                <TabsContent value="summary" className="mt-0">
+                                <TabsContent value="Header&Body" className="mt-0">
                                     <div></div>
                                     <div className="mt-2">
                                         <Card className="p-6 border border-[#CBD5E1] rounded-lg">
@@ -1350,17 +1404,17 @@ const DashboardPage = () => {
                                                         size="icon"
                                                         className="border-[#E5E5E5]"
                                                         onClick={handleDeleteResponse}
+                                                        disabled={selectedResponse?.is_default} // Thêm disabled prop
                                                     >
-                                                        <Trash2 className="h-4 w-4 text-[#898883]"/>
+                                                        <Trash2
+                                                            className={`h-4 w-4 ${
+                                                                selectedResponse?.is_default
+                                                                    ? "text-gray-400"
+                                                                    : "text-[#898883]"
+                                                            }`}
+                                                        />
                                                     </Button>
                                                 </div>
-                                            </div>
-
-                                            {/* Status Info */}
-                                            <div className="border border-[#D1D5DB] rounded-md px-4 py-3 mb-6">
-                                                <p className="text-[#777671] font-medium">
-                                                    Status: This endpoint is active and receiving requests
-                                                </p>
                                             </div>
 
                                             {/* Form */}
@@ -1387,12 +1441,28 @@ const DashboardPage = () => {
                                                     >
                                                         Status Code
                                                     </Label>
-                                                    <Input
-                                                        id="status-code"
-                                                        value={statusCode}
-                                                        onChange={(e) => setStatusCode(e.target.value)}
-                                                        className="col-span-3 border-[#CBD5E1] rounded-md"
-                                                    />
+                                                    <div className="col-span-3">
+                                                        <Select
+                                                            value={statusCode}
+                                                            onValueChange={(value) => setStatusCode(value)}
+                                                        >
+                                                            <SelectTrigger className="border-[#CBD5E1] rounded-md">
+                                                                <SelectValue placeholder="Select status code"/>
+                                                            </SelectTrigger>
+                                                            <SelectContent
+                                                                className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                                                                {statusCodes.map((status) => (
+                                                                    <SelectItem
+                                                                        key={status.code}
+                                                                        value={status.code}
+                                                                    >
+                                                                        {status.code} -{" "}
+                                                                        {status.description.split("–")[0]}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -1402,14 +1472,8 @@ const DashboardPage = () => {
                                                     >
                                                         Response Header
                                                     </Label>
-                                                    <div className="col-span-3 flex space-x-2">
-                                                        <Input
-                                                            id="header-key"
-                                                            placeholder="Key"
-                                                            value={headerKey}
-                                                            onChange={(e) => setHeaderKey(e.target.value)}
-                                                            className="border-[#CBD5E1] rounded-md"
-                                                        />
+                                                    <div className="col-span-3 flex items-center space-x-2">
+                                                        <Label htmlFor="header-value">Content-Type:</Label>
                                                         <Input
                                                             id="header-value"
                                                             placeholder="Value"
@@ -1481,7 +1545,7 @@ const DashboardPage = () => {
                                     </div>
                                 </TabsContent>
 
-                                <TabsContent value="submissions" className="mt-0">
+                                <TabsContent value="Rules" className="mt-0">
                                     <div></div>
                                     <div className="mt-2">
                                         <Frame
@@ -1491,6 +1555,44 @@ const DashboardPage = () => {
                                             onSave={handleSaveResponse} // Truyền hàm handleSaveResponse vào Frame
                                         />
                                     </div>
+                                </TabsContent>
+
+                                <TabsContent value="proxy" className="mt-0">
+                                    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                                        <div className="space-y-6">
+                                            <div className="flex flex-col items-start gap-2.5">
+                                                <Label
+                                                    htmlFor="proxy-url"
+                                                    className="text-sm font-medium text-[#000000] font-inter"
+                                                >
+                                                    Forward proxy URL
+                                                </Label>
+                                                <div
+                                                    className="flex flex-col items-start gap-[10px] w-full max-w-[590px]">
+                                                    <div className="flex flex-row items-center gap-[16px] w-full">
+                                                        <Input
+                                                            id="proxy-url"
+                                                            placeholder="Enter proxy URL"
+                                                            value={proxyUrl}
+                                                            onChange={(e) => setProxyUrl(e.target.value)}
+                                                            className="w-full h-[36px] border-[#CBD5E1] rounded-md bg-white text-[#9CA3AF] placeholder:text-[#9CA3AF]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                                                    onClick={() => {
+                                                        // Thêm logic lưu proxy ở đây nếu cần
+                                                        toast.success("Proxy URL saved!");
+                                                    }}
+                                                >
+                                                    Save Changes
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
                                 </TabsContent>
                             </Tabs>
                         </div>
@@ -1594,7 +1696,15 @@ const DashboardPage = () => {
                                     placeholder="Enter response name"
                                     value={responseName}
                                     onChange={(e) => setResponseName(e.target.value)}
+                                    className={`w-full ${
+                                        responseNameError ? "border-red-500" : ""
+                                    }`}
                                 />
+                                {responseNameError && (
+                                    <p className="text-red-500 text-sm mt-1">
+                                        {responseNameError}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -1615,12 +1725,8 @@ const DashboardPage = () => {
 
                             <div>
                                 <Label>Header</Label>
-                                <div className="flex space-x-2">
-                                    <Input
-                                        placeholder="Key"
-                                        value={headerKey}
-                                        onChange={(e) => setHeaderKey(e.target.value)}
-                                    />
+                                <div className="flex items-center space-x-2">
+                                    <Label htmlFor="header-value">Content-Type:</Label>
                                     <Input
                                         placeholder="Value"
                                         value={headerValue}
@@ -1678,7 +1784,8 @@ const DashboardPage = () => {
                             <DialogTitle>Delete Workspace</DialogTitle>
                         </DialogHeader>
                         <p>
-                            Are you sure you want to delete this workspace and all its projects?
+                            Are you sure you want to delete this workspace and all its
+                            projects?
                         </p>
                         <DialogFooter>
                             <Button

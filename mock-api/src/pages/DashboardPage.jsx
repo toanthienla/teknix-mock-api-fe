@@ -34,7 +34,9 @@ export default function DashboardPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [currentWsId, setCurrentWsId] = useState(null);
+  const [currentWsId, setCurrentWsId] = useState(
+  () => localStorage.getItem("currentWorkspace") || null
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
@@ -79,33 +81,33 @@ export default function DashboardPage() {
     }
   }, [projectId, projects]);
 
+  useEffect(() => {
+  const savedWs = localStorage.getItem("currentWorkspace");
+  if (savedWs) setCurrentWsId(savedWs);
+}, []);
+
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
-    fetch(`${API_ROOT}/workspaces`)
-      .then((res) => res.json())
-      .then((data) => {
-        setWorkspaces(data);
-        if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-      })
-      .catch(() =>
-        toast.error("Failed to load workspaces", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+  fetch(`${API_ROOT}/workspaces`)
+    .then((res) => res.json())
+    .then((data) => {
+      const sorted = data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
       );
-  };
+      setWorkspaces(sorted);
+      if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+    })
+    .catch(() =>
+      toast.error("Failed to load workspaces")
+    );
+};
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => setProjects(data))
       .catch(() =>
-        toast.error("Failed to load projects", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to load projects")
       );
   };
 
@@ -158,11 +160,7 @@ export default function DashboardPage() {
   const handleAddWorkspace = (name) => {
     const err = validateWsName(name);
     if (err) {
-      toast.warning(err, {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning(err);
       return;
     }
     fetch(`${API_ROOT}/workspaces`, {
@@ -179,29 +177,17 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        toast.success("Workspace created successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Workspace created successfully");
       })
       .catch(() =>
-        toast.error("Failed to create workspace", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to create workspace")
       );
   };
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
     if (err) {
-      toast.warning(err, {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning(err);
       return;
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
@@ -221,18 +207,10 @@ export default function DashboardPage() {
         setOpenEditWs(false);
         setEditWsName("");
         setEditWsId(null);
-        toast.success("Workspace updated successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Workspace updated successfully");
       })
       .catch(() =>
-        toast.error("Failed to update workspace", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to update workspace")
       );
   };
 
@@ -256,17 +234,9 @@ export default function DashboardPage() {
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
       if (currentWsId === id) setCurrentWsId(null);
 
-      toast.success("Workspace and its projects deleted successfully", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.success("Workspace and its projects deleted successfully");
     } catch {
-      toast.error("Failed to delete workspace or its projects", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.error("Failed to delete workspace or its projects");
     }
   };
 
@@ -276,62 +246,32 @@ export default function DashboardPage() {
     const descTrim = desc.trim();
 
     if (!titleTrim) {
-      toast.warning("Project name cannot be empty", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot be empty");
       return false;
     }
     if (titleTrim.length > 50) {
-      toast.warning("Project name cannot exceed 50 chars", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot exceed 50 chars");
       return false;
     }
     if (/^[0-9]/.test(titleTrim)) {
-      toast.warning("Project name cannot start with a number", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot start with a number");
       return false;
     }
     if (/ {2,}/.test(titleTrim)) {
-      toast.warning("Project name cannot contain multiple spaces", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name cannot contain multiple spaces");
       return false;
     }
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
       toast.warning(
-        "Only letters, numbers, and spaces allowed (no special characters)",
-        {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        }
-      );
+        "Only letters, numbers, and spaces allowed (no special characters)");
       return false;
     }
     if (!descTrim) {
-      toast.info("Project description cannot be empty", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.info("Project description cannot be empty");
       return false;
     }
     if (descTrim.length > 200) {
-      toast.warning("Project description max 200 chars", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project description max 200 chars");
       return false;
     }
 
@@ -342,11 +282,7 @@ export default function DashboardPage() {
         p.name.toLowerCase() === titleTrim.toLowerCase()
     );
     if (duplicate) {
-      toast.warning("Project name already exists in this workspace", {
-        position: "bottom-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-      });
+      toast.warning("Project name already exists in this workspace");
       return false;
     }
     return true;
@@ -374,18 +310,10 @@ export default function DashboardPage() {
         setNewTitle("");
         setNewDesc("");
         setOpenNewProject(false);
-        toast.success("Project created successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project created successfully");
       })
       .catch(() =>
-        toast.error("Failed to create project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to create project")
       );
   };
 
@@ -427,18 +355,10 @@ export default function DashboardPage() {
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
         );
         setOpenEditProject(false);
-        toast.success("Project updated successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project updated successfully",);
       })
       .catch(() =>
-        toast.error("Failed to update project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to update project")
       );
   };
 
@@ -454,18 +374,10 @@ export default function DashboardPage() {
         setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
         setDeleteProjectId(null);
         setOpenDeleteProject(false);
-        toast.success("Project deleted successfully", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        });
+        toast.success("Project deleted successfully");
       })
       .catch(() =>
-        toast.error("Failed to delete project", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to delete project")
       );
   };
 
@@ -475,7 +387,7 @@ export default function DashboardPage() {
       {/* Sidebar + Main */}
       <div className="flex min-h-screen bg-white">
         <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${isSidebarCollapsed ? "w-28" : "w-64"}`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -483,6 +395,7 @@ export default function DashboardPage() {
             endpoints={endpoints}
             current={currentWsId}
             setCurrent={setCurrentWsId}
+            onWorkspaceChange={setCurrentWsId} // nhận wsId từ Sidebar
             onAddWorkspace={handleAddWorkspace}
             onEditWorkspace={(ws) => {
               setEditWsId(ws.id);
@@ -502,7 +415,7 @@ export default function DashboardPage() {
 
         {/* Main */}
         <main
-          className="p-8 flex-1 transition-all duration-300"
+          className="pt-8 flex-1 transition-all duration-300"
         >
           <Topbar
             breadcrumb={
@@ -518,74 +431,79 @@ export default function DashboardPage() {
             showNewResponseButton={false}
           />
 
-          {currentProject ? (
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">
-                {currentProject.name}
-              </h2>
-              <p className="text-slate-600">{currentProject.description}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => navigate("/dashboard")}
-              >
-                Back to all projects
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  {currentWorkspace && (
-                    <h2 className="mt-4 text-3xl font-bold text-slate-900 mb-2">
-                      {currentWorkspace.name}
-                    </h2>
-                  )}
-                  <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
-                      <span>{sortOption}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-40 bg-white shadow-md rounded-md"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setSortOption("Recently created")}
+          <div
+            className={`transition-all duration-300 px-8 pt-4 pb-8
+    ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"}
+  `}
+          >
+            {currentProject ? (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">
+                  {currentProject.name}
+                </h2>
+                <p className="text-slate-600">{currentProject.description}</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Back to all projects
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex pl-8 pr-8 items-center justify-between mb-4">
+                  <div>
+                    {currentWorkspace && (
+                      <h2 className="mt-4 text-3xl font-bold text-slate-900 mb-2">
+                        {currentWorkspace.name}
+                      </h2>
+                    )}
+                    <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
+                        <span>{sortOption}</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-40 bg-white shadow-md rounded-md"
                     >
-                      Recently created
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
-                      A → Z
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
-                      Z → A
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {sortedProjects.length > 0 ? (
-                  sortedProjects.map((p) => (
-                    <ProjectCard
-                      key={p.id}
-                      project={p}
-                      onClick={() => navigate(`/dashboard/${p.id}`)}
-                      onEdit={() => openEditProjectDialog(p)}
-                      onDelete={() => openDeleteProjectDialog(p.id)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-slate-500">No projects found.</p>
-                )}
-              </div>
-            </>
-          )}
+                      <DropdownMenuItem
+                        onClick={() => setSortOption("Recently created")}
+                      >
+                        Recently created
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
+                        A → Z
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
+                        Z → A
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex pr-8 pl-8 flex-col gap-4">
+                  {sortedProjects.length > 0 ? (
+                    sortedProjects.map((p) => (
+                      <ProjectCard
+                        key={p.id}
+                        project={p}
+                        onClick={() => navigate(`/dashboard/${p.id}`)}
+                        onEdit={() => openEditProjectDialog(p)}
+                        onDelete={() => openDeleteProjectDialog(p.id)}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-slate-500">No projects found.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </main>
       </div>
 

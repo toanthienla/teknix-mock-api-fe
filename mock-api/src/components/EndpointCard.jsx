@@ -52,7 +52,14 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                                     <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
                                 </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        onDelete(id);
+                                    }
+                                }}
+                            >
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                     <AlertDialogDescription>
@@ -65,7 +72,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                                         Cancel
                                     </AlertDialogCancel>
                                     <AlertDialogAction
-                                        className="bg-blue-600 text-white hover:bg-blue-700"
+                                        className="bg-red-600 text-white hover:bg-red-700"
                                         onClick={() => onDelete(id)}
                                     >
                                         Continue
@@ -87,12 +94,12 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                         method === "GET"
                             ? "bg-emerald-100 text-black hover:bg-emerald-200"
                             : method === "POST"
-                            ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                            : method === "PUT"
-                            ? "bg-orange-400 text-black hover:bg-orange-500"
-                            : method === "DELETE"
-                            ? "bg-red-400 text-black hover:bg-red-500"
-                            : "bg-gray-100 text-black hover:bg-gray-200"
+                                ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                                : method === "PUT"
+                                    ? "bg-orange-400 text-black hover:bg-orange-500"
+                                    : method === "DELETE"
+                                        ? "bg-red-400 text-black hover:bg-red-500"
+                                        : "bg-gray-100 text-black hover:bg-gray-200"
                     }`}
                 >
                     {method}

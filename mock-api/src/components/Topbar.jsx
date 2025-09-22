@@ -27,6 +27,13 @@ export default function Topbar({
         if (onSearch) onSearch(value);
     };
 
+    // const handleSelectWorkspace = (wsId) => {
+    //     setCurrentWsId(wsId);
+    //     localStorage.setItem("currentWorkspace", wsId);
+    //     if (onWorkspaceChange) onWorkspaceChange(wsId);
+    //     navigate("/dashboard"); // chuyển về dashboard
+    // };
+
     return (
         <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
             {/* Search */}
@@ -36,7 +43,7 @@ export default function Topbar({
                         placeholder="Search"
                         value={query}
                         onChange={handleChange}
-                        className="pl-9 pr-3 h-12 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+                        className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                         <Search size={16} />
@@ -64,14 +71,14 @@ export default function Topbar({
                                                 className={`whitespace-nowrap overflow-hidden min-w-0 ${
                                                     isLast ? "" : "truncate"
                                                 }`}
-                                                title={item} // hover sẽ hiện full text
+                                                title={item.label}
                                             >
-                                                {isLast ? (
+                                                {isLast || !item.href ? (
                                                     <BreadcrumbPage className="font-medium text-slate-900">
-                                                        {item}
+                                                        {item.label}
                                                     </BreadcrumbPage>
                                                 ) : (
-                                                    <BreadcrumbLink href="/dashboard">{item}</BreadcrumbLink>
+                                                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
                                                 )}
                                             </BreadcrumbItem>
                                             {!isLast && <BreadcrumbSeparator />}
