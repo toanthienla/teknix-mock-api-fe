@@ -28,7 +28,7 @@ export default function Topbar({
     };
 
     return (
-        <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200">
+        <div className=" h-12 relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
             {/* Search */}
             <div className="flex-1 flex items-center">
                 <div className="relative w-[250px]">

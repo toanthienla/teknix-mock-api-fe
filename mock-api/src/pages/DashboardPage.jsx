@@ -475,7 +475,7 @@ export default function DashboardPage() {
       {/* Sidebar + Main */}
       <div className="flex min-h-screen bg-white">
         <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${isSidebarCollapsed ? "w-28" : "w-64"}`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -502,7 +502,7 @@ export default function DashboardPage() {
 
         {/* Main */}
         <main
-          className="p-8 flex-1 transition-all duration-300"
+          className="pt-8 flex-1 transition-all duration-300"
         >
           <Topbar
             breadcrumb={
@@ -518,74 +518,79 @@ export default function DashboardPage() {
             showNewResponseButton={false}
           />
 
-          {currentProject ? (
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">
-                {currentProject.name}
-              </h2>
-              <p className="text-slate-600">{currentProject.description}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => navigate("/dashboard")}
-              >
-                Back to all projects
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  {currentWorkspace && (
-                    <h2 className="mt-4 text-3xl font-bold text-slate-900 mb-2">
-                      {currentWorkspace.name}
-                    </h2>
-                  )}
-                  <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
-                      <span>{sortOption}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-40 bg-white shadow-md rounded-md"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => setSortOption("Recently created")}
+          <div
+            className={`transition-all duration-300 px-8 pt-4 pb-8
+    ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"}
+  `}
+          >
+            {currentProject ? (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">
+                  {currentProject.name}
+                </h2>
+                <p className="text-slate-600">{currentProject.description}</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Back to all projects
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex pl-8 pr-8 items-center justify-between mb-4">
+                  <div>
+                    {currentWorkspace && (
+                      <h2 className="mt-4 text-3xl font-bold text-slate-900 mb-2">
+                        {currentWorkspace.name}
+                      </h2>
+                    )}
+                    <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
+                        <span>{sortOption}</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-40 bg-white shadow-md rounded-md"
                     >
-                      Recently created
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
-                      A → Z
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
-                      Z → A
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {sortedProjects.length > 0 ? (
-                  sortedProjects.map((p) => (
-                    <ProjectCard
-                      key={p.id}
-                      project={p}
-                      onClick={() => navigate(`/dashboard/${p.id}`)}
-                      onEdit={() => openEditProjectDialog(p)}
-                      onDelete={() => openDeleteProjectDialog(p.id)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-slate-500">No projects found.</p>
-                )}
-              </div>
-            </>
-          )}
+                      <DropdownMenuItem
+                        onClick={() => setSortOption("Recently created")}
+                      >
+                        Recently created
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
+                        A → Z
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
+                        Z → A
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="flex pr-8 pl-8 flex-col gap-4">
+                  {sortedProjects.length > 0 ? (
+                    sortedProjects.map((p) => (
+                      <ProjectCard
+                        key={p.id}
+                        project={p}
+                        onClick={() => navigate(`/dashboard/${p.id}`)}
+                        onEdit={() => openEditProjectDialog(p)}
+                        onDelete={() => openDeleteProjectDialog(p.id)}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-slate-500">No projects found.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </main>
       </div>
 
