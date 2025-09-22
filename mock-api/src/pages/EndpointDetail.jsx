@@ -597,9 +597,19 @@ const DashboardPage = () => {
         fetch(`${API_ROOT}/workspaces`)
             .then((res) => res.json())
             .then((data) => {
-                setWorkspaces(data);
-                if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-            });
+                const sorted = data.sort(
+                    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                );
+                setWorkspaces(sorted);
+                if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+            })
+            .catch(() =>
+                toast.error("Failed to load workspaces", {
+                    position: "bottom-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                })
+            );
     };
 
     const fetchProjects = () => {

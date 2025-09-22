@@ -27,13 +27,6 @@ export default function Topbar({
         if (onSearch) onSearch(value);
     };
 
-    // const handleSelectWorkspace = (wsId) => {
-    //     setCurrentWsId(wsId);
-    //     localStorage.setItem("currentWorkspace", wsId);
-    //     if (onWorkspaceChange) onWorkspaceChange(wsId);
-    //     navigate("/dashboard"); // chuyển về dashboard
-    // };
-
     return (
         <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
             {/* Search */}

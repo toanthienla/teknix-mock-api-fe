@@ -51,11 +51,13 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [activeTab, setActiveTab] = useState("endpoints");
+
   const [logs, setLogs] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
@@ -597,9 +599,23 @@ export default function Dashboard() {
             breadcrumb={
               currentWorkspace
                 ? currentProject
-                  ? [currentWorkspace.name, currentProject.name]
-                  : [currentWorkspace.name]
-                : []
+                  ? [
+                    {
+                      label: currentWorkspace.name,
+                      href: "/dashboard",
+                    },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
+                  ]
+                  : [
+                    {
+                      label: currentWorkspace.name,
+                      href: "/dashboard",
+                    },
+                  ]
+              : []
             }
             onSearch={setSearchTerm}
             showNewProjectButton={false}
@@ -609,8 +625,8 @@ export default function Dashboard() {
           {/* Content Area */}
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
-    ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"}
-  `}
+            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
+            }`}
           >
             <div className="flex flex-col">
               <div className="flex border-b border-gray-200 mb-4 text-stone-500">
