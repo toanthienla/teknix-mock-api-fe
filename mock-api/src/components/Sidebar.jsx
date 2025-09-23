@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ChevronDown, Plus, ChevronLeft } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, {useState, useEffect, useRef} from "react";
+import {useNavigate} from "react-router-dom";
+import {ChevronDown, Plus, ChevronLeft} from "lucide-react";
+import {Input} from "@/components/ui/input";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
@@ -30,7 +30,7 @@ export default function Sidebar({
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [rightClickActionId, setRightClickActionId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [menuPos, setMenuPos] = useState({x: 0, y: 0});
 
   const navigate = useNavigate();
   const actionMenuRef = useRef(null);
@@ -101,7 +101,7 @@ export default function Sidebar({
       y = e.clientY - menuHeight - padding;
     }
 
-    setMenuPos({ x, y });
+    setMenuPos({x, y});
     setRightClickActionId(rightClickActionId === wsId ? null : wsId);
   };
 
@@ -130,7 +130,7 @@ export default function Sidebar({
         >
           <ChevronLeft
             className={`w-5 h-5 text-slate-900 transition-transform ${isCollapsed ? "rotate-180" : ""
-              }`}
+            }`}
           />
         </button>
       </div>
@@ -153,7 +153,7 @@ export default function Sidebar({
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${active
                     ? "bg-slate-100 font-semibold text-slate-900"
                     : "hover:bg-slate-50 text-slate-800 font-medium"
-                    }`}
+                  }`}
                   onClick={() => {
                     setCurrent(ws.id);  // chỉ chọn workspace thôi
                   }}
@@ -165,7 +165,7 @@ export default function Sidebar({
                       alt="WP icon"
                       className="w-5 h-5 object-contain"
                     />
-                    <span 
+                    <span
                       key={ws.id}
                       onClick={() => handleSelectWorkspace(ws.id)}
                     >
@@ -177,7 +177,7 @@ export default function Sidebar({
                       toggleProjects(ws.id);   // chỉ bấm icon mới expand/collapse
                     }}
                     className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-0" : "-rotate-90"
-                      }`}
+                    }`}
                   />
                 </div>
 
@@ -185,7 +185,7 @@ export default function Sidebar({
                   <div
                     ref={actionMenuRef}
                     className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
-                    style={{ top: menuPos.y, left: menuPos.x }}
+                    style={{top: menuPos.y, left: menuPos.x}}
                   >
                     <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                       Actions
@@ -198,7 +198,7 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={editIcon} alt="edit" className="w-4 h-4" />
+                      <img src={editIcon} alt="edit" className="w-4 h-4"/>
                       Rename
                     </button>
                     <button
@@ -209,7 +209,7 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={newicon} alt="new" className="w-4 h-4" />
+                      <img src={newicon} alt="new" className="w-4 h-4"/>
                       New Project
                     </button>
 
@@ -221,7 +221,7 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={deleteIcon} alt="delete" className="w-4 h-4" />
+                      <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
                       Delete
                     </button>
                   </div>
@@ -257,7 +257,7 @@ export default function Sidebar({
                                 toggleEndpoints(p.id);
                               }}
                               className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
-                                }`}
+                              }`}
                             />
                           </div>
 
@@ -300,7 +300,7 @@ export default function Sidebar({
           <li className="mt-2">
             {isAdding ? (
               <div className="relative w-full">
-                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
+                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600"/>
                 <Input
                   ref={inputRef}
                   autoFocus
@@ -322,7 +322,7 @@ export default function Sidebar({
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 hover:text-slate-900 text-slate-900 font-medium"
                 onClick={() => setIsAdding(true)}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4"/>
                 <span>New Workspace</span>
               </div>
             )}

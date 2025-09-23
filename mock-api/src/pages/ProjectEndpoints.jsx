@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, {useEffect, useState} from "react";
+import {Button} from "@/components/ui/button";
 import {
   Table,
   TableHeader,
@@ -14,10 +14,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, ChevronsUpDown } from "lucide-react";
+import {ChevronDown, ChevronsUpDown} from "lucide-react";
 import Sidebar from "@/components/Sidebar.jsx";
-import { useNavigate, useParams } from "react-router-dom";
-import { API_ROOT } from "@/utils/constants.js";
+import {useNavigate, useParams} from "react-router-dom";
+import {API_ROOT} from "@/utils/constants.js";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { Input } from "@/components/ui/input.jsx";
+import {Input} from "@/components/ui/input.jsx";
 import {
   Select,
   SelectContent,
@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select.jsx";
 import EndpointCard from "@/components/EndpointCard.jsx";
 import Topbar from "@/components/Topbar.jsx";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import createIcon from "@/assets/create.svg";
 import pathIcon from "@/assets/path.svg";
 import methodIcon from "@/assets/method.svg";
@@ -49,7 +49,7 @@ import refreshIcon from "@/assets/refresh.svg";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
+  const {projectId} = useParams();
   const [activeTab, setActiveTab] = useState("endpoints");
 
   const [logs, setLogs] = useState([]);
@@ -63,13 +63,13 @@ export default function Dashboard() {
   const [sortOption, setSortOption] = useState("Recently created");
 
   const [openProjectsMap, setOpenProjectsMap] = useState(
-      () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+    () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
   );
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
-      () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+    () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-      () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
   );
 
   const [openEditWs, setOpenEditWs] = useState(false);
@@ -277,28 +277,28 @@ export default function Dashboard() {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   const fetchWorkspaces = () => {
-   fetch(`${API_ROOT}/workspaces`)
-     .then((res) => res.json())
-     .then((data) => {
-       const sorted = data.sort(
-         (a, b) => new Date(a.created_at) - new Date(b.created_at)
-       );
-       setWorkspaces(sorted);
-       if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
-     })
-     .catch(() =>
-       toast.error("Failed to load workspaces", {
-         position: "bottom-right",
-         autoClose: 2000,
-         hideProgressBar: false,
-       })
-     );
- };
+    fetch(`${API_ROOT}/workspaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setWorkspaces(sorted);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+      })
+      .catch(() =>
+        toast.error("Failed to load workspaces", {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+        })
+      );
+  };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
@@ -408,7 +408,7 @@ export default function Dashboard() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -419,7 +419,7 @@ export default function Dashboard() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -433,7 +433,7 @@ export default function Dashboard() {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -442,7 +442,7 @@ export default function Dashboard() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -461,11 +461,11 @@ export default function Dashboard() {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -501,13 +501,13 @@ export default function Dashboard() {
 
     fetch(`${API_ROOT}/endpoints`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(newEndpoint),
     })
       .then((res) => res.json())
       .then((createdEndpoint) => {
         setEndpoints((prev) => [...prev, createdEndpoint]);
-        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [currentWsId]: true}));
         setNewEName("");
         setNewEPath("");
         setNewEMethod("");
@@ -538,7 +538,7 @@ export default function Dashboard() {
 
     fetch(`${API_ROOT}/endpoints/${editId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         id: editId,
         name: editEName,
@@ -552,7 +552,7 @@ export default function Dashboard() {
         setEndpoints((prev) =>
           prev.map((ep) =>
             ep.id === editId
-              ? { ...ep, name: editEName, path: editEPath, method: editEMethod }
+              ? {...ep, name: editEName, path: editEPath, method: editEMethod}
               : ep
           )
         );
@@ -568,7 +568,7 @@ export default function Dashboard() {
 
   // delete endpoint
   const handleDeleteEndpoint = (id) => {
-    fetch(`${API_ROOT}/endpoints/${id}`, { method: "DELETE" })
+    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"})
       .then(() => {
         setEndpoints((prev) => prev.filter((e) => e.id !== id));
 
@@ -634,7 +634,7 @@ export default function Dashboard() {
                       href: "/dashboard",
                     },
                   ]
-              : []
+                : []
             }
             onSearch={setSearchTerm}
             showNewProjectButton={false}
@@ -653,9 +653,9 @@ export default function Dashboard() {
                   variant="ghost"
                   onClick={() => setActiveTab("endpoints")}
                   className={`rounded-none px-4 py-2 -mb-px ${activeTab === "endpoints"
-                      ? "border-b-2 border-stone-900 text-stone-900"
-                      : ""
-                    }`}
+                    ? "border-b-2 border-stone-900 text-stone-900"
+                    : ""
+                  }`}
                 >
                   Endpoints
                 </Button>
@@ -666,9 +666,9 @@ export default function Dashboard() {
                     fetchLogs();
                   }}
                   className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs"
-                      ? "border-b-2 border-stone-900 text-stone-900"
-                      : ""
-                    }`}
+                    ? "border-b-2 border-stone-900 text-stone-900"
+                    : ""
+                  }`}
                 >
                   Logs
                 </Button>
@@ -691,7 +691,7 @@ export default function Dashboard() {
                               variant="ghost"
                               className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
                             >
-                              All <ChevronDown className="w-4 h-4" />
+                              All <ChevronDown className="w-4 h-4"/>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
@@ -707,7 +707,7 @@ export default function Dashboard() {
                               variant="ghost"
                               className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
                             >
-                              {sortOption} <ChevronsUpDown className="w-4 h-4" />
+                              {sortOption} <ChevronsUpDown className="w-4 h-4"/>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
@@ -734,34 +734,34 @@ export default function Dashboard() {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                                                {/* New Endpoint Button + Dialog */}
-                                                <Dialog open={openNew} onOpenChange={setOpenNew}>
-                                                    <Button
-                                                        onClick={() => setOpenNew(true)}
-                                                        className="bg-blue-500 text-white hover:bg-blue-600 px-3 py-1 rounded-md"
-                                                    >
-                                                        <img
-                                                            src={createIcon}
-                                                            alt="Create Icon"
-                                                            className="w-4 h-4 object-contain"
-                                                        />
-                                                        New Endpoint
-                                                    </Button>
-                                                    <DialogContent
-                                                        className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") {
-                                                                e.preventDefault();
-                                                                handleCreateEndpoint();
-                                                            }
-                                                        }}
-                                                    >
-                                                        <DialogHeader>
-                                                            <DialogTitle>New Endpoint</DialogTitle>
-                                                            <DialogDescription>
-                                                                Fill in details to create a new endpoint.
-                                                            </DialogDescription>
-                                                        </DialogHeader>
+                        {/* New Endpoint Button + Dialog */}
+                        <Dialog open={openNew} onOpenChange={setOpenNew}>
+                          <Button
+                            onClick={() => setOpenNew(true)}
+                            className="bg-blue-500 text-white hover:bg-blue-600 px-3 py-1 rounded-md"
+                          >
+                            <img
+                              src={createIcon}
+                              alt="Create Icon"
+                              className="w-4 h-4 object-contain"
+                            />
+                            New Endpoint
+                          </Button>
+                          <DialogContent
+                            className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleCreateEndpoint();
+                              }
+                            }}
+                          >
+                            <DialogHeader>
+                              <DialogTitle>New Endpoint</DialogTitle>
+                              <DialogDescription>
+                                Fill in details to create a new endpoint.
+                              </DialogDescription>
+                            </DialogHeader>
 
                             <h3 className="text-sm font-semibold text-slate-700 mt-2">
                               Endpoint Detail
@@ -793,7 +793,7 @@ export default function Dashboard() {
                                 onValueChange={setNewEMethod}
                               >
                                 <SelectTrigger className="w-[180px]">
-                                  <SelectValue placeholder="Select a method" />
+                                  <SelectValue placeholder="Select a method"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectGroup>
@@ -840,20 +840,20 @@ export default function Dashboard() {
                           </TableHead>
                           <TableHead className="w-1/3 border-r border-gray-300">
                             <div className="flex items-center gap-2">
-                              <img src={pathIcon} alt="Path icon" className="w-4 h-4" />
+                              <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
                               <span>Path</span>
                             </div>
                           </TableHead>
                           <TableHead className="w-1/6 border-r border-gray-300 text-center">
                             <div className="flex items-center justify-center gap-2">
                               <img src={methodIcon} alt="Method icon"
-                                className="w-4 h-4" />
+                                   className="w-4 h-4"/>
                               <span>Method</span>
                             </div>
                           </TableHead>
                           <TableHead className="w-1/6">
                             <div className="flex items-center gap-2">
-                              <img src={timeIcon} alt="Time icon" className="w-4 h-4" />
+                              <img src={timeIcon} alt="Time icon" className="w-4 h-4"/>
                               <span>Time & Date</span>
                             </div>
                           </TableHead>
@@ -887,98 +887,98 @@ export default function Dashboard() {
                     </Table>
                   </div>
 
-                                    {/* Edit Endpoint Dialog */}
-                                    <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                                        <DialogContent
-                                            className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    handleUpdateEndpoint();
-                                                }
-                                            }}
-                                        >
-                                            <DialogHeader>
-                                                <DialogTitle>Edit Endpoint</DialogTitle>
-                                            </DialogHeader>
-                                            <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                                                Endpoint Detail
-                                            </h3>
-                                            <div className="space-y-4">
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                                                    Name
-                                                </h3>
-                                                <Input
-                                                    placeholder=" Enter Endpoint Name"
-                                                    value={editEName}
-                                                    onChange={(e) => setEditEName(e.target.value)}
-                                                />
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                                                    Path
-                                                </h3>
-                                                <Input
-                                                    placeholder="/example/path/:number"
-                                                    value={editEPath}
-                                                    onChange={(e) => setEditEPath(e.target.value)}
-                                                />
+                  {/* Edit Endpoint Dialog */}
+                  <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+                    <DialogContent
+                      className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleUpdateEndpoint();
+                        }
+                      }}
+                    >
+                      <DialogHeader>
+                        <DialogTitle>Edit Endpoint</DialogTitle>
+                      </DialogHeader>
+                      <h3 className="text-sm font-semibold text-slate-700 mt-2">
+                        Endpoint Detail
+                      </h3>
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-slate-700 mt-2">
+                          Name
+                        </h3>
+                        <Input
+                          placeholder=" Enter Endpoint Name"
+                          value={editEName}
+                          onChange={(e) => setEditEName(e.target.value)}
+                        />
+                        <h3 className="text-sm font-semibold text-slate-700 mt-2">
+                          Path
+                        </h3>
+                        <Input
+                          placeholder="/example/path/:number"
+                          value={editEPath}
+                          onChange={(e) => setEditEPath(e.target.value)}
+                        />
 
-                                                <h3 className="text-sm font-semibold text-slate-700 mt-2">
-                                                    Method
-                                                </h3>
-                                                <Select value={editEMethod} onValueChange={setEditEMethod}>
-                                                    <SelectTrigger className="w-[180px]">
-                                                        <SelectValue placeholder="Select a method"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectGroup>
-                                                            <SelectLabel>Method</SelectLabel>
-                                                            <SelectItem value="GET">GET</SelectItem>
-                                                            <SelectItem value="PUT">PUT</SelectItem>
-                                                            <SelectItem value="POST">POST</SelectItem>
-                                                            <SelectItem value="DELETE">DELETE</SelectItem>
-                                                        </SelectGroup>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button
-                                                    className="text-black hover:text-red-600"
-                                                    variant="outline"
-                                                    onClick={() => setOpenEdit(false)}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    className="bg-blue-600 text-white hover:bg-blue-700"
-                                                    onClick={handleUpdateEndpoint}
-                                                >
-                                                    Update
-                                                </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                </>
-                            ) : activeTab === "logs" ? (
-                                <> {/* Logs */}
-                                    <div className="w-full overflow-x-auto">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex gap-2">
-                                                {/* Method Filter */}
-                                                <Select
-                                                    value={methodFilter}
-                                                    onValueChange={setMethodFilter}
-                                                >
-                                                    <SelectTrigger className="w-[140px]">
-                                                        <SelectValue placeholder="All Methods"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="All Methods">All Methods</SelectItem>
-                                                        <SelectItem value="GET">GET</SelectItem>
-                                                        <SelectItem value="POST">POST</SelectItem>
-                                                        <SelectItem value="PUT">PUT</SelectItem>
-                                                        <SelectItem value="DELETE">DELETE</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                        <h3 className="text-sm font-semibold text-slate-700 mt-2">
+                          Method
+                        </h3>
+                        <Select value={editEMethod} onValueChange={setEditEMethod}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select a method"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Method</SelectLabel>
+                              <SelectItem value="GET">GET</SelectItem>
+                              <SelectItem value="PUT">PUT</SelectItem>
+                              <SelectItem value="POST">POST</SelectItem>
+                              <SelectItem value="DELETE">DELETE</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          className="text-black hover:text-red-600"
+                          variant="outline"
+                          onClick={() => setOpenEdit(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          className="bg-blue-600 text-white hover:bg-blue-700"
+                          onClick={handleUpdateEndpoint}
+                        >
+                          Update
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              ) : activeTab === "logs" ? (
+                <> {/* Logs */}
+                  <div className="w-full overflow-x-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-2">
+                        {/* Method Filter */}
+                        <Select
+                          value={methodFilter}
+                          onValueChange={setMethodFilter}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="All Methods"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="All Methods">All Methods</SelectItem>
+                            <SelectItem value="GET">GET</SelectItem>
+                            <SelectItem value="POST">POST</SelectItem>
+                            <SelectItem value="PUT">PUT</SelectItem>
+                            <SelectItem value="DELETE">DELETE</SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         {/* Status Filter */}
                         <Select
@@ -986,7 +986,7 @@ export default function Dashboard() {
                           onValueChange={setStatusFilter}
                         >
                           <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Status" />
+                            <SelectValue placeholder="All Status"/>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="All Status">All Status</SelectItem>
@@ -1003,7 +1003,7 @@ export default function Dashboard() {
                           onValueChange={setTimeFilter}
                         >
                           <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="All time" />
+                            <SelectValue placeholder="All time"/>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="All time">All time</SelectItem>
@@ -1074,7 +1074,7 @@ export default function Dashboard() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          paginatedLogs.map((log, i) => <LogCard key={i} log={log} />)
+                          paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
                         )}
                       </TableBody>
                     </Table>
@@ -1090,7 +1090,7 @@ export default function Dashboard() {
                           }}
                         >
                           <SelectTrigger className="w-[80px]">
-                            <SelectValue />
+                            <SelectValue/>
                           </SelectTrigger>
                           <SelectContent>
                             {[5, 10, 20, 50].map((size) => (

@@ -1,12 +1,11 @@
-import React, { useMemo } from "react";
-import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, {useMemo} from "react";
+import {Button} from "@/components/ui/button";
 import randomColor from "randomcolor";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 
-export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
-  const { id, name, description } = project;
+export default function ProjectCard({project, onEdit, onDelete, onClick}) {
+  const {id, name, description} = project;
 
   const bgColor = useMemo(
     () =>
@@ -25,7 +24,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
       <div className="flex items-center gap-3">
         <div
           className="w-10 h-10 rounded-md"
-          style={{ backgroundColor: bgColor }}
+          style={{backgroundColor: bgColor}}
         />
         <div>
           <div className="font-medium text-sm text-slate-800">{name}</div>
@@ -44,7 +43,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
             onEdit(project);
           }}
         >
-           <img src={editIcon} alt="edit" className="w-4 h-4" />
+          <img src={editIcon} alt="edit" className="w-4 h-4"/>
         </Button>
         <Button
           variant="ghost"
@@ -54,7 +53,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
             onDelete(id);
           }}
         >
-           <img src={deleteIcon} alt="delete" className="w-4 h-4" />
+          <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
         </Button>
       </div>
     </div>

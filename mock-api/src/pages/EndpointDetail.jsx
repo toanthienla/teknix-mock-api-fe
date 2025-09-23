@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, {useState, useEffect} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { API_ROOT } from "../utils/constants";
+import {Card} from "@/components/ui/card";
+import {Textarea} from "@/components/ui/textarea";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {API_ROOT} from "../utils/constants";
 import Sidebar from "../components/Sidebar";
 import {
   Table,
@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Star, Trash2, Upload, Code, GripVertical } from "lucide-react";
-import { toast } from "react-toastify";
+import {Plus, Star, Trash2, Upload, Code, GripVertical} from "lucide-react";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -51,8 +51,8 @@ const statusCodes = [
     code: "102",
     description: "Processing – Request is being processed (WebDAV).",
   },
-  { code: "200", description: "OK – Request succeeded." },
-  { code: "201", description: "Created – Resource created successfully." },
+  {code: "200", description: "OK – Request succeeded."},
+  {code: "201", description: "Created – Resource created successfully."},
   {
     code: "202",
     description:
@@ -71,8 +71,8 @@ const statusCodes = [
     code: "301",
     description: "Moved Permanently – Resource has a new permanent URL.",
   },
-  { code: "302", description: "Found – Temporary redirect." },
-  { code: "303", description: "See Other – Redirect with GET method." },
+  {code: "302", description: "Found – Temporary redirect."},
+  {code: "303", description: "See Other – Redirect with GET method."},
   {
     code: "304",
     description: "Not Modified – Cached resource is still valid.",
@@ -85,13 +85,13 @@ const statusCodes = [
     code: "308",
     description: "Permanent Redirect – Same as 301 but method is preserved.",
   },
-  { code: "400", description: "Bad Request – Invalid request syntax." },
-  { code: "401", description: "Unauthorized – Authentication required." },
+  {code: "400", description: "Bad Request – Invalid request syntax."},
+  {code: "401", description: "Unauthorized – Authentication required."},
   {
     code: "403",
     description: "Forbidden – Client not allowed to access resource.",
   },
-  { code: "404", description: "Not Found – Resource not found." },
+  {code: "404", description: "Not Found – Resource not found."},
   {
     code: "405",
     description: "Method Not Allowed – HTTP method not supported.",
@@ -104,14 +104,14 @@ const statusCodes = [
     code: "409",
     description: "Conflict – Request conflicts with resource state.",
   },
-  { code: "410", description: "Gone – Resource is permanently unavailable." },
+  {code: "410", description: "Gone – Resource is permanently unavailable."},
   {
     code: "415",
     description:
       "Unsupported Media Type – Server does not support request format.",
   },
-  { code: "429", description: "Too Many Requests – Rate limiting exceeded." },
-  { code: "500", description: "Internal Server Error – Generic server error." },
+  {code: "429", description: "Too Many Requests – Rate limiting exceeded."},
+  {code: "500", description: "Internal Server Error – Generic server error."},
   {
     code: "501",
     description: "Not Implemented – Server does not support functionality.",
@@ -136,7 +136,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   // Thêm state để lưu lỗi cho từng rule
@@ -278,13 +278,13 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -333,7 +333,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
       // Update errors state after deletion
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -355,14 +355,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule after name change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -373,14 +373,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -472,7 +472,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -519,7 +519,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -535,7 +535,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
           {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
           <div className="flex justify-between items-center mt-4">
             <Button variant="outline" onClick={handleAddRule}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add rule
             </Button>
 
@@ -555,40 +555,40 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 };
 
 const DashboardPage = () => {
-    // Thêm state để lưu lỗi response name
-    const [responseNameError, setResponseNameError] = useState("");
-    const {projectId, endpointId} = useParams();
-    const [currentEndpointId, setCurrentEndpointId] = useState(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [responseName, setResponseName] = useState("");
-    const [statusCode, setStatusCode] = useState("");
-    const [headerValue, setHeaderValue] = useState("");
-    const [responseBody, setResponseBody] = useState("");
-    const [delay, setDelay] = useState("0");
-    const [workspaces, setWorkspaces] = useState([]);
-    const [projects, setProjects] = useState([]);
-    const [currentWsId, setCurrentWsId] = useState(null);
+  // Thêm state để lưu lỗi response name
+  const [responseNameError, setResponseNameError] = useState("");
+  const {projectId, endpointId} = useParams();
+  const [currentEndpointId, setCurrentEndpointId] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [responseName, setResponseName] = useState("");
+  const [statusCode, setStatusCode] = useState("");
+  const [headerValue, setHeaderValue] = useState("");
+  const [responseBody, setResponseBody] = useState("");
+  const [delay, setDelay] = useState("0");
+  const [workspaces, setWorkspaces] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [currentWsId, setCurrentWsId] = useState(null);
 
-    const [openProjectsMap, setOpenProjectsMap] = useState(
-        () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
-    );
-    const [openEndpointsMap, setOpenEndpointsMap] = useState(
-        () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
-    );
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-        () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
-    );
+  const [openProjectsMap, setOpenProjectsMap] = useState(
+    () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+  );
+  const [openEndpointsMap, setOpenEndpointsMap] = useState(
+    () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+  );
 
-    const [statusData, setStatusData] = useState([]);
-    const [draggedItem, setDraggedItem] = useState(null);
-    const [selectedResponse, setSelectedResponse] = useState(null);
-    const [endpointResponses, setEndpointResponses] = useState([]);
-    const [endpoints, setEndpoints] = useState([]);
+  const [statusData, setStatusData] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [selectedResponse, setSelectedResponse] = useState(null);
+  const [endpointResponses, setEndpointResponses] = useState([]);
+  const [endpoints, setEndpoints] = useState([]);
 
-    const [openEditWs, setOpenEditWs] = useState(false);
-    const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
-    const [editWsId, setEditWsId] = useState(null);
-    const [editWsName, setEditWsName] = useState("");
+  const [openEditWs, setOpenEditWs] = useState(false);
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
+  const [editWsId, setEditWsId] = useState(null);
+  const [editWsName, setEditWsName] = useState("");
 
   // Thêm state để lưu trữ trạng thái trước khi drag
   const [previousStatusData, setPreviousStatusData] = useState([]);
@@ -606,24 +606,24 @@ const DashboardPage = () => {
     ? workspaces.find((w) => String(w.id) === String(currentProject.workspace_id))
     : null;
 
-    const fetchWorkspaces = () => {
-        fetch(`${API_ROOT}/workspaces`)
-            .then((res) => res.json())
-            .then((data) => {
-                const sorted = data.sort(
-                    (a, b) => new Date(a.created_at) - new Date(b.created_at)
-                );
-                setWorkspaces(sorted);
-                if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
-            })
-            .catch(() =>
-                toast.error("Failed to load workspaces", {
-                    position: "bottom-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                })
-            );
-    };
+  const fetchWorkspaces = () => {
+    fetch(`${API_ROOT}/workspaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setWorkspaces(sorted);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+      })
+      .catch(() =>
+        toast.error("Failed to load workspaces", {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+        })
+      );
+  };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
@@ -721,29 +721,29 @@ const DashboardPage = () => {
     }
   }, [currentEndpointId]);
 
-    useEffect(() => {
-        localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
-    }, [openProjectsMap]);
+  useEffect(() => {
+    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
+  }, [openProjectsMap]);
 
-    useEffect(() => {
-        localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
-    }, [openEndpointsMap]);
+  useEffect(() => {
+    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
+  }, [openEndpointsMap]);
 
-    useEffect(() => {
-        localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
-    }, [isSidebarCollapsed]);
+  useEffect(() => {
+    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
-    // Keep sidebar expanded when on endpoint detail
-    useEffect(() => {
-        if (!projectId) return;
-        const p = projects.find((proj) => String(proj.id) === String(projectId));
-        if (!p) return;
+  // Keep sidebar expanded when on endpoint detail
+  useEffect(() => {
+    if (!projectId) return;
+    const p = projects.find((proj) => String(proj.id) === String(projectId));
+    if (!p) return;
 
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -771,7 +771,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -782,7 +782,7 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -796,7 +796,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -805,7 +805,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -824,11 +824,11 @@ const DashboardPage = () => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -909,7 +909,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, priority: updated.priority }
+              ? {...response, priority: updated.priority}
               : response;
           })
         );
@@ -920,7 +920,7 @@ const DashboardPage = () => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? { ...status, priority: updated.priority } : status;
+            return updated ? {...status, priority: updated.priority} : status;
           })
         );
 
@@ -962,7 +962,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, is_default: updated.is_default }
+              ? {...response, is_default: updated.is_default}
               : response;
           })
         );
@@ -974,7 +974,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? { ...status, isDefault: updated.is_default }
+              ? {...status, isDefault: updated.is_default}
               : status;
           })
         );
@@ -1020,7 +1020,7 @@ const DashboardPage = () => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = { ...newStatusData[draggedItem] };
+      const draggedItemContent = {...newStatusData[draggedItem]};
 
       // Xóa item khỏi vị trí cũ
       newStatusData.splice(draggedItem, 1);
@@ -1113,7 +1113,7 @@ const DashboardPage = () => {
 
     fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -1128,8 +1128,8 @@ const DashboardPage = () => {
         setEndpointResponses((prev) =>
           selectedResponse
             ? prev.map((r) =>
-                r.id === updatedResponse.id ? updatedResponse : r
-              )
+              r.id === updatedResponse.id ? updatedResponse : r
+            )
             : [...prev, updatedResponse]
         );
 
@@ -1137,24 +1137,24 @@ const DashboardPage = () => {
         setStatusData((prev) =>
           selectedResponse
             ? prev.map((s) =>
-                s.id === updatedResponse.id
-                  ? {
-                      ...s,
-                      code: updatedResponse.status_code.toString(),
-                      name: updatedResponse.name,
-                      isDefault: updatedResponse.is_default,
-                    }
-                  : s
-              )
-            : [
-                ...prev,
-                {
-                  id: updatedResponse.id,
+              s.id === updatedResponse.id
+                ? {
+                  ...s,
                   code: updatedResponse.status_code.toString(),
                   name: updatedResponse.name,
                   isDefault: updatedResponse.is_default,
-                },
-              ]
+                }
+                : s
+            )
+            : [
+              ...prev,
+              {
+                id: updatedResponse.id,
+                code: updatedResponse.status_code.toString(),
+                name: updatedResponse.name,
+                isDefault: updatedResponse.is_default,
+              },
+            ]
         );
 
         // Cập nhật trực tiếp proxy state từ response trả về
@@ -1233,38 +1233,38 @@ const DashboardPage = () => {
               ? currentProject
                 ? currentEndpointId
                   ? [
-                      {
-                        label: currentWorkspace.name,
-                        href: "/dashboard", // workspace chỉ cần /dashboard
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) => String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null, // endpoint không có link
-                      },
-                    ]
+                    {
+                      label: currentWorkspace.name,
+                      href: "/dashboard", // workspace chỉ cần /dashboard
+                    },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
+                    {
+                      label:
+                        endpoints.find(
+                          (ep) => String(ep.id) === String(currentEndpointId)
+                        )?.name || "Endpoint",
+                      href: null, // endpoint không có link
+                    },
+                  ]
                   : [
-                      {
-                        label: currentWorkspace.name,
-                        href: "/dashboard",
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                    ]
-                : [
                     {
                       label: currentWorkspace.name,
                       href: "/dashboard",
                     },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
                   ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    href: "/dashboard",
+                  },
+                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -1296,8 +1296,10 @@ const DashboardPage = () => {
 
             {/* Phần bên phải - Form Status Info */}
             <div className="flex-1 max-w-[707px] ml-8">
-              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
-                <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
+              <div
+                className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+                <div
+                  className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -1333,18 +1335,22 @@ const DashboardPage = () => {
               <div className="rounded-md border border-solid border-slate-300">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                    <TableRow
+                      className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
                       <TableHead className="w-[119.2px] h-10 px-1 py-0">
                         <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                          <div
+                            className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
                             Status Code
                           </div>
                         </div>
                       </TableHead>
                       <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                         <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                          <div
+                            className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                               Name Response
                             </div>
                           </div>
@@ -1379,15 +1385,17 @@ const DashboardPage = () => {
                       >
                         <TableCell className="w-[119.2px] h-[49px] p-2">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.name}
                             </div>
                           </div>
@@ -1395,7 +1403,8 @@ const DashboardPage = () => {
                         {/* Thêm cột Default badge */}
                         <TableCell className="w-[80px] h-[49px] p-2">
                           {status.isDefault && (
-                            <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                            <div
+                              className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
                               <span className="text-xs font-medium text-[#0A0A0A]">
                                 Default
                               </span>
@@ -1515,7 +1524,7 @@ const DashboardPage = () => {
                                 id="status-code" // Thêm id để khớp với htmlFor của Label
                                 className="border-[#CBD5E1] rounded-md"
                               >
-                                <SelectValue placeholder="Select status code" />
+                                <SelectValue placeholder="Select status code"/>
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
@@ -1576,14 +1585,14 @@ const DashboardPage = () => {
                                 size="sm"
                                 className="border-[#E5E5E5]"
                               >
-                                <Upload className="mr-2 h-4 w-4" /> Upload
+                                <Upload className="mr-2 h-4 w-4"/> Upload
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="border-[#E5E5E5]"
                               >
-                                <Code className="mr-2 h-4 w-4" /> Format
+                                <Code className="mr-2 h-4 w-4"/> Format
                               </Button>
                             </div>
                           </div>
@@ -1643,7 +1652,7 @@ const DashboardPage = () => {
                               onValueChange={setProxyMethod}
                             >
                               <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                <SelectValue placeholder="Method" />
+                                <SelectValue placeholder="Method"/>
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="GET">GET</SelectItem>
