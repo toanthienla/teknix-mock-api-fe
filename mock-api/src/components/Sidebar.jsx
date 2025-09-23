@@ -18,7 +18,7 @@ export default function Sidebar({
   onAddWorkspace,
   onEditWorkspace,
   onDeleteWorkspace,
-  onAddProject,
+  onAddProject, // expect (workspaceId) => ...
   projects = [],
   openProjectsMap,
   setOpenProjectsMap,
@@ -27,24 +27,43 @@ export default function Sidebar({
   isCollapsed,
   setIsCollapsed, // Nhận props để đồng bộ trạng thái
 }) {
+  const navigate = useNavigate();
+
+  // Local UI state
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [rightClickActionId, setRightClickActionId] = useState(null);
-  const [menuPos, setMenuPos] = useState({x: 0, y: 0});
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [emptyWsId, setEmptyWsId] = useState(null); // workspace chưa có project
+  const [emptyProjectId, setEmptyProjectId] = useState(null); // project chưa có endpoint
 
-  const navigate = useNavigate();
   const actionMenuRef = useRef(null);
   const inputRef = useRef(null);
 
-  const [currentWsId, setCurrentWsId] = useState(
-    () => localStorage.getItem("currentWorkspace") || null
-  );
+  // Provide local fallback maps if parent didn't pass handlers
+  const [localOpenProjectsMap, setLocalOpenProjectsMap] = useState({});
+  const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
 
-  const handleSelectWorkspace = (wsId) => {
-    setCurrentWsId(wsId);
-    localStorage.setItem("currentWorkspace", wsId);
-    if (onWorkspaceChange) onWorkspaceChange(wsId);
-    navigate("/dashboard"); // chuyển về dashboard
+  // Helper to read/write project map (use parent setter if provided)
+  const readOpenProjects = (wsId) =>
+    (openProjectsMap ? openProjectsMap[wsId] : localOpenProjectsMap[wsId]) || false;
+  const readOpenEndpoints = (pId) =>
+    (openEndpointsMap ? openEndpointsMap[pId] : localOpenEndpointsMap[pId]) || false;
+
+  const toggleProjects = (wsId) => {
+    if (setOpenProjectsMap) {
+      setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+    } else {
+      setLocalOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+    }
+  };
+
+  const toggleEndpoints = (projectId) => {
+    if (setOpenEndpointsMap) {
+      setOpenEndpointsMap((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+    } else {
+      setLocalOpenEndpointsMap((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+    }
   };
 
   useEffect(() => {
@@ -63,32 +82,26 @@ export default function Sidebar({
   }, []);
 
   const handleAdd = () => {
-    if (newName.trim() !== "") {
-      onAddWorkspace(newName.trim());
-      setNewName("");
-      setIsAdding(false);
+    if (!newName.trim()) {
+      return;
     }
+    if (onAddWorkspace) onAddWorkspace(newName.trim());
+    setNewName("");
+    setIsAdding(false);
   };
 
-  const toggleProjects = (wsId) => {
-    setOpenProjectsMap((prev) => ({
-      ...prev,
-      [wsId]: !prev[wsId],
-    }));
-  };
-
-  const toggleEndpoints = (projectId) => {
-    setOpenEndpointsMap((prev) => ({
-      ...prev,
-      [projectId]: !prev[projectId],
-    }));
+  const handleSelectWorkspace = (wsId) => {
+    if (setCurrent) setCurrent(wsId);
+    if (onWorkspaceChange) onWorkspaceChange(wsId);
+    localStorage.setItem("currentWorkspace", wsId);
+    navigate("/dashboard");
   };
 
   const handleRightClick = (e, wsId) => {
     e.preventDefault();
 
-    const menuWidth = 176;
-    const menuHeight = 120;
+    const menuWidth = 200;
+    const menuHeight = 140;
     const padding = 10;
 
     let x = e.clientX + 10;
@@ -101,19 +114,19 @@ export default function Sidebar({
       y = e.clientY - menuHeight - padding;
     }
 
-    setMenuPos({x, y});
-    setRightClickActionId(rightClickActionId === wsId ? null : wsId);
+    setMenuPos({ x, y });
+    setRightClickActionId((prev) => (prev === wsId ? null : wsId));
   };
 
   return (
     <div
-      className={`flex flex-col h-screen bg-white transition-all duration-300 r w-64
-        }`}
+      className={`flex flex-col h-screen bg-white transition-all duration-300 ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
     >
       {/* Header with Logo and Collapse Button */}
-      <div className=" flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
-        {/* Border phải giả */}
-        <div className="absolute top-0 right-0 h-full w-px bg-slate-200"></div>
+      <div className="flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
+        <div className="absolute top-0 right-0 h-full w-px bg-slate-200" />
 
         <div
           className="cursor-pointer flex items-center flex-shrink-0"
@@ -125,11 +138,12 @@ export default function Sidebar({
         </div>
 
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
           className="p-1 rounded-full hover:bg-slate-100 transition-colors flex-shrink-0"
         >
           <ChevronLeft
-            className={`w-5 h-5 text-slate-900 transition-transform ${isCollapsed ? "rotate-180" : ""
+            className={`w-5 h-5 text-slate-900 transition-transform ${
+              isCollapsed ? "rotate-180" : ""
             }`}
           />
         </button>
@@ -140,8 +154,8 @@ export default function Sidebar({
         <div className="text-sm text-slate-700 mb-2 font-medium">WORKSPACES</div>
         <ul className="space-y-1">
           {workspaces.map((ws) => {
-            const active = current === ws.id;
-            const isOpen = openProjectsMap[ws.id] || false;
+            const active = String(current) === String(ws.id);
+            const isOpen = readOpenProjects(ws.id);
             const wsProjects = projects.filter(
               (p) => String(p.workspace_id) === String(ws.id)
             );
@@ -150,12 +164,14 @@ export default function Sidebar({
             return (
               <li key={ws.id} className="group relative">
                 <div
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${active
-                    ? "bg-slate-100 font-semibold text-slate-900"
-                    : "hover:bg-slate-50 text-slate-800 font-medium"
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${
+                    active
+                      ? "bg-slate-100 font-semibold text-slate-900"
+                      : "hover:bg-slate-50 text-slate-800 font-medium"
                   }`}
                   onClick={() => {
-                    setCurrent(ws.id);  // chỉ chọn workspace thôi
+                    // chỉ chọn workspace (highlight) - không navigate away here
+                    if (setCurrent) setCurrent(ws.id);
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
                 >
@@ -171,16 +187,33 @@ export default function Sidebar({
                     >
                       {ws.name}</span>
                   </span>
+
                   <ChevronDown
                     onClick={(e) => {
-                      e.stopPropagation();     // không cho lan lên onClick cha
-                      toggleProjects(ws.id);   // chỉ bấm icon mới expand/collapse
+                      e.stopPropagation();
+
+                      if (wsProjects.length === 0) {
+                        setEmptyWsId(ws.id); // hiện thông báo workspace rỗng
+                        return;
+                      }
+
+                      setEmptyWsId(null); // reset nếu có project
+                      toggleProjects(ws.id); // expand/collapse
                     }}
-                    className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-0" : "-rotate-90"
+                    className={`w-4 h-4 text-slate-400 transition-transform ${
+                      isOpen ? "rotate-0" : "-rotate-90"
                     }`}
                   />
                 </div>
 
+                {/* Workspace empty warning */}
+                {emptyWsId === ws.id && (
+                  <div className="ml-8 mt-1 text-xs text-red-500">
+                    This workspace has no projects yet.
+                  </div>
+                )}
+
+                {/* Action menu on right click */}
                 {isActionOpen && (
                   <div
                     ref={actionMenuRef}
@@ -190,10 +223,11 @@ export default function Sidebar({
                     <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                       Actions
                     </div>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onEditWorkspace(ws);
+                        onEditWorkspace && onEditWorkspace(ws);
                         setRightClickActionId(null);
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
@@ -201,10 +235,12 @@ export default function Sidebar({
                       <img src={editIcon} alt="edit" className="w-4 h-4"/>
                       Rename
                     </button>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onAddProject) onAddProject();
+                        // truyền workspace id ra ngoài để tạo project trong workspace đó
+                        onAddProject && onAddProject(ws.id);
                         setRightClickActionId(null);
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
@@ -216,7 +252,7 @@ export default function Sidebar({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteWorkspace(ws.id);
+                        onDeleteWorkspace && onDeleteWorkspace(ws.id);
                         setRightClickActionId(null);
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
@@ -227,10 +263,11 @@ export default function Sidebar({
                   </div>
                 )}
 
+                {/* Project list */}
                 {isOpen && wsProjects.length > 0 && (
                   <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
                     {wsProjects.map((p) => {
-                      const isEpOpen = openEndpointsMap[p.id] || false;
+                      const isEpOpen = readOpenEndpoints(p.id);
                       return (
                         <div key={p.id}>
                           <div
@@ -251,32 +288,43 @@ export default function Sidebar({
                               />
                               {p.name}
                             </div>
+
                             <ChevronDown
                               onClick={(e) => {
                                 e.stopPropagation();
+                                const projectEndpoints = endpoints.filter(
+                                  (ep) => String(ep.project_id) === String(p.id)
+                                );
+                                if (projectEndpoints.length === 0) {
+                                  setEmptyProjectId(p.id); // hiện thông báo project rỗng
+                                  return;
+                                }
+                                setEmptyProjectId(null); // reset nếu có endpoint
                                 toggleEndpoints(p.id);
                               }}
-                              className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
+                              className={`w-4 h-4 text-slate-400 transition-transform ${
+                                isEpOpen ? "rotate-0" : "-rotate-90"
                               }`}
                             />
                           </div>
 
+                          {/* Project empty warning */}
+                          {emptyProjectId === p.id && (
+                            <div className="ml-8 mt-1 text-xs text-red-500">
+                              This project has no endpoints yet.
+                            </div>
+                          )}
+
+                          {/* Endpoint list */}
                           {isEpOpen && (
                             <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
                               {endpoints
-                                .filter(
-                                  (ep) =>
-                                    String(ep.project_id) === String(p.id)
-                                )
+                                .filter((ep) => String(ep.project_id) === String(p.id))
                                 .map((ep) => (
                                   <div
                                     key={ep.id}
                                     className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
-                                    onClick={() =>
-                                      navigate(
-                                        `/dashboard/${p.id}/endpoint/${ep.id}`
-                                      )
-                                    }
+                                    onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
                                   >
                                     <img
                                       src={settingIcon}
@@ -297,6 +345,7 @@ export default function Sidebar({
             );
           })}
 
+          {/* New workspace input / button */}
           <li className="mt-2">
             {isAdding ? (
               <div className="relative w-full">

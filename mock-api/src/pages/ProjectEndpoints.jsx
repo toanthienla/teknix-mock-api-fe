@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
+import { Textarea } from "@/components/ui/textarea";
 import EndpointCard from "@/components/EndpointCard.jsx";
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
@@ -71,6 +72,10 @@ export default function Dashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
   );
+  const [openNewProject, setOpenNewProject] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [targetWsId, setTargetWsId] = useState(null);
 
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
@@ -477,6 +482,90 @@ export default function Dashboard() {
     }
   };
 
+  const validateProject = (title, desc, editMode = false, editId = null) => {
+      const titleTrim = title.trim();
+      const descTrim = desc.trim();
+
+      if (!titleTrim) {
+        toast.warning("Project name cannot be empty");
+        return false;
+      }
+      if (titleTrim.length > 50) {
+        toast.warning("Project name cannot exceed 50 chars");
+        return false;
+      }
+      if (/^[0-9]/.test(titleTrim)) {
+        toast.warning("Project name cannot start with a number");
+        return false;
+      }
+      if (/ {2,}/.test(titleTrim)) {
+        toast.warning("Project name cannot contain multiple spaces");
+        return false;
+      }
+      if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+        toast.warning(
+          "Only letters, numbers, and spaces allowed (no special characters)");
+        return false;
+      }
+      if (!descTrim) {
+        toast.info("Project description cannot be empty");
+        return false;
+      }
+      if (descTrim.length > 200) {
+        toast.warning("Project description max 200 chars");
+        return false;
+      }
+
+      const duplicate = projects.some(
+        (p) =>
+          p.workspace_id === currentWsId &&
+          (!editMode || p.id !== editId) &&
+          p.name.toLowerCase() === titleTrim.toLowerCase()
+      );
+      if (duplicate) {
+        toast.warning("Project name already exists in this workspace");
+        return false;
+      }
+      return true;
+    };
+
+   const handleCreateProject = () => {
+     if (!validateProject(newTitle, newDesc)) return;
+     const newProject = {
+       name: newTitle.trim(),
+       description: newDesc.trim(),
+       workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
+       created_at: new Date().toISOString(),
+       updated_at: new Date().toISOString(),
+     };
+
+     fetch(`${API_ROOT}/projects`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify(newProject),
+     })
+       .then((res) => res.json())
+       .then((createdProject) => {
+         setProjects((prev) => [...prev, createdProject]);
+
+         // mở workspace tương ứng
+         setCurrentWsId(createdProject.workspace_id);
+         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+
+         setOpenProjectsMap((prev) => ({
+           ...prev,
+           [createdProject.workspace_id]: true,
+         }));
+
+         setNewTitle("");
+         setNewDesc("");
+         setTargetWsId(null); // reset sau khi tạo xong
+         setOpenNewProject(false);
+         toast.success("Project created successfully");
+       })
+       .catch(() => toast.error("Failed to create project"));
+   };
+
   // create endpoint
   const handleCreateEndpoint = () => {
     if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) {
@@ -606,6 +695,10 @@ export default function Dashboard() {
             setOpenEndpointsMap={setOpenEndpointsMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
+            onAddProject={(workspaceId) => {
+    setTargetWsId(workspaceId); // lưu workspace đang chọn
+    setOpenNewProject(true);    // mở modal tạo project
+  }}
           />
         </aside>
 
@@ -1131,6 +1224,70 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+
+      {/* New Project */}
+            <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
+              <DialogContent className="max-w-lg rounded-2xl p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
+                  <div className="mt-1 text-sm text-slate-500">Project details</div>
+                </DialogHeader>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Name
+                    </label>
+                    <Input
+                      placeholder="Project name"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateProject();
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Description
+                    </label>
+                    <Textarea
+                      placeholder="Project description"
+                      value={newDesc}
+                      onChange={(e) => setNewDesc(e.target.value)}
+                      maxLength={200}
+                      className="min-h-[50px] resize-y"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleCreateProject();
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-slate-400 text-right mt-1">
+                      {newDesc.length}/200
+                    </p>
+                  </div>
+                </div>
+
+                <DialogFooter className="flex justify-end gap-3 mt-4">
+                  <Button variant="outline" onClick={() => setOpenNewProject(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={handleCreateProject}
+                  >
+                    Create
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
 
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
