@@ -1,7 +1,7 @@
-import React, {useState, useEffect, useRef} from "react";
-import {useNavigate} from "react-router-dom";
-import {ChevronDown, Plus, ChevronLeft} from "lucide-react";
-import {Input} from "@/components/ui/input";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { ChevronDown, Plus, ChevronLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
@@ -122,7 +122,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col  bg-white transition-all duration-300 w-64">
+    <div className="flex flex-col h-screen bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
         <div className="absolute top-0 right-0 h-full w-px bg-slate-200" />
@@ -177,11 +177,9 @@ export default function Sidebar({
                       alt="WP icon"
                       className="w-5 h-5 object-contain"
                     />
-                    <span
-                      key={ws.id}
-                      onClick={() => handleSelectWorkspace(ws.id)}
-                    >
-                      {ws.name}</span>
+                    <span onClick={() => handleSelectWorkspace(ws.id)}>
+                      {ws.name}
+                    </span>
                   </span>
 
                   <ChevronDown
@@ -282,7 +280,7 @@ export default function Sidebar({
                   <div
                     ref={actionMenuRef}
                     className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
-                    style={{top: menuPos.y, left: menuPos.x}}
+                    style={{ top: menuPos.y, left: menuPos.x }}
                   >
                     <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                       Actions
@@ -296,7 +294,7 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={editIcon} alt="edit" className="w-4 h-4"/>
+                      <img src={editIcon} alt="edit" className="w-4 h-4" />
                       Rename
                     </button>
 
@@ -308,7 +306,7 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={newicon} alt="new" className="w-4 h-4"/>
+                      <img src={newicon} alt="new" className="w-4 h-4" />
                       New Project
                     </button>
 
@@ -320,88 +318,9 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
+                      <img src={deleteIcon} alt="delete" className="w-4 h-4" />
                       Delete
                     </button>
-                  </div>
-                )}
-
-                {/* Project list */}
-                {isOpen && wsProjects.length > 0 && (
-                  <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
-                    {wsProjects.map((p) => {
-                      const isEpOpen = readOpenEndpoints(p.id);
-                      return (
-                        <div key={p.id}>
-                          <div
-                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
-                            onClick={() => navigate(`/dashboard/${p.id}`)}
-                          >
-                            <div
-                              className="flex items-center gap-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/dashboard/${p.id}`);
-                              }}
-                            >
-                              <img
-                                src={folderIcon}
-                                alt="Folder icon"
-                                className="w-4 h-4 object-contain"
-                              />
-                              {p.name}
-                            </div>
-
-                            <ChevronDown
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const projectEndpoints = endpoints.filter(
-                                  (ep) => String(ep.project_id) === String(p.id)
-                                );
-                                if (projectEndpoints.length === 0) {
-                                  setEmptyProjectId(p.id); // hiện thông báo project rỗng
-                                  return;
-                                }
-                                setEmptyProjectId(null); // reset nếu có endpoint
-                                toggleEndpoints(p.id);
-                              }}
-                              className={`w-4 h-4 text-slate-400 transition-transform ${
-                                isEpOpen ? "rotate-0" : "-rotate-90"
-                              }`}
-                            />
-                          </div>
-
-                          {/* Project empty warning */}
-                          {emptyProjectId === p.id && (
-                            <div className="ml-8 mt-1 text-xs text-red-500">
-                              This project has no endpoints yet.
-                            </div>
-                          )}
-
-                          {/* Endpoint list */}
-                          {isEpOpen && (
-                            <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
-                              {endpoints
-                                .filter((ep) => String(ep.project_id) === String(p.id))
-                                .map((ep) => (
-                                  <div
-                                    key={ep.id}
-                                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
-                                    onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
-                                  >
-                                    <img
-                                      src={settingIcon}
-                                      alt={ep.method}
-                                      className="w-5 h-5 object-contain"
-                                    />
-                                    {ep.name}
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </li>
@@ -412,7 +331,7 @@ export default function Sidebar({
           <li className="mt-2">
             {isAdding ? (
               <div className="relative w-full">
-                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600"/>
+                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                 <Input
                   ref={inputRef}
                   autoFocus
@@ -434,7 +353,7 @@ export default function Sidebar({
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 hover:text-slate-900 text-slate-900 font-medium"
                 onClick={() => setIsAdding(true)}
               >
-                <Plus className="w-4 h-4"/>
+                <Plus className="w-4 h-4" />
                 <span>New Workspace</span>
               </div>
             )}
