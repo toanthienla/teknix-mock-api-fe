@@ -103,11 +103,16 @@ export default function DashboardPage() {
   };
 
   const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => setProjects(data))
-      .catch(() => toast.error("Failed to load projects"));
-  };
+  fetch(`${API_ROOT}/projects`)
+    .then((res) => res.json())
+    .then((data) => {
+      const sorted = data.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+      setProjects(sorted);
+    })
+    .catch(() => toast.error("Failed to load projects"));
+};
 
   const fetchEndpoints = () => {
     fetch(`${API_ROOT}/endpoints`)
@@ -287,7 +292,7 @@ export default function DashboardPage() {
   const newProject = {
     name: newTitle.trim(),
     description: newDesc.trim(),
-    workspace_id: targetWsId || currentWsId, // ✅ ưu tiên workspace được chọn
+    workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
