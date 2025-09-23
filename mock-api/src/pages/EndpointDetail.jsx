@@ -136,6 +136,7 @@ const statusCodes = [
     },
 ];
 
+
 const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
     const [parameterRows, setParameterRows] = useState([]);
 
@@ -577,6 +578,11 @@ const DashboardPage = () => {
     const [editWsName, setEditWsName] = useState("");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
 
+    const [openNewProject, setOpenNewProject] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [targetWsId, setTargetWsId] = useState(null);
+
     // Thêm state để lưu trữ trạng thái trước khi drag
     const [previousStatusData, setPreviousStatusData] = useState([]);
 
@@ -594,13 +600,23 @@ const DashboardPage = () => {
         : null;
 
     const fetchWorkspaces = () => {
-        fetch(`${API_ROOT}/workspaces`)
-            .then((res) => res.json())
-            .then((data) => {
-                setWorkspaces(data);
-                if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-            });
-    };
+       fetch(`${API_ROOT}/workspaces`)
+         .then((res) => res.json())
+         .then((data) => {
+           const sorted = data.sort(
+             (a, b) => new Date(a.created_at) - new Date(b.created_at)
+           );
+           setWorkspaces(sorted);
+           if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+         })
+         .catch(() =>
+           toast.error("Failed to load workspaces", {
+             position: "bottom-right",
+             autoClose: 2000,
+             hideProgressBar: false,
+           })
+         );
+     };
 
     const fetchProjects = () => {
         fetch(`${API_ROOT}/projects`)
@@ -804,6 +820,91 @@ const DashboardPage = () => {
             toast.error("Failed to delete workspace!");
         }
     };
+
+     const validateProject = (title, desc, editMode = false, editId = null) => {
+          const titleTrim = title.trim();
+          const descTrim = desc.trim();
+      
+          if (!titleTrim) {
+            toast.warning("Project name cannot be empty");
+            return false;
+          }
+          if (titleTrim.length > 50) {
+            toast.warning("Project name cannot exceed 50 chars");
+            return false;
+          }
+          if (/^[0-9]/.test(titleTrim)) {
+            toast.warning("Project name cannot start with a number");
+            return false;
+          }
+          if (/ {2,}/.test(titleTrim)) {
+            toast.warning("Project name cannot contain multiple spaces");
+            return false;
+          }
+          if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+            toast.warning(
+              "Only letters, numbers, and spaces allowed (no special characters)");
+            return false;
+          }
+          if (!descTrim) {
+            toast.info("Project description cannot be empty");
+            return false;
+          }
+          if (descTrim.length > 200) {
+            toast.warning("Project description max 200 chars");
+            return false;
+          }
+      
+          const duplicate = projects.some(
+            (p) =>
+              p.workspace_id === currentWsId &&
+              (!editMode || p.id !== editId) &&
+              p.name.toLowerCase() === titleTrim.toLowerCase()
+          );
+          if (duplicate) {
+            toast.warning("Project name already exists in this workspace");
+            return false;
+          }
+          return true;
+        };
+      
+       const handleCreateProject = () => {
+         if (!validateProject(newTitle, newDesc)) return;
+         const newProject = {
+           name: newTitle.trim(),
+           description: newDesc.trim(),
+           workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
+           created_at: new Date().toISOString(),
+           updated_at: new Date().toISOString(),
+         };
+       
+         fetch(`${API_ROOT}/projects`, {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify(newProject),
+         })
+           .then((res) => res.json())
+           .then((createdProject) => {
+             setProjects((prev) => [...prev, createdProject]);
+       
+             // mở workspace tương ứng
+             setCurrentWsId(createdProject.workspace_id);
+             localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+       
+             setOpenProjectsMap((prev) => ({
+               ...prev,
+               [createdProject.workspace_id]: true,
+             }));
+       
+             setNewTitle("");
+             setNewDesc("");
+             setTargetWsId(null); // reset sau khi tạo xong
+             setOpenNewProject(false);
+             toast.success("Project created successfully");
+           })
+           .catch(() => toast.error("Failed to create project"));
+       };
+
 
     const handleDeleteResponse = () => {
         if (!selectedResponse) return;
@@ -1143,6 +1244,10 @@ const DashboardPage = () => {
                     setOpenEndpointsMap={setOpenEndpointsMap}
                     isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
                     setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
+                    onAddProject={(workspaceId) => {
+    setTargetWsId(workspaceId); // lưu workspace đang chọn
+    setOpenNewProject(true);    // mở modal tạo project
+  }}
                 />
             </aside>
 
@@ -1645,6 +1750,70 @@ const DashboardPage = () => {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+{/* New Project */}
+            <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
+              <DialogContent className="max-w-lg rounded-2xl p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
+                  <div className="mt-1 text-sm text-slate-500">Project details</div>
+                </DialogHeader>
+      
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Name
+                    </label>
+                    <Input
+                      placeholder="Project name"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateProject();
+                        }
+                      }}
+                    />
+                  </div>
+      
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Description
+                    </label>
+                    <Textarea
+                      placeholder="Project description"
+                      value={newDesc}
+                      onChange={(e) => setNewDesc(e.target.value)}
+                      maxLength={200}
+                      className="min-h-[50px] resize-y"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleCreateProject();
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-slate-400 text-right mt-1">
+                      {newDesc.length}/200
+                    </p>
+                  </div>
+                </div>
+      
+                <DialogFooter className="flex justify-end gap-3 mt-4">
+                  <Button variant="outline" onClick={() => setOpenNewProject(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={handleCreateProject}
+                  >
+                    Create
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+      
 
                 {/* Confirm Delete Workspace */}
                 <Dialog

@@ -35,15 +35,17 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(
-  () => localStorage.getItem("currentWorkspace") || null
+    () => localStorage.getItem("currentWorkspace") || null
   );
+  const [targetWsId, setTargetWsId] = useState(null);
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
 
   const [openProjectsMap, setOpenProjectsMap] = useState({});
   const [openEndpointsMap, setOpenEndpointsMap] = useState({});
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
@@ -82,33 +84,29 @@ export default function DashboardPage() {
   }, [projectId, projects]);
 
   useEffect(() => {
-  const savedWs = localStorage.getItem("currentWorkspace");
-  if (savedWs) setCurrentWsId(savedWs);
-}, []);
+    const savedWs = localStorage.getItem("currentWorkspace");
+    if (savedWs) setCurrentWsId(savedWs);
+  }, []);
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
-  fetch(`${API_ROOT}/workspaces`)
-    .then((res) => res.json())
-    .then((data) => {
-      const sorted = data.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
-      );
-      setWorkspaces(sorted);
-      if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
-    })
-    .catch(() =>
-      toast.error("Failed to load workspaces")
-    );
-};
+    fetch(`${API_ROOT}/workspaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setWorkspaces(sorted);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+      })
+      .catch(() => toast.error("Failed to load workspaces"));
+  };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => setProjects(data))
-      .catch(() =>
-        toast.error("Failed to load projects")
-      );
+      .catch(() => toast.error("Failed to load projects"));
   };
 
   const fetchEndpoints = () => {
@@ -176,12 +174,11 @@ export default function DashboardPage() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
+        localStorage.setItem("currentWorkspace", createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Workspace created successfully");
       })
-      .catch(() =>
-        toast.error("Failed to create workspace")
-      );
+      .catch(() => toast.error("Failed to create workspace"));
   };
 
   const handleEditWorkspace = () => {
@@ -209,18 +206,14 @@ export default function DashboardPage() {
         setEditWsId(null);
         toast.success("Workspace updated successfully");
       })
-      .catch(() =>
-        toast.error("Failed to update workspace")
-      );
+      .catch(() => toast.error("Failed to update workspace"));
   };
 
   const handleDeleteWorkspace = async (id) => {
     try {
       const res = await fetch(`${API_ROOT}/projects`);
       const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter(
-        (p) => p.workspace_id === id
-      );
+      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
 
       await Promise.all(
         projectsToDelete.map((p) =>
@@ -263,7 +256,8 @@ export default function DashboardPage() {
     }
     if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
       toast.warning(
-        "Only letters, numbers, and spaces allowed (no special characters)");
+        "Only letters, numbers, and spaces allowed (no special characters)"
+      );
       return false;
     }
     if (!descTrim) {
@@ -288,34 +282,43 @@ export default function DashboardPage() {
     return true;
   };
 
-  const handleCreateProject = () => {
-    if (!validateProject(newTitle, newDesc)) return;
-    const newProject = {
-      name: newTitle.trim(),
-      description: newDesc.trim(),
-      workspace_id: currentWsId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    fetch(`${API_ROOT}/projects`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newProject),
-    })
-      .then((res) => res.json())
-      .then((createdProject) => {
-        setProjects((prev) => [...prev, createdProject]);
-        setOpenProjectsMap((prev) => ({ ...prev, [currentWsId]: true }));
-        setNewTitle("");
-        setNewDesc("");
-        setOpenNewProject(false);
-        toast.success("Project created successfully");
-      })
-      .catch(() =>
-        toast.error("Failed to create project")
-      );
+ const handleCreateProject = () => {
+  if (!validateProject(newTitle, newDesc)) return;
+  const newProject = {
+    name: newTitle.trim(),
+    description: newDesc.trim(),
+    workspace_id: targetWsId || currentWsId, // ✅ ưu tiên workspace được chọn
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
+
+  fetch(`${API_ROOT}/projects`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newProject),
+  })
+    .then((res) => res.json())
+    .then((createdProject) => {
+      setProjects((prev) => [...prev, createdProject]);
+
+      // mở workspace tương ứng
+      setCurrentWsId(createdProject.workspace_id);
+      localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+
+      setOpenProjectsMap((prev) => ({
+        ...prev,
+        [createdProject.workspace_id]: true,
+      }));
+
+      setNewTitle("");
+      setNewDesc("");
+      setTargetWsId(null); // reset sau khi tạo xong
+      setOpenNewProject(false);
+      toast.success("Project created successfully");
+    })
+    .catch(() => toast.error("Failed to create project"));
+};
+
 
   const openEditProjectDialog = (p) => {
     setEditId(p.id);
@@ -355,11 +358,9 @@ export default function DashboardPage() {
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
         );
         setOpenEditProject(false);
-        toast.success("Project updated successfully",);
+        toast.success("Project updated successfully");
       })
-      .catch(() =>
-        toast.error("Failed to update project")
-      );
+      .catch(() => toast.error("Failed to update project"));
   };
 
   const openDeleteProjectDialog = (id) => {
@@ -376,9 +377,7 @@ export default function DashboardPage() {
         setOpenDeleteProject(false);
         toast.success("Project deleted successfully");
       })
-      .catch(() =>
-        toast.error("Failed to delete project")
-      );
+      .catch(() => toast.error("Failed to delete project"));
   };
 
   // -------------------- Render --------------------
@@ -387,7 +386,9 @@ export default function DashboardPage() {
       {/* Sidebar + Main */}
       <div className="flex min-h-screen bg-white">
         <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${
+            !isSidebarCollapsed ? "border-r" : "border-none"
+          }`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -395,7 +396,7 @@ export default function DashboardPage() {
             endpoints={endpoints}
             current={currentWsId}
             setCurrent={setCurrentWsId}
-            onWorkspaceChange={setCurrentWsId} // nhận wsId từ Sidebar
+            onWorkspaceChange={setCurrentWsId}
             onAddWorkspace={handleAddWorkspace}
             onEditWorkspace={(ws) => {
               setEditWsId(ws.id);
@@ -409,14 +410,15 @@ export default function DashboardPage() {
             setOpenEndpointsMap={setOpenEndpointsMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
-            onAddProject={() => setOpenNewProject(true)}
+           onAddProject={(workspaceId) => {
+          setTargetWsId(workspaceId); // lưu workspace đang chọn
+          setOpenNewProject(true);    // mở modal tạo project
+       }}
           />
         </aside>
 
         {/* Main */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300"
-        >
+        <main className="pt-8 flex-1 transition-all duration-300">
           <Topbar
             breadcrumb={
               currentWorkspace
@@ -459,7 +461,9 @@ export default function DashboardPage() {
                         {currentWorkspace.name}
                       </h2>
                     )}
-                    <h3 className="text-base text-slate-600 ml-2">All Projects</h3>
+                    <h3 className="text-base text-slate-600 ml-2">
+                      All Projects
+                    </h3>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
