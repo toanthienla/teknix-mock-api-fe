@@ -193,7 +193,7 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         localStorage.setItem("currentWorkspace", createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Workspace created successfully");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -300,43 +300,42 @@ export default function DashboardPage() {
     return true;
   };
 
- const handleCreateProject = () => {
-  if (!validateProject(newTitle, newDesc)) return;
-  const newProject = {
-    name: newTitle.trim(),
-    description: newDesc.trim(),
-    workspace_id: targetWsId || currentWsId, // ✅ ưu tiên workspace được chọn
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  const handleCreateProject = () => {
+    if (!validateProject(newTitle, newDesc)) return;
+    const newProject = {
+      name: newTitle.trim(),
+      description: newDesc.trim(),
+      workspace_id: targetWsId || currentWsId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-  fetch(`${API_ROOT}/projects`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newProject),
-  })
-    .then((res) => res.json())
-    .then((createdProject) => {
-      setProjects((prev) => [...prev, createdProject]);
-
-      // mở workspace tương ứng
-      setCurrentWsId(createdProject.workspace_id);
-      localStorage.setItem("currentWorkspace", createdProject.workspace_id);
-
-      setOpenProjectsMap((prev) => ({
-        ...prev,
-        [createdProject.workspace_id]: true,
-      }));
-
-      setNewTitle("");
-      setNewDesc("");
-      setTargetWsId(null); // reset sau khi tạo xong
-      setOpenNewProject(false);
-      toast.success("Project created successfully");
+    fetch(`${API_ROOT}/projects`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(newProject),
     })
-    .catch(() => toast.error("Failed to create project"));
-};
+      .then((res) => res.json())
+      .then((createdProject) => {
+        setProjects((prev) => [...prev, createdProject]);
 
+        // mở workspace tương ứng
+        setCurrentWsId(createdProject.workspace_id);
+        localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+
+        setOpenProjectsMap((prev) => ({
+          ...prev,
+          [createdProject.workspace_id]: true,
+        }));
+
+        setNewTitle("");
+        setNewDesc("");
+        setTargetWsId(null); // reset sau khi tạo xong
+        setOpenNewProject(false);
+        toast.success("Project created successfully");
+      })
+      .catch(() => toast.error("Failed to create project"));
+  };
 
   const openEditProjectDialog = (p) => {
     setEditId(p.id);
@@ -428,10 +427,10 @@ export default function DashboardPage() {
             setOpenEndpointsMap={setOpenEndpointsMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
-           onAddProject={(workspaceId) => {
-          setTargetWsId(workspaceId); // lưu workspace đang chọn
-          setOpenNewProject(true);    // mở modal tạo project
-       }}
+            onAddProject={(workspaceId) => {
+              setTargetWsId(workspaceId); // lưu workspace đang chọn
+              setOpenNewProject(true);    // mở modal tạo project
+            }}
           />
         </aside>
 

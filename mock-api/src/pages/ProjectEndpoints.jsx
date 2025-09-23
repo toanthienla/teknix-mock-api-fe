@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  // const [endpointResponse, setEndpointResponse] = useState(null);
 
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -326,8 +327,17 @@ export default function Dashboard() {
       .catch((err) => console.error("Error fetching endpoints:", err));
   };
 
-  const fetchLogs = () => {
-    fetch(`${API_ROOT}/logs`)
+  // const fetchEndpointsResponses = (eid) => {
+  //   if (!eid) return;
+  //   fetch(`${API_ROOT}/endpoint_responses/${eid}`)
+  //     .then((res) => res.json())
+  //     .then((data) => setEndpoints(data))
+  //     .catch((err) => console.error("Error fetching endpoints:", err));
+  // };
+
+  const fetchLogs = (pid) => {
+    if (!pid) return;
+    fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`)
       .then((res) => res.json())
       .then((data) => setLogs(data))
       .catch((err) => console.error("Error fetching logs:", err));
@@ -756,7 +766,7 @@ export default function Dashboard() {
                   variant="ghost"
                   onClick={() => {
                     setActiveTab("logs");
-                    fetchLogs();
+                    fetchLogs(projectId);
                   }}
                   className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs"
                     ? "border-b-2 border-stone-900 text-stone-900"

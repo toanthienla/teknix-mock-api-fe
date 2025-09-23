@@ -120,7 +120,7 @@ export default function Sidebar({
 
   return (
     <div
-      className={`flex flex-col h-screen bg-white transition-all duration-300 ${
+      className={`flex flex-col bg-white transition-all duration-300 r w-64 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >

@@ -54,6 +54,7 @@ export function LoginForm({className, ...props}) {
 
     if (email === "abc@gmail.com" && password === "12345678") {
       toast.success("Login successful");
+      localStorage.clear();
       navigate("/dashboard");
     } else {
       toast.error("Invalid email or password");
