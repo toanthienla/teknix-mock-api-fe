@@ -49,14 +49,17 @@ export function SignupForm({
                                         id="email"
                                         type="email"
                                         placeholder="m@example.com"
-                                        required
                                     />
                                 </div>
                                 <div className="grid gap-3">
                                     <div className="flex items-center">
                                         <Label htmlFor="password">Password</Label>
                                     </div>
-                                    <Input id="password" type="password" required />
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                    />
                                 </div>
 
                                 <Button type="submit" className="w-full">

@@ -9,11 +9,60 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import React from "react";
+import {useNavigate} from "react-router-dom";
+import {toast} from "react-toastify";
 
 export function LoginForm({
   className,
   ...props
 }) {
+    const navigate = useNavigate();
+
+    const [email, setEmail] = React.useState("");
+    const [password, setPassword] = React.useState("");
+
+    const validateInputs = (email, password) => {
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail) {
+            return "Email is required";
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedEmail)) {
+            return "Invalid email format";
+        }
+
+        if (!trimmedPassword) {
+            return "Password is required";
+        }
+
+        if (trimmedPassword.length < 8) {
+            return "Password must be at least 8 characters";
+        }
+
+        return null;
+    };
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+
+        const errorMessage = validateInputs(email, password);
+        if (errorMessage) {
+            toast.error(errorMessage);
+            return;
+        }
+
+        if (email === "abc@gmail.com" && password === "12345678") {
+            toast.success("Login successful");
+            navigate("/dashboard");
+        } else {
+            toast.error("Invalid email or password");
+        }
+    }
+
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
@@ -24,15 +73,15 @@ export function LoginForm({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form>
+                    <form onSubmit={handleLogin}>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-3">
                                 <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
-                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="m@example.com"
-                                    required
                                 />
                             </div>
                             <div className="grid gap-3">
@@ -45,10 +94,19 @@ export function LoginForm({
                                         Forgot your password?
                                     </a>
                                 </div>
-                                <Input id="password" type="password" required />
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <Button type="submit" className="w-full">
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                >
                                     Login
                                 </Button>
                                 <Button variant="outline" className="w-full">
