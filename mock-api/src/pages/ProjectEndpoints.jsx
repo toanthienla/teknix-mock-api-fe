@@ -374,62 +374,6 @@ export default function Dashboard() {
     }
   };
 
-
-  // Filter logs
-  const filteredLogs = logs.filter((log) => {
-    const projectOk = String(log.project_id) === String(projectId);
-
-    const methodOk =
-      methodFilter === "All Methods" ||
-      log.request_method?.toUpperCase() === methodFilter.toUpperCase();
-
-    const statusOk =
-      statusFilter === "All Status" ||
-      String(log.response_status_code) === String(statusFilter);
-
-    let timeOk = true;
-    if (timeFilter && timeFilter !== "All time") {
-      const logTime = new Date(log.created_at);
-      if (!isNaN(logTime)) {
-        const now = Date.now();
-        if (timeFilter === "Last 24 hours") {
-          timeOk = logTime.getTime() >= now - 24 * 60 * 60 * 1000;
-        } else if (timeFilter === "Last 7 days") {
-          timeOk = logTime.getTime() >= now - 7 * 24 * 60 * 60 * 1000;
-        } else if (timeFilter === "Last 30 days") {
-          timeOk = logTime.getTime() >= now - 30 * 24 * 60 * 60 * 1000;
-        }
-      }
-    }
-    return projectOk && methodOk && statusOk && timeOk;
-  });
-
-  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-
-  // logs hiển thị theo trang
-  const paginatedLogs = filteredLogs.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
-  // filter + sort endpoints
-  const filteredEndpoints = endpoints.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // sort endpoints based on sortOption
-  let sortedEndpoints = [...filteredEndpoints];
-
-  if (sortOption === "Recently created") {
-    sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  } else if (sortOption === "Oldest first") {
-    sortedEndpoints.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  } else if (sortOption === "Alphabetical (A-Z)") {
-    sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sortOption === "Alphabetical (Z-A)") {
-    sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
-  }
-
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
@@ -614,18 +558,11 @@ export default function Dashboard() {
       return;
     }
 
-    const maxId =
-      allEndpoints.length > 0
-        ? Math.max(...allEndpoints.map((ep) => Number(ep.id)))
-        : 0;
-    const newId = (maxId + 1).toString();
-
     const newEndpoint = {
-      id: newId,
       name: newEName,
       path: newEPath,
       method: newEMethod,
-      project_id: String(projectId),
+      project_id: Number(projectId),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -710,6 +647,61 @@ export default function Dashboard() {
         toast.error("Failed to delete endpoint!");
       });
   };
+
+  // Filter logs
+  const filteredLogs = logs.filter((log) => {
+    const projectOk = String(log.project_id) === String(projectId);
+
+    const methodOk =
+      methodFilter === "All Methods" ||
+      log.request_method?.toUpperCase() === methodFilter.toUpperCase();
+
+    const statusOk =
+      statusFilter === "All Status" ||
+      String(log.response_status_code) === String(statusFilter);
+
+    let timeOk = true;
+    if (timeFilter && timeFilter !== "All time") {
+      const logTime = new Date(log.created_at);
+      if (!isNaN(logTime)) {
+        const now = Date.now();
+        if (timeFilter === "Last 24 hours") {
+          timeOk = logTime.getTime() >= now - 24 * 60 * 60 * 1000;
+        } else if (timeFilter === "Last 7 days") {
+          timeOk = logTime.getTime() >= now - 7 * 24 * 60 * 60 * 1000;
+        } else if (timeFilter === "Last 30 days") {
+          timeOk = logTime.getTime() >= now - 30 * 24 * 60 * 60 * 1000;
+        }
+      }
+    }
+    return projectOk && methodOk && statusOk && timeOk;
+  });
+
+  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+
+  // logs hiển thị theo trang
+  const paginatedLogs = filteredLogs.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
+  // filter + sort endpoints
+  const filteredEndpoints = endpoints.filter((e) =>
+    e.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // sort endpoints based on sortOption
+  let sortedEndpoints = [...filteredEndpoints];
+
+  if (sortOption === "Recently created") {
+    sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sortOption === "Oldest first") {
+    sortedEndpoints.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  } else if (sortOption === "Alphabetical (A-Z)") {
+    sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortOption === "Alphabetical (Z-A)") {
+    sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
