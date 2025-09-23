@@ -34,8 +34,6 @@ export default function Sidebar({
   const [newName, setNewName] = useState("");
   const [rightClickActionId, setRightClickActionId] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
-  const [emptyWsId, setEmptyWsId] = useState(null); // workspace chưa có project
-  const [emptyProjectId, setEmptyProjectId] = useState(null); // project chưa có endpoint
 
   const actionMenuRef = useRef(null);
   const inputRef = useRef(null);
@@ -60,9 +58,15 @@ export default function Sidebar({
 
   const toggleEndpoints = (projectId) => {
     if (setOpenEndpointsMap) {
-      setOpenEndpointsMap((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+      setOpenEndpointsMap((prev) => ({
+        ...prev,
+        [projectId]: !prev[projectId],
+      }));
     } else {
-      setLocalOpenEndpointsMap((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
+      setLocalOpenEndpointsMap((prev) => ({
+        ...prev,
+        [projectId]: !prev[projectId],
+      }));
     }
   };
 
@@ -82,9 +86,7 @@ export default function Sidebar({
   }, []);
 
   const handleAdd = () => {
-    if (!newName.trim()) {
-      return;
-    }
+    if (!newName.trim()) return;
     if (onAddWorkspace) onAddWorkspace(newName.trim());
     setNewName("");
     setIsAdding(false);
@@ -119,10 +121,8 @@ export default function Sidebar({
   };
 
   return (
-    <div
-      className={`flex flex-col bg-white transition-all duration-300 r w-64`}
-    >
-      {/* Header with Logo and Collapse Button */}
+    <div className="flex flex-col bg-white transition-all duration-300 w-64">
+      {/* Header */}
       <div className="flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
         <div className="absolute top-0 right-0 h-full w-px bg-slate-200" />
 
@@ -130,9 +130,7 @@ export default function Sidebar({
           className="cursor-pointer flex items-center flex-shrink-0"
           onClick={() => navigate("/dashboard")}
         >
-          <span className="text-2xl font-bold text-slate-900 whitespace-nowrap leading-[56px]">
-            MockAPI
-          </span>
+          <span className="text-2xl font-bold text-slate-900">MockAPI</span>
         </div>
 
         <button
@@ -168,7 +166,6 @@ export default function Sidebar({
                       : "hover:bg-slate-50 text-slate-800 font-medium"
                   }`}
                   onClick={() => {
-                    // chỉ chọn workspace (highlight) - không navigate away here
                     if (setCurrent) setCurrent(ws.id);
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
@@ -189,14 +186,7 @@ export default function Sidebar({
                   <ChevronDown
                     onClick={(e) => {
                       e.stopPropagation();
-
-                      if (wsProjects.length === 0) {
-                        setEmptyWsId(ws.id); // hiện thông báo workspace rỗng
-                        return;
-                      }
-
-                      setEmptyWsId(null); // reset nếu có project
-                      toggleProjects(ws.id); // expand/collapse
+                      toggleProjects(ws.id); // luôn toggle
                     }}
                     className={`w-4 h-4 text-slate-400 transition-transform ${
                       isOpen ? "rotate-0" : "-rotate-90"
@@ -204,19 +194,94 @@ export default function Sidebar({
                   />
                 </div>
 
-                {/* Workspace empty warning */}
-                {emptyWsId === ws.id && (
-                  <div className="ml-8 mt-1 text-xs text-red-500">
-                    This workspace has no projects yet.
+                {/* Project list hoặc thông báo */}
+                {isOpen && (
+                  <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
+                    {wsProjects.length === 0 ? (
+                      <div className="text-xs text-gray-500">
+                        This workspace has no projects yet.
+                      </div>
+                    ) : (
+                      wsProjects.map((p) => {
+                        const isEpOpen = readOpenEndpoints(p.id);
+                        const projectEndpoints = endpoints.filter(
+                          (ep) => String(ep.project_id) === String(p.id)
+                        );
+
+                        return (
+                          <div key={p.id}>
+                            <div
+                              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
+                              onClick={() => navigate(`/dashboard/${p.id}`)}
+                            >
+                              <div
+                                className="flex items-center gap-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/dashboard/${p.id}`);
+                                }}
+                              >
+                                <img
+                                  src={folderIcon}
+                                  alt="Folder icon"
+                                  className="w-4 h-4 object-contain"
+                                />
+                                {p.name}
+                              </div>
+
+                              <ChevronDown
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleEndpoints(p.id);
+                                }}
+                                className={`w-4 h-4 text-slate-400 transition-transform ${
+                                  isEpOpen ? "rotate-0" : "-rotate-90"
+                                }`}
+                              />
+                            </div>
+
+                            {/* Endpoint list hoặc thông báo */}
+                            {isEpOpen && (
+                              <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
+                                {projectEndpoints.length === 0 ? (
+                                  <div className="text-gray-500">
+                                    This project has no endpoints yet.
+                                  </div>
+                                ) : (
+                                  projectEndpoints.map((ep) => (
+                                    <div
+                                      key={ep.id}
+                                      className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
+                                      onClick={() =>
+                                        navigate(
+                                          `/dashboard/${p.id}/endpoint/${ep.id}`
+                                        )
+                                      }
+                                    >
+                                      <img
+                                        src={settingIcon}
+                                        alt={ep.method}
+                                        className="w-5 h-5 object-contain"
+                                      />
+                                      {ep.name}
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 )}
 
-                {/* Action menu on right click */}
+                {/* Action menu (right click) */}
                 {isActionOpen && (
                   <div
                     ref={actionMenuRef}
                     className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
-                    style={{top: menuPos.y, left: menuPos.x}}
+                    style={{ top: menuPos.y, left: menuPos.x }}
                   >
                     <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                       Actions
@@ -230,20 +295,19 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={editIcon} alt="edit" className="w-4 h-4"/>
+                      <img src={editIcon} alt="edit" className="w-4 h-4" />
                       Rename
                     </button>
 
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // truyền workspace id ra ngoài để tạo project trong workspace đó
                         onAddProject && onAddProject(ws.id);
                         setRightClickActionId(null);
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={newicon} alt="new" className="w-4 h-4"/>
+                      <img src={newicon} alt="new" className="w-4 h-4" />
                       New Project
                     </button>
 
@@ -255,88 +319,9 @@ export default function Sidebar({
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium"
                     >
-                      <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
+                      <img src={deleteIcon} alt="delete" className="w-4 h-4" />
                       Delete
                     </button>
-                  </div>
-                )}
-
-                {/* Project list */}
-                {isOpen && wsProjects.length > 0 && (
-                  <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
-                    {wsProjects.map((p) => {
-                      const isEpOpen = readOpenEndpoints(p.id);
-                      return (
-                        <div key={p.id}>
-                          <div
-                            className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
-                            onClick={() => navigate(`/dashboard/${p.id}`)}
-                          >
-                            <div
-                              className="flex items-center gap-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/dashboard/${p.id}`);
-                              }}
-                            >
-                              <img
-                                src={folderIcon}
-                                alt="Folder icon"
-                                className="w-4 h-4 object-contain"
-                              />
-                              {p.name}
-                            </div>
-
-                            <ChevronDown
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const projectEndpoints = endpoints.filter(
-                                  (ep) => String(ep.project_id) === String(p.id)
-                                );
-                                if (projectEndpoints.length === 0) {
-                                  setEmptyProjectId(p.id); // hiện thông báo project rỗng
-                                  return;
-                                }
-                                setEmptyProjectId(null); // reset nếu có endpoint
-                                toggleEndpoints(p.id);
-                              }}
-                              className={`w-4 h-4 text-slate-400 transition-transform ${
-                                isEpOpen ? "rotate-0" : "-rotate-90"
-                              }`}
-                            />
-                          </div>
-
-                          {/* Project empty warning */}
-                          {emptyProjectId === p.id && (
-                            <div className="ml-8 mt-1 text-xs text-red-500">
-                              This project has no endpoints yet.
-                            </div>
-                          )}
-
-                          {/* Endpoint list */}
-                          {isEpOpen && (
-                            <div className="ml-6 mt-1 space-y-1 text-xs text-slate-600">
-                              {endpoints
-                                .filter((ep) => String(ep.project_id) === String(p.id))
-                                .map((ep) => (
-                                  <div
-                                    key={ep.id}
-                                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
-                                    onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
-                                  >
-                                    <img
-                                      src={settingIcon}
-                                      alt={ep.method}
-                                      className="w-5 h-5 object-contain"
-                                    />
-                                    {ep.name}
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </li>
@@ -347,7 +332,7 @@ export default function Sidebar({
           <li className="mt-2">
             {isAdding ? (
               <div className="relative w-full">
-                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600"/>
+                <Plus className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                 <Input
                   ref={inputRef}
                   autoFocus
@@ -369,7 +354,7 @@ export default function Sidebar({
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-slate-50 hover:text-slate-900 text-slate-900 font-medium"
                 onClick={() => setIsAdding(true)}
               >
-                <Plus className="w-4 h-4"/>
+                <Plus className="w-4 h-4" />
                 <span>New Workspace</span>
               </div>
             )}

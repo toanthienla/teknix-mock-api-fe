@@ -136,7 +136,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   // Thêm state để lưu lỗi cho từng rule
@@ -630,11 +630,17 @@ const DashboardPage = () => {
       );
   };
 
-  const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => setProjects(data));
-  };
+   const fetchProjects = () => {
+      fetch(`${API_ROOT}/projects`)
+        .then((res) => res.json())
+        .then((data) => {
+          const sorted = data.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          );
+          setProjects(sorted);
+        })
+        .catch(() => toast.error("Failed to load projects"));
+    };
 
   const fetchEndpoints = () => {
     fetch(`${API_ROOT}/endpoints`)

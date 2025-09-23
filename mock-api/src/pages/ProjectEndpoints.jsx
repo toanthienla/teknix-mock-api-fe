@@ -305,10 +305,16 @@ export default function Dashboard() {
       );
   };
 
-  const fetchProjects = () => {
+   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
-      .then((data) => setProjects(data));
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setProjects(sorted);
+      })
+      .catch(() => toast.error("Failed to load projects"));
   };
 
   const fetchAllEndpoints = () => {
@@ -732,9 +738,9 @@ export default function Dashboard() {
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
             onAddProject={(workspaceId) => {
-    setTargetWsId(workspaceId); // lưu workspace đang chọn
-    setOpenNewProject(true);    // mở modal tạo project
-  }}
+              setTargetWsId(workspaceId); // lưu workspace đang chọn
+              setOpenNewProject(true);    // mở modal tạo project
+            }}
           />
         </aside>
 
