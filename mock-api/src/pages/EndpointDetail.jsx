@@ -51,8 +51,8 @@ const statusCodes = [
     code: "102",
     description: "Processing – Request is being processed (WebDAV).",
   },
-  {code: "200", description: "OK – Request succeeded."},
-  {code: "201", description: "Created – Resource created successfully."},
+  { code: "200", description: "OK – Request succeeded." },
+  { code: "201", description: "Created – Resource created successfully." },
   {
     code: "202",
     description:
@@ -71,8 +71,8 @@ const statusCodes = [
     code: "301",
     description: "Moved Permanently – Resource has a new permanent URL.",
   },
-  {code: "302", description: "Found – Temporary redirect."},
-  {code: "303", description: "See Other – Redirect with GET method."},
+  { code: "302", description: "Found – Temporary redirect." },
+  { code: "303", description: "See Other – Redirect with GET method." },
   {
     code: "304",
     description: "Not Modified – Cached resource is still valid.",
@@ -85,13 +85,13 @@ const statusCodes = [
     code: "308",
     description: "Permanent Redirect – Same as 301 but method is preserved.",
   },
-  {code: "400", description: "Bad Request – Invalid request syntax."},
-  {code: "401", description: "Unauthorized – Authentication required."},
+  { code: "400", description: "Bad Request – Invalid request syntax." },
+  { code: "401", description: "Unauthorized – Authentication required." },
   {
     code: "403",
     description: "Forbidden – Client not allowed to access resource.",
   },
-  {code: "404", description: "Not Found – Resource not found."},
+  { code: "404", description: "Not Found – Resource not found." },
   {
     code: "405",
     description: "Method Not Allowed – HTTP method not supported.",
@@ -104,14 +104,14 @@ const statusCodes = [
     code: "409",
     description: "Conflict – Request conflicts with resource state.",
   },
-  {code: "410", description: "Gone – Resource is permanently unavailable."},
+  { code: "410", description: "Gone – Resource is permanently unavailable." },
   {
     code: "415",
     description:
       "Unsupported Media Type – Server does not support request format.",
   },
-  {code: "429", description: "Too Many Requests – Rate limiting exceeded."},
-  {code: "500", description: "Internal Server Error – Generic server error."},
+  { code: "429", description: "Too Many Requests – Rate limiting exceeded." },
+  { code: "500", description: "Internal Server Error – Generic server error." },
   {
     code: "501",
     description: "Not Implemented – Server does not support functionality.",
@@ -136,7 +136,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
+const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   // Thêm state để lưu lỗi cho từng rule
@@ -1412,13 +1412,17 @@ const DashboardPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
-                      <circle
-                        cx="10.5"
-                        cy="10"
-                        r="8"
-                        stroke="#777671"
-                        strokeWidth="1.5"
-                      />
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                      </svg>
                     </svg>
                   </div>
                 </div>
@@ -1433,22 +1437,18 @@ const DashboardPage = () => {
               <div className="rounded-md border border-solid border-slate-300">
                 <Table>
                   <TableHeader>
-                    <TableRow
-                      className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
                       <TableHead className="w-[119.2px] h-10 px-1 py-0">
                         <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div
-                            className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
                             Status Code
                           </div>
                         </div>
                       </TableHead>
                       <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                         <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div
-                            className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                               Name Response
                             </div>
                           </div>
@@ -1483,17 +1483,15 @@ const DashboardPage = () => {
                       >
                         <TableCell className="w-[119.2px] h-[49px] p-2">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.name}
                             </div>
                           </div>
@@ -1501,8 +1499,7 @@ const DashboardPage = () => {
                         {/* Thêm cột Default badge */}
                         <TableCell className="w-[80px] h-[49px] p-2">
                           {status.isDefault && (
-                            <div
-                              className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                            <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
                               <span className="text-xs font-medium text-[#0A0A0A]">
                                 Default
                               </span>
