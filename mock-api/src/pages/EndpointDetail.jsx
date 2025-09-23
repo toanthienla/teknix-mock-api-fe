@@ -1782,19 +1782,19 @@ const DashboardPage = () => {
                 <div>
                   <Label>Header</Label>
                 </div>
-                <div className="grid grid-cols-3 items-start gap-4">
+                <div className="grid grid-cols-4 items-start gap-2">
                   <Label
-                    htmlFor="content-type"
+                    htmlFor="new-response-content-type"
                     className="text-right text-sm font-medium text-[#000000]"
                   >
                     Content-Type:
                   </Label>
                   <Input
-                    id="content-type"
+                    id="new-response-content-type"
                     placeholder="Value"
                     value={headerValue}
                     onChange={(e) => setHeaderValue(e.target.value)}
-                    className="col-span-2"
+                    className="col-span-3"
                   />
                 </div>
               </div>
