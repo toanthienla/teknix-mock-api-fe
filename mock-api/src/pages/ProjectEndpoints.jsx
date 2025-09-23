@@ -61,9 +61,16 @@ export default function Dashboard() {
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
-  const [openProjectsMap, setOpenProjectsMap] = useState({}); // track open workspace project lists
-  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
+
+  const [openProjectsMap, setOpenProjectsMap] = useState(
+      () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+  );
+  const [openEndpointsMap, setOpenEndpointsMap] = useState(
+      () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+      () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+  );
 
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
@@ -248,6 +255,18 @@ export default function Dashboard() {
       fetchEndpoints(projectId);
     }
   }, [projectId]);
+
+  useEffect(() => {
+    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
+  }, [openProjectsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
+  }, [openEndpointsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   // Keep sidebar expanded for selected project when navigating into project view
   useEffect(() => {

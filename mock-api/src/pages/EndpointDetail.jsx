@@ -564,18 +564,27 @@ const DashboardPage = () => {
     const [workspaces, setWorkspaces] = useState([]);
     const [projects, setProjects] = useState([]);
     const [currentWsId, setCurrentWsId] = useState(null);
-    const [openProjectsMap, setOpenProjectsMap] = useState({});
+
+    const [openProjectsMap, setOpenProjectsMap] = useState(
+        () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+    );
+    const [openEndpointsMap, setOpenEndpointsMap] = useState(
+        () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+    );
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+        () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+    );
+
     const [statusData, setStatusData] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
     const [selectedResponse, setSelectedResponse] = useState(null);
     const [endpointResponses, setEndpointResponses] = useState([]);
     const [endpoints, setEndpoints] = useState([]);
-    const [openEndpointsMap, setOpenEndpointsMap] = useState({});
+
     const [openEditWs, setOpenEditWs] = useState(false);
     const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
     const [editWsId, setEditWsId] = useState(null);
     const [editWsName, setEditWsName] = useState("");
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
 
     // Thêm state để lưu trữ trạng thái trước khi drag
     const [previousStatusData, setPreviousStatusData] = useState([]);
@@ -707,6 +716,18 @@ const DashboardPage = () => {
             fetchEndpointResponses();
         }
     }, [currentEndpointId]);
+
+    useEffect(() => {
+        localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
+    }, [openProjectsMap]);
+
+    useEffect(() => {
+        localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
+    }, [openEndpointsMap]);
+
+    useEffect(() => {
+        localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+    }, [isSidebarCollapsed]);
 
     // Keep sidebar expanded when on endpoint detail
     useEffect(() => {

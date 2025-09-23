@@ -41,9 +41,15 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
 
-  const [openProjectsMap, setOpenProjectsMap] = useState({});
-  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
+  const [openProjectsMap, setOpenProjectsMap] = useState(
+      () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+  );
+  const [openEndpointsMap, setOpenEndpointsMap] = useState(
+      () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+      () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+  );
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
@@ -82,9 +88,21 @@ export default function DashboardPage() {
   }, [projectId, projects]);
 
   useEffect(() => {
-  const savedWs = localStorage.getItem("currentWorkspace");
-  if (savedWs) setCurrentWsId(savedWs);
-}, []);
+    const savedWs = localStorage.getItem("currentWorkspace");
+    if (savedWs) setCurrentWsId(savedWs);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
+  }, [openProjectsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
+  }, [openEndpointsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {

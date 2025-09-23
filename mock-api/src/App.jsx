@@ -24,8 +24,7 @@ export default function App() {
         <Route path="/dashboard/:projectId" element={<ProjectEndpoints />} />
 
         <Route
-          path="/dashboard/:projectId/endpoint/:endpointId"
-          element={<EndpointDetail />}
+          path="/dashboard/:projectId/endpoint/:endpointId" element={<EndpointDetail />}
         />
       </Routes>
 
