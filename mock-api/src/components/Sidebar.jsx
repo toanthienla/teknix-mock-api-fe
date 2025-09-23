@@ -120,9 +120,7 @@ export default function Sidebar({
 
   return (
     <div
-      className={`flex flex-col bg-white transition-all duration-300 r w-64 ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
+      className={`flex flex-col bg-white transition-all duration-300 r w-64`}
     >
       {/* Header with Logo and Collapse Button */}
       <div className="flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">

@@ -590,13 +590,13 @@ const DashboardPage = () => {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
-    const [openNewProject, setOpenNewProject] = useState(false);
+  const [openNewProject, setOpenNewProject] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [targetWsId, setTargetWsId] = useState(null);
 
-    // Thêm state để lưu trữ trạng thái trước khi drag
-    const [previousStatusData, setPreviousStatusData] = useState([]);
+  // Thêm state để lưu trữ trạng thái trước khi drag
+  const [previousStatusData, setPreviousStatusData] = useState([]);
 
   // Thêm state để lưu condition
   const [responseCondition, setResponseCondition] = useState({});
@@ -611,24 +611,24 @@ const DashboardPage = () => {
     ? workspaces.find((w) => String(w.id) === String(currentProject.workspace_id))
     : null;
 
-    const fetchWorkspaces = () => {
-       fetch(`${API_ROOT}/workspaces`)
-         .then((res) => res.json())
-         .then((data) => {
-           const sorted = data.sort(
-             (a, b) => new Date(a.created_at) - new Date(b.created_at)
-           );
-           setWorkspaces(sorted);
-           if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
-         })
-         .catch(() =>
-           toast.error("Failed to load workspaces", {
-             position: "bottom-right",
-             autoClose: 2000,
-             hideProgressBar: false,
-           })
-         );
-     };
+  const fetchWorkspaces = () => {
+    fetch(`${API_ROOT}/workspaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setWorkspaces(sorted);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+      })
+      .catch(() =>
+        toast.error("Failed to load workspaces", {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+        })
+      );
+  };
 
   const fetchProjects = () => {
     fetch(`${API_ROOT}/projects`)
@@ -845,93 +845,93 @@ const DashboardPage = () => {
     }
   };
 
-     const validateProject = (title, desc, editMode = false, editId = null) => {
-          const titleTrim = title.trim();
-          const descTrim = desc.trim();
+  const validateProject = (title, desc, editMode = false, editId = null) => {
+    const titleTrim = title.trim();
+    const descTrim = desc.trim();
 
-          if (!titleTrim) {
-            toast.warning("Project name cannot be empty");
-            return false;
-          }
-          if (titleTrim.length > 50) {
-            toast.warning("Project name cannot exceed 50 chars");
-            return false;
-          }
-          if (/^[0-9]/.test(titleTrim)) {
-            toast.warning("Project name cannot start with a number");
-            return false;
-          }
-          if (/ {2,}/.test(titleTrim)) {
-            toast.warning("Project name cannot contain multiple spaces");
-            return false;
-          }
-          if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-            toast.warning(
-              "Only letters, numbers, and spaces allowed (no special characters)");
-            return false;
-          }
-          if (!descTrim) {
-            toast.info("Project description cannot be empty");
-            return false;
-          }
-          if (descTrim.length > 200) {
-            toast.warning("Project description max 200 chars");
-            return false;
-          }
+    if (!titleTrim) {
+      toast.warning("Project name cannot be empty");
+      return false;
+    }
+    if (titleTrim.length > 50) {
+      toast.warning("Project name cannot exceed 50 chars");
+      return false;
+    }
+    if (/^[0-9]/.test(titleTrim)) {
+      toast.warning("Project name cannot start with a number");
+      return false;
+    }
+    if (/ {2,}/.test(titleTrim)) {
+      toast.warning("Project name cannot contain multiple spaces");
+      return false;
+    }
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+      toast.warning(
+        "Only letters, numbers, and spaces allowed (no special characters)");
+      return false;
+    }
+    if (!descTrim) {
+      toast.info("Project description cannot be empty");
+      return false;
+    }
+    if (descTrim.length > 200) {
+      toast.warning("Project description max 200 chars");
+      return false;
+    }
 
-          const duplicate = projects.some(
-            (p) =>
-              p.workspace_id === currentWsId &&
-              (!editMode || p.id !== editId) &&
-              p.name.toLowerCase() === titleTrim.toLowerCase()
-          );
-          if (duplicate) {
-            toast.warning("Project name already exists in this workspace");
-            return false;
-          }
-          return true;
-        };
+    const duplicate = projects.some(
+      (p) =>
+        p.workspace_id === currentWsId &&
+        (!editMode || p.id !== editId) &&
+        p.name.toLowerCase() === titleTrim.toLowerCase()
+    );
+    if (duplicate) {
+      toast.warning("Project name already exists in this workspace");
+      return false;
+    }
+    return true;
+  };
 
-       const handleCreateProject = () => {
-         if (!validateProject(newTitle, newDesc)) return;
-         const newProject = {
-           name: newTitle.trim(),
-           description: newDesc.trim(),
-           workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
-           created_at: new Date().toISOString(),
-           updated_at: new Date().toISOString(),
-         };
+  const handleCreateProject = () => {
+    if (!validateProject(newTitle, newDesc)) return;
+    const newProject = {
+      name: newTitle.trim(),
+      description: newDesc.trim(),
+      workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-         fetch(`${API_ROOT}/projects`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify(newProject),
-         })
-           .then((res) => res.json())
-           .then((createdProject) => {
-             setProjects((prev) => [...prev, createdProject]);
+    fetch(`${API_ROOT}/projects`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(newProject),
+    })
+      .then((res) => res.json())
+      .then((createdProject) => {
+        setProjects((prev) => [...prev, createdProject]);
 
-             // mở workspace tương ứng
-             setCurrentWsId(createdProject.workspace_id);
-             localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+        // mở workspace tương ứng
+        setCurrentWsId(createdProject.workspace_id);
+        localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-             setOpenProjectsMap((prev) => ({
-               ...prev,
-               [createdProject.workspace_id]: true,
-             }));
+        setOpenProjectsMap((prev) => ({
+          ...prev,
+          [createdProject.workspace_id]: true,
+        }));
 
-             setNewTitle("");
-             setNewDesc("");
-             setTargetWsId(null); // reset sau khi tạo xong
-             setOpenNewProject(false);
-             toast.success("Project created successfully");
-           })
-           .catch(() => toast.error("Failed to create project"));
-       };
+        setNewTitle("");
+        setNewDesc("");
+        setTargetWsId(null); // reset sau khi tạo xong
+        setOpenNewProject(false);
+        toast.success("Project created successfully");
+      })
+      .catch(() => toast.error("Failed to create project"));
+  };
 
 
-    const handleDeleteResponse = () => {
-        if (!selectedResponse) return;
+  const handleDeleteResponse = () => {
+    if (!selectedResponse) return;
 
     // Thêm kiểm tra response mặc định
     if (selectedResponse.is_default) {
@@ -1281,43 +1281,43 @@ const DashboardPage = () => {
   const [proxyUrl, setProxyUrl] = useState("");
   const [proxyMethod, setProxyMethod] = useState("GET"); // Thêm state proxy_method
 
-    return (
-        <div className="min-h-screen bg-white text-slate-800 flex">
-            {/* Sidebar */}
-            <aside
-                className={`border-r border-slate-100 bg-white transition-all duration-300`}
-            >
-                <Sidebar
-                    workspaces={workspaces}
-                    projects={projects}
-                    endpoints={endpoints}
-                    current={currentWsId}
-                    setCurrent={setCurrentWsId}
-                    onAddWorkspace={handleAddWorkspace}
-                    onEditWorkspace={(ws) => {
-                        setEditWsId(ws.id);
-                        setEditWsName(ws.name);
-                        setOpenEditWs(true);
-                    }}
-                    onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-                    openProjectsMap={openProjectsMap}
-                    setOpenProjectsMap={setOpenProjectsMap}
-                    openEndpointsMap={openEndpointsMap}
-                    setOpenEndpointsMap={setOpenEndpointsMap}
-                    isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
-                    setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
-                    onAddProject={(workspaceId) => {
-    setTargetWsId(workspaceId); // lưu workspace đang chọn
-    setOpenNewProject(true);    // mở modal tạo project
-  }}
-                />
-            </aside>
+  return (
+    <div className="min-h-screen bg-white text-slate-800 flex">
+      {/* Sidebar */}
+      <aside
+        className={`border-r border-slate-100 bg-white transition-all duration-300
+                ${!isSidebarCollapsed ? "border-r" : "border-none"
+        }`}
+      >
+        <Sidebar
+          workspaces={workspaces}
+          projects={projects}
+          endpoints={endpoints}
+          current={currentWsId}
+          setCurrent={setCurrentWsId}
+          onAddWorkspace={handleAddWorkspace}
+          onEditWorkspace={(ws) => {
+            setEditWsId(ws.id);
+            setEditWsName(ws.name);
+            setOpenEditWs(true);
+          }}
+          onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
+          openProjectsMap={openProjectsMap}
+          setOpenProjectsMap={setOpenProjectsMap}
+          openEndpointsMap={openEndpointsMap}
+          setOpenEndpointsMap={setOpenEndpointsMap}
+          isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
+          setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
+          onAddProject={(workspaceId) => {
+            setTargetWsId(workspaceId); // lưu workspace đang chọn
+            setOpenNewProject(true);    // mở modal tạo project
+          }}
+        />
+      </aside>
 
       {/* Main Content */}
       <div
-        className={`p-8 transition-all duration-300 ${
-          isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
-        } overflow-y-auto`}
+        className={`p-8 flex-1 transition-all duration-300`}
       >
         {/* Header */}
         <Topbar
@@ -1368,7 +1368,11 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="mb-6 mt-2">
+        <div
+          className={`transition-all duration-300 px-8 pt-4 pb-8
+            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
+          }`}
+        >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -1833,102 +1837,102 @@ const DashboardPage = () => {
           </DialogContent>
         </Dialog>
 
-{/* New Project */}
-            <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
-              <DialogContent className="max-w-lg rounded-2xl p-6">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
-                  <div className="mt-1 text-sm text-slate-500">Project details</div>
-                </DialogHeader>
+        {/* New Project */}
+        <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
+          <DialogContent className="max-w-lg rounded-2xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
+              <div className="mt-1 text-sm text-slate-500">Project details</div>
+            </DialogHeader>
 
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Name
-                    </label>
-                    <Input
-                      placeholder="Project name"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleCreateProject();
-                        }
-                      }}
-                    />
-                  </div>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name
+                </label>
+                <Input
+                  placeholder="Project name"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateProject();
+                    }
+                  }}
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Description
-                    </label>
-                    <Textarea
-                      placeholder="Project description"
-                      value={newDesc}
-                      onChange={(e) => setNewDesc(e.target.value)}
-                      maxLength={200}
-                      className="min-h-[50px] resize-y"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleCreateProject();
-                        }
-                      }}
-                    />
-                    <p className="text-xs text-slate-400 text-right mt-1">
-                      {newDesc.length}/200
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Description
+                </label>
+                <Textarea
+                  placeholder="Project description"
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  maxLength={200}
+                  className="min-h-[50px] resize-y"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleCreateProject();
+                    }
+                  }}
+                />
+                <p className="text-xs text-slate-400 text-right mt-1">
+                  {newDesc.length}/200
+                </p>
+              </div>
+            </div>
 
-                <DialogFooter className="flex justify-end gap-3 mt-4">
-                  <Button variant="outline" onClick={() => setOpenNewProject(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                    onClick={handleCreateProject}
-                  >
-                    Create
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <DialogFooter className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setOpenNewProject(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleCreateProject}
+              >
+                Create
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
 
-                {/* Confirm Delete Workspace */}
-                <Dialog
-                    open={!!confirmDeleteWs}
-                    onOpenChange={() => setConfirmDeleteWs(null)}
-                >
-                    <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-                        <DialogHeader>
-                            <DialogTitle>Delete Workspace</DialogTitle>
-                        </DialogHeader>
-                        <p>
-                            Are you sure you want to delete this workspace and all its
-                            projects?
-                        </p>
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => setConfirmDeleteWs(null)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                className="bg-red-600 text-white hover:bg-red-700"
-                                onClick={() => {
-                                    handleDeleteWorkspace(confirmDeleteWs);
-                                    setConfirmDeleteWs(null);
-                                }}
-                            >
-                                Delete
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+        {/* Confirm Delete Workspace */}
+        <Dialog
+          open={!!confirmDeleteWs}
+          onOpenChange={() => setConfirmDeleteWs(null)}
+        >
+          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+            <DialogHeader>
+              <DialogTitle>Delete Workspace</DialogTitle>
+            </DialogHeader>
+            <p>
+              Are you sure you want to delete this workspace and all its
+              projects?
+            </p>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmDeleteWs(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  handleDeleteWorkspace(confirmDeleteWs);
+                  setConfirmDeleteWs(null);
+                }}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* New Response Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

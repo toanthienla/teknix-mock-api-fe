@@ -2,34 +2,6 @@ import React from "react";
 import {TableRow, TableCell} from "@/components/ui/table";
 import {Badge} from "@/components/ui/badge";
 
-function formatResponseBody(body) {
-  if (!body) return "-";
-
-  // Trường hợp có "error"
-  if (body.error) return body.error;
-
-  // Trường hợp có "status"
-  if (body.status) return body.status;
-
-  // Trường hợp có "users" là mảng
-  if (Array.isArray(body.users)) {
-    return body.users.map((u) => u.name || u.id).join(", ");
-  }
-
-  // Trường hợp có report (ví dụ daily report)
-  if (body.report_date) {
-    return `Report ${body.report_date}: ${body.sales} sales, ${body.orders} orders`;
-  }
-
-  // Trường hợp có theme setting
-  if (body.theme) {
-    return `Theme: ${body.theme}`;
-  }
-
-  // Trường hợp mặc định → stringify
-  return JSON.stringify(body);
-}
-
 export default function LogCard({log}) {
   const {
     created_at,
@@ -37,7 +9,6 @@ export default function LogCard({log}) {
     request_path,
     latency_ms,
     response_status_code,
-    response_body,
   } = log;
 
   return (
@@ -78,8 +49,8 @@ export default function LogCard({log}) {
         {response_status_code}
       </TableCell>
 
-      <TableCell className="font-mono text-xs">
-        {formatResponseBody(response_body)}
+      <TableCell className="font-mono text-sm">
+        {log.endpointResponseName || "No response"}
       </TableCell>
     </TableRow>
   );

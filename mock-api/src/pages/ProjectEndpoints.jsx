@@ -58,7 +58,6 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  // const [endpointResponse, setEndpointResponse] = useState(null);
 
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -327,21 +326,48 @@ export default function Dashboard() {
       .catch((err) => console.error("Error fetching endpoints:", err));
   };
 
-  // const fetchEndpointsResponses = (eid) => {
-  //   if (!eid) return;
-  //   fetch(`${API_ROOT}/endpoint_responses/${eid}`)
-  //     .then((res) => res.json())
-  //     .then((data) => setEndpoints(data))
-  //     .catch((err) => console.error("Error fetching endpoints:", err));
-  // };
-
-  const fetchLogs = (pid) => {
+  const fetchLogs = async (pid) => {
     if (!pid) return;
-    fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`)
-      .then((res) => res.json())
-      .then((data) => setLogs(data))
-      .catch((err) => console.error("Error fetching logs:", err));
+    try {
+      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
+      const data = await res.json();
+
+      // map logs với endpoint_responses
+      const enrichedLogs = await Promise.all(
+        data.map(async (log) => {
+          if (!log.endpoint_id) return log;
+
+          const endpoint = endpoints.find((ep) => String(ep.id) === String(log.endpoint_id));
+          const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
+
+          try {
+            const res = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
+            const responses = await res.json();
+
+            // lấy response khớp với log (nếu có response_id trong log thì match, nếu không lấy cái đầu tiên)
+            const matched = responses.find(r => String(r.id) === String(log.response_id)) || responses[0];
+
+            return {
+              ...log,
+              endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
+            };
+          } catch (err) {
+            console.error("Error fetching endpoint_responses:", err);
+            return {
+              ...log,
+              endpointResponseName: endpointName,
+            };
+          }
+        })
+      );
+
+      setLogs(enrichedLogs);
+    } catch (err) {
+      console.error("Error fetching logs:", err);
+      toast.error("Failed to load logs");
+    }
   };
+
 
   // Filter logs
   const filteredLogs = logs.filter((log) => {
@@ -714,7 +740,7 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main
-          className="pt-8 flex-1 transition-all duration-300"
+          className="pt-8 flex-1 transition-all duration-300 "
         >
           {/* Top Navbar */}
           <Topbar
