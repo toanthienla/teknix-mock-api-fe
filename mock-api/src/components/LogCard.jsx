@@ -1,6 +1,6 @@
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import {TableRow, TableCell} from "@/components/ui/table";
+import {Badge} from "@/components/ui/badge";
 
 function formatResponseBody(body) {
   if (!body) return "-";
@@ -30,7 +30,7 @@ function formatResponseBody(body) {
   return JSON.stringify(body);
 }
 
-export default function LogCard({ log }) {
+export default function LogCard({log}) {
   const {
     created_at,
     request_method,
@@ -59,12 +59,12 @@ export default function LogCard({ log }) {
             request_method === "GET"
               ? "bg-emerald-100 text-black hover:bg-emerald-200"
               : request_method === "POST"
-              ? "bg-indigo-300 text-black hover:bg-indigo-400"
-              : request_method === "PUT"
-              ? "bg-orange-400 text-black hover:bg-orange-500"
-              : request_method === "DELETE"
-              ? "bg-red-400 text-black hover:bg-red-500"
-              : "bg-gray-100 text-black hover:bg-gray-200"
+                ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                : request_method === "PUT"
+                  ? "bg-orange-400 text-black hover:bg-orange-500"
+                  : request_method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
           }`}
         >
           {request_method}
