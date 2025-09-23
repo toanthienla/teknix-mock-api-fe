@@ -1290,9 +1290,9 @@ const DashboardPage = () => {
     return (
         <div className="min-h-screen bg-white text-slate-800 flex">
             {/* Sidebar */}
-            <aside
-                className={`border-r border-slate-100 bg-white transition-all duration-300`}
-            >
+             <aside
+          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
+        >
                 <Sidebar
                     workspaces={workspaces}
                     projects={projects}
@@ -1321,9 +1321,7 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <div
-        className={`p-8 transition-all duration-300 ${
-          isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
-        } overflow-y-auto`}
+        className="pt-8 flex-1 transition-all duration-300"
       >
         {/* Header */}
         <Topbar
@@ -1374,7 +1372,11 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="mb-6 mt-2">
+       <div
+            className={`transition-all duration-300 px-8 pt-4 pb-8
+            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
+            }`}
+          >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
