@@ -122,7 +122,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white transition-all duration-300 w-64">
+    <div className="flex flex-col  bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 bg-white relative border-b border-slate-200 h-16">
         <div className="absolute top-0 right-0 h-full w-px bg-slate-200" />
