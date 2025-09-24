@@ -1,5 +1,5 @@
 import {LoginForm} from "@/components/LoginForm.jsx"
-import loginImage from '@/assets/loginImage.png'
+import loginImage from '@/assets/loginImage.svg'
 
 export default function LoginPage() {
 

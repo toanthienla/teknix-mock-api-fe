@@ -1,5 +1,5 @@
 import {SignupForm} from "@/components/SignupForm.jsx"
-import signupImage from '@/assets/signupImage.png'
+import signupImage from '@/assets/signupImage.svg'
 
 export default function SignupPage() {
   return (

@@ -2,6 +2,7 @@ import {Routes, Route, Navigate} from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
+import VerifyEmail from "@/pages/VerifyEmail.jsx";
 import ProjectEndpoints from "./pages/ProjectEndpoints.jsx";
 import EndpointDetail from "@/pages/EndpointDetail.jsx";
 import {ToastContainer} from "react-toastify";
@@ -17,6 +18,8 @@ export default function App() {
         {/* Auth pages */}
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/signup" element={<SignupPage/>}/>
+        <Route path="/verify" element={<VerifyEmail/>}/>
+        <Route path="/forgot-password" element={<Navigate to="/login"/>}/>
 
         {/* Dashboard routes */}
         <Route path="/dashboard" element={<DashboardPage/>}/>
