@@ -598,6 +598,30 @@
       "condition": {},
       "is_default": false,
       "delay_ms": 0
+    },
+    {
+      "id": "b643",
+      "endpoint_id": "1",
+      "name": "What?",
+      "status_code": 206,
+      "response_body": "Yes.",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null
+    },
+    {
+      "id": "d164",
+      "endpoint_id": "1",
+      "name": "Ok",
+      "status_code": 200,
+      "response_body": "Haha",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null
     }
   ],
   "logs": [
