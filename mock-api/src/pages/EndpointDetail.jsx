@@ -576,7 +576,6 @@ const DashboardPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
   const [statusCode, setStatusCode] = useState("");
-  const [headerValue, setHeaderValue] = useState("");
   const [responseBody, setResponseBody] = useState("");
   const [delay, setDelay] = useState("0");
   const [workspaces, setWorkspaces] = useState([]);
@@ -667,22 +666,24 @@ const DashboardPage = () => {
   };
 
   const fetchEndpointResponses = () => {
-    // Đảm bảo endpoint_id luôn là string khi gọi API
     const endpointIdStr = String(currentEndpointId);
 
-    // Fetch responses for specific endpoint using query parameter
     fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
-        setEndpointResponses(data);
+        // Sắp xếp dữ liệu theo priority tăng dần
+        const sortedData = [...data].sort((a, b) => a.priority - b.priority);
 
-        // Format data for Response Configurations
-        const statusDataFormatted = data.map((res) => ({
+        setEndpointResponses(sortedData);
+
+        // Format data cho Response Configurations với priority
+        const statusDataFormatted = sortedData.map((res) => ({
           id: res.id,
           code: res.status_code.toString(),
           name: res.name,
           isDefault: res.is_default,
           bgColor: res.is_default ? "bg-slate-100" : "",
+          priority: res.priority, // Thêm priority vào statusData
         }));
 
         setStatusData(statusDataFormatted);
@@ -989,7 +990,6 @@ const DashboardPage = () => {
         if (endpointResponses.length === 1) {
           setResponseName("");
           setStatusCode("");
-          setHeaderValue("");
           setResponseBody("");
           setDelay("0");
         }
@@ -1178,7 +1178,6 @@ const DashboardPage = () => {
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
-    setHeaderValue("application/json");
     setResponseBody("");
     setDelay("0");
     setIsDialogOpen(true);
@@ -1290,7 +1289,6 @@ const DashboardPage = () => {
           setSelectedResponse(null);
           setResponseName("");
           setStatusCode("200");
-          setHeaderValue("application/json");
           setResponseBody("");
           setDelay("0");
         }
@@ -1675,19 +1673,12 @@ const DashboardPage = () => {
                         </div>
 
                         <div className="grid grid-cols-2 items-start gap-4">
-                          <Label
-                            htmlFor="content-type"
-                            className="text-right text-sm font-medium text-[#000000] self-start pt-1"
-                          >
+                          <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
                             Content-Type:
-                          </Label>
-                          <Input
-                            id="content-type"
-                            placeholder="Value"
-                            value={headerValue}
-                            onChange={(e) => setHeaderValue(e.target.value)}
-                            className="col-span-1 border-[#CBD5E1] rounded-md"
-                          />
+                          </div>
+                          <div className="col-span-1 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                            application/json
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-4 gap-4">
@@ -2011,22 +2002,17 @@ const DashboardPage = () => {
 
               <div className="space-y-4">
                 <div>
-                  <Label>Header</Label>
+                  <div className="font-medium text-sm text-[#000000]">
+                    Header
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-start gap-2">
-                  <Label
-                    htmlFor="new-response-content-type"
-                    className="text-right text-sm font-medium text-[#000000]"
-                  >
+                  <div className="text-right text-sm font-medium text-[#000000]">
                     Content-Type:
-                  </Label>
-                  <Input
-                    id="new-response-content-type"
-                    placeholder="Value"
-                    value={headerValue}
-                    onChange={(e) => setHeaderValue(e.target.value)}
-                    className="col-span-3"
-                  />
+                  </div>
+                  <div className="col-span-3 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                    application/json
+                  </div>
                 </div>
               </div>
 

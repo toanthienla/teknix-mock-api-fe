@@ -240,11 +240,13 @@
       "status_code": 200,
       "response_body": {
         "id": 1,
-        "username": "john_doasse"
+        "username": "john_doasssse"
       },
       "condition": {},
       "is_default": true,
       "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null,
       "id": "1"
     },
     {
@@ -331,11 +333,13 @@
       "name": "Invalid Email",
       "status_code": 400,
       "response_body": {
-        "error": "Invalid email formawasst"
+        "error": "Invalid email formawasssst"
       },
       "condition": {},
       "is_default": false,
       "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null,
       "id": "18"
     },
     {
@@ -615,16 +619,28 @@
       "proxy_method": null
     },
     {
-      "id": "d164",
       "endpoint_id": "1",
       "name": "Ok",
       "status_code": 200,
-      "response_body": "Haha",
+      "response_body": "Hsaha",
       "condition": {},
       "is_default": false,
       "delay_ms": 0,
       "proxy_url": null,
-      "proxy_method": null
+      "proxy_method": null,
+      "id": "d164"
+    },
+    {
+      "endpoint_id": "1",
+      "name": "Yes",
+      "status_code": 200,
+      "response_body": "nanis",
+      "condition": {},
+      "is_default": false,
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null,
+      "id": "17d1"
     }
   ],
   "logs": [
