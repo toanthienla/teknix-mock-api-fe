@@ -806,9 +806,13 @@ export default function Dashboard() {
                   {/* View all Endpoints */}
                   <div className="mb-4">
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <h2 className="text-xl font-bold text-gray-800 mb-2">
-                        {sortedEndpoints.length} Endpoints
-                      </h2>
+                      {currentWorkspace ? (
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">
+                          {currentWorkspace.name} - {sortedEndpoints.length} Endpoints
+                        </h2>
+                      ) : (
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
+                      )}
 
                       {/* Filter + Sort + New Endpoint */}
                       <div className="ml-auto flex items-center gap-2">

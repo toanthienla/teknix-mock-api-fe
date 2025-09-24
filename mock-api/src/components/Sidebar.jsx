@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from "react";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {ChevronDown, Plus, ChevronLeft} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import editIcon from "@/assets/Edit Icon.svg";
@@ -28,7 +28,7 @@ export default function Sidebar({
   setIsCollapsed, // Nhận props để đồng bộ trạng thái
 }) {
   const navigate = useNavigate();
-
+  const { projectId, endpointId} = useParams();
   // Local UI state
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -150,7 +150,7 @@ export default function Sidebar({
         <div className="text-sm text-slate-700 mb-2 font-medium">WORKSPACES</div>
         <ul className="space-y-1">
           {workspaces.map((ws) => {
-            const active = String(current) === String(ws.id);
+            const activeWs = String(current) === String(ws.id);
             const isOpen = readOpenProjects(ws.id);
             const wsProjects = projects.filter(
               (p) => String(p.workspace_id) === String(ws.id)
@@ -161,7 +161,7 @@ export default function Sidebar({
               <li key={ws.id} className="group relative">
                 <div
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer ${
-                    active
+                    activeWs
                       ? "bg-slate-100 font-semibold text-slate-900"
                       : "hover:bg-slate-50 text-slate-800 font-medium"
                   }`}
@@ -170,15 +170,17 @@ export default function Sidebar({
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
                 >
-                  <span className="flex items-center gap-2">
+                  <span
+                    className="flex items-center gap-2"
+                    key={ws.id}
+                    onClick={() => handleSelectWorkspace(ws.id)}
+                  >
                     <img
                       src={WPIcon}
                       alt="WP icon"
                       className="w-5 h-5 object-contain"
                     />
                     <span
-                      key={ws.id}
-                      onClick={() => handleSelectWorkspace(ws.id)}
                     >
                       {ws.name}</span>
                   </span>
@@ -207,11 +209,16 @@ export default function Sidebar({
                         const projectEndpoints = endpoints.filter(
                           (ep) => String(ep.project_id) === String(p.id)
                         );
+                        const activePj = String(projectId) === String(p.id);
 
                         return (
                           <div key={p.id}>
                             <div
-                              className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer"
+                              className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                activePj
+                                  ? "bg-slate-100 font-semibold text-slate-900"
+                                  : "hover:bg-slate-50 text-slate-800"
+                              }`}
                               onClick={() => navigate(`/dashboard/${p.id}`)}
                             >
                               <div
@@ -248,24 +255,30 @@ export default function Sidebar({
                                     This project has no endpoints yet.
                                   </div>
                                 ) : (
-                                  projectEndpoints.map((ep) => (
-                                    <div
-                                      key={ep.id}
-                                      className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-100 cursor-pointer"
-                                      onClick={() =>
-                                        navigate(
-                                          `/dashboard/${p.id}/endpoint/${ep.id}`
-                                        )
-                                      }
-                                    >
-                                      <img
-                                        src={settingIcon}
-                                        alt={ep.method}
-                                        className="w-5 h-5 object-contain"
-                                      />
-                                      {ep.name}
-                                    </div>
-                                  ))
+                                  projectEndpoints.map((ep) => {
+                                    const activeEndpoint =
+                                      String(endpointId) === String(ep.id); // 👈 so sánh active
+                                    return (
+                                      <div
+                                        key={ep.id}
+                                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                          activeEndpoint
+                                            ? "bg-slate-100 font-semibold text-slate-900"
+                                            : "hover:bg-slate-100 text-slate-700"
+                                        }`}
+                                        onClick={() =>
+                                          navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                        }
+                                      >
+                                        <img
+                                          src={settingIcon}
+                                          alt={ep.method}
+                                          className="w-5 h-5 object-contain"
+                                        />
+                                        {ep.name}
+                                      </div>
+                                    );
+                                  })
                                 )}
                               </div>
                             )}
