@@ -169,6 +169,20 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       }
     }
 
+    // Thêm validation kiểm tra trùng rule
+    const existingRules = parameterRows.filter((r) => r.id !== row.id);
+    const duplicateRule = existingRules.find(
+      (r) =>
+        r.type === row.type &&
+        r.name.trim().toLowerCase() === row.name.trim().toLowerCase()
+    );
+
+    if (duplicateRule) {
+      newErrors.name = `Duplicate ${row.type.toLowerCase()} name. "${
+        row.name
+      }" already exists.`;
+    }
+
     return newErrors;
   };
 
@@ -303,7 +317,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   };
 
   const handleAddRule = () => {
-    // Validate all rules before adding new one
+    // Validate tất cả rules trước khi thêm mới
     if (!validateAllRules()) {
       toast.error("Please fix errors before adding new rule");
       return;
@@ -358,7 +372,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       prev.map((r) => (r.id === id ? { ...r, name: value } : r))
     );
 
-    // Validate rule after name change
+    // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
