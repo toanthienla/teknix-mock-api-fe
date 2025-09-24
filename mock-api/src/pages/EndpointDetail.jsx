@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, {useState, useEffect} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { API_ROOT } from "../utils/constants";
+import {Card} from "@/components/ui/card";
+import {Textarea} from "@/components/ui/textarea";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {API_ROOT} from "../utils/constants";
 import Sidebar from "../components/Sidebar";
 import {
   Table,
@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Star, Trash2, Upload, Code, GripVertical } from "lucide-react";
-import { toast } from "react-toastify";
+import {Plus, Star, Trash2, Upload, Code, GripVertical} from "lucide-react";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -136,7 +136,7 @@ const statusCodes = [
   },
 ];
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   // Thêm state để lưu lỗi cho từng rule
@@ -278,13 +278,13 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -333,7 +333,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
       // Update errors state after deletion
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -355,14 +355,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule after name change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -373,14 +373,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -472,7 +472,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -519,7 +519,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -535,7 +535,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
           {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
           <div className="flex justify-between items-center mt-4">
             <Button variant="outline" onClick={handleAddRule}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add rule
             </Button>
 
@@ -557,7 +557,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 const DashboardPage = () => {
   // Thêm state để lưu lỗi response name
   const [responseNameError, setResponseNameError] = useState("");
-  const { projectId, endpointId } = useParams();
+  const {projectId, endpointId} = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -568,18 +568,32 @@ const DashboardPage = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(null);
-  const [openProjectsMap, setOpenProjectsMap] = useState({});
+
+  const [openProjectsMap, setOpenProjectsMap] = useState(
+    () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
+  );
+  const [openEndpointsMap, setOpenEndpointsMap] = useState(
+    () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
+  );
+
   const [statusData, setStatusData] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [endpointResponses, setEndpointResponses] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [openEndpointsMap, setOpenEndpointsMap] = useState({});
+
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Thêm trạng thái thu gọn
+
+  const [openNewProject, setOpenNewProject] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [targetWsId, setTargetWsId] = useState(null);
 
   // Thêm state để lưu trữ trạng thái trước khi drag
   const [previousStatusData, setPreviousStatusData] = useState([]);
@@ -594,25 +608,39 @@ const DashboardPage = () => {
     : null;
 
   const currentWorkspace = currentWsId
-    ? workspaces.find(
-        (w) => String(w.id) === String(currentProject.workspace_id)
-      )
+    ? workspaces.find((w) => String(w.id) === String(currentProject.workspace_id))
     : null;
 
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
-        setWorkspaces(data);
-        if (data.length > 0 && !currentWsId) setCurrentWsId(data[0].id);
-      });
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setWorkspaces(sorted);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+      })
+      .catch(() =>
+        toast.error("Failed to load workspaces", {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+        })
+      );
   };
 
-  const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => setProjects(data));
-  };
+   const fetchProjects = () => {
+      fetch(`${API_ROOT}/projects`)
+        .then((res) => res.json())
+        .then((data) => {
+          const sorted = data.sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          );
+          setProjects(sorted);
+        })
+        .catch(() => toast.error("Failed to load projects"));
+    };
 
   const fetchEndpoints = () => {
     fetch(`${API_ROOT}/endpoints`)
@@ -704,6 +732,18 @@ const DashboardPage = () => {
     }
   }, [currentEndpointId]);
 
+  useEffect(() => {
+    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
+  }, [openProjectsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
+  }, [openEndpointsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
   // Keep sidebar expanded when on endpoint detail
   useEffect(() => {
     if (!projectId) return;
@@ -713,8 +753,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -742,7 +782,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -753,7 +793,7 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -767,7 +807,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -776,7 +816,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -795,11 +835,11 @@ const DashboardPage = () => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -810,6 +850,91 @@ const DashboardPage = () => {
       toast.error("Failed to delete workspace!");
     }
   };
+
+  const validateProject = (title, desc, editMode = false, editId = null) => {
+    const titleTrim = title.trim();
+    const descTrim = desc.trim();
+
+    if (!titleTrim) {
+      toast.warning("Project name cannot be empty");
+      return false;
+    }
+    if (titleTrim.length > 50) {
+      toast.warning("Project name cannot exceed 50 chars");
+      return false;
+    }
+    if (/^[0-9]/.test(titleTrim)) {
+      toast.warning("Project name cannot start with a number");
+      return false;
+    }
+    if (/ {2,}/.test(titleTrim)) {
+      toast.warning("Project name cannot contain multiple spaces");
+      return false;
+    }
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+      toast.warning(
+        "Only letters, numbers, and spaces allowed (no special characters)");
+      return false;
+    }
+    if (!descTrim) {
+      toast.info("Project description cannot be empty");
+      return false;
+    }
+    if (descTrim.length > 200) {
+      toast.warning("Project description max 200 chars");
+      return false;
+    }
+
+    const duplicate = projects.some(
+      (p) =>
+        p.workspace_id === currentWsId &&
+        (!editMode || p.id !== editId) &&
+        p.name.toLowerCase() === titleTrim.toLowerCase()
+    );
+    if (duplicate) {
+      toast.warning("Project name already exists in this workspace");
+      return false;
+    }
+    return true;
+  };
+
+  const handleCreateProject = () => {
+    if (!validateProject(newTitle, newDesc)) return;
+    const newProject = {
+      name: newTitle.trim(),
+      description: newDesc.trim(),
+      workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    fetch(`${API_ROOT}/projects`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(newProject),
+    })
+      .then((res) => res.json())
+      .then((createdProject) => {
+        setProjects((prev) => [...prev, createdProject]);
+
+        // mở workspace tương ứng
+        setCurrentWsId(createdProject.workspace_id);
+        localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+
+        setOpenProjectsMap((prev) => ({
+          ...prev,
+          [createdProject.workspace_id]: true,
+        }));
+
+        setNewTitle("");
+        setNewDesc("");
+        setTargetWsId(null); // reset sau khi tạo xong
+        setOpenNewProject(false);
+        toast.success("Project created successfully");
+      })
+      .catch(() => toast.error("Failed to create project"));
+  };
+
 
   const handleDeleteResponse = () => {
     if (!selectedResponse) return;
@@ -880,7 +1005,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, priority: updated.priority }
+              ? {...response, priority: updated.priority}
               : response;
           })
         );
@@ -891,7 +1016,7 @@ const DashboardPage = () => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? { ...status, priority: updated.priority } : status;
+            return updated ? {...status, priority: updated.priority} : status;
           })
         );
 
@@ -933,7 +1058,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, is_default: updated.is_default }
+              ? {...response, is_default: updated.is_default}
               : response;
           })
         );
@@ -945,7 +1070,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? { ...status, isDefault: updated.is_default }
+              ? {...status, isDefault: updated.is_default}
               : status;
           })
         );
@@ -991,7 +1116,7 @@ const DashboardPage = () => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = { ...newStatusData[draggedItem] };
+      const draggedItemContent = {...newStatusData[draggedItem]};
 
       // Xóa item khỏi vị trí cũ
       newStatusData.splice(draggedItem, 1);
@@ -1084,7 +1209,7 @@ const DashboardPage = () => {
 
     fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -1099,8 +1224,8 @@ const DashboardPage = () => {
         setEndpointResponses((prev) =>
           selectedResponse
             ? prev.map((r) =>
-                r.id === updatedResponse.id ? updatedResponse : r
-              )
+              r.id === updatedResponse.id ? updatedResponse : r
+            )
             : [...prev, updatedResponse]
         );
 
@@ -1108,24 +1233,24 @@ const DashboardPage = () => {
         setStatusData((prev) =>
           selectedResponse
             ? prev.map((s) =>
-                s.id === updatedResponse.id
-                  ? {
-                      ...s,
-                      code: updatedResponse.status_code.toString(),
-                      name: updatedResponse.name,
-                      isDefault: updatedResponse.is_default,
-                    }
-                  : s
-              )
-            : [
-                ...prev,
-                {
-                  id: updatedResponse.id,
+              s.id === updatedResponse.id
+                ? {
+                  ...s,
                   code: updatedResponse.status_code.toString(),
                   name: updatedResponse.name,
                   isDefault: updatedResponse.is_default,
-                },
-              ]
+                }
+                : s
+            )
+            : [
+              ...prev,
+              {
+                id: updatedResponse.id,
+                code: updatedResponse.status_code.toString(),
+                name: updatedResponse.name,
+                isDefault: updatedResponse.is_default,
+              },
+            ]
         );
 
         // Cập nhật trực tiếp proxy state từ response trả về
@@ -1166,7 +1291,9 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Sidebar */}
       <aside
-        className={`border-r border-slate-100 bg-white transition-all duration-300`}
+        className={`border-r border-slate-100 bg-white transition-all duration-300
+                ${!isSidebarCollapsed ? "border-r" : "border-none"
+        }`}
       >
         <Sidebar
           workspaces={workspaces}
@@ -1187,14 +1314,16 @@ const DashboardPage = () => {
           setOpenEndpointsMap={setOpenEndpointsMap}
           isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
           setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
+          onAddProject={(workspaceId) => {
+            setTargetWsId(workspaceId); // lưu workspace đang chọn
+            setOpenNewProject(true);    // mở modal tạo project
+          }}
         />
       </aside>
 
       {/* Main Content */}
       <div
-        className={`p-8 transition-all duration-300 ${
-          isSidebarCollapsed ? "w-[calc(100%-80px)]" : "flex-1"
-        } overflow-y-auto`}
+        className={`p-8 flex-1 transition-all duration-300`}
       >
         {/* Header */}
         <Topbar
@@ -1204,38 +1333,38 @@ const DashboardPage = () => {
               ? currentProject
                 ? currentEndpointId
                   ? [
-                      {
-                        label: currentWorkspace.name,
-                        href: "/dashboard", // workspace chỉ cần /dashboard
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) => String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null, // endpoint không có link
-                      },
-                    ]
+                    {
+                      label: currentWorkspace.name,
+                      href: "/dashboard", // workspace chỉ cần /dashboard
+                    },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
+                    {
+                      label:
+                        endpoints.find(
+                          (ep) => String(ep.id) === String(currentEndpointId)
+                        )?.name || "Endpoint",
+                      href: null, // endpoint không có link
+                    },
+                  ]
                   : [
-                      {
-                        label: currentWorkspace.name,
-                        href: "/dashboard",
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                    ]
-                : [
                     {
                       label: currentWorkspace.name,
                       href: "/dashboard",
                     },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
                   ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    href: "/dashboard",
+                  },
+                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -1245,7 +1374,11 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="mb-6 mt-2">
+        <div
+          className={`transition-all duration-300 px-8 pt-4 pb-8
+            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
+          }`}
+        >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -1266,9 +1399,11 @@ const DashboardPage = () => {
             </div>
 
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex-1 max-w-[807px] ml-8">
-              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
-                <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
+            <div className="flex-1 max-w-[707px] ml-8">
+              <div
+                className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+                <div
+                  className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -1490,7 +1625,7 @@ const DashboardPage = () => {
                                 id="status-code" // Thêm id để khớp với htmlFor của Label
                                 className="border-[#CBD5E1] rounded-md"
                               >
-                                <SelectValue placeholder="Select status code" />
+                                <SelectValue placeholder="Select status code"/>
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
@@ -1551,14 +1686,14 @@ const DashboardPage = () => {
                                 size="sm"
                                 className="border-[#E5E5E5]"
                               >
-                                <Upload className="mr-2 h-4 w-4" /> Upload
+                                <Upload className="mr-2 h-4 w-4"/> Upload
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="border-[#E5E5E5]"
                               >
-                                <Code className="mr-2 h-4 w-4" /> Format
+                                <Code className="mr-2 h-4 w-4"/> Format
                               </Button>
                             </div>
                           </div>
@@ -1618,7 +1753,7 @@ const DashboardPage = () => {
                               onValueChange={setProxyMethod}
                             >
                               <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                <SelectValue placeholder="Method" />
+                                <SelectValue placeholder="Method"/>
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="GET">GET</SelectItem>
@@ -1704,6 +1839,70 @@ const DashboardPage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* New Project */}
+        <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
+          <DialogContent className="max-w-lg rounded-2xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
+              <div className="mt-1 text-sm text-slate-500">Project details</div>
+            </DialogHeader>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Name
+                </label>
+                <Input
+                  placeholder="Project name"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateProject();
+                    }
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Description
+                </label>
+                <Textarea
+                  placeholder="Project description"
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  maxLength={200}
+                  className="min-h-[50px] resize-y"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleCreateProject();
+                    }
+                  }}
+                />
+                <p className="text-xs text-slate-400 text-right mt-1">
+                  {newDesc.length}/200
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setOpenNewProject(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleCreateProject}
+              >
+                Create
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 
         {/* Confirm Delete Workspace */}
         <Dialog

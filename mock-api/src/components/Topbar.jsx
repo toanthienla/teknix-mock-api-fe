@@ -3,117 +3,110 @@ import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
 export default function Topbar({
-    breadcrumb = [],
-    onSearch,
-    onNewProject,
-    onNewResponse,
-    showNewProjectButton,
-    showNewResponseButton
+ breadcrumb = [],
+ onSearch,
+ onNewProject,
+ onNewResponse,
+ showNewProjectButton,
+ showNewResponseButton
 }) {
-    const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("");
 
-    const handleChange = (e) => {
-        const value = e.target.value;
-        setQuery(value);
-        if (onSearch) onSearch(value);
-    };
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    if (onSearch) onSearch(value);
+  };
 
-    // const handleSelectWorkspace = (wsId) => {
-    //     setCurrentWsId(wsId);
-    //     localStorage.setItem("currentWorkspace", wsId);
-    //     if (onWorkspaceChange) onWorkspaceChange(wsId);
-    //     navigate("/dashboard"); // chuyển về dashboard
-    // };
-
-    return (
-        <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
-            {/* Search */}
-            <div className="flex-1 flex items-center">
-                <div className="relative w-[250px]">
-                    <Input
-                        placeholder="Search"
-                        value={query}
-                        onChange={handleChange}
-                        className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-                    />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                        <Search size={16} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Breadcrumb */}
-            <div
-                className={
-                    showNewProjectButton
-                        ? "flex-1 flex justify-center"
-                        : "flex flex-1 justify-end"
-                }
-            >
-                {breadcrumb.length > 0 && (
-                    <div className="bg-slate-100 px-4 py-2 rounded-md min-w-[250px] max-w-[100%] overflow-hidden">
-                        <Breadcrumb>
-                            <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
-                                {breadcrumb.map((item, idx) => {
-                                    const isLast = idx === breadcrumb.length - 1;
-                                    return (
-                                        <React.Fragment key={idx}>
-                                            <BreadcrumbItem
-                                                className={`whitespace-nowrap overflow-hidden min-w-0 ${
-                                                    isLast ? "" : "truncate"
-                                                }`}
-                                                title={item.label}
-                                            >
-                                                {isLast || !item.href ? (
-                                                    <BreadcrumbPage className="font-medium text-slate-900">
-                                                        {item.label}
-                                                    </BreadcrumbPage>
-                                                ) : (
-                                                    <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
-                                                )}
-                                            </BreadcrumbItem>
-                                            {!isLast && <BreadcrumbSeparator />}
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </BreadcrumbList>
-                        </Breadcrumb>
-                    </div>
-                )}
-            </div>
-
-            {/* New Project Button */}
-            {showNewProjectButton && (
-                <div className="flex-1 flex justify-end">
-                    <Button
-                        onClick={onNewProject}
-                        className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
-                    >
-                        New Project
-                    </Button>
-                </div>
-            )}
-
-            {/* New Response Button */}
-            {showNewResponseButton && (
-                <div className="flex-1 flex justify-end">
-                    <Button
-                        onClick={onNewResponse}
-                        className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
-                    >
-                        New Response
-                    </Button>
-                </div>
-            )}
+  return (
+    <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
+      {/* Search */}
+      <div className="flex-1 flex items-center">
+        <div className="relative w-[250px]">
+          <Input
+            placeholder="Search"
+            value={query}
+            onChange={handleChange}
+            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+          />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+            <Search size={16}/>
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Breadcrumb */}
+      <div
+        className={
+          showNewProjectButton
+            ? "flex-1 flex justify-center"
+            : "flex flex-1 justify-end"
+        }
+      >
+        {breadcrumb.length > 0 && (
+          <div className="bg-slate-100 px-4 py-2 rounded-md min-w-[250px] max-w-[100%] overflow-hidden">
+            <Breadcrumb>
+              <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
+                {breadcrumb.map((item, idx) => {
+                  const isLast = idx === breadcrumb.length - 1;
+                  return (
+                    <React.Fragment key={idx}>
+                      <BreadcrumbItem
+                        className={`whitespace-nowrap overflow-hidden min-w-0 ${
+                          isLast ? "" : "truncate"
+                        }`}
+                        title={item.label}
+                      >
+                        {isLast || !item.href ? (
+                          <BreadcrumbPage className="font-medium text-slate-900">
+                            {item.label}
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {!isLast && <BreadcrumbSeparator/>}
+                    </React.Fragment>
+                  );
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        )}
+      </div>
+
+      {/* New Project Button */}
+      {showNewProjectButton && (
+        <div className="flex-1 flex justify-end">
+          <Button
+            onClick={onNewProject}
+            className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
+          >
+            New Project
+          </Button>
+        </div>
+      )}
+
+      {/* New Response Button */}
+      {showNewResponseButton && (
+        <div className="flex-1 flex justify-end">
+          <Button
+            onClick={onNewResponse}
+            className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-md"
+          >
+            New Response
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 }
