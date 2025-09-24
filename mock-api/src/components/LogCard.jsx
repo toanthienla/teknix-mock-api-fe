@@ -1,43 +1,14 @@
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import {TableRow, TableCell} from "@/components/ui/table";
+import {Badge} from "@/components/ui/badge";
 
-function formatResponseBody(body) {
-  if (!body) return "-";
-
-  // Trường hợp có "error"
-  if (body.error) return body.error;
-
-  // Trường hợp có "status"
-  if (body.status) return body.status;
-
-  // Trường hợp có "users" là mảng
-  if (Array.isArray(body.users)) {
-    return body.users.map((u) => u.name || u.id).join(", ");
-  }
-
-  // Trường hợp có report (ví dụ daily report)
-  if (body.report_date) {
-    return `Report ${body.report_date}: ${body.sales} sales, ${body.orders} orders`;
-  }
-
-  // Trường hợp có theme setting
-  if (body.theme) {
-    return `Theme: ${body.theme}`;
-  }
-
-  // Trường hợp mặc định → stringify
-  return JSON.stringify(body);
-}
-
-export default function LogCard({ log }) {
+export default function LogCard({log}) {
   const {
     created_at,
     request_method,
     request_path,
     latency_ms,
     response_status_code,
-    response_body,
   } = log;
 
   return (
@@ -59,12 +30,12 @@ export default function LogCard({ log }) {
             request_method === "GET"
               ? "bg-emerald-100 text-black hover:bg-emerald-200"
               : request_method === "POST"
-              ? "bg-indigo-300 text-black hover:bg-indigo-400"
-              : request_method === "PUT"
-              ? "bg-orange-400 text-black hover:bg-orange-500"
-              : request_method === "DELETE"
-              ? "bg-red-400 text-black hover:bg-red-500"
-              : "bg-gray-100 text-black hover:bg-gray-200"
+                ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                : request_method === "PUT"
+                  ? "bg-orange-400 text-black hover:bg-orange-500"
+                  : request_method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
           }`}
         >
           {request_method}
@@ -78,8 +49,8 @@ export default function LogCard({ log }) {
         {response_status_code}
       </TableCell>
 
-      <TableCell className="font-mono text-xs">
-        {formatResponseBody(response_body)}
+      <TableCell className="font-mono text-sm">
+        {log.endpointResponseName || "No response"}
       </TableCell>
     </TableRow>
   );
