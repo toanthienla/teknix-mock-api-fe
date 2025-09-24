@@ -1,12 +1,12 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { toast } from "react-toastify"
-import { z } from "zod"
-import { REGEXP_ONLY_DIGITS } from "input-otp"
+import {zodResolver} from "@hookform/resolvers/zod"
+import {useForm} from "react-hook-form"
+import {toast} from "react-toastify"
+import {z} from "zod"
+import {REGEXP_ONLY_DIGITS} from "input-otp"
 
-import { Button } from "@/components/ui/button.jsx"
+import {Button} from "@/components/ui/button.jsx"
 import {
   Form,
   FormControl,
@@ -22,6 +22,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp.jsx"
 import React from "react";
+import {useNavigate} from "react-router-dom";
 
 const FormSchema = z.object({
   pin: z
@@ -30,6 +31,7 @@ const FormSchema = z.object({
 })
 
 export function InputOTPForm() {
+  const navigate = useNavigate();
   const form = useForm({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -39,6 +41,7 @@ export function InputOTPForm() {
 
   function onSubmit(data) {
     toast.success("You submitted the following values: " + data.pin);
+    navigate("/dashboard");
   }
 
   return (
@@ -51,43 +54,43 @@ export function InputOTPForm() {
           <FormField
             control={form.control}
             name="pin"
-            render={({ field }) => (
+            render={({field}) => (
               <FormItem>
-                <FormLabel className="text-lg">Verify Your Email</FormLabel>
+                <FormLabel className="text-xl">Verify Your Email</FormLabel>
                 <FormControl>
-                  <div className="flex justify-center">
+                  <div className="mt-2 flex justify-center">
                     <InputOTP
                       maxLength={6}
                       pattern={REGEXP_ONLY_DIGITS}
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                     >
                       <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
+                        <InputOTPSlot index={0}/>
+                        <InputOTPSlot index={1}/>
+                        <InputOTPSlot index={2}/>
+                        <InputOTPSlot index={3}/>
+                        <InputOTPSlot index={4}/>
+                        <InputOTPSlot index={5}/>
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
                 </FormControl>
                 <FormDescription>
-                  <div className="mt-4 text-center text-sm">
+                  <span className="block mt-4 text-center text-sm">
                     Enter the code we’ve sent to your inbox
-                  </div>
-                  <div className="mt-2 text-center text-sm">
-                    Didn&apos;t get the code?{" "}
+                  </span>
+                  <span className="block mt-2 text-center text-sm">
+                    Didn’t get the code?{" "}
                     <a href="/signup" className="font-bold text-black underline underline-offset-4">
                       Resend it
                     </a>
-                  </div>
+                  </span>
                 </FormDescription>
-                <FormMessage />
+                <FormMessage/>
               </FormItem>
             )}
           />
-
           <Button className="bg-blue-600 hover:bg-blue-700" type="submit">Submit</Button>
         </form>
       </Form>

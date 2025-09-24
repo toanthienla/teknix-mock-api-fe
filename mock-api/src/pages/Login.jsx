@@ -9,7 +9,7 @@ export default function LoginPage() {
         <div className="absolute inset-0">
           <img
             src={loginImage}
-            alt="Login illustration"
+            alt="Login Image"
             className="h-full w-full object-cover"
           />
         </div>

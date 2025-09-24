@@ -14,7 +14,7 @@ export default function SignupPage() {
         <div className="absolute inset-0">
           <img
             src={signupImage}
-            alt="Login illustration"
+            alt="Signup Image"
             className="h-full w-full object-cover"
           />
         </div>
