@@ -171,9 +171,7 @@ export default function Sidebar({
                   }}
                   onContextMenu={(e) => handleRightClick(e, ws.id)}
                 >
-                  <span
-                    className="flex items-center gap-2"
-                  >
+                  <span className="flex items-center gap-2">
                     <img
                       src={WPIcon}
                       alt="WP icon"
