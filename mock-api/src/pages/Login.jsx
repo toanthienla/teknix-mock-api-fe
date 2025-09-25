@@ -1,5 +1,5 @@
 import {LoginForm} from "@/components/LoginForm.jsx"
-import loginImage from '@/assets/loginImage.png'
+import loginImage from '@/assets/loginImage.svg'
 
 export default function LoginPage() {
 
@@ -9,7 +9,7 @@ export default function LoginPage() {
         <div className="absolute inset-0">
           <img
             src={loginImage}
-            alt="Login illustration"
+            alt="Login Image"
             className="h-full w-full object-cover"
           />
         </div>

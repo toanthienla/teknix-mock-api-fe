@@ -1,5 +1,5 @@
 import {SignupForm} from "@/components/SignupForm.jsx"
-import signupImage from '@/assets/signupImage.png'
+import signupImage from '@/assets/signupImage.svg'
 
 export default function SignupPage() {
   return (
@@ -14,7 +14,7 @@ export default function SignupPage() {
         <div className="absolute inset-0">
           <img
             src={signupImage}
-            alt="Login illustration"
+            alt="Signup Image"
             className="h-full w-full object-cover"
           />
         </div>

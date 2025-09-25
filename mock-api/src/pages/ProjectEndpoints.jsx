@@ -115,7 +115,7 @@ export default function Dashboard() {
 
   // Regex to check route + query
   const validPath =
-    /^\/[a-zA-Z0-9\-_]*(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+    /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
 
   // Validation for creating an endpoint
@@ -686,12 +686,12 @@ export default function Dashboard() {
   );
 
   // filter + sort endpoints
-  // const filteredEndpoints = endpoints.filter((p) =>
-  //   p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
+  const filteredEndpoints = endpoints.filter((e) =>
+    e.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // sort endpoints based on sortOption
-  let sortedEndpoints = [...endpoints];
+  let sortedEndpoints = [...filteredEndpoints];
 
   if (sortOption === "Recently created") {
     sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -806,9 +806,13 @@ export default function Dashboard() {
                   {/* View all Endpoints */}
                   <div className="mb-4">
                     <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <h2 className="text-xl font-bold text-gray-800 mb-2">
-                        {sortedEndpoints.length} Endpoints
-                      </h2>
+                      {currentWorkspace ? (
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">
+                          {currentWorkspace.name} - {sortedEndpoints.length} Endpoints
+                        </h2>
+                      ) : (
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
+                      )}
 
                       {/* Filter + Sort + New Endpoint */}
                       <div className="ml-auto flex items-center gap-2">
