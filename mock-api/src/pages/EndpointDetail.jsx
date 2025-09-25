@@ -17,7 +17,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Star, Trash2, Upload, Code, GripVertical } from "lucide-react";
+import {
+  Plus,
+  Star,
+  Trash2,
+  Upload,
+  Code,
+  GripVertical,
+  Loader2,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Dialog,
@@ -569,6 +577,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 };
 
 const DashboardPage = () => {
+  // Thêm state để quản lý loading
+  const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
   const [responseNameError, setResponseNameError] = useState("");
   const { projectId, endpointId } = useParams();
@@ -620,14 +630,15 @@ const DashboardPage = () => {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
-  const currentWorkspace = currentWsId
+  const currentWorkspace = currentProject
     ? workspaces.find(
         (w) => String(w.id) === String(currentProject.workspace_id)
       )
     : null;
 
+  // Sửa các hàm fetch để trả về promise
   const fetchWorkspaces = () => {
-    fetch(`${API_ROOT}/workspaces`)
+    return fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
@@ -646,7 +657,7 @@ const DashboardPage = () => {
   };
 
   const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
+    return fetch(`${API_ROOT}/projects`)
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
@@ -658,7 +669,7 @@ const DashboardPage = () => {
   };
 
   const fetchEndpoints = () => {
-    fetch(`${API_ROOT}/endpoints`)
+    return fetch(`${API_ROOT}/endpoints`)
       .then((res) => res.json())
       .then((data) => {
         setEndpoints(data);
@@ -668,7 +679,7 @@ const DashboardPage = () => {
   const fetchEndpointResponses = () => {
     const endpointIdStr = String(currentEndpointId);
 
-    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
+    return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
         // Sắp xếp dữ liệu theo priority tăng dần
@@ -730,10 +741,28 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
-    fetchWorkspaces();
-    fetchProjects();
-    fetchEndpoints();
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          fetchWorkspaces(),
+          fetchProjects(),
+          fetchEndpoints(),
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
+
+  useEffect(() => {
+    if (currentEndpointId) {
+      setIsLoading(true);
+      fetchEndpointResponses().finally(() => setIsLoading(false));
+    }
+  }, [currentEndpointId]);
 
   useEffect(() => {
     if (endpointId) {
@@ -742,12 +771,6 @@ const DashboardPage = () => {
       setCurrentEndpointId(endpoints[0].id);
     }
   }, [endpointId, endpoints]);
-
-  useEffect(() => {
-    if (currentEndpointId) {
-      fetchEndpointResponses();
-    }
-  }, [currentEndpointId]);
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
@@ -1310,6 +1333,20 @@ const DashboardPage = () => {
 
   const [proxyUrl, setProxyUrl] = useState("");
   const [proxyMethod, setProxyMethod] = useState("GET"); // Thêm state proxy_method
+
+  // Thêm UI loading
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-white">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
+          <p className="text-lg font-medium text-gray-700">
+            Loading endpoint data...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
