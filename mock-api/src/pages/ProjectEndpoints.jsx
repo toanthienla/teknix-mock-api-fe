@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {
   Table,
@@ -591,13 +591,25 @@ export default function Dashboard() {
   };
 
   // edit endpoint
-  const openEditEndpoint = (p) => {
-    setEditId(p.id);
-    setEditEName(p.name);
-    setEditEPath(p.path);
-    setEditEMethod(p.method || "GET");
+  const [currentEndpoint, setCurrentEndpoint] = useState(null);
+  const openEditEndpoint = (e) => {
+    setEditId(e.id);
+    setEditEName(e.name);
+    setEditEPath(e.path);
+    setEditEMethod(e.method);
+
+    setCurrentEndpoint(e);
     setOpenEdit(true);
   };
+
+  const hasEdited = useMemo(() => {
+    if (!currentEndpoint) return false;
+    return (
+      editEName !== currentEndpoint.name ||
+      editEPath !== currentEndpoint.path ||
+      editEMethod !== currentEndpoint.method
+    );
+  }, [editEName, editEPath, editEMethod, currentEndpoint]);
 
   const handleUpdateEndpoint = () => {
     if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) {
@@ -1023,7 +1035,7 @@ export default function Dashboard() {
                     <DialogContent
                       className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === "Enter" && hasEdited) {
                           e.preventDefault();
                           handleUpdateEndpoint();
                         }
@@ -1082,6 +1094,7 @@ export default function Dashboard() {
                         <Button
                           className="bg-blue-600 text-white hover:bg-blue-700"
                           onClick={handleUpdateEndpoint}
+                          disabled={!hasEdited}
                         >
                           Update
                         </Button>
@@ -1090,7 +1103,8 @@ export default function Dashboard() {
                   </Dialog>
                 </>
               ) : activeTab === "logs" ? (
-                <> {/* Logs */}
+                <>
+                  {/* Logs */}
                   <div className="w-full overflow-x-auto">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex gap-2">
