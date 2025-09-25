@@ -71,7 +71,16 @@ export default function Topbar({
                             {item.label}
                           </BreadcrumbPage>
                         ) : (
-                          <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                          <BreadcrumbLink
+                            href={item.href}
+                            onClick={() => {
+                              if (item.WORKSPACE_ID) {
+                                localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                              }
+                            }}
+                          >
+                            {item.label}
+                          </BreadcrumbLink>
                         )}
                       </BreadcrumbItem>
                       {!isLast && <BreadcrumbSeparator/>}

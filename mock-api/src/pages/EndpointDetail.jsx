@@ -1359,6 +1359,7 @@ const DashboardPage = () => {
                   ? [
                       {
                         label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard", // workspace chỉ cần /dashboard
                       },
                       {
@@ -1376,6 +1377,7 @@ const DashboardPage = () => {
                   : [
                       {
                         label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard",
                       },
                       {
@@ -1386,6 +1388,7 @@ const DashboardPage = () => {
                 : [
                     {
                       label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
                   ]

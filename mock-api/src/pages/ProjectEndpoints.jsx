@@ -760,6 +760,7 @@ export default function Dashboard() {
                   ? [
                     {
                       label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
                     {
@@ -770,6 +771,7 @@ export default function Dashboard() {
                   : [
                     {
                       label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
                   ]
