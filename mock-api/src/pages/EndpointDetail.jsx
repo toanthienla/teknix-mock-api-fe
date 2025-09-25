@@ -600,6 +600,29 @@ const DashboardPage = () => {
 
   // Thêm state để lưu condition
   const [responseCondition, setResponseCondition] = useState({});
+  const [stateConditions, setStateConditions] = useState([
+  { id: Date.now(), key: "user_logged_in", operator: "=", value: "true" },
+  { id: Date.now() + 1, key: "cart.items", operator: ">", value: "0" },
+  { id: Date.now() + 2, key: "visits", operator: "<", value: "5" },
+  { id: Date.now() + 3, key: "user_email", operator: "regex", value: "^.+@gmail.com$" },
+]);
+
+const addStateCondition = () => {
+  setStateConditions(prev => [
+    ...prev,
+    { id: Date.now(), key: "", operator: "", value: "" }, // 👈 operator rỗng
+  ]);
+};
+
+const updateStateCondition = (id, field, value) => {
+  setStateConditions(prev =>
+    prev.map(c => (c.id === id ? { ...c, [field]: value } : c))
+  );
+};
+
+const removeStateCondition = (id) => {
+  setStateConditions(prev => prev.filter(c => c.id !== id));
+};
 
   const [setSearchTerm] = useState("");
 
@@ -1522,27 +1545,39 @@ const DashboardPage = () => {
             {/* Cột phải - Navigation và Content */}
             <div className="w-2/3">
               {/* Navigation Tabs */}
-              <Tabs defaultValue="Header&Body" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-transparent mb-4">
-                  <TabsTrigger
-                    value="Header&Body"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Header&Body
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="Rules"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Rules
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="proxy"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Proxy
-                  </TabsTrigger>
-                </TabsList>
+<Tabs defaultValue="Header&Body" className="w-full">
+  <TabsList className="grid w-full grid-cols-5 bg-transparent mb-4">
+    <TabsTrigger
+      value="Header&Body"
+      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+    >
+      Header&Body
+    </TabsTrigger>
+    <TabsTrigger
+      value="Rules"
+      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+    >
+      Request Matching
+    </TabsTrigger>
+    <TabsTrigger
+      value="stateMatching"
+      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+    >
+      State Matching
+    </TabsTrigger>
+    <TabsTrigger
+      value="stateUpdate"
+      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+    >
+      State Update
+    </TabsTrigger>
+    <TabsTrigger
+      value="proxy"
+      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+    >
+      Proxy
+    </TabsTrigger>
+  </TabsList>
 
                 {/* TabsContent */}
                 <TabsContent value="Header&Body" className="mt-0">
@@ -1738,6 +1773,155 @@ const DashboardPage = () => {
                     />
                   </div>
                 </TabsContent>
+
+<TabsContent value="stateMatching">
+  <div className="rounded-lg border border-blue-300 bg-white p-4">
+    <h3 className="font-semibold mb-4">Success Response</h3>
+
+    <div className="space-y-2">
+      {stateConditions.map((cond) => (
+        <div
+          key={cond.id}
+          className="flex items-center gap-2 rounded border border-blue-300 bg-white px-2 py-1
+                     hover:border-blue-500 hover:bg-blue-50 transition-colors"
+        >
+          {/* Key select */}
+          <Select
+            value={cond.key || undefined}
+            onValueChange={(val) => updateStateCondition(cond.id, "key", val)}
+          >
+            <SelectTrigger className="w-1/3 border-blue-300 focus:ring-blue-400">
+              <SelectValue placeholder="Select key" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                value="user_logged_in"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                user_logged_in
+              </SelectItem>
+              <SelectItem
+                value="cart.items"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                cart.items
+              </SelectItem>
+              <SelectItem
+                value="visits"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                visits
+              </SelectItem>
+              <SelectItem
+                value="user_email"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                user_email
+              </SelectItem>
+              <SelectItem
+                value="cart"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                cart
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Operator select */}
+          <Select
+            value={cond.operator || undefined}
+            onValueChange={(val) =>
+              updateStateCondition(cond.id, "operator", val)
+            }
+          >
+            <SelectTrigger className="w-28 border-blue-300 focus:ring-blue-400">
+              <SelectValue placeholder="Options" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                value="="
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                =
+              </SelectItem>
+              <SelectItem
+                value="!="
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                !=
+              </SelectItem>
+              <SelectItem
+                value=">"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                {">"}
+              </SelectItem>
+              <SelectItem
+                value="<"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                {"<"}
+              </SelectItem>
+              <SelectItem
+                value="contains"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                contains
+              </SelectItem>
+              <SelectItem
+                value="exists"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                exists
+              </SelectItem>
+              <SelectItem
+                value="regex"
+                className="hover:bg-blue-50 focus:bg-blue-50 data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-600"
+              >
+                regex
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Value input */}
+          <Input
+            placeholder="value"
+            value={cond.value}
+            onChange={(e) =>
+              updateStateCondition(cond.id, "value", e.target.value)
+            }
+            className="w-1/3 border-blue-300 focus:ring-blue-400"
+          />
+
+          {/* Divider */}
+          <div className="w-px self-stretch bg-blue-300" />
+
+          {/* Delete button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-500 hover:text-red-500"
+            onClick={() => removeStateCondition(cond.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+
+      {/* Add new condition */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={addStateCondition}
+        className="w-full justify-end border-blue-300 text-gray-600 
+                   hover:border-blue-500 hover:bg-blue-50 transition-colors"
+      >
+        + Add
+      </Button>
+    </div>
+  </div>
+</TabsContent>
+
 
                 <TabsContent value="proxy" className="mt-0">
                   <Card className="p-6 border border-[#CBD5E1] rounded-lg">
