@@ -345,18 +345,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
     setParameterRows((prevRows) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
-      // Update errors state after deletion
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[idToDelete];
         return newErrors;
       });
 
-      // Only show toast when actually deleting a rule and not the reset case
       if (filteredRows.length < prevRows.length) {
-        setTimeout(() => {
-          toast.success("Rule deleted successfully!");
-        }, 0);
+        toast.info("Rule removed locally. Click 'Save Changes' to apply.");
       }
 
       return filteredRows;
@@ -545,6 +541,13 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
               )}
             </div>
           ))}
+
+          {/* Thêm thông báo khi không có rule nào */}
+          {parameterRows.length === 0 && (
+            <div className="text-gray-500 text-sm mt-2 pl-2">
+              No rules are available.
+            </div>
+          )}
 
           {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
           <div className="flex justify-between items-center mt-4">
@@ -1556,7 +1559,7 @@ const DashboardPage = () => {
                     value="Rules"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
-                    Rules
+                    Request Matching
                   </TabsTrigger>
                   <TabsTrigger
                     value="proxy"
