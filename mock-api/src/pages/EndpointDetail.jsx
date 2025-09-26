@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,7 +43,6 @@ import {
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
 
-// Define the status codes
 const statusCodes = [
   {
     code: "100",
@@ -147,29 +145,21 @@ const statusCodes = [
 const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
-  // Thêm state để lưu lỗi cho từng rule
   const [errors, setErrors] = useState({});
   const [selectedRuleId, setSelectedRuleId] = useState(null);
 
-  // Hàm validate rule
   const validateRule = (row) => {
     const newErrors = {};
 
-    // Kiểm tra name không được trống
     if (!row.name.trim()) {
       newErrors.name = "Name cannot be empty";
-    }
-    // Kiểm tra name không chứa khoảng trắng cho Route Parameter
-    else if (row.type === "Route Parameter" && /\s/.test(row.name)) {
+    } else if (row.type === "Route Parameter" && /\s/.test(row.name)) {
       newErrors.name = "Route parameter name cannot contain spaces";
     }
 
-    // Kiểm tra value không được trống
     if (!row.value.trim()) {
       newErrors.value = "Value cannot be empty";
-    }
-    // Kiểm tra value là JSON hợp lệ cho Body
-    else if (row.type === "Body") {
+    } else if (row.type === "Body") {
       try {
         JSON.parse(row.value);
       } catch {
@@ -177,7 +167,6 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       }
     }
 
-    // Thêm validation kiểm tra trùng rule
     const existingRules = parameterRows.filter((r) => r.id !== row.id);
     const duplicateRule = existingRules.find(
       (r) =>
@@ -194,7 +183,6 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
     return newErrors;
   };
 
-  // Hàm validate tất cả rules
   const validateAllRules = () => {
     const allErrors = {};
     let isValid = true;
@@ -275,7 +263,6 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
         validateAllRules();
       }, 0);
     } else {
-      // Nếu không có condition, đặt parameterRows thành mảng rỗng
       setParameterRows([]);
     }
   }, [selectedResponse]);
@@ -615,7 +602,8 @@ const DashboardPage = () => {
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
-
+  const [proxyUrl, setProxyUrl] = useState("");
+  const [proxyMethod, setProxyMethod] = useState("GET");
   const [openNewProject, setOpenNewProject] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -685,24 +673,19 @@ const DashboardPage = () => {
     return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
-        // Sắp xếp dữ liệu theo priority tăng dần
         const sortedData = [...data].sort((a, b) => a.priority - b.priority);
-
         setEndpointResponses(sortedData);
 
-        // Format data cho Response Configurations với priority
         const statusDataFormatted = sortedData.map((res) => ({
           id: res.id,
           code: res.status_code.toString(),
           name: res.name,
           isDefault: res.is_default,
           bgColor: res.is_default ? "bg-slate-100" : "",
-          priority: res.priority, // Thêm priority vào statusData
+          priority: res.priority,
         }));
-
         setStatusData(statusDataFormatted);
 
-        // Chỉ set default selected response nếu chưa có response nào được chọn
         if (!selectedResponse && data.length > 0) {
           const defaultResponse = data.find((res) => res.is_default) || data[0];
           setSelectedResponse(defaultResponse);
@@ -712,13 +695,14 @@ const DashboardPage = () => {
             JSON.stringify(defaultResponse.response_body, null, 2)
           );
           setDelay(defaultResponse.delay_ms?.toString() || "0");
+
+          setProxyUrl(defaultResponse.proxy_url || "");
+          setProxyMethod(defaultResponse.proxy_method || "GET");
         } else if (selectedResponse) {
-          // Nếu đã có response được chọn, kiểm tra xem nó vẫn tồn tại trong data mới
           const existingResponse = data.find(
             (res) => res.id === selectedResponse.id
           );
           if (existingResponse) {
-            // Cập nhật thông tin response được chọn với dữ liệu mới từ server
             setSelectedResponse(existingResponse);
             setResponseName(existingResponse.name);
             setStatusCode(existingResponse.status_code.toString());
@@ -726,9 +710,10 @@ const DashboardPage = () => {
               JSON.stringify(existingResponse.response_body, null, 2)
             );
             setDelay(existingResponse.delay_ms?.toString() || "0");
-          }
-          // Nếu response được chọn không còn tồn tại, chọn response default hoặc response đầu tiên
-          else if (data.length > 0) {
+
+            setProxyUrl(existingResponse.proxy_url || "");
+            setProxyMethod(existingResponse.proxy_method || "GET");
+          } else if (data.length > 0) {
             const defaultResponse =
               data.find((res) => res.is_default) || data[0];
             setSelectedResponse(defaultResponse);
@@ -738,6 +723,9 @@ const DashboardPage = () => {
               JSON.stringify(defaultResponse.response_body, null, 2)
             );
             setDelay(defaultResponse.delay_ms?.toString() || "0");
+
+            setProxyUrl(defaultResponse.proxy_url || "");
+            setProxyMethod(defaultResponse.proxy_method || "GET");
           }
         }
       });
@@ -766,6 +754,15 @@ const DashboardPage = () => {
       fetchEndpointResponses().finally(() => setIsLoading(false));
     }
   }, [currentEndpointId]);
+
+  useEffect(() => {
+    if (endpointResponses.length > 0 && !selectedResponse) {
+      const defaultResponse =
+        endpointResponses.find((r) => r.is_default) || endpointResponses[0];
+      setProxyUrl(defaultResponse.proxy_url || "");
+      setProxyMethod(defaultResponse.proxy_method || "GET");
+    }
+  }, [endpointResponses, selectedResponse]);
 
   useEffect(() => {
     if (endpointId) {
@@ -1141,14 +1138,13 @@ const DashboardPage = () => {
         console.error("Error setting default response:", error);
         toast.error("Failed to set default response!");
 
-        // Khôi phục state nếu cập nhật thất bại
         fetchEndpointResponses();
       });
   };
 
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
-    setPreviousStatusData([...statusData]); // Lưu trạng thái để khôi phục nếu lỗi
+    setPreviousStatusData([...statusData]);
     e.dataTransfer.effectAllowed = "move";
   };
 
@@ -1163,22 +1159,18 @@ const DashboardPage = () => {
       const newStatusData = [...statusData];
       const draggedItemContent = { ...newStatusData[draggedItem] };
 
-      // Xóa item khỏi vị trí cũ
       newStatusData.splice(draggedItem, 1);
-      // Chèn item vào vị trí mới
+
       newStatusData.splice(dropIndex, 0, draggedItemContent);
 
-      // Cập nhật state local ngay lập tức để UI phản hồi nhanh
       setStatusData(newStatusData);
 
-      // Tạo payload cho cập nhật priority (đúng định dạng API)
       const priorityUpdates = newStatusData.map((item, index) => ({
         id: item.id,
         endpoint_id: String(currentEndpointId),
-        priority: index + 1, // Priority theo thứ tự mới (bắt đầu từ 1)
+        priority: index + 1,
       }));
 
-      // Cập nhật priority trên server
       updatePriorities(priorityUpdates, newStatusData);
     }
 
@@ -1186,7 +1178,6 @@ const DashboardPage = () => {
   };
 
   const handleResponseSelect = (response) => {
-    // Gọi API riêng cho response được chọn
     fetch(`${API_ROOT}/endpoint_responses/${response.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -1195,6 +1186,8 @@ const DashboardPage = () => {
         setStatusCode(data.status_code.toString());
         setResponseBody(JSON.stringify(data.response_body, null, 2));
         setDelay(data.delay_ms?.toString() || "0");
+        setProxyUrl(data.proxy_url || "");
+        setProxyMethod(data.proxy_method || "GET");
       })
       .catch(console.error);
   };
@@ -1297,16 +1290,13 @@ const DashboardPage = () => {
               ]
         );
 
-        // Cập nhật trực tiếp proxy state từ response trả về
         setProxyUrl(updatedResponse.proxy_url || "");
         setProxyMethod(updatedResponse.proxy_method || "GET");
 
-        // Cập nhật selectedResponse nếu đang chỉnh sửa
         if (selectedResponse) {
           setSelectedResponse(updatedResponse);
         }
 
-        // Thêm toast thông báo thành công
         if (selectedResponse) {
           toast.success("Response updated successfully!");
         } else {
@@ -1325,7 +1315,6 @@ const DashboardPage = () => {
       });
   };
 
-  // Đảm bảo state proxy được khởi tạo đúng
   useEffect(() => {
     if (selectedResponse) {
       setResponseCondition(selectedResponse.condition || {});
@@ -1333,9 +1322,6 @@ const DashboardPage = () => {
       setProxyMethod(selectedResponse.proxy_method || "GET");
     }
   }, [selectedResponse]);
-
-  const [proxyUrl, setProxyUrl] = useState("");
-  const [proxyMethod, setProxyMethod] = useState("GET"); // Thêm state proxy_method
 
   // Thêm UI loading
   if (isLoading) {
@@ -1792,7 +1778,7 @@ const DashboardPage = () => {
                       responseName={selectedResponse?.name}
                       selectedResponse={selectedResponse}
                       onUpdateRules={setResponseCondition}
-                      onSave={handleSaveResponse} // Truyền hàm handleSaveResponse vào Frame
+                      onSave={handleSaveResponse}
                     />
                   </div>
                 </TabsContent>
