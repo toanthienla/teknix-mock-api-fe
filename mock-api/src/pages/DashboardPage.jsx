@@ -121,16 +121,16 @@ export default function DashboardPage() {
   };
 
   const fetchProjects = () => {
-  fetch(`${API_ROOT}/projects`)
-    .then((res) => res.json())
-    .then((data) => {
-      const sorted = data.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
-      );
-      setProjects(sorted);
-    })
-    .catch(() => toast.error("Failed to load projects"));
-};
+    fetch(`${API_ROOT}/projects`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setProjects(sorted);
+      })
+      .catch(() => toast.error("Failed to load projects"));
+  };
 
   const fetchEndpoints = () => {
     fetch(`${API_ROOT}/endpoints`)
@@ -444,9 +444,13 @@ export default function DashboardPage() {
           <Topbar
             breadcrumb={
               currentWorkspace
-                ? currentProject
-                  ? [currentWorkspace.name, currentProject.name]
-                  : [currentWorkspace.name]
+                ? [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                  },
+                ]
                 : []
             }
             onSearch={setSearchTerm}
