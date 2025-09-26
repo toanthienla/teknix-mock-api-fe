@@ -639,6 +639,10 @@ const DashboardPage = () => {
       )
     : null;
 
+  const method =
+    endpoints.find((ep) => String(ep.id) === String(currentEndpointId))
+      ?.method || "GET";
+
   // Sửa các hàm fetch để trả về promise
   const fetchWorkspaces = () => {
     return fetch(`${API_ROOT}/workspaces`)
@@ -1457,11 +1461,19 @@ const DashboardPage = () => {
               </h2>
               <Badge
                 variant="outline"
-                className="bg-[#D5FBD3] text-[#000000] border-0"
+                className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
+                  method === "GET"
+                    ? "bg-emerald-100 text-black hover:bg-emerald-200"
+                    : method === "POST"
+                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                      : method === "PUT"
+                        ? "bg-orange-400 text-black hover:bg-orange-500"
+                        : method === "DELETE"
+                          ? "bg-red-400 text-black hover:bg-red-500"
+                          : "bg-gray-100 text-black hover:bg-gray-200"
+                }`}
               >
-                {endpoints.find(
-                  (ep) => String(ep.id) === String(currentEndpointId)
-                )?.method || "GET"}
+                {method}
               </Badge>
             </div>
 
