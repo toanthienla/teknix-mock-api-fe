@@ -25,6 +25,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage/>}/>
 
         <Route path="/dashboard/:projectId" element={<ProjectEndpoints/>}/>
+        <Route path="/projects/:projectId" element={<ProjectEndpoints/>}/>
 
         <Route
           path="/dashboard/:projectId/endpoint/:endpointId" element={<EndpointDetail/>}

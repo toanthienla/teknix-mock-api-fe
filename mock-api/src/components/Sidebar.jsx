@@ -14,14 +14,20 @@ export default function Sidebar({
   setCurrent,
   onWorkspaceChange,
   endpoints = [],
+  folders = [],
   onEditWorkspace,
   onDeleteWorkspace,
   onAddProject,
+  onAddFolder,
+  onEditFolder,
+  onDeleteFolder,
   projects = [],
   openProjectsMap,
   setOpenProjectsMap,
   openEndpointsMap,
   setOpenEndpointsMap,
+  openFoldersMap,
+  setOpenFoldersMap,
   isCollapsed,
   setIsCollapsed,
   setOpenNewWs
@@ -30,14 +36,17 @@ export default function Sidebar({
   const {projectId, endpointId} = useParams();
 
   const [rightClickActionId, setRightClickActionId] = useState(null);
+  const [rightClickFolderId, setRightClickFolderId] = useState(null);
   const [menuPos, setMenuPos] = useState({x: 0, y: 0});
   const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
   const [lockedMode, setLockedMode] = useState(false); // ✅ chỉ hiển thị workspace active
 
   const actionMenuRef = useRef(null);
+  const folderMenuRef = useRef(null);
 
   const [localOpenProjectsMap, setLocalOpenProjectsMap] = useState({});
   const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
+  const [localOpenFoldersMap, setLocalOpenFoldersMap] = useState({});
 
   // map projectId -> randomColor
   const [projectColorMap, setProjectColorMap] = useState({});
@@ -81,6 +90,9 @@ export default function Sidebar({
       if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) {
         setRightClickActionId(null);
       }
+      if (folderMenuRef.current && !folderMenuRef.current.contains(e.target)) {
+        setRightClickFolderId(null);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -107,21 +119,57 @@ export default function Sidebar({
     setRightClickActionId((prev) => (prev === wsId ? null : wsId));
   };
 
+  const handleFolderRightClick = (e, folderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const menuWidth = 140;
+    const menuHeight = 80;
+    const padding = 10;
+    let x = e.clientX + 10;
+    let y = e.clientY + 5;
+    if (x + menuWidth > window.innerWidth) x = e.clientX - menuWidth - padding;
+    if (y + menuHeight > window.innerHeight) y = e.clientY - menuHeight - padding;
+    setMenuPos({x, y});
+    setRightClickFolderId((prev) => (prev === folderId ? null : folderId));
+  };
+
   const currentWorkspace = workspaces.find((ws) => String(ws.id) === String(current));
+
+  // ✅ Nếu chưa chọn thì không gán workspace đầu tiên
+// => để null thì dropdown sẽ hiện "Select Workspace"
+if (!currentWorkspace && current) {
+  setCurrent(null);
+}
+// ✅ Auto detect workspace từ URL (projectId / endpointId)
+useEffect(() => {
+  if (projectId) {
+    const project = projects.find((p) => String(p.id) === String(projectId));
+    if (project) {
+      const wsId = project.workspace_id;
+      if (setCurrent) setCurrent(wsId);
+      if (onWorkspaceChange) onWorkspaceChange(wsId);
+      setLockedMode(true); // 👉 đảm bảo chỉ hiển thị workspace + project đang chọn
+    }
+  }
+}, [projectId, projects]);
+
 
   return (
     <div className="flex flex-col bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
-          className="cursor-pointer text-2xl font-bold text-slate-900"
-          onClick={() => {
-            setLockedMode(false); // ✅ quay lại hiển thị tất cả workspace
-            navigate("/dashboard");
-          }}
-        >
-          MockAPI
-        </span>
+  className="cursor-pointer text-2xl font-bold text-slate-900"
+  onClick={() => {
+    setLockedMode(false); // quay lại hiển thị tất cả workspace
+    setCurrent?.(null); // reset workspace
+    localStorage.removeItem("currentWorkspace"); // xoá workspace đang lưu
+    navigate("/dashboard");
+  }}
+>
+  MockAPI
+</span>
+
         <button
           onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
           className="p-1 rounded-full hover:bg-slate-100 transition-colors"
@@ -208,33 +256,136 @@ export default function Sidebar({
                         />
                       </div>
 
-                      {/* Endpoints */}
+                      {/* Folders and Endpoints */}
                       {isEpOpen && (
                         <div className="ml-6 mt-1 space-y-1 text-xs">
-                          {projectEndpoints.length === 0 ? (
-                            <div className="text-gray-500">
-                              This project has no endpoints yet.
-                            </div>
-                          ) : (
-                            projectEndpoints.map((ep) => {
-                              const activeEp = String(endpointId) === String(ep.id);
+                          {(() => {
+                            // Get folders for this project
+                            const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
+                            console.log('Debug - Project:', p.id, 'Folders:', projectFolders, 'All folders:', folders);
+                            // Get endpoints without folder_id (ungrouped endpoints)
+                            const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
+                            // Get endpoints with folder_id
+                            const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
+
+                            const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
+
+                            if (!hasContent) {
                               return (
-                                <div
-                                  key={ep.id}
-                                  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                    activeEp
-                                      ? "bg-slate-100 font-semibold text-slate-900"
-                                      : "hover:bg-slate-100"
-                                  }`}
-                                  onClick={() =>
-                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                  }
-                                >
-                                  <img src={settingIcon} className="w-5 h-5" alt="ep" />
-                                  {ep.name}
+                                <div className="text-gray-500">
+                                  This project has no folders yet.
                                 </div>
                               );
-                            })
+                            }
+
+                            return (
+                              <>
+                                {/* Render folders with their endpoints */}
+                                {projectFolders.map((folder) => {
+                                  const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
+                                  const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
+
+                                  return (
+                                    <div key={folder.id}>
+                                      {/* Folder header */}
+                                      <div
+                                        className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100"
+                                        onClick={(e) => {
+                                          // If click on chevron, toggle folder
+                                          if (e.target.closest('.folder-chevron')) {
+                                            if (setOpenFoldersMap) {
+                                              setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
+                                            } else {
+                                              setLocalOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
+                                            }
+                                          } else {
+                                            // If click on folder name, navigate to project page with folder filter
+                                            navigate(`/projects/${p.id}?folderId=${folder.id}`);
+                                          }
+                                        }}
+                                        onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
+                                      >
+                                        <ChevronDown
+                                          className={`h-3 w-3 text-slate-400 transition-transform folder-chevron ${
+                                            isFolderOpen ? "rotate-0" : "-rotate-90"
+                                          }`}
+                                        />
+                                        <img src={folderIcon} className="w-4 h-4" alt="folder" />
+                                        <span>{folder.name}</span>
+                                      </div>
+
+                                      {/* Folder endpoints */}
+                                      {isFolderOpen && (
+                                        <div className="ml-6 mt-1 space-y-1">
+                                          {folderEndpoints.length === 0 ? (
+                                            <div className="text-gray-400 px-2 py-1">
+                                              No endpoints in this folder
+                                            </div>
+                                          ) : (
+                                            folderEndpoints.map((ep) => {
+                                              const activeEp = String(endpointId) === String(ep.id);
+                                              return (
+                                                <div
+                                                  key={ep.id}
+                                                  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                                    activeEp
+                                                      ? "bg-slate-100 font-semibold text-slate-900"
+                                                      : "hover:bg-slate-100"
+                                                  }`}
+                                                  onClick={() =>
+                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                  }
+                                                >
+                                                  <img src={settingIcon} className="w-5 h-5" alt="ep" />
+                                                  {ep.name}
+                                                </div>
+                                              );
+                                            })
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+
+                                {/* Render ungrouped endpoints directly */}
+                                {ungroupedEndpoints.map((ep) => {
+                                  const activeEp = String(endpointId) === String(ep.id);
+                                  return (
+                                    <div
+                                      key={ep.id}
+                                      className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                        activeEp
+                                          ? "bg-slate-100 font-semibold text-slate-900"
+                                          : "hover:bg-slate-100"
+                                      }`}
+                                      onClick={() =>
+                                        navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                      }
+                                    >
+                                      <img src={settingIcon} className="w-5 h-5" alt="ep" />
+                                      {ep.name}
+                                    </div>
+                                  );
+                                })}
+                              </>
+                            );
+                          })()}
+
+                          {/* New folder button khi đang trong project */}
+                          {String(projectId) === String(p.id) && (
+                            <div
+                              className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onAddFolder) {
+                                  onAddFolder();
+                                }
+                              }}
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>New folder...</span>
+                            </div>
                           )}
                         </div>
                       )}
@@ -328,38 +479,120 @@ export default function Sidebar({
                           />
                         </div>
 
-                        {/* Endpoints */}
+                        {/* Folders and Endpoints */}
                         {isEpOpen && (
                           <div className="ml-6 mt-1 space-y-1 text-xs">
-                            {projectEndpoints.length === 0 ? (
-                              <div className="text-gray-500">
-                                This project has no endpoints yet.
-                              </div>
-                            ) : (
-                              projectEndpoints.map((ep) => {
-                                const activeEp = String(endpointId) === String(ep.id);
+                            {(() => {
+                              // Get folders for this project
+                              const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
+                              console.log('Debug - Workspace Project:', p.id, 'Folders:', projectFolders);
+                              // Get endpoints without folder_id (ungrouped endpoints)
+                              const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
+                              // Get endpoints with folder_id
+                              const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
+
+                              const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
+
+                              if (!hasContent) {
                                 return (
-                                  <div
-                                    key={ep.id}
-                                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                      activeEp
-                                        ? "bg-slate-100 font-semibold text-slate-900"
-                                        : "hover:bg-slate-100"
-                                    }`}
-                                    onClick={() =>
-                                      navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                    }
-                                  >
-                                    <img
-                                      src={settingIcon}
-                                      className="w-5 h-5"
-                                      alt="ep"
-                                    />
-                                    {ep.name}
+                                  <div className="text-gray-500">
+                                    This project has no endpoints yet.
                                   </div>
                                 );
-                              })
-                            )}
+                              }
+
+                              return (
+                                <>
+                                  {/* Render folders with their endpoints */}
+                                  {projectFolders.map((folder) => {
+                                    const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
+                                    const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
+
+                                    return (
+                                      <div key={folder.id}>
+                                        {/* Folder header */}
+                                        <div
+                                          className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100"
+                                          onClick={(e) => {
+                                            // If click on chevron, toggle folder
+                                            if (e.target.closest('.folder-chevron')) {
+                                              if (setOpenFoldersMap) {
+                                                setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
+                                              } else {
+                                                setLocalOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
+                                              }
+                                            } else {
+                                              // If click on folder name, navigate to project page with folder filter
+                                              navigate(`/projects/${p.id}?folderId=${folder.id}`);
+                                            }
+                                          }}
+                                        >
+                                          <ChevronDown
+                                            className={`w-3 h-3 text-slate-400 transition-transform folder-chevron ${
+                                              isFolderOpen ? "rotate-0" : "-rotate-90"
+                                            }`}
+                                          />
+                                          <img src={folderIcon} className="w-4 h-4" alt="folder" />
+                                          <span>{folder.name}</span>
+                                        </div>
+
+                                        {/* Folder endpoints */}
+                                        {isFolderOpen && (
+                                          <div className="ml-6 mt-1 space-y-1">
+                                            {folderEndpoints.length === 0 ? (
+                                              <div className="text-gray-400 px-2 py-1">
+                                                No endpoints in this folder
+                                              </div>
+                                            ) : (
+                                              folderEndpoints.map((ep) => {
+                                                const activeEp = String(endpointId) === String(ep.id);
+                                                return (
+                                                  <div
+                                                    key={ep.id}
+                                                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                                      activeEp
+                                                        ? "bg-slate-100 font-semibold text-slate-900"
+                                                        : "hover:bg-slate-100"
+                                                    }`}
+                                                    onClick={() =>
+                                                      navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                    }
+                                                  >
+                                                    <img src={settingIcon} className="w-5 h-5" alt="ep" />
+                                                    {ep.name}
+                                                  </div>
+                                                );
+                                              })
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+
+                                  {/* Render ungrouped endpoints directly */}
+                                  {ungroupedEndpoints.map((ep) => {
+                                    const activeEp = String(endpointId) === String(ep.id);
+                                    return (
+                                      <div
+                                        key={ep.id}
+                                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                          activeEp
+                                            ? "bg-slate-100 font-semibold text-slate-900"
+                                            : "hover:bg-slate-100"
+                                        }`}
+                                        onClick={() =>
+                                          navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                        }
+                                      >
+                                        <img src={settingIcon} className="w-5 h-5" alt="ep" />
+                                        {ep.name}
+                                      </div>
+                                    );
+                                  })}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
@@ -385,7 +618,7 @@ export default function Sidebar({
                 >
                   <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
                 </button>
-                
+
                 <button
                   onClick={() => onDeleteWorkspace && onDeleteWorkspace(ws.id)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
@@ -411,6 +644,43 @@ export default function Sidebar({
 )}
 
         </div>
+
+        {/* Folder Context Menu */}
+        {rightClickFolderId && (
+          <div
+            ref={folderMenuRef}
+            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
+            style={{ top: menuPos.y, left: menuPos.x }}
+          >
+            <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+              Actions
+            </div>
+            <button
+              onClick={() => {
+                if (onEditFolder) {
+                  const folder = folders.find(f => f.id === rightClickFolderId);
+                  onEditFolder(folder);
+                }
+                setRightClickFolderId(null);
+              }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+            >
+              <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
+            </button>
+
+            <button
+              onClick={() => {
+                if (onDeleteFolder) {
+                  onDeleteFolder(rightClickFolderId);
+                }
+                setRightClickFolderId(null);
+              }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+            >
+              <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
