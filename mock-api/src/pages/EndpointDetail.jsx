@@ -588,6 +588,9 @@ const DashboardPage = () => {
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
     () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
   );
+  const [openFoldersMap, setOpenFoldersMap] = useState(
+    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
+  );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
   );
@@ -597,6 +600,7 @@ const DashboardPage = () => {
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [endpointResponses, setEndpointResponses] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [folders, setFolders] = useState([]);
 
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
@@ -668,6 +672,17 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         setEndpoints(data);
+      });
+  };
+
+  const fetchFolders = () => {
+    return fetch(`${API_ROOT}/folders`)
+      .then((res) => res.json())
+      .then((data) => {
+        setFolders(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching folders:', error);
       });
   };
 
@@ -743,6 +758,7 @@ const DashboardPage = () => {
           fetchWorkspaces(),
           fetchProjects(),
           fetchEndpoints(),
+          fetchFolders(),
         ]);
       } finally {
         setIsLoading(false);
@@ -783,6 +799,10 @@ const DashboardPage = () => {
   useEffect(() => {
     localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
   }, [openEndpointsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
+  }, [openFoldersMap]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -1352,6 +1372,7 @@ const DashboardPage = () => {
           workspaces={workspaces}
           projects={projects}
           endpoints={endpoints}
+          folders={folders}
           current={currentWsId}
           setCurrent={setCurrentWsId}
           onAddWorkspace={handleAddWorkspace}
@@ -1365,11 +1386,16 @@ const DashboardPage = () => {
           setOpenProjectsMap={setOpenProjectsMap}
           openEndpointsMap={openEndpointsMap}
           setOpenEndpointsMap={setOpenEndpointsMap}
+          openFoldersMap={openFoldersMap}
+          setOpenFoldersMap={setOpenFoldersMap}
           isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
           setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
           onAddProject={(workspaceId) => {
             setTargetWsId(workspaceId); // lưu workspace đang chọn
             setOpenNewProject(true); // mở modal tạo project
+          }}
+          onAddFolder={(projectId) => {
+            console.log('Add folder for project:', projectId);
           }}
         />
       </aside>

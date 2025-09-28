@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {ChevronDown, ChevronsUpDown} from "lucide-react";
 import Sidebar from "@/components/Sidebar.jsx";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate, useParams, useLocation} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
 import {
   Dialog,
@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
 import {Input} from "@/components/ui/input.jsx";
+import {Label} from "@/components/ui/label.jsx";
 import {
   Select,
   SelectContent,
@@ -49,15 +50,31 @@ import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
 
 export default function Dashboard() {
+  console.log('🔄 ProjectEndpoints component rendering...');
+  
   const navigate = useNavigate();
   const {projectId} = useParams();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("endpoints");
+
+  // Get folderId from URL query parameters
+  const urlParams = new URLSearchParams(location.search);
+  const selectedFolderId = urlParams.get('folderId');
+  
+  console.log('📍 Debug Info:', {
+    projectId,
+    selectedFolderId,
+    url: location.pathname + location.search,
+    timestamp: new Date().toLocaleTimeString()
+  });
 
   const [logs, setLogs] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +85,9 @@ export default function Dashboard() {
   );
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
     () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [openFoldersMap, setOpenFoldersMap] = useState(
+    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
@@ -81,6 +101,15 @@ export default function Dashboard() {
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
+
+  // folder state
+  const [openNewFolder, setOpenNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [deleteFolderId, setDeleteFolderId] = useState(null);
+  const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
 
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -250,9 +279,23 @@ export default function Dashboard() {
 
   // fetch workspaces + projects + endpoints
   useEffect(() => {
-    fetchWorkspaces();
-    fetchProjects();
-    fetchAllEndpoints();
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        fetchWorkspaces();
+        fetchProjects();
+        fetchAllEndpoints();
+        fetchFolders();
+        
+        // Wait a bit for all to complete
+        setTimeout(() => setIsLoading(false), 1000);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -268,6 +311,10 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
   }, [openEndpointsMap]);
+
+  useEffect(() => {
+    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
+  }, [openFoldersMap]);
 
   useEffect(() => {
     localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
@@ -287,7 +334,7 @@ export default function Dashboard() {
   }, [projectId, projects, currentWsId]);
 
   const fetchWorkspaces = () => {
-    fetch(`${API_ROOT}/workspaces`)
+    return fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
@@ -332,6 +379,13 @@ export default function Dashboard() {
       .catch((err) => console.error("Error fetching endpoints:", err));
   };
 
+  const fetchFolders = () => {
+    fetch(`${API_ROOT}/folders`)
+      .then((res) => res.json())
+      .then((data) => setFolders(data))
+      .catch((err) => console.error("Error fetching folders:", err));
+  };
+
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
@@ -371,6 +425,184 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Error fetching logs:", err);
       toast.error("Failed to load logs");
+    }
+  };
+
+  // -------------------- Folder --------------------
+  const handleAddFolder = () => {
+    setOpenNewFolder(true);
+  };
+
+  const handleEditFolder = (folder) => {
+    setNewFolderName(folder.name);
+    setNewFolderDesc(folder.description || "");
+    setEditingFolderId(folder.id);
+    setOpenNewFolder(true);
+  };
+
+  const handleDeleteFolder = async (folderId) => {
+    setDeleteFolderId(folderId);
+    setOpenDeleteFolder(true);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!deleteFolderId) return;
+    
+    try {
+      // Get all endpoints in this folder
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(deleteFolderId));
+
+      // Delete all endpoints in the folder first
+      await Promise.all(
+        endpointsToDelete.map(e => 
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+        )
+      );
+
+      // Delete the folder
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE" });
+
+      // Update local state
+      setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
+      setAllEndpoints(prev => prev.filter(e => String(e.folder_id) !== String(deleteFolderId)));
+
+      toast.dismiss();
+      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+      
+      // If currently viewing the deleted folder, navigate back to project view
+      if (selectedFolderId === deleteFolderId) {
+        navigate(`/projects/${projectId}`);
+      }
+      
+      setOpenDeleteFolder(false);
+      setDeleteFolderId(null);
+    } catch (error) {
+      console.error('Delete folder error:', error);
+      toast.error("Failed to delete folder");
+    }
+  };
+
+  const validateFolderName = (name) => {
+    const trimmed = name.trim();
+    
+    if (!trimmed) {
+      return "Folder name cannot be empty";
+    }
+    
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed)) {
+      return "Must start with a letter, no special chars, single spaces allowed";
+    }
+    
+    if (trimmed.length > 20) {
+      return "Folder name max 20 chars";
+    }
+    
+    // Check for duplicate folder names in the current project (exclude current folder when editing)
+    const projectFolders = folders.filter(f => 
+      String(f.project_id) === String(projectId) && 
+      f.id !== editingFolderId
+    );
+    if (projectFolders.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+      return "Folder name already exists in this project";
+    }
+    
+    return "";
+  };
+
+  const hasChanges = () => {
+    if (!editingFolderId) return true; // Always allow create
+    
+    const originalFolder = folders.find(f => f.id === editingFolderId);
+    if (!originalFolder) return true;
+    
+    return newFolderName.trim() !== originalFolder.name || 
+           newFolderDesc.trim() !== (originalFolder.description || "");
+  };
+
+  const handleCreateFolder = async () => {
+    // Clear any existing toasts first
+    toast.dismiss();
+    
+    // Check if no changes when editing
+    if (editingFolderId) {
+      const originalFolder = folders.find(f => f.id === editingFolderId);
+      if (originalFolder && 
+          newFolderName.trim() === originalFolder.name && 
+          newFolderDesc.trim() === (originalFolder.description || "")) {
+        // No changes, just close dialog
+        setOpenNewFolder(false);
+        setNewFolderName("");
+        setNewFolderDesc("");
+        setEditingFolderId(null);
+        return;
+      }
+    }
+    
+    const validationError = validateFolderName(newFolderName);
+    if (validationError) {
+      toast.warning(validationError);
+      return;
+    }
+
+    if (isCreatingFolder) {
+      return; // Prevent double submission
+    }
+
+    setIsCreatingFolder(true);
+
+    try {
+      const folderData = {
+        name: newFolderName.trim(),
+        description: newFolderDesc.trim(),
+        project_id: projectId,
+        created_at: editingFolderId ? undefined : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      let response;
+      if (editingFolderId) {
+        // Update existing folder
+        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingFolderId, ...folderData }),
+        });
+      } else {
+        // Create new folder
+        response = await fetch(`${API_ROOT}/folders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(folderData),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to save folder');
+      }
+
+      const savedFolder = await response.json();
+      
+      if (editingFolderId) {
+        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
+        toast.success(`Folder "${savedFolder.name}" updated successfully!`);
+      } else {
+        setFolders((prev) => [...prev, savedFolder]);
+        toast.success(`Folder "${savedFolder.name}" created successfully!`);
+        // Auto navigate to the new folder page
+        navigate(`/projects/${projectId}?folderId=${savedFolder.id}`);
+      }
+      
+      setNewFolderName("");
+      setNewFolderDesc("");
+      setEditingFolderId(null);
+      setOpenNewFolder(false);
+    } catch (error) {
+      console.error('Error saving folder:', error);
+      toast.error('Failed to save folder. Please try again.');
+    } finally {
+      setIsCreatingFolder(false);
     }
   };
 
@@ -558,14 +790,28 @@ export default function Dashboard() {
       return;
     }
 
+    // Check if we have folders for this project
+    const projectFolders = folders.filter(f => String(f.project_id) === String(projectId));
+    
+    // If project has folders but no folder is selected, require folder selection
+    if (projectFolders.length > 0 && !selectedFolderId) {
+      toast.warning("Please select a folder first or create a new folder to organize your endpoints.");
+      return;
+    }
+
     const newEndpoint = {
       name: newEName,
       path: newEPath,
       method: newEMethod,
-      project_id: Number(projectId),
+      project_id: projectId, // Keep as string to match project id format
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // If we're viewing a specific folder, add the endpoint to that folder
+    if (selectedFolderId) {
+      newEndpoint.folder_id = selectedFolderId;
+    }
 
     fetch(`${API_ROOT}/endpoints`, {
       method: "POST",
@@ -698,9 +944,16 @@ export default function Dashboard() {
   );
 
   // filter + sort endpoints
-  const filteredEndpoints = endpoints.filter((e) =>
+  let filteredEndpoints = endpoints.filter((e) =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // If folderId is specified, filter by folder
+  if (selectedFolderId) {
+    filteredEndpoints = filteredEndpoints.filter((e) => 
+      String(e.folder_id) === String(selectedFolderId)
+    );
+  }
 
   // sort endpoints based on sortOption
   let sortedEndpoints = [...filteredEndpoints];
@@ -715,6 +968,18 @@ export default function Dashboard() {
     sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
   }
 
+  // Get current folder info
+  const currentFolder = selectedFolderId ? folders.find(f => String(f.id) === String(selectedFolderId)) : null;
+  
+  console.log('📁 Folder Debug:', {
+    selectedFolderId,
+    currentFolder: currentFolder ? { id: currentFolder.id, name: currentFolder.name } : null,
+    totalFolders: folders.length,
+    projectFolders: folders.filter(f => String(f.project_id) === String(projectId)).length
+  });
+
+  console.log('🚀 About to render component...');
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -726,6 +991,7 @@ export default function Dashboard() {
             workspaces={workspaces}
             projects={projects}
             endpoints={allEndpoints}
+            folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
             onAddWorkspace={handleAddWorkspace}
@@ -739,12 +1005,18 @@ export default function Dashboard() {
             setOpenProjectsMap={setOpenProjectsMap}
             openEndpointsMap={openEndpointsMap}
             setOpenEndpointsMap={setOpenEndpointsMap}
+            openFoldersMap={openFoldersMap}
+            setOpenFoldersMap={setOpenFoldersMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
             onAddProject={(workspaceId) => {
               setTargetWsId(workspaceId); // lưu workspace đang chọn
               setOpenNewProject(true);    // mở modal tạo project
             }}
+            onAddFolder={handleAddFolder}
+            onEditFolder={handleEditFolder}
+            onDeleteFolder={handleDeleteFolder}
+            
           />
         </aside>
 
@@ -757,17 +1029,33 @@ export default function Dashboard() {
             breadcrumb={
               currentWorkspace
                 ? currentProject
-                  ? [
-                    {
-                      label: currentWorkspace.name,
-                      WORKSPACE_ID: currentWorkspace.id,
-                      href: "/dashboard",
-                    },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                    },
-                  ]
+                  ? currentFolder
+                    ? [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/projects/${currentProject.id}`,
+                      },
+                      {
+                        label: currentFolder.name,
+                        href: `/projects/${currentProject.id}?folderId=${currentFolder.id}`,
+                      },
+                    ]
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/projects/${currentProject.id}`,
+                      },
+                    ]
                   : [
                     {
                       label: currentWorkspace.name,
@@ -822,7 +1110,21 @@ export default function Dashboard() {
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       {currentWorkspace ? (
                         <h2 className="text-xl font-bold text-gray-800 mb-2">
-                          {currentWorkspace.name} - {sortedEndpoints.length} Endpoints
+                          {currentWorkspace.name}
+                          {currentProject && (
+                            <>
+                              {" - "}
+                              {currentProject.name}
+                            </>
+                          )}
+                          {currentFolder && (
+                            <>
+                              {" / "}
+                              {currentFolder.name}
+                            </>
+                          )}
+                          {" - "}
+                          {sortedEndpoints.length} Endpoints
                         </h2>
                       ) : (
                         <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
@@ -1390,6 +1692,78 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* New Folder Dialog */}
+      <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
+        <DialogContent 
+          className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
+        >
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              {editingFolderId ? "Edit Folder" : "New Folder"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
+                Name
+              </Label>
+              <Input
+                id="folder-name"
+                placeholder="Enter folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
+                    e.preventDefault();
+                    if (hasChanges()) {
+                      handleCreateFolder();
+                    } else {
+                      // No changes, just close dialog
+                      setOpenNewFolder(false);
+                      setNewFolderName("");
+                      setNewFolderDesc("");
+                      setEditingFolderId(null);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setOpenNewFolder(false);
+                    setNewFolderName("");
+                    setNewFolderDesc("");
+                    setEditingFolderId(null);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4 flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setOpenNewFolder(false);
+                setNewFolderName("");
+                setNewFolderDesc("");
+                setEditingFolderId(null);
+              }}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
+              className="px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+            >
+              {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Confirm Delete Workspace */}
       <Dialog
         open={!!confirmDeleteWs}
@@ -1415,6 +1789,42 @@ export default function Dashboard() {
                 handleDeleteWorkspace(confirmDeleteWs);
                 setConfirmDeleteWs(null);
               }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Folder Dialog */}
+      <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg font-semibold text-gray-900">
+              Delete Folder
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-2">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this folder and all its endpoints? This action cannot be undone.
+            </p>
+          </div>
+
+          <DialogFooter className="pt-4 flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setOpenDeleteFolder(false);
+                setDeleteFolderId(null);
+              }}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDeleteFolder}
+              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium"
             >
               Delete
             </Button>

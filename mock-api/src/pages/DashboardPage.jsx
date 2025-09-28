@@ -1,12 +1,12 @@
 "use client";
 
-import React, {useState, useEffect} from "react";
-import {useParams, useNavigate} from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
-import {ChevronDown} from "lucide-react";
-import {API_ROOT} from "../utils/constants";
+import { ChevronDown } from "lucide-react";
+import { API_ROOT } from "../utils/constants";
 
 import {
   Dialog,
@@ -15,9 +15,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,20 +25,20 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const {projectId} = useParams();
+  const { projectId } = useParams();
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(
     () => localStorage.getItem("currentWorkspace") || null
   );
   const [targetWsId, setTargetWsId] = useState(null);
-
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
@@ -48,6 +48,9 @@ export default function DashboardPage() {
   );
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
     () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
+  );
+  const [openFoldersMap, setOpenFoldersMap] = useState(
+    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
@@ -63,6 +66,9 @@ export default function DashboardPage() {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
@@ -74,6 +80,7 @@ export default function DashboardPage() {
     fetchWorkspaces();
     fetchProjects();
     fetchEndpoints();
+    fetchFolders();
   }, []);
 
   useEffect(() => {
@@ -106,6 +113,10 @@ export default function DashboardPage() {
     localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
+  useEffect(() => {
+    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
+  }, [openFoldersMap]);
+
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
@@ -136,6 +147,57 @@ export default function DashboardPage() {
     fetch(`${API_ROOT}/endpoints`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
+  };
+
+  const fetchFolders = async () => {
+    try {
+      console.log('DashboardPage: Fetching folders...');
+      const response = await fetch(`${API_ROOT}/folders`);
+      const data = await response.json();
+      console.log('DashboardPage: Folders fetched:', data);
+      setFolders(data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
+
+  const handleAddFolder = (projectId) => {
+    console.log('Add folder for project:', projectId);
+    // This could open a modal or navigate to a folder creation page
+  };
+
+  const handleEditFolder = (folder) => {
+    console.log('Edit folder:', folder);
+    // Navigate to project page with folder selected for editing
+    navigate(`/projects/${folder.project_id}?folderId=${folder.id}&action=edit`);
+  };
+
+  const handleDeleteFolder = async (folderId) => {
+    try {
+      // Get all endpoints in this folder
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(folderId));
+
+      // Delete all endpoints in the folder first
+      await Promise.all(
+        endpointsToDelete.map(e => 
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+        )
+      );
+
+      // Delete the folder
+      await fetch(`${API_ROOT}/folders/${folderId}`, { method: "DELETE" });
+
+      // Update local state
+      setFolders(prev => prev.filter(f => f.id !== folderId));
+      setEndpoints(prev => prev.filter(e => String(e.folder_id) !== String(folderId)));
+
+      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+    } catch (error) {
+      console.error('Delete folder error:', error);
+      toast.error("Failed to delete folder");
+    }
   };
 
   // -------------------- Filtering & Sorting --------------------
@@ -186,7 +248,7 @@ export default function DashboardPage() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -198,7 +260,7 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         localStorage.setItem("currentWorkspace", createdWs.id);
-        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Workspace created successfully");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -210,9 +272,17 @@ export default function DashboardPage() {
       toast.warning(err);
       return;
     }
+
+    // Kiểm tra nếu tên workspace không thay đổi
+    const original = workspaces.find(w => w.id === editWsId);
+    if (original && editWsName.trim() === original.name) {
+      setOpenEditWs(false);
+      return;
+    }
+
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -221,7 +291,7 @@ export default function DashboardPage() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -234,25 +304,69 @@ export default function DashboardPage() {
 
   const handleDeleteWorkspace = async (id) => {
     try {
-      const res = await fetch(`${API_ROOT}/projects`);
-      const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
+      // 1. Get all projects in this workspace
+      const projectsRes = await fetch(`${API_ROOT}/projects`);
+      const allProjects = await projectsRes.json();
+      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
+      const projectIds = projectsToDelete.map(p => p.id);
 
+      // 2. Get all folders in these projects
+      const foldersRes = await fetch(`${API_ROOT}/folders`);
+      const allFolders = await foldersRes.json();
+      const foldersToDelete = allFolders.filter((f) => 
+        projectIds.some(pid => String(f.project_id) === String(pid))
+      );
+      const folderIds = foldersToDelete.map(f => f.id);
+
+      // 3. Get all endpoints in these projects/folders
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter((e) => 
+        projectIds.some(pid => String(e.project_id) === String(pid)) ||
+        folderIds.some(fid => String(e.folder_id) === String(fid))
+      );
+
+      // 4. Delete all endpoints first
       await Promise.all(
-        projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      // 5. Delete all folders
+      await Promise.all(
+        foldersToDelete.map((f) =>
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+        )
+      );
 
+      // 6. Delete all projects
+      await Promise.all(
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+        )
+      );
+
+      // 7. Finally delete the workspace
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+
+      // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
-      if (currentWsId === id) setCurrentWsId(null);
+      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
+      setFolders((prev) => prev.filter((f) => 
+        !projectIds.some(pid => String(f.project_id) === String(pid))
+      ));
+      setEndpoints((prev) => prev.filter((e) => 
+        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
+        !folderIds.some(fid => String(e.folder_id) === String(fid))
+      ));
+      
+      if (String(currentWsId) === String(id)) setCurrentWsId(null);
 
-      toast.success("Workspace and its projects deleted successfully");
-    } catch {
-      toast.error("Failed to delete workspace or its projects");
+      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+    } catch (error) {
+      console.error('Delete workspace error:', error);
+      toast.error("Failed to delete workspace or its content");
     }
   };
 
@@ -317,7 +431,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newProject),
     })
       .then((res) => res.json())
@@ -353,6 +467,7 @@ export default function DashboardPage() {
     const original = projects.find((p) => p.id === editId);
     if (!original) return;
 
+    // Kiểm tra nếu không có thay đổi thì đóng dialog
     if (
       editTitle.trim() === (original.name || "") &&
       editDesc.trim() === (original.description || "")
@@ -365,7 +480,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/projects/${editId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: editId,
         name: editTitle.trim(),
@@ -390,16 +505,61 @@ export default function DashboardPage() {
     setOpenDeleteProject(true);
   };
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = async () => {
     if (!deleteProjectId) return;
-    fetch(`${API_ROOT}/projects/${deleteProjectId}`, {method: "DELETE"})
-      .then(() => {
-        setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
-        setDeleteProjectId(null);
-        setOpenDeleteProject(false);
-        toast.success("Project deleted successfully");
-      })
-      .catch(() => toast.error("Failed to delete project"));
+    
+    try {
+      // 1. Get all folders in this project
+      const foldersRes = await fetch(`${API_ROOT}/folders`);
+      const allFolders = await foldersRes.json();
+      const foldersToDelete = allFolders.filter((f) => 
+        String(f.project_id) === String(deleteProjectId)
+      );
+      const folderIds = foldersToDelete.map(f => f.id);
+
+      // 2. Get all endpoints in this project or its folders
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter((e) => 
+        String(e.project_id) === String(deleteProjectId) ||
+        folderIds.some(fid => String(e.folder_id) === String(fid))
+      );
+
+      // 3. Delete all endpoints first
+      await Promise.all(
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+        )
+      );
+
+      // 4. Delete all folders
+      await Promise.all(
+        foldersToDelete.map((f) =>
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+        )
+      );
+
+      // 5. Delete the project
+      await fetch(`${API_ROOT}/projects/${deleteProjectId}`, { method: "DELETE" });
+
+      // 6. Update local state
+      setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
+      setFolders((prev) => prev.filter((f) => 
+        String(f.project_id) !== String(deleteProjectId)
+      ));
+      setEndpoints((prev) => prev.filter((e) => 
+        String(e.project_id) !== String(deleteProjectId) &&
+        !folderIds.some(fid => String(e.folder_id) === String(fid))
+      ));
+      
+      setDeleteProjectId(null);
+      setOpenDeleteProject(false);
+      
+      toast.success(`Project and all its content (${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+    } catch (error) {
+      console.error('Delete project error:', error);
+      toast.error("Failed to delete project");
+    }
   };
 
   // -------------------- Render --------------------
@@ -408,14 +568,14 @@ export default function DashboardPage() {
       {/* Sidebar + Main */}
       <div className="flex min-h-screen bg-white">
         <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${
-            !isSidebarCollapsed ? "border-r" : "border-none"
-          }`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"
+            }`}
         >
           <Sidebar
             workspaces={workspaces}
             projects={projects}
             endpoints={endpoints}
+            folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
             onWorkspaceChange={setCurrentWsId}
@@ -430,13 +590,20 @@ export default function DashboardPage() {
             setOpenProjectsMap={setOpenProjectsMap}
             openEndpointsMap={openEndpointsMap}
             setOpenEndpointsMap={setOpenEndpointsMap}
+            openFoldersMap={openFoldersMap}
+            setOpenFoldersMap={setOpenFoldersMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
             onAddProject={(workspaceId) => {
-              setTargetWsId(workspaceId); // lưu workspace đang chọn
-              setOpenNewProject(true);    // mở modal tạo project
+              setTargetWsId(workspaceId);
+              setOpenNewProject(true);
             }}
+            onAddFolder={handleAddFolder}
+            onEditFolder={handleEditFolder}
+            onDeleteFolder={handleDeleteFolder}
+            setOpenNewWs={setOpenNewWs}   // 👈 Thêm dòng này
           />
+
         </aside>
 
         {/* Main */}
@@ -461,8 +628,11 @@ export default function DashboardPage() {
 
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
-              ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
-            }`}
+              ${isSidebarCollapsed
+                ? "w-[calc(100%+16rem)] -translate-x-64"
+                : "w-full"
+              }
+            `}
           >
             {currentProject ? (
               <div>
@@ -495,7 +665,7 @@ export default function DashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
                         <span>{sortOption}</span>
-                        <ChevronDown className="w-4 h-4"/>
+                        <ChevronDown className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -516,7 +686,7 @@ export default function DashboardPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <div className="flex pr-8 pl-8 flex-col gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-8">
                   {sortedProjects.length > 0 ? (
                     sortedProjects.map((p) => (
                       <ProjectCard
@@ -528,7 +698,7 @@ export default function DashboardPage() {
                       />
                     ))
                   ) : (
-                    <p className="text-slate-500">No projects found.</p>
+                    <p className="text-slate-500 col-span-full">No projects found.</p>
                   )}
                 </div>
               </>
@@ -536,6 +706,8 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
+
+      {/* Modals */}
 
       {/* New Project */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
@@ -591,7 +763,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-black/90"
               onClick={handleCreateProject}
             >
               Create
@@ -599,6 +771,7 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Edit Project */}
       <Dialog open={openEditProject} onOpenChange={setOpenEditProject}>
@@ -668,7 +841,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-black/90"
               onClick={handleUpdateProject}
               disabled={
                 editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
@@ -680,6 +853,7 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       {/* Delete Project */}
       <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
@@ -702,30 +876,76 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
+
+
+      {/* ✅ New Workspace */}
+      <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenNewWs(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white hover:bg-gray-800"
+              onClick={() => {
+                handleAddWorkspace(newWsName);
+                setNewWsName("");
+                setOpenNewWs(false);
+              }}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Workspace</DialogTitle>
           </DialogHeader>
-          <Input
-            placeholder="Workspace name"
-            value={editWsName}
-            onChange={(e) => setEditWsName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleEditWorkspace();
-              }
-            }}
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={editWsName}
+              onChange={(e) => setEditWsName(e.target.value)}
+            />
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenEditWs(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-gray-800"
               onClick={handleEditWorkspace}
+              disabled={
+                editWsName.trim() === (workspaces.find((w) => w.id === editWsId)?.name || "")
+              }
             >
               Update
             </Button>
@@ -734,23 +954,18 @@ export default function DashboardPage() {
       </Dialog>
 
       {/* Delete Workspace */}
-      <Dialog
-        open={!!confirmDeleteWs}
-        onOpenChange={(open) => !open && setConfirmDeleteWs(null)}
-      >
+      <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Workspace</DialogTitle>
+            <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this workspace and all its projects?
-          </p>
+          <p>Are you sure you want to delete this workspace and all its projects?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => {
                 handleDeleteWorkspace(confirmDeleteWs);
                 setConfirmDeleteWs(null);
