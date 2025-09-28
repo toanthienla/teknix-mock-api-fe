@@ -39,7 +39,6 @@ export default function DashboardPage() {
   );
   const [targetWsId, setTargetWsId] = useState(null);
 
-
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("Recently created");
 
@@ -62,6 +61,9 @@ export default function DashboardPage() {
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
+
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
 
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -413,30 +415,32 @@ export default function DashboardPage() {
           }`}
         >
           <Sidebar
-            workspaces={workspaces}
-            projects={projects}
-            endpoints={endpoints}
-            current={currentWsId}
-            setCurrent={setCurrentWsId}
-            onWorkspaceChange={setCurrentWsId}
-            onAddWorkspace={handleAddWorkspace}
-            onEditWorkspace={(ws) => {
-              setEditWsId(ws.id);
-              setEditWsName(ws.name);
-              setOpenEditWs(true);
-            }}
-            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-            openProjectsMap={openProjectsMap}
-            setOpenProjectsMap={setOpenProjectsMap}
-            openEndpointsMap={openEndpointsMap}
-            setOpenEndpointsMap={setOpenEndpointsMap}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            onAddProject={(workspaceId) => {
-              setTargetWsId(workspaceId); // lưu workspace đang chọn
-              setOpenNewProject(true);    // mở modal tạo project
-            }}
-          />
+  workspaces={workspaces}
+  projects={projects}
+  endpoints={endpoints}
+  current={currentWsId}
+  setCurrent={setCurrentWsId}
+  onWorkspaceChange={setCurrentWsId}
+  onAddWorkspace={handleAddWorkspace}
+  onEditWorkspace={(ws) => {
+    setEditWsId(ws.id);
+    setEditWsName(ws.name);
+    setOpenEditWs(true);
+  }}
+  onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
+  openProjectsMap={openProjectsMap}
+  setOpenProjectsMap={setOpenProjectsMap}
+  openEndpointsMap={openEndpointsMap}
+  setOpenEndpointsMap={setOpenEndpointsMap}
+  isCollapsed={isSidebarCollapsed}
+  setIsCollapsed={setIsSidebarCollapsed}
+  onAddProject={(workspaceId) => {
+    setTargetWsId(workspaceId);
+    setOpenNewProject(true);
+  }}
+  setOpenNewWs={setOpenNewWs}   // 👈 Thêm dòng này
+/>
+
         </aside>
 
         {/* Main */}
@@ -445,12 +449,12 @@ export default function DashboardPage() {
             breadcrumb={
               currentWorkspace
                 ? [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                ]
+                    {
+                      label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
+                      href: "/dashboard",
+                    },
+                  ]
                 : []
             }
             onSearch={setSearchTerm}
@@ -461,8 +465,12 @@ export default function DashboardPage() {
 
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
-              ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
-            }`}
+              ${
+                isSidebarCollapsed
+                  ? "w-[calc(100%+16rem)] -translate-x-64"
+                  : "w-full"
+              }
+            `}
           >
             {currentProject ? (
               <div>
@@ -495,7 +503,7 @@ export default function DashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
                         <span>{sortOption}</span>
-                        <ChevronDown className="w-4 h-4"/>
+                        <ChevronDown className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -528,7 +536,9 @@ export default function DashboardPage() {
                       />
                     ))
                   ) : (
-                    <p className="text-slate-500">No projects found.</p>
+                    <p className="text-center text-slate-500 mt-16">
+                      No projects found
+                    </p>
                   )}
                 </div>
               </>
@@ -537,61 +547,32 @@ export default function DashboardPage() {
         </main>
       </div>
 
+      {/* Modals */}
+
       {/* New Project */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
-        <DialogContent className="max-w-lg rounded-2xl p-6">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
-            <div className="mt-1 text-sm text-slate-500">Project details</div>
+            <DialogTitle>New Project</DialogTitle>
           </DialogHeader>
-
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Name
-              </label>
-              <Input
-                placeholder="Project name"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleCreateProject();
-                  }
-                }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Description
-              </label>
-              <Textarea
-                placeholder="Project description"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                maxLength={200}
-                className="min-h-[50px] resize-y"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleCreateProject();
-                  }
-                }}
-              />
-              <p className="text-xs text-slate-400 text-right mt-1">
-                {newDesc.length}/200
-              </p>
-            </div>
+          <div className="space-y-2">
+            <Input
+              placeholder="Project name"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+            />
+            <Textarea
+              placeholder="Project description"
+              value={newDesc}
+              onChange={(e) => setNewDesc(e.target.value)}
+            />
           </div>
-
-          <DialogFooter className="flex justify-end gap-3 mt-4">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNewProject(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-gray-800"
               onClick={handleCreateProject}
             >
               Create
@@ -602,78 +583,29 @@ export default function DashboardPage() {
 
       {/* Edit Project */}
       <Dialog open={openEditProject} onOpenChange={setOpenEditProject}>
-        <DialogContent className="max-w-lg rounded-2xl p-6">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Edit Project</DialogTitle>
-            <div className="mt-1 text-sm text-slate-500">Project details</div>
+            <DialogTitle>Edit Project</DialogTitle>
           </DialogHeader>
-
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Name
-              </label>
-              <Input
-                placeholder="Project name"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (
-                      editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
-                      editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
-                    ) {
-                      setOpenEditProject(false);
-                    } else {
-                      handleUpdateProject();
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Description
-              </label>
-              <Textarea
-                placeholder="Project description"
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-                maxLength={200}
-                className="min-h-[80px] resize-y"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (
-                      editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
-                      editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
-                    ) {
-                      setOpenEditProject(false);
-                    } else {
-                      handleUpdateProject();
-                    }
-                  }
-                }}
-              />
-              <p className="text-xs text-slate-400 text-right mt-1">
-                {editDesc.length}/200
-              </p>
-            </div>
+          <div className="space-y-2">
+            <Input
+              placeholder="Project name"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+            />
+            <Textarea
+              placeholder="Project description"
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+            />
           </div>
-
-          <DialogFooter className="flex justify-end gap-3 mt-4">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpenEditProject(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-gray-800"
               onClick={handleUpdateProject}
-              disabled={
-                editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
-                editDesc.trim() === (projects.find((p) => p.id === editId)?.description || "")
-              }
             >
               Update
             </Button>
@@ -685,18 +617,60 @@ export default function DashboardPage() {
       <Dialog open={openDeleteProject} onOpenChange={setOpenDeleteProject}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Project</DialogTitle>
+            <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <p>Are you sure you want to delete this project?</p>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteProject(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenDeleteProject(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteProject}>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={handleDeleteProject}
+            >
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ✅ New Workspace */}
+      <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenNewWs(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-black text-white hover:bg-gray-800"
+              onClick={() => {
+                handleAddWorkspace(newWsName);
+                setNewWsName("");
+                setOpenNewWs(false);
+              }}
+            >
+              Create
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -708,23 +682,22 @@ export default function DashboardPage() {
           <DialogHeader>
             <DialogTitle>Edit Workspace</DialogTitle>
           </DialogHeader>
-          <Input
-            placeholder="Workspace name"
-            value={editWsName}
-            onChange={(e) => setEditWsName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleEditWorkspace();
-              }
-            }}
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={editWsName}
+              onChange={(e) => setEditWsName(e.target.value)}
+            />
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenEditWs(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-black text-white hover:bg-gray-800"
               onClick={handleEditWorkspace}
             >
               Update
@@ -734,23 +707,18 @@ export default function DashboardPage() {
       </Dialog>
 
       {/* Delete Workspace */}
-      <Dialog
-        open={!!confirmDeleteWs}
-        onOpenChange={(open) => !open && setConfirmDeleteWs(null)}
-      >
+      <Dialog open={!!confirmDeleteWs} onOpenChange={() => setConfirmDeleteWs(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Workspace</DialogTitle>
+            <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this workspace and all its projects?
-          </p>
+          <p>Are you sure you want to delete this workspace and all its projects?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => {
                 handleDeleteWorkspace(confirmDeleteWs);
                 setConfirmDeleteWs(null);
