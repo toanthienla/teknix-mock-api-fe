@@ -326,7 +326,7 @@ export default function Dashboard() {
 
   const fetchEndpoints = (pid) => {
     if (!pid) return;
-    fetch(`${API_ROOT}/endpoints?project_id=${pid}`)
+    fetch(`${API_ROOT}/endpoints?folder_id=${pid}`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data))
       .catch((err) => console.error("Error fetching endpoints:", err));
@@ -779,6 +779,7 @@ export default function Dashboard() {
             }
             onSearch={setSearchTerm}
             showNewProjectButton={false}
+            showNewFolderButton={true}
             showNewResponseButton={false}
           />
 
@@ -883,7 +884,7 @@ export default function Dashboard() {
                         <Dialog open={openNew} onOpenChange={setOpenNew}>
                           <Button
                             onClick={() => setOpenNew(true)}
-                            className="bg-blue-500 text-white hover:bg-blue-600 px-3 py-1 rounded-md"
+                            className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded-md"
                           >
                             <img
                               src={createIcon}
@@ -1094,7 +1095,6 @@ export default function Dashboard() {
                           Cancel
                         </Button>
                         <Button
-                          className="bg-blue-600 text-white hover:bg-blue-700"
                           onClick={handleUpdateEndpoint}
                           disabled={!hasEdited}
                         >
