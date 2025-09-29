@@ -5,33 +5,33 @@ import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import settingIcon from "@/assets/Settings Icon.svg";
-import newicon from "@/assets/Add.svg";
+// import newicon from "@/assets/Add.svg";
 import randomColor from "randomcolor";
 
 export default function Sidebar({
-  workspaces = [],
-  current,
-  setCurrent,
-  onWorkspaceChange,
-  endpoints = [],
-  folders = [],
-  onEditWorkspace,
-  onDeleteWorkspace,
-  onAddProject,
-  onAddFolder,
-  onEditFolder,
-  onDeleteFolder,
-  projects = [],
-  openProjectsMap,
-  setOpenProjectsMap,
-  openEndpointsMap,
-  setOpenEndpointsMap,
-  openFoldersMap,
-  setOpenFoldersMap,
-  isCollapsed,
-  setIsCollapsed,
-  setOpenNewWs
-}) {
+                                  workspaces = [],
+                                  current,
+                                  setCurrent,
+                                  onWorkspaceChange,
+                                  endpoints = [],
+                                  folders = [],
+                                  onEditWorkspace,
+                                  onDeleteWorkspace,
+                                  onAddProject,
+                                  onAddFolder,
+                                  onEditFolder,
+                                  onDeleteFolder,
+                                  projects = [],
+                                  openProjectsMap,
+                                  setOpenProjectsMap,
+                                  openEndpointsMap,
+                                  setOpenEndpointsMap,
+                                  openFoldersMap,
+                                  setOpenFoldersMap,
+                                  isCollapsed,
+                                  setIsCollapsed,
+                                  setOpenNewWs
+                                }) {
   const navigate = useNavigate();
   const {projectId, endpointId} = useParams();
 
@@ -134,24 +134,24 @@ export default function Sidebar({
   };
 
   const currentWorkspace = workspaces.find((ws) => String(ws.id) === String(current));
-  
+
   // ✅ Nếu chưa chọn thì không gán workspace đầu tiên
-// => để null thì dropdown sẽ hiện "Select Workspace"
-if (!currentWorkspace && current) {
-  setCurrent(null);
-}
-// ✅ Auto detect workspace từ URL (projectId / endpointId)
-useEffect(() => {
-  if (projectId) {
-    const project = projects.find((p) => String(p.id) === String(projectId));
-    if (project) {
-      const wsId = project.workspace_id;
-      if (setCurrent) setCurrent(wsId);
-      if (onWorkspaceChange) onWorkspaceChange(wsId);
-      setLockedMode(true); // 👉 đảm bảo chỉ hiển thị workspace + project đang chọn
-    }
+  // => để null thì dropdown sẽ hiện "Select Workspace"
+  if (!currentWorkspace && current) {
+    setCurrent(null);
   }
-}, [projectId, projects]);
+  // ✅ Auto detect workspace từ URL (projectId / endpointId)
+  useEffect(() => {
+    if (projectId) {
+      const project = projects.find((p) => String(p.id) === String(projectId));
+      if (project) {
+        const wsId = project.workspace_id;
+        if (setCurrent) setCurrent(wsId);
+        if (onWorkspaceChange) onWorkspaceChange(wsId);
+        setLockedMode(true); // 👉 đảm bảo chỉ hiển thị workspace + project đang chọn
+      }
+    }
+  }, [projectId, projects]);
 
 
   return (
@@ -159,16 +159,21 @@ useEffect(() => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
-  className="cursor-pointer text-2xl font-bold text-slate-900"
-  onClick={() => {
-    setLockedMode(false); // quay lại hiển thị tất cả workspace
-    setCurrent?.(null); // reset workspace
-    localStorage.removeItem("currentWorkspace"); // xoá workspace đang lưu
-    navigate("/dashboard");
-  }}
->
-  MockAPI
-</span>
+          className="cursor-pointer text-2xl font-bold text-slate-900"
+          onClick={() => {
+            localStorage.clear();
+
+            setLockedMode(false);
+            setCurrent?.(null);
+
+            // Đảm bảo xoá xong trước khi navigate
+            Promise.resolve().then(() => {
+              navigate("/dashboard");
+            });
+          }}
+        >
+          MockAPI
+        </span>
 
         <button
           onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
@@ -200,7 +205,7 @@ useEffect(() => {
             </button>
             {wsDropdownOpen && (
               <div className="mt-1 border border-slate-200 rounded-md bg-white shadow-sm max-h-60 overflow-y-auto">
-              {workspaces.map((ws) => (
+                {workspaces.map((ws) => (
   <div
     key={ws.id}
     className={`px-3 py-2 cursor-pointer hover:bg-slate-100 flex justify-between items-center ${
@@ -231,9 +236,42 @@ useEffect(() => {
     />
   </div>
 ))}
+
               </div>
             )}
           </div>
+{/* ✅ Context menu cho Workspace trong dropdown (locked mode) */}
+{rightClickActionId && wsDropdownOpen && (
+  <div
+    ref={actionMenuRef}
+    className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
+    style={{ top: menuPos.y, left: menuPos.x }}
+  >
+    <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+      Actions
+    </div>
+    <button
+      onClick={() => {
+        const ws = workspaces.find(w => w.id === rightClickActionId);
+        onEditWorkspace?.(ws);
+        setRightClickActionId(null);
+      }}
+      className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+    >
+      <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
+    </button>
+
+    <button
+      onClick={() => {
+        onDeleteWorkspace?.(rightClickActionId);
+        setRightClickActionId(null);
+      }}
+      className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+    >
+      <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
+    </button>
+  </div>
+)}
 
           {/* Sidebar khi lockedMode = true → show projects */}
           {lockedMode && currentWorkspace && (
@@ -259,7 +297,7 @@ useEffect(() => {
                       >
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
+                          style={{backgroundColor: projectColorMap[p.id] || "#999"}}
                         />
                         {p.name}
                         <ChevronDown
@@ -280,13 +318,17 @@ useEffect(() => {
                             // Get folders for this project
                             const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
                             console.log('Debug - Project:', p.id, 'Folders:', projectFolders, 'All folders:', folders);
+                            // Lấy toàn bộ endpoints thuộc project này (qua folder)
+                            const projectEndpoints = endpoints.filter(ep =>
+                              projectFolders.some(f => String(f.id) === String(ep.folder_id))
+                            );
                             // Get endpoints without folder_id (ungrouped endpoints)
                             const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
                             // Get endpoints with folder_id
                             const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
-                            
+
                             const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
-                            
+
                             if (!hasContent) {
                               return (
                                 <div className="text-gray-500">
@@ -294,48 +336,46 @@ useEffect(() => {
                                 </div>
                               );
                             }
-                            
+
                             return (
                               <>
                                 {/* Render folders with their endpoints */}
                                 {projectFolders.map((folder) => {
                                   const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
                                   const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
-                                  
+
                                   return (
                                     <div key={folder.id}>
                                       {/* Folder header */}
                                       <div
                                         className="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-slate-200 bg-slate-100"
                                         onClick={(e) => {
-                                          // If click on chevron, toggle folder
-                                          if (e.target.closest('.folder-chevron')) {
-                                            e.stopPropagation();
-                                            if (setOpenFoldersMap) {
-                                              setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
-                                            } else {
-                                              setLocalOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
-                                            }
+                                          e.stopPropagation();
+                                          // Toggle folder open/close
+                                          if (setOpenFoldersMap) {
+                                            setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
                                           } else {
-                                            // If click on folder name, navigate to project page with folder filter
-                                            navigate(`/projects/${p.id}?folderId=${folder.id}`);
+                                            setLocalOpenFoldersMap((prev) => ({
+                                              ...prev,
+                                              [folder.id]: !prev[folder.id]
+                                            }));
                                           }
                                         }}
                                         onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
                                       >
                                         <div className="flex items-center gap-2">
                                           <ChevronDown
-                                            className={`h-3 w-3 text-slate-500 transition-transform folder-chevron cursor-pointer ${
+                                            className={`h-3 w-3 text-slate-500 transition-transform ${
                                               isFolderOpen ? "rotate-0" : "-rotate-90"
                                             }`}
                                           />
-                                          <span className="text-sm font-medium cursor-pointer text-slate-700">{folder.name}</span>
+                                          <span className="text-sm font-medium text-slate-700">{folder.name}</span>
                                         </div>
                                         <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
                                           {folderEndpoints.length}
                                         </span>
                                       </div>
-                                      
+
                                       {/* Folder endpoints */}
                                       {isFolderOpen && (
                                         <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
@@ -368,7 +408,7 @@ useEffect(() => {
                                     </div>
                                   );
                                 })}
-                                
+
                                 {/* Render ungrouped endpoints directly */}
                                 {ungroupedEndpoints.map((ep) => {
                                   const activeEp = String(endpointId) === String(ep.id);
@@ -384,7 +424,7 @@ useEffect(() => {
                                         navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                       }
                                     >
-                                      <img src={settingIcon} className="w-5 h-5" alt="ep" />
+                                      <img src={settingIcon} className="w-5 h-5" alt="ep"/>
                                       {ep.name}
                                     </div>
                                   );
@@ -392,7 +432,7 @@ useEffect(() => {
                               </>
                             );
                           })()}
-                          
+
                           {/* New folder button khi đang trong project */}
                           {String(projectId) === String(p.id) && (
                             <div
@@ -404,7 +444,7 @@ useEffect(() => {
                                 }
                               }}
                             >
-                              <Plus className="w-4 h-4" />
+                              <Plus className="w-4 h-4"/>
                               <span>New folder...</span>
                             </div>
                           )}
@@ -417,261 +457,266 @@ useEffect(() => {
           )}
 
           {/* Sidebar workspace list khi chưa locked */}
-{!lockedMode && (
-  <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
-    {/* Header */}
-    <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50 border-b">
-      WORKSPACES
-    </div>
+          {!lockedMode && (
+            <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
+              {/* Header */}
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50 border-b">
+                WORKSPACES
+              </div>
 
-    <ul className="space-y-1">
-      {workspaces.map((ws) => {
-        const activeWs = String(current) === String(ws.id);
-        const isOpen = readOpenProjects(ws.id);
-        const wsProjects = projects.filter(
-          (p) => String(p.workspace_id) === String(ws.id)
-        );
-        const isActionOpen = rightClickActionId === ws.id;
+              <ul className="space-y-1">
+                {workspaces.map((ws) => {
+                  const activeWs = String(current) === String(ws.id);
+                  const isOpen = readOpenProjects(ws.id);
+                  const wsProjects = projects.filter(
+                    (p) => String(p.workspace_id) === String(ws.id)
+                  );
+                  const isActionOpen = rightClickActionId === ws.id;
 
-        return (
-          <li key={ws.id} className="group relative">
-            <div
-              className={`w-full flex items-center justify-between gap-2 px-3 py-2 cursor-pointer ${
-                activeWs
-                  ? "bg-slate-100 font-semibold text-slate-900"
-                  : "hover:bg-slate-50"
-              }`}
-              onClick={() => handleSelectWorkspace(ws.id)}
-              onContextMenu={(e) => handleRightClick(e, ws.id)}
-            >
-              <span>{ws.name}</span>
-              {activeWs && (
-  <MoreHorizontal
-    onClick={(e) => {
-      e.stopPropagation();
-      toggleProjects(ws.id);
-    }}
-    className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
-  />
-)}
-
-            </div>
-
-            {/* Projects giữ nguyên như cũ */}
-            {activeWs && isOpen && (
-              <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
-                {wsProjects.length === 0 ? (
-                  <div className="text-xs text-gray-500">
-                    This workspace has no projects yet.
-                  </div>
-                ) : (
-                  wsProjects.map((p) => {
-                    const isEpOpen = readOpenEndpoints(p.id);
-                    const projectEndpoints = endpoints.filter(
-                      (ep) => String(ep.project_id) === String(p.id)
-                    );
-                    const activePj = String(projectId) === String(p.id);
-
-                    return (
-                      <div key={p.id}>
-                        <div
-                          className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                            activePj
-                              ? "bg-slate-100 font-semibold text-slate-900"
-                              : "hover:bg-slate-50"
-                          }`}
-                          onClick={() => navigate(`/dashboard/${p.id}`)}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full"
-                            style={{
-                              backgroundColor: projectColorMap[p.id] || "#999",
-                            }}
-                          />
-                          {p.name}
-                          <ChevronDown
+                  return (
+                    <li key={ws.id} className="group relative">
+                      <div
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 cursor-pointer ${
+                          activeWs
+                            ? "bg-slate-100 font-semibold text-slate-900"
+                            : "hover:bg-slate-50"
+                        }`}
+                        onClick={() => handleSelectWorkspace(ws.id)}
+                        onContextMenu={(e) => handleRightClick(e, ws.id)}
+                      >
+                        <span>{ws.name}</span>
+                        {activeWs && (
+                          <MoreHorizontal
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleEndpoints(p.id);
+                              toggleProjects(ws.id);
                             }}
-                            className={`w-4 h-4 text-slate-400 transition-transform ${
-                              isEpOpen ? "rotate-0" : "-rotate-90"
-                            }`}
+                            className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
                           />
-                        </div>
-
-                        {/* Folders and Endpoints */}
-                        {isEpOpen && (
-                          <div className="ml-6 mt-1 space-y-1 text-xs">
-                            {(() => {
-                              // Get folders for this project
-                              const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
-                              console.log('Debug - Workspace Project:', p.id, 'Folders:', projectFolders);
-                              // Get endpoints without folder_id (ungrouped endpoints)
-                              const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
-                              // Get endpoints with folder_id
-                              const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
-                              
-                              const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
-                              
-                              if (!hasContent) {
-                                return (
-                                  <div className="text-gray-500">
-                                    This project has no endpoints yet.
-                                  </div>
-                                );
-                              }
-                              
-                              return (
-                                <>
-                                  {/* Render folders with their endpoints */}
-                                  {projectFolders.map((folder) => {
-                                    const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
-                                    const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
-                                    
-                                    return (
-                                      <div key={folder.id}>
-                                        {/* Folder header */}
-                                        <div
-                                          className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100"
-                                          onClick={(e) => {
-                                            // If click on chevron, toggle folder
-                                            if (e.target.closest('.folder-chevron')) {
-                                              if (setOpenFoldersMap) {
-                                                setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
-                                              } else {
-                                                setLocalOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
-                                              }
-                                            } else {
-                                              // If click on folder name, navigate to project page with folder filter
-                                              navigate(`/projects/${p.id}?folderId=${folder.id}`);
-                                            }
-                                          }}
-                                        >
-                                          <ChevronDown
-                                            className={`w-3 h-3 text-slate-400 transition-transform folder-chevron ${
-                                              isFolderOpen ? "rotate-0" : "-rotate-90"
-                                            }`}
-                                          />
-                                          <img src={folderIcon} className="w-4 h-4" alt="folder" />
-                                          <span>{folder.name}</span>
-                                        </div>
-                                        
-                                        {/* Folder endpoints */}
-                                        {isFolderOpen && (
-                                          <div className="ml-6 mt-1 space-y-1">
-                                            {folderEndpoints.length === 0 ? (
-                                              <div className="text-gray-400 px-2 py-1">
-                                                No endpoints in this folder
-                                              </div>
-                                            ) : (
-                                              folderEndpoints.map((ep) => {
-                                                const activeEp = String(endpointId) === String(ep.id);
-                                                return (
-                                                  <div
-                                                    key={ep.id}
-                                                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                                      activeEp
-                                                        ? "bg-slate-100 font-semibold text-slate-900"
-                                                        : "hover:bg-slate-100"
-                                                    }`}
-                                                    onClick={() =>
-                                                      navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                                    }
-                                                  >
-                                                    <img src={settingIcon} className="w-5 h-5" alt="ep" />
-                                                    {ep.name}
-                                                  </div>
-                                                );
-                                              })
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                  
-                                  {/* Render ungrouped endpoints directly */}
-                                  {ungroupedEndpoints.map((ep) => {
-                                    const activeEp = String(endpointId) === String(ep.id);
-                                    return (
-                                      <div
-                                        key={ep.id}
-                                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                          activeEp
-                                            ? "bg-slate-100 font-semibold text-slate-900"
-                                            : "hover:bg-slate-100"
-                                        }`}
-                                        onClick={() =>
-                                          navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                        }
-                                      >
-                                        <img src={settingIcon} className="w-5 h-5" alt="ep" />
-                                        {ep.name}
-                                      </div>
-                                    );
-                                  })}
-                                </>
-                              );
-                            })()}
-                          </div>
                         )}
+
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
 
-            {/* Context menu giữ nguyên */}
-            {isActionOpen && (
+                      {/* Projects giữ nguyên như cũ */}
+                      {activeWs && isOpen && (
+                        <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
+                          {wsProjects.length === 0 ? (
+                            <div className="text-xs text-gray-500">
+                              This workspace has no projects yet.
+                            </div>
+                          ) : (
+                            wsProjects.map((p) => {
+                              const isEpOpen = readOpenEndpoints(p.id);
+                              const projectEndpoints = endpoints.filter(
+                                (ep) => String(ep.project_id) === String(p.id)
+                              );
+                              const activePj = String(projectId) === String(p.id);
+
+                              return (
+                                <div key={p.id}>
+                                  <div
+                                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                      activePj
+                                        ? "bg-slate-100 font-semibold text-slate-900"
+                                        : "hover:bg-slate-50"
+                                    }`}
+                                    onClick={() => navigate(`/dashboard/${p.id}`)}
+                                  >
+                                    <span
+                                      className="w-2 h-2 rounded-full"
+                                      style={{
+                                        backgroundColor: projectColorMap[p.id] || "#999",
+                                      }}
+                                    />
+                                    {p.name}
+                                    <ChevronDown
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleEndpoints(p.id);
+                                      }}
+                                      className={`w-4 h-4 text-slate-400 transition-transform ${
+                                        isEpOpen ? "rotate-0" : "-rotate-90"
+                                      }`}
+                                    />
+                                  </div>
+
+                                  {/* Folders and Endpoints */}
+                                  {isEpOpen && (
+                                    <div className="ml-6 mt-1 space-y-1 text-xs">
+                                      {(() => {
+                                        // Get folders for this project
+                                        const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
+                                        console.log('Debug - Workspace Project:', p.id, 'Folders:', projectFolders);
+                                        // Get endpoints without folder_id (ungrouped endpoints)
+                                        const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
+                                        // Get endpoints with folder_id
+                                        const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
+
+                                        const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
+
+                                        if (!hasContent) {
+                                          return (
+                                            <div className="text-gray-500">
+                                              This project has no endpoints yet.
+                                            </div>
+                                          );
+                                        }
+
+                                        return (
+                                          <>
+                                            {/* Render folders with their endpoints */}
+                                            {projectFolders.map((folder) => {
+                                              const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
+                                              const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
+
+                                              return (
+                                                <div key={folder.id}>
+                                                  {/* Folder header */}
+                                                  <div
+                                                    className="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-slate-200 bg-slate-100"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      // Toggle folder open/close
+                                                      if (setOpenFoldersMap) {
+                                                        setOpenFoldersMap((prev) => ({
+                                                          ...prev,
+                                                          [folder.id]: !prev[folder.id]
+                                                        }));
+                                                      } else {
+                                                        setLocalOpenFoldersMap((prev) => ({
+                                                          ...prev,
+                                                          [folder.id]: !prev[folder.id]
+                                                        }));
+                                                      }
+                                                    }}
+                                                  >
+                                                    <div className="flex items-center gap-2">
+                                                      <ChevronDown
+                                                        className={`h-3 w-3 text-slate-500 transition-transform ${
+                                                          isFolderOpen ? "rotate-0" : "-rotate-90"
+                                                        }`}
+                                                      />
+                                                      <span className="text-sm font-medium text-slate-700">{folder.name}</span>
+                                                    </div>
+                                                    <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
+                                                      {folderEndpoints.length}
+                                                    </span>
+                                                  </div>
+
+                                                  {/* Folder endpoints */}
+                                                  {isFolderOpen && (
+                                                    <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
+                                                      {folderEndpoints.length === 0 ? (
+                                                        <div className="text-gray-400 px-2 py-1 text-xs">
+                                                          No endpoints in this folder
+                                                        </div>
+                                                      ) : (
+                                                        folderEndpoints.map((ep) => {
+                                                          const activeEp = String(endpointId) === String(ep.id);
+                                                          return (
+                                                            <div
+                                                              key={ep.id}
+                                                              className={`px-3 py-2 rounded cursor-pointer text-sm ${
+                                                                activeEp
+                                                                  ? "bg-slate-100 font-medium text-slate-900"
+                                                                  : "hover:bg-slate-50 text-slate-600"
+                                                              }`}
+                                                              onClick={() =>
+                                                                navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                              }
+                                                            >
+                                                              <span>{ep.name}</span>
+                                                            </div>
+                                                          );
+                                                        })
+                                                      )}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+
+                                            {/* Render ungrouped endpoints directly */}
+                                            {ungroupedEndpoints.map((ep) => {
+                                              const activeEp = String(endpointId) === String(ep.id);
+                                              return (
+                                                <div
+                                                  key={ep.id}
+                                                  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                                    activeEp
+                                                      ? "bg-slate-100 font-semibold text-slate-900"
+                                                      : "hover:bg-slate-100"
+                                                  }`}
+                                                  onClick={() =>
+                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                  }
+                                                >
+                                                  <img src={settingIcon} className="w-5 h-5" alt="ep"/>
+                                                  {ep.name}
+                                                </div>
+                                              );
+                                            })}
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+
+                      {/* Context menu giữ nguyên */}
+                      {isActionOpen && (
+                        <div
+                          ref={actionMenuRef}
+                          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
+                          style={{top: menuPos.y, left: menuPos.x}}
+                        >
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+                            Actions
+                          </div>
+                          <button
+                            onClick={() => onEditWorkspace && onEditWorkspace(ws)}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+                          >
+                            <img src={editIcon} className="w-4 h-4" alt="edit"/> Edit
+                          </button>
+
+                          <button
+                            onClick={() => onDeleteWorkspace && onDeleteWorkspace(ws.id)}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+                          >
+                            <img src={deleteIcon} className="w-4 h-4" alt="delete"/> Delete
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* New workspace btn */}
               <div
-                ref={actionMenuRef}
-                className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
-                style={{ top: menuPos.y, left: menuPos.x }}
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 font-medium border-t"
+                onClick={() => setOpenNewWs(true)}
               >
-                <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
-                  Actions
-                </div>
-                <button
-                  onClick={() => onEditWorkspace && onEditWorkspace(ws)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
-                >
-                  <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
-                </button>
-                
-                <button
-                  onClick={() => onDeleteWorkspace && onDeleteWorkspace(ws.id)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
-                >
-                  <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
-                </button>
+                <Plus className="w-4 h-4"/>
+                <span>New Workspace</span>
               </div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-
-    {/* New workspace btn */}
-    <div
-      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 font-medium border-t"
-      onClick={() => setOpenNewWs(true)}
-    >
-      <Plus className="w-4 h-4" />
-      <span>New Workspace</span>
-    </div>
-  </div>
-)}
+            </div>
+          )}
 
         </div>
-        
+
         {/* Folder Context Menu */}
         {rightClickFolderId && (
           <div
             ref={folderMenuRef}
             className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
-            style={{ top: menuPos.y, left: menuPos.x }}
+            style={{top: menuPos.y, left: menuPos.x}}
           >
             <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
               Actions
@@ -686,9 +731,9 @@ useEffect(() => {
               }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
             >
-              <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
+              <img src={editIcon} className="w-4 h-4" alt="edit"/> Edit
             </button>
-            
+
             <button
               onClick={() => {
                 if (onDeleteFolder) {
@@ -698,7 +743,7 @@ useEffect(() => {
               }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
             >
-              <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
+              <img src={deleteIcon} className="w-4 h-4" alt="delete"/> Delete
             </button>
           </div>
         )}
