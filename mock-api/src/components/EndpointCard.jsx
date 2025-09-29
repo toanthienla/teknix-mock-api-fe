@@ -23,7 +23,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
   return (
     <TableRow className="border-b border-gray-300">
       {/* Name + Actions */}
-      <TableCell className="w-1/3 border-r border-gray-300">
+      <TableCell className="w-1/4 border-r border-gray-300">
         <div className="flex items-center justify-between">
           <span
             className="font-semibold text-gray-800 cursor-pointer"
@@ -31,64 +31,14 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
           >
               {name}
           </span>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-blue-600 hover:text-blue-800"
-              onClick={() => onEdit(endpoint)}
-            >
-              <img src={editIcon} alt="edit" className="w-4 h-4"/>
-            </Button>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-gray-500 hover:text-red-600"
-                >
-                  <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onDelete(id);
-                  }
-                }}
-              >
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete endpoint data from
-                    our servers.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="text-black hover:text-red-600">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-red-600 text-white hover:bg-red-700"
-                    onClick={() => onDelete(id)}
-                  >
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
         </div>
       </TableCell>
 
       {/* Path */}
-      <TableCell className="w-1/3 font-semibold text-gray-800 border-r border-gray-300">{path}</TableCell>
+      <TableCell className="w-1/4 font-semibold text-gray-800 border-r border-gray-300">{path}</TableCell>
 
       {/* Method */}
-      <TableCell className="w-1/6 text-center border-r border-gray-300">
+      <TableCell className="w-1/12 text-center border-r border-gray-300">
         <Badge
           className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
             method === "GET"
@@ -107,7 +57,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
       </TableCell>
 
       {/* Created Time */}
-      <TableCell className="w-1/6 font-semibold text-gray-800 whitespace-nowrap text-sm">
+      <TableCell className="w-1/4 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
         {new Date(endpoint.created_at).toLocaleString("en-US", {
           year: "numeric",
           month: "long",
@@ -116,6 +66,63 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
           minute: "2-digit",
           hour12: true,
         })}
+      </TableCell>
+
+      <TableCell className="w-1/12 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
+
+
+      </TableCell>
+
+      <TableCell className="w-1/12 text-center">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:text-blue-800"
+            onClick={() => onEdit(endpoint)}
+          >
+            <img src={editIcon} alt="edit" className="w-4 h-4"/>
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-gray-500 hover:text-red-600"
+              >
+                <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onDelete(id);
+                }
+              }}
+            >
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete endpoint data from
+                  our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="text-black hover:text-red-600">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 text-white hover:bg-red-700"
+                  onClick={() => onDelete(id)}
+                >
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </TableCell>
     </TableRow>
   )

@@ -190,11 +190,11 @@ export default function Dashboard() {
       toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
       return false;
     }
-    const duplicateEndpoint = endpoints.some(
-      (ep) =>
-        String(ep.project_id) === String(projectId) &&
-        ep.path.trim() === path.trim() &&
-        ep.method.toUpperCase() === method.toUpperCase()
+
+    const duplicateEndpoint = allEndpoints.some((ep) =>
+      String(ep.folder_id) === String(selectedFolderId) &&
+      ep.path.trim() === path.trim() &&
+      ep.method.toUpperCase() === method.toUpperCase()
     );
     if (duplicateEndpoint) {
       toast.warning(
@@ -230,7 +230,7 @@ export default function Dashboard() {
     const duplicateName = endpoints.find(
       (ep) =>
         ep.id !== id &&
-        String(ep.project_id) === String(projectId) &&
+        String(ep.folder_id) === String(selectedFolderId) &&
         ep.name.toLowerCase() === name.toLowerCase()
     );
     if (duplicateName) {
@@ -259,7 +259,7 @@ export default function Dashboard() {
     const duplicateEndpoint = endpoints.some(
       (ep) =>
         ep.id !== id &&
-        String(ep.project_id) === String(projectId) &&
+        String(ep.folder_id) === String(selectedFolderId) &&
         ep.path.trim() === path.trim() &&
         ep.method.toUpperCase() === method.toUpperCase()
     );
@@ -304,6 +304,15 @@ export default function Dashboard() {
       fetchEndpoints(selectedFolderId);
     }
   }, [selectedFolderId]);
+
+  useEffect(() => {
+    if (!selectedFolderId && projectId) {
+      const projectEndpoints = allEndpoints.filter(
+        (ep) => String(ep.project_id) === String(projectId)
+      );
+      setEndpoints(projectEndpoints);
+    }
+  }, [selectedFolderId, projectId, allEndpoints]);
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
@@ -428,6 +437,32 @@ export default function Dashboard() {
       toast.error("Failed to load logs");
     }
   };
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    // nếu đang xem 1 folder cụ thể thì fetchEndpoints(selectedFolderId) đã lo rồi
+    if (selectedFolderId) return;
+
+    // nếu dữ liệu chưa có thì clear hoặc chờ
+    if (!allEndpoints?.length || !folders?.length) {
+      setEndpoints([]);
+      return;
+    }
+
+    // Lấy id các folder thuộc project này
+    const folderIds = folders
+      .filter((f) => String(f.project_id) === String(projectId))
+      .map((f) => String(f.id));
+
+    // Lọc những endpoint có folder_id nằm trong folderIds
+    const projectEndpoints = allEndpoints.filter((ep) =>
+      folderIds.includes(String(ep.folder_id))
+    );
+
+    setEndpoints(projectEndpoints);
+  }, [projectId, selectedFolderId, allEndpoints, folders]);
+
 
   // -------------------- Folder --------------------
   const handleAddFolder = (targetProjectId = null) => {
@@ -951,10 +986,10 @@ export default function Dashboard() {
     e.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // If folderId is specified, filter by folder
+  // Nếu có folderId → chỉ lấy folder đó
   if (selectedFolderId) {
-    filteredEndpoints = filteredEndpoints.filter((e) => 
-      String(e.folder_id) === String(selectedFolderId)
+    filteredEndpoints = filteredEndpoints.filter(
+      (e) => String(e.folder_id) === String(selectedFolderId)
     );
   }
 
@@ -1284,28 +1319,42 @@ export default function Dashboard() {
                     <Table className="border-t border-b border-gray-300">
                       <TableHeader>
                         <TableRow className="border-b border-gray-300">
-                          <TableHead className="w-1/3 border-r border-gray-300">
+                          <TableHead className="w-1/4 border-r border-gray-300">
                             <div className="flex items-center gap-2">
                               <span className="text-xs">Aa</span>
                             </div>
                           </TableHead>
-                          <TableHead className="w-1/3 border-r border-gray-300">
+                          <TableHead className="w-1/4 border-r border-gray-300">
                             <div className="flex items-center gap-2">
                               <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
                               <span>Path</span>
                             </div>
                           </TableHead>
-                          <TableHead className="w-1/6 border-r border-gray-300 text-center">
+                          <TableHead className="w-1/12 border-r border-gray-300 text-center">
                             <div className="flex items-center justify-center gap-2">
                               <img src={methodIcon} alt="Method icon"
                                    className="w-4 h-4"/>
                               <span>Method</span>
                             </div>
                           </TableHead>
-                          <TableHead className="w-1/6">
+                          <TableHead className="w-1/4 border-r border-gray-300">
                             <div className="flex items-center gap-2">
                               <img src={timeIcon} alt="Time icon" className="w-4 h-4"/>
                               <span>Time & Date</span>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-1/12 border-r border-gray-300 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <img src={methodIcon} alt="Method icon"
+                                   className="w-4 h-4"/>
+                              <span>Status</span>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-1/12 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <img src={methodIcon} alt="Method icon"
+                                   className="w-4 h-4"/>
+                              <span>Actions</span>
                             </div>
                           </TableHead>
                         </TableRow>
