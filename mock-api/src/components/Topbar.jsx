@@ -1,4 +1,5 @@
 import React, {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default function Topbar({
    showNewFolderButton,
    showNewResponseButton
  }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
@@ -53,11 +55,13 @@ export default function Topbar({
                         </BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink
-                          href={item.href}
-                          onClick={() => {
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
                             if (item.WORKSPACE_ID) {
                               localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
                             }
+                            navigate(item.href);
                           }}
                         >
                           {item.label}

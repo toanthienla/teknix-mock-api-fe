@@ -99,7 +99,31 @@ export default function DashboardPage() {
   useEffect(() => {
     const savedWs = localStorage.getItem("currentWorkspace");
     if (savedWs) setCurrentWsId(savedWs);
-  }, []);
+
+    // Listen for localStorage changes (from breadcrumb clicks)
+    const handleStorageChange = () => {
+      const updatedWs = localStorage.getItem("currentWorkspace");
+      if (updatedWs && updatedWs !== currentWsId) {
+        setCurrentWsId(updatedWs);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for manual localStorage updates in same tab
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+      originalSetItem.apply(this, arguments);
+      if (key === 'currentWorkspace') {
+        handleStorageChange();
+      }
+    };
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      localStorage.setItem = originalSetItem;
+    };
+  }, [currentWsId]);
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
