@@ -68,9 +68,14 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
         })}
       </TableCell>
 
-      <TableCell className="w-1/12 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
-
-
+      <TableCell className="w-1/12 font-semibold text-center text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
+        <span
+          className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
+            endpoint.is_active ? "text-emerald-400" : "text-rose-600"
+          }`}
+        >
+          {endpoint.is_active ? "active" : "inactive"}
+        </span>
       </TableCell>
 
       <TableCell className="w-1/12 text-center">

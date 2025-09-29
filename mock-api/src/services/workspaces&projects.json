@@ -1,39 +1,39 @@
 {
   "workspaces": [
     {
-      "id": 1,
+      "id": "1",
       "name": "Frontend Team",
       "created_at": "2025-09-01T10:00:00Z",
       "updated_at": "2025-09-10T12:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Backend Team",
       "created_at": "2025-09-02T11:00:00Z",
       "updated_at": "2025-09-11T13:00:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "DevOps Team",
       "created_at": "2025-09-03T09:00:00Z",
       "updated_at": "2025-09-12T15:00:00Z"
     },
     {
-      "id": 4,
+      "id": "4",
       "name": "QA Team",
       "created_at": "2025-09-04T14:00:00Z",
       "updated_at": "2025-09-14T17:00:00Z"
     },
     {
-      "id": "b7c7",
-      "name": "w1",
+      "id": "5",
+      "name": "Experimental Workspace",
       "created_at": "2025-09-28T11:33:11.390Z",
       "updated_at": "2025-09-28T11:33:11.390Z"
     }
   ],
   "projects": [
     {
-      "id": 1,
+      "id": "1",
       "workspace_id": 1,
       "name": "FE Workspace UI",
       "description": "Build UI for managing workspaces",
@@ -41,7 +41,7 @@
       "updated_at": "2025-09-10T14:00:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "workspace_id": 1,
       "name": "FE Project Dashboard",
       "description": "Implement project dashboard for frontend",
@@ -49,7 +49,7 @@
       "updated_at": "2025-09-11T15:00:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "workspace_id": 2,
       "name": "BE Workspace API",
       "description": "Build API for workspace management",
@@ -57,7 +57,7 @@
       "updated_at": "2025-09-12T16:00:00Z"
     },
     {
-      "id": 4,
+      "id": "4",
       "workspace_id": 2,
       "name": "BE Project API",
       "description": "Implement project endpoints",
@@ -65,7 +65,7 @@
       "updated_at": "2025-09-13T17:00:00Z"
     },
     {
-      "id": 5,
+      "id": "5",
       "workspace_id": 3,
       "name": "CI/CD Pipeline",
       "description": "Automate build and deploy",
@@ -73,7 +73,7 @@
       "updated_at": "2025-09-14T16:00:00Z"
     },
     {
-      "id": 6,
+      "id": "6",
       "workspace_id": 4,
       "name": "Test Automation",
       "description": "Automate QA test cases",
@@ -81,116 +81,145 @@
       "updated_at": "2025-09-15T09:00:00Z"
     },
     {
-      "id": "74c1",
-      "name": "p1noi",
-      "description": "p1",
-      "workspace_id": "b7c7",
+      "id": "7",
+      "workspace_id": 5,
+      "name": "Prototype Project",
+      "description": "Testing new schema features",
       "created_at": "2025-09-29T03:47:49.530Z",
       "updated_at": "2025-09-29T03:47:49.530Z"
-    },
-    {
-      "id": "db15",
-      "name": "p22",
-      "description": "jj",
-      "workspace_id": "b7c7",
-      "updated_at": "2025-09-29T04:31:22.122Z"
-    },
-    {
-      "id": "775e",
-      "name": "p3",
-      "description": "hk",
-      "workspace_id": "b7c7",
-      "created_at": "2025-09-29T04:27:59.082Z",
-      "updated_at": "2025-09-29T04:27:59.082Z"
     }
   ],
   "folders": [
     {
-      "id": 1,
+      "id": "1",
       "project_id": 1,
       "name": "Users",
       "description": "User endpoints"
     },
     {
-      "id": 2,
+      "id": "2",
       "project_id": 1,
       "name": "Auth",
       "description": "Authentication endpoints"
     },
     {
-      "id": 3,
+      "id": "3",
       "project_id": 2,
       "name": "Cars",
       "description": "Car endpoints"
     },
     {
-      "id": 4,
+      "id": "4",
       "project_id": 5,
       "name": "Pipeline",
       "description": "Build pipeline endpoints"
     },
     {
-      "id": 5,
+      "id": "5",
       "project_id": 6,
       "name": "Tests",
       "description": "QA test endpoints"
     },
     {
-      "id": "e36c",
-      "name": "f2",
-      "description": "",
-      "project_id": "74c1",
-      "created_at": "2025-09-28T11:36:30.729Z",
-      "updated_at": "2025-09-28T11:36:30.729Z"
+      "id": "6",
+      "project_id": 7,
+      "name": "Misc",
+      "description": "Prototype endpoints"
     },
     {
-      "id": "50c6",
-      "name": "ok",
+      "id": "c98e",
+      "name": "smaf",
       "description": "",
-      "project_id": "3",
-      "created_at": "2025-09-29T03:48:27.430Z",
-      "updated_at": "2025-09-29T03:48:27.430Z"
-    },
-    {
-      "id": "83f2",
-      "name": "bjkbk",
-      "description": "",
-      "project_id": "74c1",
-      "created_at": "2025-09-29T03:57:27.048Z",
-      "updated_at": "2025-09-29T03:57:27.048Z"
-    },
-    {
-      "id": "1808",
-      "name": "jfhei",
-      "description": "",
-      "project_id": "db15",
-      "created_at": "2025-09-29T04:23:34.501Z",
-      "updated_at": "2025-09-29T04:23:34.501Z"
+      "project_id": "1",
+      "created_at": "2025-09-29T16:26:30.512Z",
+      "updated_at": "2025-09-29T16:26:30.512Z"
     }
   ],
   "endpoints": [
     {
-      "id": "c4b9",
-      "name": "akop",
-      "path": "/papa",
+      "id": "1",
+      "folder_id": 1,
+      "name": "Get Users",
       "method": "GET",
-      "folder_id": "1",
-      "created_at": "2025-09-29T08:03:40.471Z",
-      "updated_at": "2025-09-29T08:03:40.471Z"
+      "path": "/users",
+      "is_active": true,
+      "created_at": "2025-09-20T08:00:00Z",
+      "updated_at": "2025-09-20T08:00:00Z"
     },
     {
-      "id": "dea7",
-      "name": "pjknh",
-      "path": "/ppp",
+      "id": "2",
+      "folder_id": 1,
+      "name": "Create User",
+      "method": "POST",
+      "path": "/users",
+      "is_active": true,
+      "created_at": "2025-09-20T08:05:00Z",
+      "updated_at": "2025-09-20T08:05:00Z"
+    },
+    {
+      "id": "3",
+      "folder_id": 3,
+      "name": "Get Cars",
       "method": "GET",
-      "folder_id": "2",
-      "created_at": "2025-09-29T08:08:42.581Z",
-      "updated_at": "2025-09-29T08:08:42.581Z"
+      "path": "/cars",
+      "is_active": true,
+      "created_at": "2025-09-20T08:10:00Z",
+      "updated_at": "2025-09-20T08:10:00Z"
+    },
+    {
+      "id": "4",
+      "folder_id": 3,
+      "name": "Add Car",
+      "method": "POST",
+      "path": "/cars",
+      "is_active": true,
+      "created_at": "2025-09-20T08:15:00Z",
+      "updated_at": "2025-09-20T08:15:00Z"
+    },
+    {
+      "id": "5",
+      "folder_id": 4,
+      "name": "Trigger Build",
+      "method": "POST",
+      "path": "/pipeline/build",
+      "is_active": true,
+      "created_at": "2025-09-20T08:20:00Z",
+      "updated_at": "2025-09-20T08:20:00Z"
+    },
+    {
+      "id": "6",
+      "folder_id": 4,
+      "name": "Get Build Status",
+      "method": "GET",
+      "path": "/pipeline/status",
+      "is_active": true,
+      "created_at": "2025-09-20T08:25:00Z",
+      "updated_at": "2025-09-20T08:25:00Z"
+    },
+    {
+      "id": "7",
+      "folder_id": 5,
+      "name": "Get Test Cases",
+      "method": "GET",
+      "path": "/testcases",
+      "is_active": true,
+      "created_at": "2025-09-20T08:30:00Z",
+      "updated_at": "2025-09-20T08:30:00Z"
+    },
+    {
+      "id": "8",
+      "folder_id": 5,
+      "name": "Run Test Case",
+      "method": "POST",
+      "path": "/testcases/run",
+      "is_active": true,
+      "created_at": "2025-09-20T08:35:00Z",
+      "updated_at": "2025-09-20T08:35:00Z"
     }
   ],
   "endpoint_responses": [
     {
-      "id": 1,
+      "id": "1",
       "endpoint_id": 1,
       "name": "Success",
       "status_code": 200,
@@ -202,7 +231,7 @@
       "is_default": true
     },
     {
-      "id": 2,
+      "id": "2",
       "endpoint_id": 1,
       "name": "User Not Found",
       "status_code": 404,
@@ -213,7 +242,7 @@
       "is_default": false
     },
     {
-      "id": 3,
+      "id": "3",
       "endpoint_id": 2,
       "name": "Created",
       "status_code": 201,
@@ -225,7 +254,7 @@
       "is_default": true
     },
     {
-      "id": 4,
+      "id": "4",
       "endpoint_id": 2,
       "name": "Duplicate Username",
       "status_code": 409,
@@ -236,7 +265,7 @@
       "is_default": false
     },
     {
-      "id": 5,
+      "id": "5",
       "endpoint_id": 3,
       "name": "Success",
       "status_code": 200,
@@ -250,7 +279,7 @@
       "is_default": true
     },
     {
-      "id": 6,
+      "id": "6",
       "endpoint_id": 3,
       "name": "Empty List",
       "status_code": 200,
@@ -259,7 +288,7 @@
       "is_default": false
     },
     {
-      "id": 7,
+      "id": "7",
       "endpoint_id": 4,
       "name": "Created",
       "status_code": 201,
@@ -271,7 +300,7 @@
       "is_default": true
     },
     {
-      "id": 8,
+      "id": "8",
       "endpoint_id": 4,
       "name": "Invalid Data",
       "status_code": 400,
@@ -282,7 +311,7 @@
       "is_default": false
     },
     {
-      "id": 9,
+      "id": "9",
       "endpoint_id": 5,
       "name": "Build Triggered",
       "status_code": 202,
@@ -294,7 +323,7 @@
       "is_default": true
     },
     {
-      "id": 10,
+      "id": "10",
       "endpoint_id": 6,
       "name": "Status Success",
       "status_code": 200,
@@ -305,7 +334,7 @@
       "is_default": true
     },
     {
-      "id": 11,
+      "id": "11",
       "endpoint_id": 6,
       "name": "Status Failed",
       "status_code": 200,
@@ -316,7 +345,7 @@
       "is_default": false
     },
     {
-      "id": 12,
+      "id": "12",
       "endpoint_id": 7,
       "name": "Get All Test Cases",
       "status_code": 200,
@@ -330,7 +359,7 @@
       "is_default": true
     },
     {
-      "id": 13,
+      "id": "13",
       "endpoint_id": 7,
       "name": "No Test Case Found",
       "status_code": 404,
@@ -341,7 +370,7 @@
       "is_default": false
     },
     {
-      "id": 14,
+      "id": "14",
       "endpoint_id": 8,
       "name": "Run Test Success",
       "status_code": 200,
@@ -353,7 +382,7 @@
       "is_default": true
     },
     {
-      "id": 15,
+      "id": "15",
       "endpoint_id": 8,
       "name": "Run Test Failed",
       "status_code": 200,
@@ -367,7 +396,7 @@
   ],
   "project_request_logs": [
     {
-      "id": 1,
+      "id": "1",
       "project_id": 1,
       "endpoint_id": 1,
       "endpoint_response_id": 1,
@@ -387,7 +416,7 @@
       "created_at": "2025-09-19T08:30:00Z"
     },
     {
-      "id": 2,
+      "id": "2",
       "project_id": 1,
       "endpoint_id": 2,
       "endpoint_response_id": 3,
@@ -409,7 +438,7 @@
       "created_at": "2025-09-19T09:15:00Z"
     },
     {
-      "id": 3,
+      "id": "3",
       "project_id": 2,
       "endpoint_id": 3,
       "endpoint_response_id": 6,
@@ -424,6 +453,54 @@
       "ip_address": "198.51.100.23",
       "latency_ms": 89,
       "created_at": "2025-09-19T10:00:00Z"
+    }
+  ],
+  "stateful_endpoints": [
+    {
+      "id": "1",
+      "folder_id": 1,
+      "name": "Products",
+      "path": "/products",
+      "schema": {
+        "id": {
+          "type": "integer",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "price": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "data": [
+        {
+          "id": 1,
+          "name": "Laptop",
+          "price": 1200
+        },
+        {
+          "id": 2,
+          "name": "Phone",
+          "price": 800
+        }
+      ],
+      "is_active": true,
+      "created_at": "2025-09-29T08:00:00Z",
+      "updated_at": "2025-09-29T08:00:00Z"
+    },
+    {
+      "id": "80ce",
+      "name": "pajsd",
+      "path": "/hi",
+      "folder_id": 2,
+      "schema": null,
+      "data": [],
+      "is_active": true,
+      "created_at": "2025-09-29T15:51:31.075Z",
+      "updated_at": "2025-09-29T15:51:31.075Z"
     }
   ]
 }

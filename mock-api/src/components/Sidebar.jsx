@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from "react";
-import {useNavigate, useParams, useLocation} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
@@ -16,7 +16,6 @@ export default function Sidebar({
                                   folders = [],
                                   onEditWorkspace,
                                   onDeleteWorkspace,
-                                  onAddProject,
                                   onAddFolder,
                                   onEditFolder,
                                   onDeleteFolder,
@@ -32,12 +31,12 @@ export default function Sidebar({
                                   setOpenNewWs
                                 }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const {projectId, endpointId} = useParams();
+  // const location = useLocation();
+  const { projectId, endpointId, folderId } = useParams();
 
   // Get folderId from URL query parameters
-  const urlParams = new URLSearchParams(location.search);
-  const selectedFolderId = urlParams.get('folderId');
+  // const urlParams = new URLSearchParams(location.search);
+  // const selectedFolderId = urlParams.get('folderId');
 
   const [rightClickActionId, setRightClickActionId] = useState(null);
   const [rightClickFolderId, setRightClickFolderId] = useState(null);
@@ -292,7 +291,7 @@ export default function Sidebar({
 
                   const activePj = String(projectId) === String(p.id);
                   // Chỉ đậm project khi không có folder được chọn
-                  const shouldBoldProject = activePj && !selectedFolderId;
+                  const shouldBoldProject = activePj && !folderId;
 
                   return (
                     <li key={p.id}>
@@ -358,14 +357,13 @@ export default function Sidebar({
                                       {/* Folder header */}
                                       <div
                                         className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
-                                          String(selectedFolderId) === String(folder.id)
+                                          String(folderId) === String(folder.id)
                                             ? "bg-slate-200 hover:bg-slate-300  font-semibold"
                                             : "bg-white hover:bg-gray-50  border-gray-200"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          // Navigate to folder page when clicking folder
-                                          navigate(`/dashboard/${p.id}?folderId=${folder.id}`);
+                                          navigate(`/dashboard/${p.id}/folder/${folder.id}`);
                                         }}
                                         onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
                                       >
@@ -388,7 +386,7 @@ export default function Sidebar({
                                             }}
                                           />
                                           <span className={`text-sm ${
-                                            String(selectedFolderId) === String(folder.id)
+                                            String(folderId) === String(folder.id)
                                               ? "font-semibold text-slate-900"
                                               : "font-medium text-slate-700"
                                           }`}>{folder.name}</span>
@@ -536,7 +534,7 @@ export default function Sidebar({
 
                               const activePj = String(projectId) === String(p.id);
                               // Chỉ đậm project khi không có folder được chọn
-                              const shouldBoldProject = activePj && !selectedFolderId;
+                              const shouldBoldProject = activePj && !folderId;
 
                               return (
                                 <div key={p.id}>
@@ -600,15 +598,15 @@ export default function Sidebar({
                                                   {/* Folder header */}
                                                   <div
                                                     className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
-                                                      String(selectedFolderId) === String(folder.id)
+                                                      String(folderId) === String(folder.id)
                                                         ? "bg-slate-200 hover:bg-slate-300 border border-slate-400 font-semibold"
                                                         : "bg-white hover:bg-gray-50 border border-gray-200"
                                                     }`}
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      // Navigate to folder page when clicking folder
-                                                      navigate(`/dashboard/${p.id}?folderId=${folder.id}`);
+                                                      navigate(`/dashboard/${p.id}/folder/${folder.id}`);
                                                     }}
+
                                                   >
                                                     <div className="flex items-center gap-2">
                                                       <ChevronDown
@@ -632,7 +630,7 @@ export default function Sidebar({
                                                         }}
                                                       />
                                                       <span className={`text-sm ${
-                                                        String(selectedFolderId) === String(folder.id)
+                                                        String(folderId) === String(folder.id)
                                                           ? "font-semibold text-slate-900"
                                                           : "font-medium text-slate-700"
                                                       }`}>{folder.name}</span>
