@@ -83,18 +83,18 @@ export default function DashboardPage() {
     fetchFolders();
   }, []);
 
-  // useEffect(() => {
-  //   if (projectId && projects.length > 0) {
-  //     const project = projects.find((p) => String(p.id) === String(projectId));
-  //     if (project) {
-  //       setCurrentWsId(project.workspace_id);
-  //       setOpenProjectsMap((prev) => ({
-  //         ...prev,
-  //         [project.workspace_id]: true,
-  //       }));
-  //     }
-  //   }
-  // }, [projectId, projects]);
+  useEffect(() => {
+    if (projectId && projects.length > 0) {
+      const project = projects.find((p) => String(p.id) === String(projectId));
+      if (project) {
+        setCurrentWsId(project.workspace_id);
+        setOpenProjectsMap((prev) => ({
+          ...prev,
+          [project.workspace_id]: true,
+        }));
+      }
+    }
+  }, [projectId, projects]);
 
   useEffect(() => {
     const savedWs = localStorage.getItem("currentWorkspace");

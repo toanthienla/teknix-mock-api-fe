@@ -61,12 +61,12 @@ export default function Dashboard() {
   const urlParams = new URLSearchParams(location.search);
   const selectedFolderId = urlParams.get('folderId');
   
-  console.log('📍 Debug Info:', {
-    projectId,
-    selectedFolderId,
-    url: location.pathname + location.search,
-    timestamp: new Date().toLocaleTimeString()
-  });
+  // console.log('📍 Debug Info:', {
+  //   projectId,
+  //   selectedFolderId,
+  //   url: location.pathname + location.search,
+  //   timestamp: new Date().toLocaleTimeString()
+  // });
 
   const [logs, setLogs] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
