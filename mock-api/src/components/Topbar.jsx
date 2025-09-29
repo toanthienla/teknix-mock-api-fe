@@ -34,7 +34,7 @@ export default function Topbar({
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
       {/* Breadcrumb bên trái */}
       {breadcrumb.length > 0 && (
-        <div className="bg-slate-100 px-4 py-2 rounded-md inline-flex overflow-hidden">
+        <div className="px-4 py-2 rounded-md inline-flex overflow-hidden">
           <Breadcrumb>
             <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
               {breadcrumb.map((item, idx) => {
@@ -59,12 +59,13 @@ export default function Topbar({
                               localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
                             }
                           }}
+                          className="font-medium text-slate-900"
                         >
                           {item.label}
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator/>}
+                    {!isLast && <BreadcrumbSeparator className="font-medium text-slate-900"/>}
                   </React.Fragment>
                 );
               })}
