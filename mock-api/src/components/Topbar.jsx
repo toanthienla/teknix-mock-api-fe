@@ -1,7 +1,7 @@
-import React, {useState} from "react";
-import {Search} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import React, { useState } from "react";
+import { Search, Circle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,13 +11,48 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+// Sửa component EndpointStatusToggle để có thể toggle được và đổi màu
+const EndpointStatusToggle = () => {
+  const [isActive, setIsActive] = useState(true);
+
+  const toggle = () => {
+    setIsActive(!isActive);
+  };
+
+  return (
+    <div
+      className="flex flex-row items-center w-[12px] h-[30px] cursor-pointer"
+      onClick={toggle}
+    >
+      <div className="flex flex-row items-center w-[60px] h-[30px]">
+        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+          {isActive ? "Active" : "Inactive"}
+        </span>
+      </div>
+      <div className="relative w-[60px] h-[30px]">
+        <div
+          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+            isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+          }`}
+        >
+          <div
+            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+              isActive ? "left-[32px]" : "left-[3px]"
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Topbar({
- breadcrumb = [],
- onSearch,
- onNewProject,
- onNewResponse,
- showNewProjectButton,
- showNewResponseButton
+  breadcrumb = [],
+  onSearch,
+  onNewProject,
+  onNewResponse,
+  showNewProjectButton,
+  showNewResponseButton,
 }) {
   const [query, setQuery] = useState("");
 
@@ -39,7 +74,7 @@ export default function Topbar({
             className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
           />
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-            <Search size={16}/>
+            <Search size={16} />
           </div>
         </div>
       </div>
@@ -75,7 +110,10 @@ export default function Topbar({
                             href={item.href}
                             onClick={() => {
                               if (item.WORKSPACE_ID) {
-                                localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                                localStorage.setItem(
+                                  "currentWorkspace",
+                                  item.WORKSPACE_ID
+                                );
                               }
                             }}
                           >
@@ -83,7 +121,7 @@ export default function Topbar({
                           </BreadcrumbLink>
                         )}
                       </BreadcrumbItem>
-                      {!isLast && <BreadcrumbSeparator/>}
+                      {!isLast && <BreadcrumbSeparator />}
                     </React.Fragment>
                   );
                 })}
@@ -92,6 +130,13 @@ export default function Topbar({
           </div>
         )}
       </div>
+
+      {/* Endpoint Status Toggle */}
+      {showNewResponseButton && (
+        <div className="flex-1 flex justify-end mr-4">
+          <EndpointStatusToggle />
+        </div>
+      )}
 
       {/* New Project Button */}
       {showNewProjectButton && (
