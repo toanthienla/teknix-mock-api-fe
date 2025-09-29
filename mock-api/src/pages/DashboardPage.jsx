@@ -163,13 +163,14 @@ export default function DashboardPage() {
 
   const handleAddFolder = (projectId) => {
     console.log('Add folder for project:', projectId);
-    // This could open a modal or navigate to a folder creation page
+    // Navigate to project page to create folder
+    navigate(`/dashboard/${projectId}`);
   };
 
   const handleEditFolder = (folder) => {
     console.log('Edit folder:', folder);
     // Navigate to project page with folder selected for editing
-    navigate(`/projects/${folder.project_id}?folderId=${folder.id}&action=edit`);
+    navigate(`/dashboard/${folder.project_id}?folderId=${folder.id}&action=edit`);
   };
 
   const handleDeleteFolder = async (folderId) => {
@@ -486,6 +487,7 @@ export default function DashboardPage() {
         name: editTitle.trim(),
         description: editDesc.trim(),
         workspace_id: currentWsId,
+        created_at: original.created_at, //Giữ lại created_at
         updated_at: new Date().toISOString(),
       }),
     })

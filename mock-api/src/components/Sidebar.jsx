@@ -1,12 +1,12 @@
 import React, {useState, useEffect, useRef} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate, useParams, useLocation} from "react-router-dom";
 import {ChevronDown, Plus, ChevronLeft, MoreHorizontal} from "lucide-react";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
-import folderIcon from "@/assets/folder-icon.svg";
 import settingIcon from "@/assets/Settings Icon.svg";
 // import newicon from "@/assets/Add.svg";
 import randomColor from "randomcolor";
+import OpenIcon from "@/assets/opensidebar.svg"
 
 export default function Sidebar({
                                   workspaces = [],
@@ -33,7 +33,12 @@ export default function Sidebar({
                                   setOpenNewWs
                                 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const {projectId, endpointId} = useParams();
+
+  // Get folderId from URL query parameters
+  const urlParams = new URLSearchParams(location.search);
+  const selectedFolderId = urlParams.get('folderId');
 
   const [rightClickActionId, setRightClickActionId] = useState(null);
   const [rightClickFolderId, setRightClickFolderId] = useState(null);
@@ -158,34 +163,35 @@ export default function Sidebar({
     <div className="flex flex-col bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
-        <span
-          className="cursor-pointer text-2xl font-bold text-slate-900"
-          onClick={() => {
-            localStorage.clear();
+  {/* Logo MockAPI → click để reset */}
+  <span
+    className="cursor-pointer text-2xl font-bold text-slate-900"
+    onClick={() => {
+      localStorage.clear();
+      setLockedMode(false);
+      setCurrent?.(null);
+      Promise.resolve().then(() => {
+        navigate("/dashboard");
+      });
+    }}
+  >
+    MockAPI
+  </span>
 
-            setLockedMode(false);
-            setCurrent?.(null);
-
-            // Đảm bảo xoá xong trước khi navigate
-            Promise.resolve().then(() => {
-              navigate("/dashboard");
-            });
-          }}
-        >
-          MockAPI
-        </span>
-
-        <button
-          onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
-          className="p-1 rounded-full hover:bg-slate-100 transition-colors"
-        >
-          <ChevronLeft
-            className={`w-5 h-5 text-slate-900 transition-transform ${
-              isCollapsed ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      </div>
+  {/* Đổi nút toggle từ ChevronLeft → hình opensidebar.svg */}
+  <button
+    onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
+    className="p-1 rounded-full hover:bg-slate-100 transition-colors"
+  >
+    <img
+      src={OpenIcon}
+      alt="toggle sidebar"
+      className={`w-6 h-6 transition-transform ${
+        isCollapsed ? "rotate-180" : ""
+      }`}
+    />
+  </button>
+</div>
 
       {/* Main */}
       <div className={`${isCollapsed ? "hidden" : "flex-1 overflow-hidden"}`}>
@@ -284,14 +290,16 @@ export default function Sidebar({
                     (ep) => String(ep.project_id) === String(p.id)
                   );
                   const activePj = String(projectId) === String(p.id);
+                  // Chỉ đậm project khi không có folder được chọn
+                  const shouldBoldProject = activePj && !selectedFolderId;
 
                   return (
                     <li key={p.id}>
                       <div
                         className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer ${
-                          activePj
+                          shouldBoldProject
                             ? "bg-slate-100 font-semibold text-slate-900"
-                            : "hover:bg-slate-50"
+                            : "hover:bg-slate-50 text-slate-600"
                         }`}
                         onClick={() => navigate(`/dashboard/${p.id}`)}
                       >
@@ -348,18 +356,15 @@ export default function Sidebar({
                                     <div key={folder.id}>
                                       {/* Folder header */}
                                       <div
-                                        className="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-slate-200 bg-slate-100"
+                                        className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
+                                          String(selectedFolderId) === String(folder.id) 
+                                            ? "bg-slate-200 hover:bg-slate-300  font-semibold" 
+                                            : "bg-white hover:bg-gray-50  border-gray-200"
+                                        }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          // Toggle folder open/close
-                                          if (setOpenFoldersMap) {
-                                            setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
-                                          } else {
-                                            setLocalOpenFoldersMap((prev) => ({
-                                              ...prev,
-                                              [folder.id]: !prev[folder.id]
-                                            }));
-                                          }
+                                          // Navigate to folder page when clicking folder
+                                          navigate(`/dashboard/${p.id}?folderId=${folder.id}`);
                                         }}
                                         onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
                                       >
@@ -368,8 +373,24 @@ export default function Sidebar({
                                             className={`h-3 w-3 text-slate-500 transition-transform ${
                                               isFolderOpen ? "rotate-0" : "-rotate-90"
                                             }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              // Toggle folder open/close
+                                              if (setOpenFoldersMap) {
+                                                setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
+                                              } else {
+                                                setLocalOpenFoldersMap((prev) => ({
+                                                  ...prev,
+                                                  [folder.id]: !prev[folder.id]
+                                                }));
+                                              }
+                                            }}
                                           />
-                                          <span className="text-sm font-medium text-slate-700">{folder.name}</span>
+                                          <span className={`text-sm ${
+                                            String(selectedFolderId) === String(folder.id) 
+                                              ? "font-semibold text-slate-900" 
+                                              : "font-medium text-slate-700"
+                                          }`}>{folder.name}</span>
                                         </div>
                                         <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
                                           {folderEndpoints.length}
@@ -433,21 +454,20 @@ export default function Sidebar({
                             );
                           })()}
 
-                          {/* New folder button khi đang trong project */}
-                          {String(projectId) === String(p.id) && (
-                            <div
-                              className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onAddFolder) {
-                                  onAddFolder();
-                                }
-                              }}
-                            >
-                              <Plus className="w-4 h-4"/>
-                              <span>New folder...</span>
-                            </div>
-                          )}
+                          {/* New folder button cho mọi project khi expand */}
+                          <div
+                            className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onAddFolder) {
+                                // Set projectId context cho folder creation
+                                onAddFolder(p.id);
+                              }
+                            }}
+                          >
+                            <Plus className="w-4 h-4"/>
+                            <span>New folder...</span>
+                          </div>
                         </div>
                       )}
                     </li>
@@ -511,14 +531,16 @@ export default function Sidebar({
                                 (ep) => String(ep.project_id) === String(p.id)
                               );
                               const activePj = String(projectId) === String(p.id);
+                              // Chỉ đậm project khi không có folder được chọn
+                              const shouldBoldProject = activePj && !selectedFolderId;
 
                               return (
                                 <div key={p.id}>
                                   <div
                                     className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                      activePj
+                                      shouldBoldProject
                                         ? "bg-slate-100 font-semibold text-slate-900"
-                                        : "hover:bg-slate-50"
+                                        : "hover:bg-slate-50 text-slate-600"
                                     }`}
                                     onClick={() => navigate(`/dashboard/${p.id}`)}
                                   >
@@ -573,21 +595,15 @@ export default function Sidebar({
                                                 <div key={folder.id}>
                                                   {/* Folder header */}
                                                   <div
-                                                    className="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-slate-200 bg-slate-100"
+                                                    className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
+                                                      String(selectedFolderId) === String(folder.id) 
+                                                        ? "bg-slate-200 hover:bg-slate-300 border border-slate-400 font-semibold" 
+                                                        : "bg-white hover:bg-gray-50 border border-gray-200"
+                                                    }`}
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      // Toggle folder open/close
-                                                      if (setOpenFoldersMap) {
-                                                        setOpenFoldersMap((prev) => ({
-                                                          ...prev,
-                                                          [folder.id]: !prev[folder.id]
-                                                        }));
-                                                      } else {
-                                                        setLocalOpenFoldersMap((prev) => ({
-                                                          ...prev,
-                                                          [folder.id]: !prev[folder.id]
-                                                        }));
-                                                      }
+                                                      // Navigate to folder page when clicking folder
+                                                      navigate(`/dashboard/${p.id}?folderId=${folder.id}`);
                                                     }}
                                                   >
                                                     <div className="flex items-center gap-2">
@@ -595,8 +611,27 @@ export default function Sidebar({
                                                         className={`h-3 w-3 text-slate-500 transition-transform ${
                                                           isFolderOpen ? "rotate-0" : "-rotate-90"
                                                         }`}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          // Toggle folder open/close
+                                                          if (setOpenFoldersMap) {
+                                                            setOpenFoldersMap((prev) => ({
+                                                              ...prev,
+                                                              [folder.id]: !prev[folder.id]
+                                                            }));
+                                                          } else {
+                                                            setLocalOpenFoldersMap((prev) => ({
+                                                              ...prev,
+                                                              [folder.id]: !prev[folder.id]
+                                                            }));
+                                                          }
+                                                        }}
                                                       />
-                                                      <span className="text-sm font-medium text-slate-700">{folder.name}</span>
+                                                      <span className={`text-sm ${
+                                                        String(selectedFolderId) === String(folder.id) 
+                                                          ? "font-semibold text-slate-900" 
+                                                          : "font-medium text-slate-700"
+                                                      }`}>{folder.name}</span>
                                                     </div>
                                                     <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
                                                       {folderEndpoints.length}
@@ -656,6 +691,21 @@ export default function Sidebar({
                                                 </div>
                                               );
                                             })}
+
+                                            {/* New folder button cho mọi project khi expand */}
+                                            <div
+                                              className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onAddFolder) {
+                                                  // Set projectId context cho folder creation
+                                                  onAddFolder(p.id);
+                                                }
+                                              }}
+                                            >
+                                              <Plus className="w-4 h-4"/>
+                                              <span>New folder...</span>
+                                            </div>
                                           </>
                                         );
                                       })()}
