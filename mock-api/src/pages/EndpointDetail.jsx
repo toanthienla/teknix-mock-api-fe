@@ -495,11 +495,9 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   </Select>
                 </div>
 
-                <div className="text-blue-600 w-6 flex justify-center">=</div>
-
                 <Input
-                  id={`rule-name-${row.id}`} // Thêm id duy nhất
-                  name={`rule-name-${row.id}`} // Thêm name duy nhất
+                  id={`rule-name-${row.id}`}
+                  name={`rule-name-${row.id}`}
                   value={row.name}
                   onChange={(e) => handleNameChange(row.id, e.target.value)}
                   className={`w-[184px] ${
@@ -507,10 +505,23 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-
+                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                  <span
+                    className="text-[32px] text-black"
+                    style={{
+                      fontFamily: "Inter",
+                      position: "absolute",
+                      left: "4px",
+                      top: "1px",
+                      lineHeight: "23px",
+                    }}
+                  >
+                    =
+                  </span>
+                </div>
                 <Input
-                  id={`rule-value-${row.id}`} // Thêm id duy nhất
-                  name={`rule-value-${row.id}`} // Thêm name duy nhất
+                  id={`rule-value-${row.id}`}
+                  name={`rule-value-${row.id}`}
                   value={row.value}
                   onChange={(e) => handleValueChange(row.id, e.target.value)}
                   className={`w-[151px] ${
@@ -1656,7 +1667,7 @@ const DashboardPage = () => {
                     value="Rules"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
-                    Request Matching
+                    Request Validate
                   </TabsTrigger>
                   <TabsTrigger
                     value="proxy"
