@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,9 @@ import {
   Code,
   GripVertical,
   Loader2,
+  FileCode,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -570,6 +573,9 @@ const DashboardPage = () => {
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState("url");
+  const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
   const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
@@ -608,6 +614,71 @@ const DashboardPage = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [targetWsId, setTargetWsId] = useState(null);
+
+  const insertTemplate = (template) => {
+    const textarea = document.getElementById("response-body");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Chèn template tại vị trí con trỏ
+    const newValue =
+      responseBody.substring(0, start) + template + responseBody.substring(end);
+
+    setResponseBody(newValue);
+
+    // Di chuyển con trỏ sau template đã chèn
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + template.length,
+        start + template.length
+      );
+    }, 0);
+
+    // Tự động đóng popover sau khi chèn
+    setIsPopoverOpen(false);
+  };
+
+  // Hàm lấy text mẫu dựa trên section được chọn
+  const getTemplateText = () => {
+    switch (selectedSection) {
+      case "url":
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+      case "query":
+        return {
+          template: "{{query.<param>}}",
+          description: "Get values from query string parameters",
+        };
+      case "state":
+        return {
+          template: "{{state.<param>}}",
+          description: "Get values from project state",
+        };
+      default:
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setIsPopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Thêm state để lưu trữ trạng thái trước khi drag
   const [previousStatusData, setPreviousStatusData] = useState([]);
@@ -1718,24 +1789,118 @@ const DashboardPage = () => {
                             Response Body
                           </Label>
                           <div className="col-span-3 space-y-2">
-                            <Textarea
-                              id="response-body"
-                              value={responseBody}
-                              onChange={(e) => setResponseBody(e.target.value)}
-                              className="font-mono h-60 border-[#CBD5E1] rounded-md"
-                            />
+                            <div className="relative">
+                              <Textarea
+                                id="response-body"
+                                value={responseBody}
+                                onChange={(e) =>
+                                  setResponseBody(e.target.value)
+                                }
+                                className="font-mono h-60 border-[#CBD5E1] rounded-md pb-8"
+                              />
+                              <FileCode
+                                className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
+                                size={26}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsPopoverOpen(!isPopoverOpen);
+                                }}
+                              />
+
+                              {/* Popover */}
+                              {isPopoverOpen && (
+                                <div
+                                  ref={popoverRef}
+                                  className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                >
+                                  <div className="flex flex-col items-center gap-2 p-3.5">
+                                    <div className="w-full flex justify-between items-center">
+                                      <div className="font-semibold text-sm text-gray-800">
+                                        Variable Picker
+                                      </div>
+                                      <X
+                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setIsPopoverOpen(false);
+                                        }}
+                                      />
+                                    </div>
+
+                                    <div className="w-full flex justify-between">
+                                      <div
+                                        className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "url"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("url");
+                                        }}
+                                      >
+                                        URL Parameters
+                                      </div>
+                                      <div
+                                        className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "query"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("query");
+                                        }}
+                                      >
+                                        Query Parameters
+                                      </div>
+                                      <div
+                                        className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "state"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("state");
+                                        }}
+                                      >
+                                        Project State
+                                      </div>
+                                    </div>
+
+                                    <div
+                                      className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        insertTemplate(
+                                          getTemplateText().template
+                                        );
+                                      }}
+                                    >
+                                      <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                        {getTemplateText().template}
+                                      </div>
+                                      <div className="text-[12px] text-gray-500">
+                                        {getTemplateText().description}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                             <div className="flex justify-end space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-[#E5E5E5]"
+                                className="border-[#E5E5E1]"
                               >
                                 <Upload className="mr-2 h-4 w-4" /> Upload
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-[#E5E5E5]"
+                                className="border-[#E5E5E1]"
                               >
                                 <Code className="mr-2 h-4 w-4" /> Format
                               </Button>
