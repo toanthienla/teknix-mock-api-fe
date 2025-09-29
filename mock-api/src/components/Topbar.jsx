@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import {useNavigate} from "react-router-dom";
 import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -23,7 +22,6 @@ export default function Topbar({
    showNewFolderButton,
    showNewResponseButton
  }) {
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
@@ -34,48 +32,41 @@ export default function Topbar({
 
   return (
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
-      {/* Breadcrumb bên trái */}
-      {breadcrumb.length > 0 && (
-        <div className="bg-slate-100 px-4 py-2 rounded-md inline-flex overflow-hidden">
-          <Breadcrumb>
-            <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
-              {breadcrumb.map((item, idx) => {
-                const isLast = idx === breadcrumb.length - 1;
-                return (
-                  <React.Fragment key={idx}>
-                    <BreadcrumbItem
-                      className={`whitespace-nowrap overflow-hidden min-w-0 ${
-                        isLast ? "" : "truncate"
-                      }`}
-                      title={item.label}
-                    >
-                      {isLast || !item.href ? (
-                        <BreadcrumbPage className="font-medium text-slate-900">
-                          {item.label}
-                        </BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (item.WORKSPACE_ID) {
-                              localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
-                            }
-                            navigate(item.href);
-                          }}
-                        >
-                          {item.label}
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator/>}
-                  </React.Fragment>
-                );
-              })}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      )}
+     {/* Breadcrumb bên trái */}
+{breadcrumb.length > 0 && (
+  <Breadcrumb>
+    <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden text-slate-600 text-sm">
+      {breadcrumb.map((item, idx) => {
+        const isLast = idx === breadcrumb.length - 1;
+        return (
+          <React.Fragment key={idx}>
+            <BreadcrumbItem className="whitespace-nowrap overflow-hidden min-w-0 truncate">
+              {isLast || !item.href ? (
+                <BreadcrumbPage className="font-medium text-slate-900">
+                  {item.label}
+                </BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink
+                  href={item.href}
+                  onClick={() => {
+                    if (item.WORKSPACE_ID) {
+                      localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                    }
+                  }}
+                  className="text-slate-600"
+                >
+                  {item.label}
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+            {!isLast && <BreadcrumbSeparator />}
+          </React.Fragment>
+        );
+      })}
+    </BreadcrumbList>
+  </Breadcrumb>
+)}
+
 
       {/* Search + Buttons bên phải */}
       <div className="flex items-center gap-4 ml-auto">

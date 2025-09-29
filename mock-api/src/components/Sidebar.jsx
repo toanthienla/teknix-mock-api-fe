@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import {useNavigate, useParams, useLocation} from "react-router-dom";
 import {ChevronDown, Plus, ChevronLeft, MoreHorizontal} from "lucide-react";
 import editIcon from "@/assets/Edit Icon.svg";
@@ -160,9 +160,9 @@ export default function Sidebar({
 
 
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 ease-in-out w-64 will-change-transform">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16 transition-all duration-200">
+      <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
   {/* Logo MockAPI → click để reset */}
   <span
     className="cursor-pointer text-2xl font-bold text-slate-900"
@@ -194,10 +194,10 @@ export default function Sidebar({
 </div>
 
       {/* Main */}
-      <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? "hidden" : "flex-1 overflow-hidden"}`}>
-        <div className="h-full overflow-y-auto max-h-[calc(100vh-64px)] p-2 transition-opacity duration-200">
+      <div className={`${isCollapsed ? "hidden" : "flex-1 overflow-hidden"}`}>
+        <div className="h-full overflow-y-auto max-h-[calc(100vh-64px)] p-2">
           {/* Dropdown chọn workspace */}
-          <div className="px-1 mb-3 transition-all duration-200">
+          <div className="px-1 mb-3">
             <button
               onClick={() => setWsDropdownOpen((prev) => !prev)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium"
@@ -212,13 +212,12 @@ export default function Sidebar({
             {wsDropdownOpen && (
               <div className="mt-1 border border-slate-200 rounded-md bg-white shadow-sm max-h-60 overflow-y-auto">
                 {workspaces.map((ws) => (
- <div
-  key={ws.id}
-  className={`pl-2 pr-3 py-2 cursor-pointer hover:bg-slate-100 flex justify-between items-center
-    ${String(current) === String(ws.id) 
-      ? "bg-slate-50 font-semibold border-l-2 border-blue-500" 
-      : ""}`}
->
+  <div
+    key={ws.id}
+    className={`px-3 py-2 cursor-pointer hover:bg-slate-100 flex justify-between items-center ${
+      String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
+    }`}
+  >
     {/* Tên workspace */}
     <span
       onClick={() => {
@@ -282,9 +281,9 @@ export default function Sidebar({
 
           {/* Sidebar khi lockedMode = true → show projects */}
           {lockedMode && currentWorkspace && (
-            <ul className="space-y-1 transition-all duration-300 ease-in-out">
+            <ul className="space-y-1">
               {projects
-                .filter((p) => {
+                 .filter((p) => {
                   // Nếu có projectId, chỉ hiển thị project đang được chọn
                   if (projectId) {
                     return String(p.id) === String(projectId);
@@ -302,9 +301,9 @@ export default function Sidebar({
                   const shouldBoldProject = activePj && !selectedFolderId;
 
                   return (
-                    <li key={p.id} className="transition-all duration-200 ease-in-out">
+                    <li key={p.id}>
                       <div
-                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition-all duration-200 ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer ${
                           shouldBoldProject
                             ? "bg-slate-100 font-semibold text-slate-900"
                             : "hover:bg-slate-50 text-slate-600"
@@ -329,7 +328,7 @@ export default function Sidebar({
 
                       {/* Folders and Endpoints */}
                       {isEpOpen && (
-                        <div className="ml-6 mt-1 space-y-1 text-xs transition-all duration-300 ease-in-out">
+                        <div className="ml-6 mt-1 space-y-1 text-xs">
                           {(() => {
                             // Get folders for this project
                             const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
@@ -366,8 +365,8 @@ export default function Sidebar({
                                       <div
                                         className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
                                           String(selectedFolderId) === String(folder.id) 
-                                            ? "bg-slate-200 hover:bg-slate-300 font-semibold" 
-                                            : "bg-white hover:bg-gray-50"
+                                            ? "bg-slate-200 hover:bg-slate-300  font-semibold" 
+                                            : "bg-white hover:bg-gray-50  border-gray-200"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -486,7 +485,7 @@ export default function Sidebar({
 
           {/* Sidebar workspace list khi chưa locked */}
           {!lockedMode && (
-            <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden transition-all duration-300 ease-in-out">
+            <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
               {/* Header */}
               <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50 border-b">
                 WORKSPACES
@@ -603,7 +602,7 @@ export default function Sidebar({
                                                 <div key={folder.id}>
                                                   {/* Folder header */}
                                                   <div
-                                                    className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
+                                                   className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
                                                       String(selectedFolderId) === String(folder.id) 
                                                         ? "bg-slate-200 hover:bg-slate-300 font-semibold" 
                                                         : "bg-white hover:bg-gray-50"
@@ -773,7 +772,7 @@ export default function Sidebar({
         {rightClickFolderId && (
           <div
             ref={folderMenuRef}
-            className="fixed bg-white  border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
+            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
             style={{top: menuPos.y, left: menuPos.x}}
           >
             <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
