@@ -83,18 +83,18 @@ export default function DashboardPage() {
     fetchFolders();
   }, []);
 
-  useEffect(() => {
-    if (projectId && projects.length > 0) {
-      const project = projects.find((p) => String(p.id) === String(projectId));
-      if (project) {
-        setCurrentWsId(project.workspace_id);
-        setOpenProjectsMap((prev) => ({
-          ...prev,
-          [project.workspace_id]: true,
-        }));
-      }
-    }
-  }, [projectId, projects]);
+  // useEffect(() => {
+  //   if (projectId && projects.length > 0) {
+  //     const project = projects.find((p) => String(p.id) === String(projectId));
+  //     if (project) {
+  //       setCurrentWsId(project.workspace_id);
+  //       setOpenProjectsMap((prev) => ({
+  //         ...prev,
+  //         [project.workspace_id]: true,
+  //       }));
+  //     }
+  //   }
+  // }, [projectId, projects]);
 
   useEffect(() => {
     const savedWs = localStorage.getItem("currentWorkspace");
@@ -126,7 +126,7 @@ export default function DashboardPage() {
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
         setWorkspaces(sorted);
-        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+        // if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
       })
       .catch(() => toast.error("Failed to load workspaces"));
   };

@@ -161,10 +161,15 @@ export default function Sidebar({
         <span
           className="cursor-pointer text-2xl font-bold text-slate-900"
           onClick={() => {
-            setLockedMode(false); // quay lại hiển thị tất cả workspace
-            setCurrent?.(null); // reset workspace
-            localStorage.removeItem("currentWorkspace"); // xoá workspace đang lưu
-            navigate("/dashboard");
+            localStorage.clear();
+
+            setLockedMode(false);
+            setCurrent?.(null);
+
+            // Đảm bảo xoá xong trước khi navigate
+            Promise.resolve().then(() => {
+              navigate("/dashboard");
+            });
           }}
         >
           MockAPI
