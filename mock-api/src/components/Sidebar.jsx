@@ -5,7 +5,7 @@ import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import settingIcon from "@/assets/Settings Icon.svg";
-// import newicon from "@/assets/Add.svg";
+import newicon from "@/assets/Add.svg";
 import randomColor from "randomcolor";
 
 export default function Sidebar({
@@ -205,20 +205,37 @@ export default function Sidebar({
             </button>
             {wsDropdownOpen && (
               <div className="mt-1 border border-slate-200 rounded-md bg-white shadow-sm max-h-60 overflow-y-auto">
-                {workspaces.map((ws) => (
-                  <div
-                    key={ws.id}
-                    className={`px-3 py-2 cursor-pointer hover:bg-slate-100 ${
-                      String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
-                    }`}
-                    onClick={() => {
-                      handleSelectWorkspace(ws.id);
-                      setWsDropdownOpen(false);
-                    }}
-                  >
-                    {ws.name}
-                  </div>
-                ))}
+              {workspaces.map((ws) => (
+  <div
+    key={ws.id}
+    className={`px-3 py-2 cursor-pointer hover:bg-slate-100 flex justify-between items-center ${
+      String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
+    }`}
+  >
+    {/* Tên workspace */}
+    <span
+      onClick={() => {
+        handleSelectWorkspace(ws.id);
+        setWsDropdownOpen(false);
+      }}
+    >
+      {ws.name}
+    </span>
+
+    {/* 3 chấm menu */}
+    <MoreHorizontal
+      className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation(); // tránh chọn workspace khi click 3 chấm
+        setRightClickActionId((prev) => (prev === ws.id ? null : ws.id));
+
+        // Vị trí menu
+        const rect = e.target.getBoundingClientRect();
+        setMenuPos({ x: rect.right, y: rect.bottom });
+      }}
+    />
+  </div>
+))}
               </div>
             )}
           </div>
@@ -298,17 +315,15 @@ export default function Sidebar({
                                     <div key={folder.id}>
                                       {/* Folder header */}
                                       <div
-                                        className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100"
+                                        className="flex items-center justify-between px-3 py-2 rounded cursor-pointer hover:bg-slate-200 bg-slate-100"
                                         onClick={(e) => {
                                           // If click on chevron, toggle folder
                                           if (e.target.closest('.folder-chevron')) {
+                                            e.stopPropagation();
                                             if (setOpenFoldersMap) {
                                               setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
                                             } else {
-                                              setLocalOpenFoldersMap((prev) => ({
-                                                ...prev,
-                                                [folder.id]: !prev[folder.id]
-                                              }));
+                                              setLocalOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
                                             }
                                           } else {
                                             // If click on folder name, navigate to project page with folder filter
@@ -317,20 +332,24 @@ export default function Sidebar({
                                         }}
                                         onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
                                       >
-                                        <ChevronDown
-                                          className={`h-3 w-3 text-slate-400 transition-transform folder-chevron ${
-                                            isFolderOpen ? "rotate-0" : "-rotate-90"
-                                          }`}
-                                        />
-                                        <img src={folderIcon} className="w-4 h-4" alt="folder"/>
-                                        <span>{folder.name}</span>
+                                        <div className="flex items-center gap-2">
+                                          <ChevronDown
+                                            className={`h-3 w-3 text-slate-500 transition-transform folder-chevron cursor-pointer ${
+                                              isFolderOpen ? "rotate-0" : "-rotate-90"
+                                            }`}
+                                          />
+                                          <span className="text-sm font-medium cursor-pointer text-slate-700">{folder.name}</span>
+                                        </div>
+                                        <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
+                                          {folderEndpoints.length}
+                                        </span>
                                       </div>
 
                                       {/* Folder endpoints */}
                                       {isFolderOpen && (
-                                        <div className="ml-6 mt-1 space-y-1">
+                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
                                           {folderEndpoints.length === 0 ? (
-                                            <div className="text-gray-400 px-2 py-1">
+                                            <div className="text-gray-400 px-2 py-1 text-xs">
                                               No endpoints in this folder
                                             </div>
                                           ) : (
@@ -339,17 +358,16 @@ export default function Sidebar({
                                               return (
                                                 <div
                                                   key={ep.id}
-                                                  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
+                                                  className={`px-3 py-2 rounded cursor-pointer text-sm ${
                                                     activeEp
-                                                      ? "bg-slate-100 font-semibold text-slate-900"
-                                                      : "hover:bg-slate-100"
+                                                      ? "bg-slate-100 font-medium text-slate-900"
+                                                      : "hover:bg-slate-50 text-slate-600"
                                                   }`}
                                                   onClick={() =>
                                                     navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                                   }
                                                 >
-                                                  <img src={settingIcon} className="w-5 h-5" alt="ep"/>
-                                                  {ep.name}
+                                                  <span>{ep.name}</span>
                                                 </div>
                                               );
                                             })

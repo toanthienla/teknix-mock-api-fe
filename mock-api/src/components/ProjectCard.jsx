@@ -110,7 +110,7 @@ export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
       {/* Góc dưới bên phải: số lượng endpoint */}
       <div className="flex justify-end mt-3">
         <span className="text-xs text-slate-500">
-          {endpoints.length} endpoints
+          {endpoints.length} {endpoints.length === 1 ? 'endpoint' : 'endpoints'}
         </span>
       </div>
     </div>
