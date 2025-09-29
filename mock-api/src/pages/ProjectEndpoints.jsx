@@ -1053,11 +1053,11 @@ export default function Dashboard() {
                       },
                       {
                         label: currentProject.name,
-                        href: `/projects/${currentProject.id}`,
+                        href: `/dashboard/${currentProject.id}`,
                       },
                       {
                         label: currentFolder.name,
-                        href: `/projects/${currentProject.id}?folderId=${currentFolder.id}`,
+                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
                       },
                     ]
                     : [
@@ -1068,7 +1068,7 @@ export default function Dashboard() {
                       },
                       {
                         label: currentProject.name,
-                        href: `/projects/${currentProject.id}`,
+                        href: `/dashboard/${currentProject.id}`,
                       },
                     ]
                   : [

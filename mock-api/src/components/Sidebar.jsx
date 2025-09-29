@@ -281,7 +281,14 @@ export default function Sidebar({
           {lockedMode && currentWorkspace && (
             <ul className="space-y-1">
               {projects
-                .filter((p) => String(p.workspace_id) === String(currentWorkspace.id))
+                 .filter((p) => {
+                  // Nếu có projectId, chỉ hiển thị project đang được chọn
+                  if (projectId) {
+                    return String(p.id) === String(projectId);
+                  }
+                  // Nếu không có projectId, hiển thị tất cả projects của workspace
+                  return String(p.workspace_id) === String(currentWorkspace.id);
+                })
                 .map((p) => {
                   const isEpOpen = readOpenEndpoints(p.id);
                   const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
