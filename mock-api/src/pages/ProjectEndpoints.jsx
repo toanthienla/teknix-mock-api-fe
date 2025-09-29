@@ -96,6 +96,7 @@ export default function Dashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [targetWsId, setTargetWsId] = useState(null);
+  const [targetProjectId, setTargetProjectId] = useState(null);
 
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
@@ -429,7 +430,9 @@ export default function Dashboard() {
   };
 
   // -------------------- Folder --------------------
-  const handleAddFolder = () => {
+  const handleAddFolder = (targetProjectId = null) => {
+    // Nếu có targetProjectId từ sidebar, dùng nó, nếu không dùng projectId hiện tại
+    setTargetProjectId(targetProjectId || projectId);
     setOpenNewFolder(true);
   };
 
@@ -556,7 +559,7 @@ export default function Dashboard() {
       const folderData = {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
-        project_id: projectId,
+        project_id: targetProjectId || projectId,
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -590,13 +593,13 @@ export default function Dashboard() {
       } else {
         setFolders((prev) => [...prev, savedFolder]);
         toast.success(`Folder "${savedFolder.name}" created successfully!`);
-        // Auto navigate to the new folder page
-        navigate(`/projects/${projectId}?folderId=${savedFolder.id}`);
+        // Không auto navigate, để user ở project page
       }
       
       setNewFolderName("");
       setNewFolderDesc("");
       setEditingFolderId(null);
+      setTargetProjectId(null);
       setOpenNewFolder(false);
     } catch (error) {
       console.error('Error saving folder:', error);
