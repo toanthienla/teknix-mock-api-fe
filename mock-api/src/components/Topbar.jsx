@@ -12,6 +12,40 @@ import {
 } from "@/components/ui/breadcrumb";
 import addIcon from "@/assets/Add.svg"
 
+// Sửa component EndpointStatusToggle để có thể toggle được và đổi màu
+const EndpointStatusToggle = () => {
+  const [isActive, setIsActive] = useState(true);
+
+  const toggle = () => {
+    setIsActive(!isActive);
+  };
+
+  return (
+    <div
+      className="flex items-center cursor-pointer"
+      onClick={toggle}
+    >
+      <span className="mr-2 font-inter font-semibold text-[16px] leading-[19px] text-black">
+        {isActive ? "Active" : "Inactive"}
+      </span>
+      <div className="relative w-[60px] h-[30px]">
+        <div
+          className={`flex items-center px-[4px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+            isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+          }`}
+        >
+          <div
+            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+              isActive ? "left-[32px]" : "left-[3px]"
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 export default function Topbar({
    breadcrumb = [],
    onSearch,
@@ -76,61 +110,85 @@ export default function Topbar({
 
       {/* Search + Buttons bên phải */}
       <div className="flex items-center gap-4 ml-auto">
-        <div className="relative w-[250px]">
-          <Input
-            placeholder="Search..."
-            value={query}
-            onChange={handleChange}
-            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-          />
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-            <Search size={16}/>
+        {/* Nếu có Response thì gom Search + Toggle + Button chung nhóm */}
+        {showNewResponseButton ? (
+          <div className="flex items-center gap-4">
+            {/* Search giữ nguyên */}
+            <div className="relative w-[250px]">
+              <Input
+                placeholder="Search..."
+                value={query}
+                onChange={handleChange}
+                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                <Search size={16}/>
+              </div>
+            </div>
+
+            {/* Toggle */}
+            <EndpointStatusToggle />
+
+            {/* New Response */}
+            <Button
+              onClick={onNewResponse}
+              className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+            >
+              <img
+                src={addIcon}
+                alt="Add icon"
+                className="w-5 h-5 object-contain invert brightness-0"
+              />
+              New Response
+            </Button>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Trường hợp không có Response thì search đứng 1 mình */}
+            <div className="relative w-[250px]">
+              <Input
+                placeholder="Search..."
+                value={query}
+                onChange={handleChange}
+                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                <Search size={16}/>
+              </div>
+            </div>
 
-        {showNewProjectButton && (
-          <Button
-            onClick={onNewProject}
-            className="px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
-            />
-            New Project
-          </Button>
-        )}
+            {/* Project button */}
+            {showNewProjectButton && (
+              <Button
+                onClick={onNewProject}
+                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+              >
+                <img
+                  src={addIcon}
+                  alt="Add icon"
+                  className="w-5 h-5 object-contain invert brightness-0"
+                />
+                New Project
+              </Button>
+            )}
 
-        {showNewFolderButton && (
-          <Button
-            onClick={onNewFolder}
-            className="px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
-            />
-            New Folder
-          </Button>
-        )}
-
-        {showNewResponseButton && (
-          <Button
-            onClick={onNewResponse}
-            className="px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
-            />
-            New Response
-          </Button>
+            {/* Folder button */}
+            {showNewFolderButton && (
+              <Button
+                onClick={onNewFolder}
+                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+              >
+                <img
+                  src={addIcon}
+                  alt="Add icon"
+                  className="w-5 h-5 object-contain invert brightness-0"
+                />
+                New Folder
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>
   );
 }
-

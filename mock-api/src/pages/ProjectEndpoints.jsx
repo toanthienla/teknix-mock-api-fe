@@ -1144,7 +1144,7 @@ export default function Dashboard() {
                               variant="ghost"
                               className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
                             >
-                              {statelessStatusFilter === "All" ? "Status: All" : `Status: ${statelessStatusFilter}`} <ChevronDown className="w-4 h-4"/>
+                              {statelessStatusFilter === "All" ? "All" : `${statelessStatusFilter}`} <ChevronDown className="w-4 h-4"/>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
@@ -1191,7 +1191,7 @@ export default function Dashboard() {
                         <Dialog open={openNew} onOpenChange={setOpenNew}>
                           <Button
                             onClick={() => setOpenNew(true)}
-                            className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded-md"
+                            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
                           >
                             <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain" />
                             New Endpoint
@@ -1533,7 +1533,7 @@ export default function Dashboard() {
 
                         {/* New Endpoint Button (pre-select stateful) */}
                         <Button
-                          className="bg-slate-600 hover:bg-slate-700 px-3 py-1 rounded-md"
+                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
                           onClick={() => {
                             setNewEType("stateful");               // ensure dialog defaults to stateful
                             setNewEFolderId(folderId || "");       // default folder = current folder (if any)
