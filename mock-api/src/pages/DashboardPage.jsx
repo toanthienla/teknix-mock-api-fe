@@ -688,15 +688,22 @@ export default function DashboardPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-8">
                   {sortedProjects.length > 0 ? (
-                    sortedProjects.map((p) => (
-                      <ProjectCard
-                        key={p.id}
-                        project={p}
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
-                        onEdit={() => openEditProjectDialog(p)}
-                        onDelete={() => openDeleteProjectDialog(p.id)}
-                      />
-                    ))
+                    sortedProjects.map((p) => {
+                      // Calculate endpoint count for this project
+                      const projectEndpoints = endpoints.filter(
+                        (ep) => String(ep.project_id) === String(p.id)
+                      );
+                      
+                      return (
+                        <ProjectCard
+                          key={p.id}
+                          project={{ ...p, endpoints: projectEndpoints }}
+                          onClick={() => navigate(`/dashboard/${p.id}`)}
+                          onEdit={() => openEditProjectDialog(p)}
+                          onDelete={() => openDeleteProjectDialog(p.id)}
+                        />
+                      );
+                    })
                   ) : (
                     <p className="text-slate-500 col-span-full">No projects found.</p>
                   )}
