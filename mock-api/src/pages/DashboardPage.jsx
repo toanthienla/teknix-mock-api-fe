@@ -689,11 +689,17 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-8">
                   {sortedProjects.length > 0 ? (
                     sortedProjects.map((p) => {
-                      // Calculate endpoint count for this project
-                      const projectEndpoints = endpoints.filter(
-                        (ep) => String(ep.project_id) === String(p.id)
+                      // Lấy tất cả folders của project này
+                      const projectFolders = folders.filter(
+                        (f) => String(f.project_id) === String(p.id)
                       );
-                      
+                      const folderIds = projectFolders.map((f) => String(f.id));
+
+                      // Lấy tất cả endpoints trong các folder đó
+                      const projectEndpoints = endpoints.filter((ep) =>
+                        folderIds.includes(String(ep.folder_id))
+                      );
+
                       return (
                         <ProjectCard
                           key={p.id}

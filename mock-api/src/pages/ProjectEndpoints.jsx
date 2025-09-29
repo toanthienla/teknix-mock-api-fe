@@ -165,7 +165,7 @@ export default function Dashboard() {
     }
     const duplicateName = endpoints.some(
       (ep) =>
-        String(ep.project_id) === String(projectId) &&
+        String(ep.folder_id) === String(selectedFolderId) &&
         ep.name.toLowerCase() === name.toLowerCase()
     );
     if (duplicateName) {
@@ -299,10 +299,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (projectId) {
-      fetchEndpoints(projectId);
+    if (selectedFolderId) {
+      fetchEndpoints(selectedFolderId);
     }
-  }, [projectId]);
+  }, [selectedFolderId]);
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
@@ -371,9 +371,9 @@ export default function Dashboard() {
       .catch((err) => console.error("Error fetching all endpoints:", err));
   };
 
-  const fetchEndpoints = (pid) => {
-    if (!pid) return;
-    fetch(`${API_ROOT}/endpoints?folder_id=${pid}`)
+  const fetchEndpoints = (folderId) => {
+    if (!folderId) return;
+    fetch(`${API_ROOT}/endpoints?folder_id=${folderId}`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data))
       .catch((err) => console.error("Error fetching endpoints:", err));
@@ -803,15 +803,15 @@ export default function Dashboard() {
       name: newEName,
       path: newEPath,
       method: newEMethod,
-      project_id: projectId, // Keep as string to match project id format
+      folder_id: selectedFolderId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    // If we're viewing a specific folder, add the endpoint to that folder
-    if (selectedFolderId) {
-      newEndpoint.folder_id = selectedFolderId;
-    }
+    // // If we're viewing a specific folder, add the endpoint to that folder
+    // if (selectedFolderId) {
+    //   newEndpoint.folder_id = selectedFolderId;
+    // }
 
     fetch(`${API_ROOT}/endpoints`, {
       method: "POST",
@@ -870,7 +870,7 @@ export default function Dashboard() {
         name: editEName,
         path: editEPath,
         method: editEMethod,
-        project_id: Number(projectId),
+        folder_id: Number(selectedFolderId),
         updated_at: new Date().toISOString(),
       }),
     })
