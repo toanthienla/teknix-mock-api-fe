@@ -3,9 +3,10 @@ import {useNavigate, useParams} from "react-router-dom";
 import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
+import settingIcon from "@/assets/Settings Icon.svg";
 import randomColor from "randomcolor";
 import OpenIcon from "@/assets/opensidebar.svg"
-
+import statefulIcon from "@/assets/stateful.svg"
 export default function Sidebar({
                                   workspaces = [],
                                   current,
@@ -410,10 +411,13 @@ export default function Sidebar({
                                           ) : (
                                             folderEndpoints.map((ep) => {
                                               const activeEp = String(endpointId) === String(ep.id);
+                                              // Check if this is a stateful endpoint
+                                              const isStateful = statefulEndpoints.some(sep => String(sep.id) === String(ep.id));
+                                              
                                               return (
                                                 <div
                                                   key={ep.id}
-                                                  className={`px-3 py-2 rounded cursor-pointer text-sm ${
+                                                  className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${
                                                     activeEp
                                                       ? "bg-slate-100 font-medium text-slate-900"
                                                       : "hover:bg-slate-50 text-slate-600"
@@ -422,6 +426,13 @@ export default function Sidebar({
                                                     navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                                   }
                                                 >
+                                                  {isStateful && (
+                                                    <img 
+                                                      src={statefulIcon} 
+                                                      className="w-4 h-4" 
+                                                      alt="stateful"
+                                                    />
+                                                  )}
                                                   <span>{ep.name}</span>
                                                 </div>
                                               );
@@ -623,10 +634,13 @@ export default function Sidebar({
                                                       ) : (
                                                         folderEndpoints.map((ep) => {
                                                           const activeEp = String(endpointId) === String(ep.id);
+                                                          // Check if this is a stateful endpoint
+                                                          const isStateful = statefulEndpoints.some(sep => String(sep.id) === String(ep.id));
+                                                          
                                                           return (
                                                             <div
                                                               key={ep.id}
-                                                              className={`px-3 py-2 rounded cursor-pointer text-sm ${
+                                                              className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${
                                                                 activeEp
                                                                   ? "bg-slate-100 font-medium text-slate-900"
                                                                   : "hover:bg-slate-50 text-slate-600"
@@ -635,6 +649,13 @@ export default function Sidebar({
                                                                 navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                                               }
                                                             >
+                                                              {isStateful && (
+                                                                <img 
+                                                                  src={statefulIcon} 
+                                                                  className="w-4 h-4" 
+                                                                  alt="stateful"
+                                                                />
+                                                              )}
                                                               <span>{ep.name}</span>
                                                             </div>
                                                           );
