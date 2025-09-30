@@ -1201,152 +1201,20 @@ export default function Dashboard() {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {/* New Endpoint Button + Dialog */}
-                        <Dialog open={openNew} onOpenChange={setOpenNew}>
-                          <Button
-                            onClick={() => setOpenNew(true)}
-                            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
-                          >
-                            <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain" />
-                            New Endpoint
-                          </Button>
-
-                          <DialogContent
-                            className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                // avoid Enter triggering when selecting inside selects; create explicitly on button
-                                e.preventDefault();
-                                handleCreateEndpoint();
-                              }
-                            }}
-                          >
-                            <DialogHeader>
-                              <DialogTitle>New Endpoint</DialogTitle>
-                              <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
-                            </DialogHeader>
-
-                            <div className="mt-3 space-y-4">
-                              {/* Name */}
-                              <div>
-                                <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
-                                <Input
-                                  placeholder="Enter endpoint name"
-                                  value={newEName}
-                                  onChange={(e) => setNewEName(e.target.value)}
-                                />
-                              </div>
-
-                              {/* Folder select - only folders for current project */}
-                              <div>
-                                <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
-                                <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select an option" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      <SelectLabel>Folders</SelectLabel>
-                                      {folders
-                                        .filter((f) => String(f.project_id) === String(projectId))
-                                        .map((f) => (
-                                          <SelectItem key={f.id} value={String(f.id)}>
-                                            {f.name}
-                                          </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              {/* Path */}
-                              <div>
-                                <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
-                                <Input
-                                  placeholder="/examples/example/:id"
-                                  value={newEPath}
-                                  onChange={(e) => setNewEPath(e.target.value)}
-                                />
-                              </div>
-
-                              {/* Method */}
-                              <div>
-                                <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
-                                <Select
-                                  value={newEMethod}
-                                  onValueChange={(v) => setNewEMethod(v)}
-                                  // disabled when stateful selected
-                                  disabled={newEType === "stateful"}
-                                >
-                                  <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Select a method" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      <SelectLabel>Method</SelectLabel>
-                                      <SelectItem value="GET">GET</SelectItem>
-                                      <SelectItem value="POST">POST</SelectItem>
-                                      <SelectItem value="PUT">PUT</SelectItem>
-                                      <SelectItem value="DELETE">DELETE</SelectItem>
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                                {newEType === "stateful" && (
-                                  <p className="text-xs text-slate-400 mt-1 ml-2">Method is locked for stateful endpoints.</p>
-                                )}
-                              </div>
-
-                              {/* Stateless / Stateful (shadcn RadioGroup) */}
-                              <div className="pt-2">
-                                <h3 className="text-sm font-semibold text-slate-700 mb-2">Type</h3>
-
-                                <RadioGroup
-                                  value={newEType}
-                                  onValueChange={(val) => {
-                                    setNewEType(val);
-                                    if (val === "stateful") setNewEMethod("");
-                                  }}
-                                  className="flex items-center gap-6"
-                                >
-                                  <label htmlFor="rg-stateless" className="flex items-center cursor-pointer space-x-2">
-                                    <RadioGroupItem id="rg-stateless" value="stateless" />
-                                    <span className="text-sm">Stateless</span>
-                                  </label>
-
-                                  <label htmlFor="rg-stateful" className="flex items-center cursor-pointer space-x-2">
-                                    <RadioGroupItem id="rg-stateful" value="stateful" />
-                                    <span className="text-sm">Stateful</span>
-                                  </label>
-                                </RadioGroup>
-                              </div>
-                            </div>
-
-                            <DialogFooter className="mt-4">
-                              <Button
-                                className="text-black hover:text-red-600"
-                                variant="outline"
-                                onClick={() => {
-                                  setOpenNew(false);
-                                  // reset little bit
-                                  setNewEName("");
-                                  setNewEPath("");
-                                  setNewEMethod("");
-                                  setNewEFolderId(folderId || "");
-                                  setNewEType("stateless");
-                                }}
-                              >
-                                Cancel
-                              </Button>
-
-                              <Button
-                                className="bg-blue-600 text-white hover:bg-blue-700"
-                                onClick={handleCreateEndpoint}
-                              >
-                                Create
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <Button
+                          onClick={() => {
+                            setNewEType("stateless");
+                            setNewEFolderId(folderId || "");
+                            setNewEName("");
+                            setNewEPath("");
+                            setNewEMethod("");
+                            setOpenNew(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
+                        >
+                          <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain" />
+                          New Endpoint
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1398,7 +1266,7 @@ export default function Dashboard() {
                         {sortedEndpoints?.length > 0 ? (
                           sortedEndpoints.map((e) => (
                             <EndpointCard
-                              key={e.id}
+                              key={`stateless-${e.id}`}
                               endpoint={e}
                               onEdit={() => openEditEndpoint(e)}
                               onDelete={() => handleDeleteEndpoint(e.id)}
@@ -1597,7 +1465,7 @@ export default function Dashboard() {
                         ) : (
                           filteredStateful.map((se) => (
                             <StatefulCard
-                              key={se.id}
+                              key={`stateful-${se.id}`}
                               stateful={se}
                               onEdit={(s) => navigate(`/projects/${projectId}/stateful/${s.id}/edit`)}
                               onDelete={(id) => handleDeleteStateful(id)}
@@ -1614,6 +1482,147 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+
+      {/* New Endpoint Button + Dialog */}
+      <Dialog open={openNew} onOpenChange={setOpenNew}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              // avoid Enter triggering when selecting inside selects; create explicitly on button
+              e.preventDefault();
+              handleCreateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              New {newEType === "stateless" ? "Stateless" : "Stateful"} Endpoint
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-3 space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={newEName}
+                onChange={(e) => setNewEName(e.target.value)}
+              />
+            </div>
+
+            {/* Folder select - only folders for current project */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
+              <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Folders</SelectLabel>
+                    {folders
+                      .filter((f) => String(f.project_id) === String(projectId))
+                      .map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
+              <Input
+                placeholder="/examples/example/:id"
+                value={newEPath}
+                onChange={(e) => setNewEPath(e.target.value)}
+              />
+            </div>
+
+            {/* Method */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
+              <Select
+                value={newEMethod}
+                onValueChange={(v) => setNewEMethod(v)}
+                // disabled when stateful selected
+                disabled={newEType === "stateful"}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Method</SelectLabel>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {newEType === "stateful" && (
+                <p className="text-xs text-slate-400 mt-1 ml-2">Method is locked for stateful endpoints.</p>
+              )}
+            </div>
+
+            {/* Stateless / Stateful (shadcn RadioGroup) */}
+            <div className="pt-2">
+              <h3 className="text-sm font-semibold text-slate-700 mb-2">Type</h3>
+
+              <RadioGroup
+                value={newEType}
+                onValueChange={(val) => {
+                  setNewEType(val);
+                  if (val === "stateful") setNewEMethod("");
+                }}
+                className="flex items-center gap-6"
+              >
+                <label htmlFor="rg-stateless" className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem id="rg-stateless" value="stateless" />
+                  <span className="text-sm">Stateless</span>
+                </label>
+
+                <label htmlFor="rg-stateful" className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem id="rg-stateful" value="stateful" />
+                  <span className="text-sm">Stateful</span>
+                </label>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => {
+                setOpenNew(false);
+                // reset little bit
+                setNewEName("");
+                setNewEPath("");
+                setNewEMethod("");
+                setNewEFolderId(folderId || "");
+                setNewEType("stateless");
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleCreateEndpoint}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* New Project Dialog */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>

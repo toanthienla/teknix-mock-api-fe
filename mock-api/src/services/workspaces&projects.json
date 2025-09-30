@@ -457,50 +457,15 @@
   ],
   "stateful_endpoints": [
     {
-      "id": "1",
+      "id": "278e",
+      "name": "adw",
+      "path": "/apis",
       "folder_id": 1,
-      "name": "Products",
-      "path": "/products",
-      "schema": {
-        "id": {
-          "type": "integer",
-          "required": true
-        },
-        "name": {
-          "type": "string",
-          "required": true
-        },
-        "price": {
-          "type": "number",
-          "required": true
-        }
-      },
-      "data": [
-        {
-          "id": 1,
-          "name": "Laptop",
-          "price": 1200
-        },
-        {
-          "id": 2,
-          "name": "Phone",
-          "price": 800
-        }
-      ],
-      "is_active": true,
-      "created_at": "2025-09-29T08:00:00Z",
-      "updated_at": "2025-09-29T08:00:00Z"
-    },
-    {
-      "id": "80ce",
-      "name": "pajsd",
-      "path": "/hi",
-      "folder_id": 2,
       "schema": null,
       "data": [],
       "is_active": true,
-      "created_at": "2025-09-29T15:51:31.075Z",
-      "updated_at": "2025-09-29T15:51:31.075Z"
+      "created_at": "2025-09-30T02:47:14.667Z",
+      "updated_at": "2025-09-30T02:47:14.667Z"
     }
   ]
 }
