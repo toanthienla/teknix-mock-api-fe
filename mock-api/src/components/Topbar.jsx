@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import addIcon from "@/assets/Add.svg"
+import {Badge} from "@/components/ui/badge.jsx";
 
 // Sửa component EndpointStatusToggle để có thể toggle được và đổi màu
 const EndpointStatusToggle = () => {
@@ -47,15 +48,17 @@ const EndpointStatusToggle = () => {
 
 
 export default function Topbar({
-   breadcrumb = [],
-   onSearch,
-   onNewProject,
-   onNewFolder,
-   onNewResponse,
-   showNewProjectButton,
-   showNewFolderButton,
-   showNewResponseButton
- }) {
+                                 breadcrumb = [],
+                                 onSearch,
+                                 onNewProject,
+                                 onNewFolder,
+                                 onNewResponse,
+                                 showNewProjectButton,
+                                 showNewFolderButton,
+                                 showNewResponseButton,
+                                 showActiveEndpoint,
+                                 activeEndpointCount
+                               }) {
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
@@ -110,10 +113,51 @@ export default function Topbar({
 
       {/* Search + Buttons bên phải */}
       <div className="flex items-center gap-4 ml-auto">
-        {/* Nếu có Response thì gom Search + Toggle + Button chung nhóm */}
-        {showNewResponseButton ? (
+        {showActiveEndpoint ? (
           <div className="flex items-center gap-4">
-            {/* Search giữ nguyên */}
+            {/* Search */}
+            <div className="relative w-[250px]">
+              <Input
+                placeholder="Search..."
+                value={query}
+                onChange={handleChange}
+                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                <Search size={16}/>
+              </div>
+            </div>
+
+            {/* Active Endpoint Count */}
+            <Badge
+              variant="outline"
+              className="bg-blue-600 hover:bg-blue-700">
+              <span className="text-sm font-medium text-white">
+                {activeEndpointCount}
+              </span>
+            </Badge>
+            <span className="text-slate-700 font-medium -ml-2">
+               Active
+            </span>
+
+            {/* New Folder */}
+            {showNewFolderButton && (
+              <Button
+                onClick={onNewFolder}
+                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+              >
+                <img
+                  src={addIcon}
+                  alt="Add icon"
+                  className="w-5 h-5 object-contain invert brightness-0"
+                />
+                New Folder
+              </Button>
+            )}
+          </div>
+        ) : showNewResponseButton ? (
+          <div className="flex items-center gap-4">
+            {/* Nếu có Response thì gom Search + Toggle + Button chung nhóm */}
             <div className="relative w-[250px]">
               <Input
                 placeholder="Search..."
@@ -127,7 +171,7 @@ export default function Topbar({
             </div>
 
             {/* Toggle */}
-            <EndpointStatusToggle />
+            <EndpointStatusToggle/>
 
             {/* New Response */}
             <Button

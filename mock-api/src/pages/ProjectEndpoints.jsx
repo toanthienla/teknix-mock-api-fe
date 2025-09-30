@@ -56,10 +56,10 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
+  const [statefulEndpoints, setStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [statefulEndpoints, setStatefulEndpoints] = useState([]); // NEW
 
   const [currentWsId, setCurrentWsId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -270,7 +270,8 @@ export default function Dashboard() {
         fetchProjects();
         fetchAllEndpoints();
         fetchFolders();
-        fetchStatefulEndpoints(); // NEW
+        fetchAllStatefulEndpoints();
+        fetchStatefulEndpoints();
         setTimeout(() => setIsLoading(false), 1000);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -371,6 +372,13 @@ export default function Dashboard() {
       .then((res) => res.json())
       .then((data) => setEndpoints(data))
       .catch((err) => console.error("Error fetching endpoints:", err));
+  };
+
+  const fetchAllStatefulEndpoints = () => {
+    fetch(`${API_ROOT}/stateful_endpoints`)
+      .then((res) => res.json())
+      .then((data) => setAllStatefulEndpoints(data))
+      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
   };
 
   // NEW: fetch stateful_endpoints
@@ -1010,6 +1018,7 @@ export default function Dashboard() {
             workspaces={workspaces}
             projects={projects}
             endpoints={allEndpoints}
+            statefulEndpoints={allStatefulEndpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
@@ -1085,6 +1094,11 @@ export default function Dashboard() {
             showNewProjectButton={false}
             showNewFolderButton={true}
             showNewResponseButton={false}
+            showActiveEndpoint={true}
+            activeEndpointCount={
+              endpoints.filter(e => e.is_active).length +
+              statefulEndpoints.filter(s => s.is_active).length
+            }
           />
 
           <div
