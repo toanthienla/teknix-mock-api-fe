@@ -45,22 +45,12 @@ export default function Dashboard() {
   // const location = useLocation();
   const [activeTab, setActiveTab] = useState("folders");
 
-  // Get folderId from URL query parameters
-  // const urlParams = new URLSearchParams(location.search);
-  // const selectedFolderId = urlParams.get('folderId');
-
-  // console.log('📍 Debug Info:', {
-  //   projectId,
-  //   selectedFolderId,
-  //   url: location.pathname + location.search,
-  //   timestamp: new Date().toLocaleTimeString()
-  // });
-
   const [logs, setLogs] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -121,6 +111,7 @@ export default function Dashboard() {
         fetchWorkspaces();
         fetchProjects();
         fetchAllEndpoints();
+        fetchAllStatefulEndpoints()
         fetchFolders();
 
         // Wait a bit for all to complete
@@ -222,6 +213,13 @@ export default function Dashboard() {
       .then((res) => res.json())
       .then((data) => setEndpoints(data))
       .catch((err) => console.error("Error fetching endpoints:", err));
+  };
+
+  const fetchAllStatefulEndpoints = () => {
+    fetch(`${API_ROOT}/stateful_endpoints`)
+      .then((res) => res.json())
+      .then((data) => setAllStatefulEndpoints(data))
+      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
   };
 
   const fetchFolders = () => {
@@ -658,6 +656,7 @@ export default function Dashboard() {
             workspaces={workspaces}
             projects={projects}
             endpoints={allEndpoints}
+            statefulEndpoints={allStatefulEndpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}

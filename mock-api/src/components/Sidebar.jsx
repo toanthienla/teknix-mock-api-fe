@@ -1,9 +1,8 @@
-import React, {useState, useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef, useMemo} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
-import settingIcon from "@/assets/Settings Icon.svg";
 import randomColor from "randomcolor";
 import OpenIcon from "@/assets/opensidebar.svg"
 
@@ -13,6 +12,7 @@ export default function Sidebar({
                                   setCurrent,
                                   onWorkspaceChange,
                                   endpoints = [],
+                                  statefulEndpoints = [],
                                   folders = [],
                                   onEditWorkspace,
                                   onDeleteWorkspace,
@@ -31,18 +31,13 @@ export default function Sidebar({
                                   setOpenNewWs
                                 }) {
   const navigate = useNavigate();
-  // const location = useLocation();
   const { projectId, endpointId, folderId } = useParams();
-
-  // Get folderId from URL query parameters
-  // const urlParams = new URLSearchParams(location.search);
-  // const selectedFolderId = urlParams.get('folderId');
 
   const [rightClickActionId, setRightClickActionId] = useState(null);
   const [rightClickFolderId, setRightClickFolderId] = useState(null);
   const [menuPos, setMenuPos] = useState({x: 0, y: 0});
   const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
-  const [lockedMode, setLockedMode] = useState(false); // ✅ chỉ hiển thị workspace active
+  const [lockedMode, setLockedMode] = useState(false);
 
   const actionMenuRef = useRef(null);
   const folderMenuRef = useRef(null);
@@ -51,7 +46,6 @@ export default function Sidebar({
   const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
   const [localOpenFoldersMap, setLocalOpenFoldersMap] = useState({});
 
-  // map projectId -> randomColor
   const [projectColorMap, setProjectColorMap] = useState({});
 
   useEffect(() => {
@@ -61,7 +55,7 @@ export default function Sidebar({
         projectColorMap[p.id] ||
         randomColor({
           luminosity: "bright",
-          seed: p.id // đảm bảo cùng id thì màu giữ nguyên
+          seed: p.id
         });
     });
     setProjectColorMap(newMap);
@@ -106,8 +100,13 @@ export default function Sidebar({
     if (onWorkspaceChange) onWorkspaceChange(wsId);
     localStorage.setItem("currentWorkspace", wsId);
     navigate("/dashboard");
-    setLockedMode(true); // ✅ khi chọn → chỉ show workspace active
+    setLockedMode(true);
   };
+
+  useEffect(() => {
+    console.log('folders:', folders);
+    console.log('endpoints(len):', endpoints.length, 'stateful(len):', statefulEndpoints.length);
+  }, [folders, endpoints, statefulEndpoints]);
 
   const handleRightClick = (e, wsId) => {
     e.preventDefault();
@@ -138,12 +137,10 @@ export default function Sidebar({
 
   const currentWorkspace = workspaces.find((ws) => String(ws.id) === String(current));
 
-  // ✅ Nếu chưa chọn thì không gán workspace đầu tiên
-  // => để null thì dropdown sẽ hiện "Select Workspace"
   if (!currentWorkspace && current) {
     setCurrent(null);
   }
-  // ✅ Auto detect workspace từ URL (projectId / endpointId)
+
   useEffect(() => {
     if (projectId) {
       const project = projects.find((p) => String(p.id) === String(projectId));
@@ -151,17 +148,36 @@ export default function Sidebar({
         const wsId = project.workspace_id;
         if (setCurrent) setCurrent(wsId);
         if (onWorkspaceChange) onWorkspaceChange(wsId);
-        setLockedMode(true); // 👉 đảm bảo chỉ hiển thị workspace + project đang chọn
+        setLockedMode(true);
       }
     }
   }, [projectId, projects]);
 
+  // Eager map of folderId -> all endpoints (regular + stateful)
+  const folderEndpointsMap = useMemo(() => {
+    const map = {};
+    folders.forEach((f) => {
+      const regular = endpoints.filter(ep => String(ep.folder_id) === String(f.id));
+      const stateful = statefulEndpoints.filter(sep => String(sep.folder_id) === String(f.id));
+      map[f.id] = [...regular, ...stateful];
+    });
+    return map;
+  }, [folders, endpoints, statefulEndpoints]);
+
+  // Helper: check if this project has any content (folders, endpoints, stateful endpoints)
+  const projectHasContent = (p) => {
+    const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
+    const hasFolder = projectFolders.length > 0;
+    const endpointsInProjectFolders = endpoints.some(ep => projectFolders.some(f => String(f.id) === String(ep.folder_id)));
+    const statefulInProjectFolders = statefulEndpoints.some(sep => projectFolders.some(f => String(f.id) === String(sep.folder_id)));
+
+    return hasFolder || endpointsInProjectFolders || statefulInProjectFolders;
+  };
 
   return (
     <div className="flex flex-col bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
-        {/* Logo MockAPI → click để reset */}
         <span
           className="cursor-pointer text-2xl font-bold text-slate-900"
           onClick={() => {
@@ -176,7 +192,6 @@ export default function Sidebar({
           MockAPI
         </span>
 
-        {/* Đổi nút toggle từ ChevronLeft → hình opensidebar.svg */}
         <button
           onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
           className="p-1 rounded-full hover:bg-slate-100 transition-colors"
@@ -216,7 +231,6 @@ export default function Sidebar({
                       String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
                     }`}
                   >
-                    {/* Tên workspace */}
                     <span
                       onClick={() => {
                         handleSelectWorkspace(ws.id);
@@ -226,14 +240,12 @@ export default function Sidebar({
                       {ws.name}
                     </span>
 
-                    {/* 3 chấm menu */}
                     <MoreHorizontal
                       className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
                       onClick={(e) => {
-                        e.stopPropagation(); // tránh chọn workspace khi click 3 chấm
+                        e.stopPropagation();
                         setRightClickActionId((prev) => (prev === ws.id ? null : ws.id));
 
-                        // Vị trí menu
                         const rect = e.target.getBoundingClientRect();
                         setMenuPos({x: rect.right, y: rect.bottom});
                       }}
@@ -244,7 +256,7 @@ export default function Sidebar({
               </div>
             )}
           </div>
-          {/* ✅ Context menu cho Workspace trong dropdown (locked mode) */}
+
           {rightClickActionId && wsDropdownOpen && (
             <div
               ref={actionMenuRef}
@@ -281,23 +293,17 @@ export default function Sidebar({
           {lockedMode && currentWorkspace && (
             <ul className="space-y-1">
               {projects
-                 .filter((p) => {
-                  // Nếu có projectId, chỉ hiển thị project đang được chọn
+                .filter((p) => {
                   if (projectId) {
                     return String(p.id) === String(projectId);
                   }
-                  // Nếu không có projectId, hiển thị tất cả projects của workspace
                   return String(p.workspace_id) === String(currentWorkspace.id);
                 })
                 .map((p) => {
                   const isEpOpen = readOpenEndpoints(p.id);
                   const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
-                  const projectEndpoints = endpoints.filter((ep) =>
-                    projectFolders.some((f) => String(f.id) === String(ep.folder_id))
-                  );
 
                   const activePj = String(projectId) === String(p.id);
-                  // Chỉ đậm project khi không có folder được chọn
                   const shouldBoldProject = activePj && !folderId;
 
                   return (
@@ -330,19 +336,10 @@ export default function Sidebar({
                       {isEpOpen && (
                         <div className="ml-6 mt-1 space-y-1 text-xs">
                           {(() => {
-                            // Get folders for this project
                             const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
-                            console.log('Debug - Project:', p.id, 'Folders:', projectFolders, 'All folders:', folders);
-                            // // Lấy toàn bộ endpoints thuộc project này (qua folder)
-                            // const projectEndpoints = endpoints.filter(ep =>
-                            //   projectFolders.some(f => String(f.id) === String(ep.folder_id))
-                            // );
-                            // Get endpoints without folder_id (ungrouped endpoints)
-                            const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
-                            // Get endpoints with folder_id
-                            const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
 
-                            const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
+                            // Determine if the project has content (includes stateful endpoints)
+                            const hasContent = projectHasContent(p);
 
                             if (!hasContent) {
                               return (
@@ -356,7 +353,7 @@ export default function Sidebar({
                               <>
                                 {/* Render folders with their endpoints */}
                                 {projectFolders.map((folder) => {
-                                  const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
+                                  const folderEndpoints = folderEndpointsMap[folder.id] || [];
                                   const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
 
                                   return (
@@ -381,7 +378,6 @@ export default function Sidebar({
                                             }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              // Toggle folder open/close
                                               if (setOpenFoldersMap) {
                                                 setOpenFoldersMap((prev) => ({...prev, [folder.id]: !prev[folder.id]}));
                                               } else {
@@ -437,44 +433,23 @@ export default function Sidebar({
                                   );
                                 })}
 
-                                {/* Render ungrouped endpoints directly */}
-                                {ungroupedEndpoints.map((ep) => {
-                                  const activeEp = String(endpointId) === String(ep.id);
-                                  return (
-                                    <div
-                                      key={ep.id}
-                                      className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                        activeEp
-                                          ? "bg-slate-100 font-semibold text-slate-900"
-                                          : "hover:bg-slate-100"
-                                      }`}
-                                      onClick={() =>
-                                        navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                      }
-                                    >
-                                      <img src={settingIcon} className="w-5 h-5" alt="ep"/>
-                                      {ep.name}
-                                    </div>
-                                  );
-                                })}
+                                {/* New folder button cho mọi project khi expand */}
+                                <div
+                                  className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onAddFolder) {
+                                      onAddFolder(p.id);
+                                    }
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4"/>
+                                  <span>New folder...</span>
+                                </div>
                               </>
                             );
                           })()}
 
-                          {/* New folder button cho mọi project khi expand */}
-                          <div
-                            className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (onAddFolder) {
-                                // Set projectId context cho folder creation
-                                onAddFolder(p.id);
-                              }
-                            }}
-                          >
-                            <Plus className="w-4 h-4"/>
-                            <span>New folder...</span>
-                          </div>
                         </div>
                       )}
                     </li>
@@ -535,12 +510,8 @@ export default function Sidebar({
                             wsProjects.map((p) => {
                               const isEpOpen = readOpenEndpoints(p.id);
                               const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
-                              const projectEndpoints = endpoints.filter((ep) =>
-                                projectFolders.some((f) => String(f.id) === String(ep.folder_id))
-                              );
 
                               const activePj = String(projectId) === String(p.id);
-                              // Chỉ đậm project khi không có folder được chọn
                               const shouldBoldProject = activePj && !folderId;
 
                               return (
@@ -575,15 +546,9 @@ export default function Sidebar({
                                   {isEpOpen && (
                                     <div className="ml-6 mt-1 space-y-1 text-xs">
                                       {(() => {
-                                        // Get folders for this project
                                         const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
-                                        console.log('Debug - Workspace Project:', p.id, 'Folders:', projectFolders);
-                                        // Get endpoints without folder_id (ungrouped endpoints)
-                                        const ungroupedEndpoints = projectEndpoints.filter(ep => !ep.folder_id);
-                                        // Get endpoints with folder_id
-                                        const groupedEndpoints = projectEndpoints.filter(ep => ep.folder_id);
 
-                                        const hasContent = projectFolders.length > 0 || ungroupedEndpoints.length > 0;
+                                        const hasContent = projectHasContent(p);
 
                                         if (!hasContent) {
                                           return (
@@ -597,7 +562,7 @@ export default function Sidebar({
                                           <>
                                             {/* Render folders with their endpoints */}
                                             {projectFolders.map((folder) => {
-                                              const folderEndpoints = groupedEndpoints.filter(ep => String(ep.folder_id) === String(folder.id));
+                                              const folderEndpoints = folderEndpointsMap[folder.id] || [];
                                               const isFolderOpen = (openFoldersMap ? openFoldersMap[folder.id] : localOpenFoldersMap[folder.id]) || false;
 
                                               return (
@@ -622,7 +587,6 @@ export default function Sidebar({
                                                         }`}
                                                         onClick={(e) => {
                                                           e.stopPropagation();
-                                                          // Toggle folder open/close
                                                           if (setOpenFoldersMap) {
                                                             setOpenFoldersMap((prev) => ({
                                                               ...prev,
@@ -682,34 +646,12 @@ export default function Sidebar({
                                               );
                                             })}
 
-                                            {/* Render ungrouped endpoints directly */}
-                                            {ungroupedEndpoints.map((ep) => {
-                                              const activeEp = String(endpointId) === String(ep.id);
-                                              return (
-                                                <div
-                                                  key={ep.id}
-                                                  className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                                                    activeEp
-                                                      ? "bg-slate-100 font-semibold text-slate-900"
-                                                      : "hover:bg-slate-100"
-                                                  }`}
-                                                  onClick={() =>
-                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                                  }
-                                                >
-                                                  <img src={settingIcon} className="w-5 h-5" alt="ep"/>
-                                                  {ep.name}
-                                                </div>
-                                              );
-                                            })}
-
                                             {/* New folder button cho mọi project khi expand */}
                                             <div
                                               className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (onAddFolder) {
-                                                  // Set projectId context cho folder creation
                                                   onAddFolder(p.id);
                                                 }
                                               }}

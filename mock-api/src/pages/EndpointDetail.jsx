@@ -25,7 +25,6 @@ import {
   GripVertical,
   Loader2,
   FileCode,
-  ChevronDown,
   X,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -617,6 +616,7 @@ const DashboardPage = () => {
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [endpointResponses, setEndpointResponses] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
 
   const [openEditWs, setOpenEditWs] = useState(false);
@@ -757,6 +757,14 @@ const DashboardPage = () => {
       });
   };
 
+  const fetchAllStatefulEndpoints = () => {
+    fetch(`${API_ROOT}/stateful_endpoints`)
+      .then((res) => res.json())
+      .then((data) => setAllStatefulEndpoints(data))
+      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
+  };
+
+
   const fetchFolders = () => {
     return fetch(`${API_ROOT}/folders`)
       .then((res) => res.json())
@@ -840,6 +848,7 @@ const DashboardPage = () => {
           fetchWorkspaces(),
           fetchProjects(),
           fetchEndpoints(),
+          fetchAllStatefulEndpoints(),
           fetchFolders(),
         ]);
       } finally {
@@ -1454,6 +1463,7 @@ const DashboardPage = () => {
           workspaces={workspaces}
           projects={projects}
           endpoints={endpoints}
+          statefulEndpoints={allStatefulEndpoints}
           folders={folders}
           current={currentWsId}
           setCurrent={setCurrentWsId}
