@@ -10,6 +10,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog.jsx";
 import deleteIcon from "@/assets/Trash Icon.svg";
+import statefulEndpoint from "@/assets/stateful.svg"
 
 // StatefulCard
 // Props:
@@ -41,9 +42,10 @@ export default function StatefulCard({ stateful = {}, onEdit, onDelete, onClick 
       <TableCell className="w-1/4 py-3 border-r border-gray-300">
         <button
           onClick={() => onClick?.(stateful)}
-          className="text-left font-medium text-gray-800 hover:underline truncate w-full text-sm"
+          className="flex text-left font-medium text-gray-800 hover:underline truncate w-full text-sm"
           title={name}
         >
+          <img src={statefulEndpoint} alt="stateful endpoint" className="w-5 h-5 mr-2"/>
           {name}
         </button>
       </TableCell>
