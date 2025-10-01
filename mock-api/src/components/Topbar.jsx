@@ -1,7 +1,7 @@
-import React, {useState} from "react";
-import {Search} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import React, { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,55 +10,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import addIcon from "@/assets/Add.svg"
-import {Badge} from "@/components/ui/badge.jsx";
-
-// Sửa component EndpointStatusToggle để có thể toggle được và đổi màu
-const EndpointStatusToggle = () => {
-  const [isActive, setIsActive] = useState(true);
-
-  const toggle = () => {
-    setIsActive(!isActive);
-  };
-
-  return (
-    <div
-      className="flex items-center cursor-pointer"
-      onClick={toggle}
-    >
-      <span className="mr-2 font-inter font-semibold text-[16px] leading-[19px] text-black">
-        {isActive ? "Active" : "Inactive"}
-      </span>
-      <div className="relative w-[60px] h-[30px]">
-        <div
-          className={`flex items-center px-[4px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-            isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-          }`}
-        >
-          <div
-            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-              isActive ? "left-[32px]" : "left-[3px]"
-            }`}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
+import addIcon from "@/assets/Add.svg";
+import { Badge } from "@/components/ui/badge.jsx";
 
 export default function Topbar({
-                                 breadcrumb = [],
-                                 onSearch,
-                                 onNewProject,
-                                 onNewFolder,
-                                 onNewResponse,
-                                 showNewProjectButton,
-                                 showNewFolderButton,
-                                 showNewResponseButton,
-                                 showActiveEndpoint,
-                                 activeEndpointCount
-                               }) {
+  breadcrumb = [],
+  onSearch,
+  onNewProject,
+  onNewFolder,
+  onNewResponse,
+  showNewProjectButton,
+  showNewFolderButton,
+  showNewResponseButton,
+  showActiveEndpoint,
+  activeEndpointCount,
+}) {
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
@@ -93,7 +59,10 @@ export default function Topbar({
                           href={item.href}
                           onClick={() => {
                             if (item.WORKSPACE_ID) {
-                              localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                              localStorage.setItem(
+                                "currentWorkspace",
+                                item.WORKSPACE_ID
+                              );
                             }
                           }}
                           className="font-medium text-slate-900"
@@ -102,7 +71,9 @@ export default function Topbar({
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator className="font-medium text-slate-900"/>}
+                    {!isLast && (
+                      <BreadcrumbSeparator className="font-medium text-slate-900" />
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -124,21 +95,17 @@ export default function Topbar({
                 className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
+                <Search size={16} />
               </div>
             </div>
 
             {/* Active Endpoint Count */}
-            <Badge
-              variant="outline"
-              className="bg-blue-600 hover:bg-blue-700">
+            <Badge variant="outline" className="bg-blue-600 hover:bg-blue-700">
               <span className="text-sm font-medium text-white">
                 {activeEndpointCount}
               </span>
             </Badge>
-            <span className="text-slate-700 font-medium -ml-2">
-               Active
-            </span>
+            <span className="text-slate-700 font-medium -ml-2">Active</span>
 
             {/* New Folder */}
             {showNewFolderButton && (
@@ -166,12 +133,9 @@ export default function Topbar({
                 className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
+                <Search size={16} />
               </div>
             </div>
-
-            {/* Toggle */}
-            <EndpointStatusToggle/>
 
             {/* New Response */}
             <Button
@@ -197,7 +161,7 @@ export default function Topbar({
                 className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
               />
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
+                <Search size={16} />
               </div>
             </div>
 
