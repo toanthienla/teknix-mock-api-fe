@@ -34,7 +34,6 @@ export default function DashboardPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(
     () => localStorage.getItem("currentWorkspace") || null
@@ -81,7 +80,6 @@ export default function DashboardPage() {
     fetchWorkspaces();
     fetchProjects();
     fetchEndpoints();
-    fetchAllStatefulEndpoints();
     fetchFolders();
   }, []);
 
@@ -174,14 +172,6 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
   };
-
-  const fetchAllStatefulEndpoints = () => {
-    fetch(`${API_ROOT}/stateful_endpoints`)
-      .then((res) => res.json())
-      .then((data) => setAllStatefulEndpoints(data))
-      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
-  };
-
 
   const fetchFolders = async () => {
     try {
@@ -611,7 +601,6 @@ export default function DashboardPage() {
             workspaces={workspaces}
             projects={projects}
             endpoints={endpoints}
-            statefulEndpoints={allStatefulEndpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
