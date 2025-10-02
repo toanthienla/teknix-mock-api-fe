@@ -6,7 +6,6 @@ import {
   TableRow,
   TableHead,
   TableBody,
-  TableCell,
 } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -36,28 +35,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+import {Textarea} from "@/components/ui/textarea";
 import EndpointCard from "@/components/EndpointCard.jsx";
-import StatefulCard from "@/components/StatefulCard.jsx";
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import createIcon from "@/assets/create.svg";
 import pathIcon from "@/assets/path.svg";
 import methodIcon from "@/assets/method.svg";
 import timeIcon from "@/assets/time&date.svg";
+import statusIcon from "@/assets/status.svg";
+import actionsIcon from "@/assets/actions.svg";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const {projectId, folderId} = useParams();
-  const [activeTab, setActiveTab] = useState("stateless"); // default change to stateless
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
-  const [statefulEndpoints, setStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -97,10 +94,6 @@ export default function Dashboard() {
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
 
-  // stateful status filter: "All" | "Active" | "Inactive"
-  const [statelessStatusFilter, setStatelessStatusFilter] = useState("All");
-  const [statefulStatusFilter, setStatefulStatusFilter] = useState("All");
-
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
@@ -114,14 +107,18 @@ export default function Dashboard() {
   const [newEPath, setNewEPath] = useState("");
   const [newEMethod, setNewEMethod] = useState("");
   const [newEFolderId, setNewEFolderId] = useState(folderId || "");
-  const [newEType, setNewEType] = useState("stateless");
-
+  const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
+  const [newEActive, setNewEActive] = useState(true); // false = inactive, true = active
+  const [statusFilter, setStatusFilter] = useState("All");
 
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
   const [editEPath, setEditEPath] = useState("");
+  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
   const [editEMethod, setEditEMethod] = useState("");
+  const [editEActive, setEditEActive] = useState(true);
+  const [editEType, setEditEType] = useState(false); // false = stateless, true = stateful
 
   // dialogs
   const [openNew, setOpenNew] = useState(false);
@@ -187,7 +184,7 @@ export default function Dashboard() {
       return false;
     }
 
-    if (!method && type === "stateless") {
+    if (!method && !type) {
       toast.info("Method is required");
       return false;
     }
@@ -270,8 +267,6 @@ export default function Dashboard() {
         fetchProjects();
         fetchAllEndpoints();
         fetchFolders();
-        fetchAllStatefulEndpoints();
-        fetchStatefulEndpoints();
         setTimeout(() => setIsLoading(false), 1000);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -285,7 +280,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (folderId) {
       fetchEndpoints(folderId);
-      fetchStatefulEndpoints(folderId); // also fetch stateful for specific folder
     }
   }, [folderId]);
 
@@ -374,26 +368,6 @@ export default function Dashboard() {
       .catch((err) => console.error("Error fetching endpoints:", err));
   };
 
-  const fetchAllStatefulEndpoints = () => {
-    fetch(`${API_ROOT}/stateful_endpoints`)
-      .then((res) => res.json())
-      .then((data) => setAllStatefulEndpoints(data))
-      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
-  };
-
-  // NEW: fetch stateful_endpoints
-  const fetchStatefulEndpoints = (folderIdParam) => {
-    const base = `${API_ROOT}/stateful_endpoints`;
-    let url = base;
-    if (folderIdParam) url = `${base}?folder_id=${folderIdParam}`;
-    else if (projectId) url = `${base}?project_id=${projectId}`;
-
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => setStatefulEndpoints(data))
-      .catch((err) => console.error("Error fetching stateful endpoints:", err));
-  };
-
   const fetchFolders = () => {
     fetch(`${API_ROOT}/folders`)
       .then((res) => res.json())
@@ -449,11 +423,11 @@ export default function Dashboard() {
 
       await Promise.all(
         endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {method: "DELETE"});
 
       setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
       setAllEndpoints(prev => prev.filter(e => String(e.folder_id) !== String(deleteFolderId)));
@@ -546,13 +520,13 @@ export default function Dashboard() {
       if (editingFolderId) {
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingFolderId, ...folderData }),
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({id: editingFolderId, ...folderData}),
         });
       } else {
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(folderData),
         });
       }
@@ -737,7 +711,7 @@ export default function Dashboard() {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(newProject),
     })
       .then((res) => res.json())
@@ -761,110 +735,45 @@ export default function Dashboard() {
       .catch(() => toast.error("Failed to create project"));
   };
 
-  // Create endpoint (stateless)
+  // Create endpoint
   const handleCreateEndpoint = async () => {
-    // Validation
-    if (!validateCreateEndpoint(newEName, newEPath, newEMethod, newEType)) {
-      return;
-    }
-
-    // if stateless, method is required and duplicate checks apply
-    if (newEType === "stateless") {
-      if (!newEMethod) {
-        toast.info("Method is required for stateless endpoints");
-        return;
-      }
-      // duplicate endpoint check (existing endpoints + allEndpoints)
-      const duplicateEndpoint = allEndpoints.some((ep) =>
-        String(ep.folder_id) === String(newEFolderId) &&
-        ep.path.trim() === newEPath.trim() &&
-        ep.method?.toUpperCase() === newEMethod.toUpperCase()
-      );
-      if (duplicateEndpoint) {
-        toast.warning(
-          `Endpoint with method ${newEMethod.toUpperCase()} and path "${newEPath}" already exists`
-        );
-        return;
-      }
-    } else {
-      // stateful: ensure no stateless endpoint with same path in same folder + method irrelevant
-      const duplicateStateless = allEndpoints.some((ep) =>
-        String(ep.folder_id) === String(newEFolderId) &&
-        ep.path.trim() === newEPath.trim()
-      );
-      if (duplicateStateless) {
-        toast.warning("A stateless endpoint with the same path already exists in this folder");
-        return;
-      }
-    }
-
+    if (!validateCreateEndpoint(newEName, newEPath, newEMethod, newEType)) return;
     try {
-      if (newEType === "stateless") {
-        // create in endpoints table
-        const newEndpoint = {
-          name: newEName.trim(),
-          path: newEPath.trim(),
-          method: newEMethod,
-          folder_id: Number(newEFolderId),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const res = await fetch(`${API_ROOT}/endpoints`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newEndpoint),
-        });
-        if (!res.ok) throw new Error("Failed to create endpoint");
-        const created = await res.json();
-        setEndpoints((prev) => [...prev, created]);
-        // refresh all endpoints cache
-        fetchAllEndpoints();
-        toast.success("Stateless endpoint created");
-      } else {
-        // create in stateful_endpoints table
-        const newStateful = {
-          name: newEName.trim(),
-          path: newEPath.trim(),
-          folder_id: Number(newEFolderId),
-          schema: null,
-          data: [],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const res = await fetch(`${API_ROOT}/stateful_endpoints`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newStateful),
-        });
-        if (!res.ok) throw new Error("Failed to create stateful endpoint");
-        const created = await res.json();
-        setStatefulEndpoints((prev) => [...prev, created]);
-        toast.success("Stateful endpoint created");
-      }
-
-      // reset dialog fields & close
-      setNewEName("");
-      setNewEPath("");
-      setNewEMethod("");
-      setNewEFolderId(folderId || "");
-      setNewEType("stateless");
+      const newEndpoint = {
+        name: newEName.trim(),
+        path: newEPath.trim(),
+        method: !newEType ? newEMethod : null,
+        folder_id: Number(newEFolderId),
+        is_stateful: newEType,
+        is_active: newEActive,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const res = await fetch(`${API_ROOT}/endpoints`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(newEndpoint),
+      });
+      if (!res.ok) throw new Error();
+      const created = await res.json();
+      setEndpoints(prev => [...prev, created]);
       setOpenNew(false);
-    } catch (err) {
-      console.error(err);
+      toast.success("Endpoint created!");
+    } catch {
       toast.error("Failed to create endpoint");
     }
   };
 
-  // edit endpoint (stateless)
+  // edit endpoint
   const [currentEndpoint, setCurrentEndpoint] = useState(null);
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
     setEditEPath(e.path);
+    setEditEFolderId(e.folder_id);
     setEditEMethod(e.method);
+    setEditEActive(e.is_active);
+    setEditEType(e.is_stateful);
 
     setCurrentEndpoint(e);
     setOpenEdit(true);
@@ -874,44 +783,47 @@ export default function Dashboard() {
     if (!currentEndpoint) return false;
     return (
       editEName !== currentEndpoint.name ||
+      editEFolderId !== currentEndpoint.folder_id ||
       editEPath !== currentEndpoint.path ||
-      editEMethod !== currentEndpoint.method
+      editEMethod !== currentEndpoint.method ||
+      editEActive !== currentEndpoint.is_active ||
+      editEType !== currentEndpoint.is_stateful
     );
-  }, [editEName, editEPath, editEMethod, currentEndpoint]);
+  }, [editEName, editEFolderId, editEPath, editEMethod, editEActive, editEType, currentEndpoint]);
 
   const handleUpdateEndpoint = () => {
-    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) {
-      return;
-    }
+    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
+    const updated = {
+      id: editId,
+      name: editEName,
+      path: editEPath,
+      method: editEMethod,
+      folder_id: Number(editEFolderId),
+      is_active: editEActive,
+      is_stateful: editEType,
+      updated_at: new Date().toISOString(),
+    };
 
     fetch(`${API_ROOT}/endpoints/${editId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        id: editId,
-        name: editEName,
-        path: editEPath,
-        method: editEMethod,
-        folder_id: Number(folderId),
-        updated_at: new Date().toISOString(),
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
     })
       .then(() => {
+        // Cập nhật danh sách endpoints trong bảng
         setEndpoints((prev) =>
-          prev.map((ep) =>
-            ep.id === editId
-              ? {...ep, name: editEName, path: editEPath, method: editEMethod}
-              : ep
-          )
+          prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
         );
-        setOpenEdit(false);
 
+        // Cập nhật danh sách allEndpoints để Sidebar nhận đúng folder mới
+        setAllEndpoints((prev) =>
+          prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+        );
+
+        setOpenEdit(false);
         toast.success("Update endpoint successfully!");
       })
-      .catch((error) => {
-        console.error("Error updating endpoint:", error.message);
-        toast.error("Failed to update endpoint!");
-      });
+      .catch(() => toast.error("Failed to update endpoint!"));
   };
 
   // delete endpoint stateless
@@ -927,81 +839,24 @@ export default function Dashboard() {
       });
   };
 
-  // delete stateful endpoint
-  const handleDeleteStateful = (id) => {
-    fetch(`${API_ROOT}/stateful_endpoints/${id}`, { method: "DELETE" })
-      .then(() => {
-        setStatefulEndpoints(prev => prev.filter(s => s.id !== id));
-        toast.success("Delete stateful endpoint successfully!");
-      })
-      .catch((err) => {
-        console.error("Error deleting stateful endpoint:", err);
-        toast.error("Failed to delete stateful endpoint!");
-      });
-  };
-
-  // filter + sort endpoints (stateless)
-  let filteredEndpoints = endpoints.filter((e) =>
+  // Filter + sort
+  let filtered = endpoints.filter(e =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (folderId) {
-    filteredEndpoints = filteredEndpoints.filter(
-      (e) => String(e.folder_id) === String(folderId)
+  if (statusFilter !== "All") {
+    filtered = filtered.filter(e =>
+      statusFilter === "Active" ? e.is_active : !e.is_active
     );
   }
-
-  // apply stateless status filter
-  if (statelessStatusFilter && statelessStatusFilter !== "All") {
-    if (statelessStatusFilter === "Active") {
-      filteredEndpoints = filteredEndpoints.filter((e) => Boolean(e.is_active) === true);
-    } else if (statelessStatusFilter === "Inactive") {
-      filteredEndpoints = filteredEndpoints.filter((e) => Boolean(e.is_active) === false);
-    }
-  }
-
-  let sortedEndpoints = [...filteredEndpoints];
-
+  let sorted = [...filtered];
   if (sortOption === "Recently created") {
-    sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   } else if (sortOption === "Oldest first") {
-    sortedEndpoints.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   } else if (sortOption === "Alphabetical (A-Z)") {
-    sortedEndpoints.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   } else if (sortOption === "Alphabetical (Z-A)") {
-    sortedEndpoints.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-  }
-
-  // filter stateful by search + folder/project similar to stateless
-  let filteredStateful = statefulEndpoints.filter((s) =>
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (folderId) {
-    filteredStateful = filteredStateful.filter(s => String(s.folder_id) === String(folderId));
-  } else if (projectId && folders?.length) {
-    const folderIds = folders.filter(f => String(f.project_id) === String(projectId)).map(f => String(f.id));
-    filteredStateful = filteredStateful.filter(s => folderIds.includes(String(s.folder_id)));
-  }
-
-  // apply status filter
-  if (statefulStatusFilter && statefulStatusFilter !== "All") {
-    if (statefulStatusFilter === "Active") {
-      filteredStateful = filteredStateful.filter(s => Boolean(s.is_active) === true);
-    } else if (statefulStatusFilter === "Inactive") {
-      filteredStateful = filteredStateful.filter(s => Boolean(s.is_active) === false);
-    }
-  }
-
-  // sort stateful similarly by created_at (default Recently created) or by sortOption
-  if (sortOption === "Recently created") {
-    filteredStateful.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  } else if (sortOption === "Oldest first") {
-    filteredStateful.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  } else if (sortOption === "Alphabetical (A-Z)") {
-    filteredStateful.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  } else if (sortOption === "Alphabetical (Z-A)") {
-    filteredStateful.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    sorted.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
   }
 
   // Get current folder info
@@ -1018,7 +873,6 @@ export default function Dashboard() {
             workspaces={workspaces}
             projects={projects}
             endpoints={allEndpoints}
-            statefulEndpoints={allStatefulEndpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
@@ -1096,8 +950,7 @@ export default function Dashboard() {
             showNewResponseButton={false}
             showActiveEndpoint={true}
             activeEndpointCount={
-              endpoints.filter(e => e.is_active).length +
-              statefulEndpoints.filter(s => s.is_active).length
+              endpoints.filter(e => e.is_active).length
             }
           />
 
@@ -1107,377 +960,140 @@ export default function Dashboard() {
             }`}
           >
             <div className="flex flex-col">
-              <div className="flex ml-auto border-b border-gray-200 mb-4 text-stone-500">
-                <Button
-                  variant="ghost"
-                  onClick={() => { setActiveTab("stateless"); }}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "stateless"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
-                  }`}
-                >
-                  <span className="text-lg">Stateless</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setActiveTab("stateful");
-                    fetchStatefulEndpoints(); // fetch when opening stateful tab
-                  }}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "stateful"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
-                  }`}
-                >
-                  <span className="text-lg">Stateful</span>
-                </Button>
+              {/* Bảng endpoints chung */}
+              <div className="mb-4">
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  {currentWorkspace ? (
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">
+                      {currentWorkspace.name}
+                      {currentProject && <> {" - "}{currentProject.name}</>}
+                      {currentFolder && <> {" / "}{currentFolder.name}</>}
+                      {" - "}
+                      {sorted.length} Endpoints
+                    </h2>
+                  ) : (
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
+                  )}
+
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Status filter */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                        >
+                          {statusFilter === "All" ? "All" : `${statusFilter}`} <ChevronDown className="w-4 h-4"/>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setStatusFilter("All")}>All</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setStatusFilter("Active")}>Active</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setStatusFilter("Inactive")}>Inactive</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Sort */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                        >
+                          {sortOption} <ChevronsUpDown className="w-4 h-4"/>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => setSortOption("Recently created")}>Recently
+                          created</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption("Oldest first")}>Oldest first</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption("Alphabetical (A-Z)")}>Alphabetical
+                          (A-Z)</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption("Alphabetical (Z-A)")}>Alphabetical
+                          (Z-A)</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* New Endpoint */}
+                    <Button
+                      onClick={() => {
+                        setNewEType(false);
+                        setNewEFolderId(folderId || "");
+                        setNewEName("");
+                        setNewEPath("");
+                        setNewEMethod("");
+                        setOpenNew(true);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
+                    >
+                      <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain"/>
+                      New Endpoint
+                    </Button>
+                  </div>
+                </div>
               </div>
 
-              {activeTab === "stateless" ? (
-                <>
-                  {/* Stateless: same as old Endpoints */}
-                  <div className="mb-4">
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      {currentWorkspace ? (
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">
-                          {currentWorkspace.name}
-                          {currentProject && <> {" - "}{currentProject.name}</>}
-                          {currentFolder && <> {" / "}{currentFolder.name}</>}
-                          {" - "}
-                          {sortedEndpoints.length} Endpoints
-                        </h2>
-                      ) : (
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
-                      )}
-
-                      <div className="ml-auto flex items-center gap-2">
-                        {/* Status filter */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                            >
-                              {statelessStatusFilter === "All" ? "All" : `${statelessStatusFilter}`} <ChevronDown className="w-4 h-4"/>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setStatelessStatusFilter("All")}>All</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatelessStatusFilter("Active")}>Active</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatelessStatusFilter("Inactive")}>Inactive</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                            >
-                              {sortOption} <ChevronsUpDown className="w-4 h-4"/>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem
-                              onClick={() => setSortOption("Recently created")}
-                            >
-                              Recently created
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setSortOption("Oldest first")}
-                            >
-                              Oldest first
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setSortOption("Alphabetical (A-Z)")}
-                            >
-                              Alphabetical (A-Z)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setSortOption("Alphabetical (Z-A)")}
-                            >
-                              Alphabetical (Z-A)
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button
-                          onClick={() => {
-                            setNewEType("stateless");
-                            setNewEFolderId(folderId || "");
-                            setNewEName("");
-                            setNewEPath("");
-                            setNewEMethod("");
-                            setOpenNew(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
-                        >
-                          <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain" />
-                          New Endpoint
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stateless Endpoint Table (unchanged structure) */}
-                  <div className="w-full overflow-x-auto">
-                    <Table className="border-t border-b border-gray-300">
-                      <TableHeader>
-                        <TableRow className="border-b border-gray-300">
-                          <TableHead className="w-1/4 border-r border-gray-300">
-                            <div className="flex items-center gap-2">
-                              <span>Aa</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/4 border-r border-gray-300">
-                            <div className="flex items-center gap-2">
-                              <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
-                              <span>Path</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/12 border-r border-gray-300 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <img src={methodIcon} alt="Method icon" className="w-4 h-4"/>
-                              <span>Method</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/4 border-r border-gray-300">
-                            <div className="flex items-center gap-2">
-                              <img src={timeIcon} alt="Time icon" className="w-4 h-4"/>
-                              <span>Time & Date</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/12 border-r border-gray-300 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <img src={methodIcon} alt="Method icon" className="w-4 h-4"/>
-                              <span>Status</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/12 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <img src={methodIcon} alt="Method icon" className="w-4 h-4"/>
-                              <span>Actions</span>
-                            </div>
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-
-                      <TableBody>
-                        {sortedEndpoints?.length > 0 ? (
-                          sortedEndpoints.map((e) => (
-                            <EndpointCard
-                              key={`stateless-${e.id}`}
-                              endpoint={e}
-                              onEdit={() => openEditEndpoint(e)}
-                              onDelete={() => handleDeleteEndpoint(e.id)}
-                              onClick={() =>
-                                navigate(`/dashboard/${projectId}/endpoint/${e.id}`)
-                              }
-                            />
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableHead
-                              colSpan={6}
-                              className="text-center text-slate-500 py-4"
-                            >
-                              No endpoints found.
-                            </TableHead>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Edit Endpoint Dialog (unchanged) */}
-                  <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-                    <DialogContent
-                      className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && hasEdited) {
-                          e.preventDefault();
-                          handleUpdateEndpoint();
-                        }
-                      }}
-                    >
-                      <DialogHeader>
-                        <DialogTitle>Edit Endpoint</DialogTitle>
-                      </DialogHeader>
-                      <h3 className="text-sm font-semibold text-slate-700 mt-2">Endpoint Detail</h3>
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Name</h3>
-                        <Input
-                          placeholder=" Enter Endpoint Name"
-                          value={editEName}
-                          onChange={(e) => setEditEName(e.target.value)}
+              {/* Endpoint Table */}
+              <div className="w-full overflow-x-auto">
+                <Table className="border-t border-b border-gray-300">
+                  <TableHeader>
+                    <TableRow className="border-b border-gray-300">
+                      <TableHead className="w-1/4 border-r border-gray-300">
+                        <span>Aa</span>
+                      </TableHead>
+                      <TableHead className="w-1/4 border-r border-gray-300">
+                        <div className="flex items-center gap-2">
+                          <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
+                          <span>Path</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-1/12 border-r border-gray-300 text-center">
+                        <div className="flex items-center gap-2">
+                          <img src={methodIcon} alt="Method icon" className="w-4 h-4"/>
+                          <span>Method</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-1/4 border-r border-gray-300">
+                        <div className="flex items-center gap-2">
+                          <img src={timeIcon} alt="Time & Date icon" className="w-4 h-4"/>
+                          <span>Time & Date</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-1/12 border-r border-gray-300 text-center">
+                        <div className="flex items-center gap-2">
+                          <img src={statusIcon} alt="Status icon" className="w-4 h-4"/>
+                          <span>Status</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-1/12 text-center">
+                        <div className="flex items-center gap-2">
+                          <img src={actionsIcon} alt="Actions icon" className="w-4 h-4"/>
+                          <span>Actions</span>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sorted.length > 0 ? (
+                      sorted.map((e) => (
+                        <EndpointCard
+                          key={e.id}
+                          endpoint={e}
+                          onEdit={() => openEditEndpoint(e)}
+                          onDelete={() => handleDeleteEndpoint(e.id)}
+                          onClick={() => navigate(`/dashboard/${projectId}/endpoint/${e.id}`)}
                         />
-                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Path</h3>
-                        <Input
-                          placeholder="/example/path/:number"
-                          value={editEPath}
-                          onChange={(e) => setEditEPath(e.target.value)}
-                        />
-
-                        <h3 className="text-sm font-semibold text-slate-700 mt-2">Method</h3>
-                        <Select value={editEMethod} onValueChange={setEditEMethod}>
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select a method"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel>Method</SelectLabel>
-                              <SelectItem value="GET">GET</SelectItem>
-                              <SelectItem value="PUT">PUT</SelectItem>
-                              <SelectItem value="POST">POST</SelectItem>
-                              <SelectItem value="DELETE">DELETE</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          className="text-black hover:text-red-600"
-                          variant="outline"
-                          onClick={() => setOpenEdit(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleUpdateEndpoint}
-                          disabled={!hasEdited}
-                        >
-                          Update
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </>
-              ) : activeTab === "stateful" ? (
-                <>
-                  {/* Stateful table */}
-                  <div className="mb-4">
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      {currentWorkspace ? (
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">
-                          {currentWorkspace.name}
-                          {currentProject && <> {" - "}{currentProject.name}</>}
-                          {currentFolder && <> {" / "}{currentFolder.name}</>}
-                          {" - "}
-                          {filteredStateful.length} Stateful endpoints
-                        </h2>
-                      ) : (
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
-                      )}
-
-                      <div className="ml-auto flex items-center gap-2">
-                        {/* Status filter */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                            >
-                              {statefulStatusFilter === "All" ? "All" : `${statefulStatusFilter}`} <ChevronDown className="w-4 h-4"/>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setStatefulStatusFilter("All")}>All</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatefulStatusFilter("Active")}>Active</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setStatefulStatusFilter("Inactive")}>Inactive</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Sort */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
-                            >
-                              {sortOption} <ChevronsUpDown className="w-4 h-4"/>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setSortOption("Recently created")}>
-                              Recently created
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortOption("Oldest first")}>
-                              Oldest first
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortOption("Alphabetical (A-Z)")}>
-                              Alphabetical (A-Z)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortOption("Alphabetical (Z-A)")}>
-                              Alphabetical (Z-A)
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* New Endpoint Button (pre-select stateful) */}
-                        <Button
-                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
-                          onClick={() => {
-                            setNewEType("stateful");               // ensure dialog defaults to stateful
-                            setNewEFolderId(folderId || "");       // default folder = current folder (if any)
-                            setNewEName("");
-                            setNewEPath("");
-                            setNewEMethod("");
-                            setOpenNew(true);
-                          }}
-                        >
-                          <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain" />
-                          New Endpoint
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="w-full overflow-x-auto">
-                    <Table className="border-t border-b border-gray-300">
-                      <TableHeader>
-                        <TableRow className="border-b border-gray-300">
-                          <TableHead className="w-1/4 border-r border-gray-300">Aa</TableHead>
-                          <TableHead className="w-1/4 border-r border-gray-300">
-                            <div className="flex items-center gap-2">
-                              <img src={pathIcon} alt="Path icon" className="w-4 h-4"/>
-                              <span>Path</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/4 border-r border-gray-300">
-                            <div className="flex items-center gap-2">
-                              <img src={timeIcon} alt="Time icon" className="w-4 h-4"/>
-                              <span>Time & Date</span>
-                            </div>
-                          </TableHead>
-                          <TableHead className="w-1/12 border-r border-gray-300 text-center">Status</TableHead>
-                          <TableHead className="w-1/12 border-r border-gray-300 text-center">Label</TableHead>
-                          <TableHead className="w-1/12 text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-
-                      <TableBody>
-                        {filteredStateful.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center text-slate-500 py-4">
-                              No stateful endpoints found.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredStateful.map((se) => (
-                            <StatefulCard
-                              key={`stateful-${se.id}`}
-                              stateful={se}
-                              onEdit={(s) => navigate(`/projects/${projectId}/stateful/${s.id}/edit`)}
-                              onDelete={(id) => handleDeleteStateful(id)}
-                              onClick={(s) => navigate(`/projects/${projectId}/stateful/${s.id}`)}
-                            />
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
-              ) : null}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableHead colSpan={6} className="text-center text-slate-500 py-4">
+                          No endpoints found.
+                        </TableHead>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
         </main>
@@ -1497,12 +1113,12 @@ export default function Dashboard() {
         >
           <DialogHeader>
             <DialogTitle>
-              New {newEType === "stateless" ? "Stateless" : "Stateful"} Endpoint
+              New Endpoint
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
           </DialogHeader>
 
-          <div className="mt-3 space-y-4">
+          <div className="space-y-4">
             {/* Name */}
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
@@ -1518,7 +1134,7 @@ export default function Dashboard() {
               <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
               <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an option" />
+                  <SelectValue placeholder="Select an option"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -1552,10 +1168,10 @@ export default function Dashboard() {
                 value={newEMethod}
                 onValueChange={(v) => setNewEMethod(v)}
                 // disabled when stateful selected
-                disabled={newEType === "stateful"}
+                disabled={newEType}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a method" />
+                  <SelectValue placeholder="Select a method"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -1572,26 +1188,44 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Stateless / Stateful (shadcn RadioGroup) */}
-            <div className="pt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-2">Type</h3>
-
+            {/* Type */}
+            <div className="flex gap-4 pt-2">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Type:</h3>
               <RadioGroup
-                value={newEType}
+                value={String(newEType)}
                 onValueChange={(val) => {
-                  setNewEType(val);
-                  if (val === "stateful") setNewEMethod("");
+                  const boolVal = val === "true";
+                  setNewEType(boolVal);
+                  if (boolVal) setNewEMethod(""); // reset method if stateful
                 }}
                 className="flex items-center gap-6"
               >
-                <label htmlFor="rg-stateless" className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem id="rg-stateless" value="stateless" />
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="false" />
                   <span className="text-sm">Stateless</span>
                 </label>
-
-                <label htmlFor="rg-stateful" className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem id="rg-stateful" value="stateful" />
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="true" />
                   <span className="text-sm">Stateful</span>
+                </label>
+              </RadioGroup>
+            </div>
+
+            {/* Status */}
+            <div className="pt-2">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Status</h3>
+              <RadioGroup
+                value={newEActive ? "active" : "inactive"}
+                onValueChange={(val) => setNewEActive(val === "active")}
+                className="flex items-center gap-6"
+              >
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="active" />
+                  <span className="text-sm">Active</span>
+                </label>
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="inactive" />
+                  <span className="text-sm">Inactive</span>
                 </label>
               </RadioGroup>
             </div>
@@ -1603,12 +1237,11 @@ export default function Dashboard() {
               variant="outline"
               onClick={() => {
                 setOpenNew(false);
-                // reset little bit
                 setNewEName("");
                 setNewEPath("");
                 setNewEMethod("");
                 setNewEFolderId(folderId || "");
-                setNewEType("stateless");
+                setNewEType(false);
               }}
             >
               Cancel
@@ -1619,6 +1252,151 @@ export default function Dashboard() {
               onClick={handleCreateEndpoint}
             >
               Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Endpoint Dialog (unchanged) */}
+      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasEdited) {
+              e.preventDefault();
+              handleUpdateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Endpoint</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-sm text-slate-800">Endpoint details</DialogDescription>
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={editEName}
+                onChange={(e) => setEditEName(e.target.value)}
+              />
+            </div>
+
+            {/* Folder select - only folders for current project */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
+              <Select value={String(editEFolderId)} onValueChange={(v) => setEditEFolderId(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a folder"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Folders</SelectLabel>
+                    {folders
+                      .filter((f) => String(f.project_id) === String(projectId))
+                      .map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
+              <Input
+                placeholder="/examples/example/:id"
+                value={editEPath}
+                onChange={(e) => setEditEPath(e.target.value)}
+              />
+            </div>
+
+            {/* Method */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
+              <Select
+                value={editEMethod}
+                onValueChange={(v) => setEditEMethod(v)}
+                // disabled when stateful selected
+                disabled={editEType}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a method"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Method</SelectLabel>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {editEMethod && (
+                <p className="text-xs text-slate-400 mt-1 ml-2">Method is locked for stateful endpoints.</p>
+              )}
+            </div>
+
+            {/* Type */}
+            <div className="flex gap-4 pt-2">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Type:</h3>
+              <RadioGroup
+                value={String(editEType)}
+                onValueChange={(val) => {
+                  const boolVal = val === "true";
+                  setEditEType(boolVal);
+                  if (boolVal) setEditEMethod(""); // reset method if stateful
+                }}
+                className="flex items-center gap-6"
+              >
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="false" />
+                  <span className="text-sm">Stateless</span>
+                </label>
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="true" />
+                  <span className="text-sm">Stateful</span>
+                </label>
+              </RadioGroup>
+            </div>
+
+            {/* Status */}
+            <div className="flex gap-4 pt-2">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Status:</h3>
+              <RadioGroup
+                value={editEActive ? "active" : "inactive"}
+                onValueChange={(val) => setEditEActive(val === "active")}
+                className="flex items-center gap-6"
+              >
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="active" />
+                  <span className="text-sm">Active</span>
+                </label>
+                <label className="flex items-center cursor-pointer space-x-2">
+                  <RadioGroupItem value="inactive" />
+                  <span className="text-sm">Inactive</span>
+                </label>
+              </RadioGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateEndpoint}
+              disabled={!hasEdited}
+            >
+              Update
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1705,7 +1483,8 @@ export default function Dashboard() {
           </div>
           <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleEditWorkspace}>Update</Button>
+            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={handleEditWorkspace}>Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1793,7 +1572,10 @@ export default function Dashboard() {
           <p>Are you sure you want to delete this workspace and all its projects?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>Cancel</Button>
-            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={() => { handleDeleteWorkspace(confirmDeleteWs); setConfirmDeleteWs(null); }}>Delete</Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={() => {
+              handleDeleteWorkspace(confirmDeleteWs);
+              setConfirmDeleteWs(null);
+            }}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1806,12 +1588,18 @@ export default function Dashboard() {
           </DialogHeader>
 
           <div className="py-2">
-            <p className="text-sm text-gray-600">Are you sure you want to delete this folder and all its endpoints? This action cannot be undone.</p>
+            <p className="text-sm text-gray-600">Are you sure you want to delete this folder and all its endpoints? This
+              action cannot be undone.</p>
           </div>
 
           <DialogFooter className="pt-4 flex gap-2">
-            <Button variant="ghost" onClick={() => { setOpenDeleteFolder(false); setDeleteFolderId(null); }} className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Cancel</Button>
-            <Button onClick={confirmDeleteFolder} className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">Delete</Button>
+            <Button variant="ghost" onClick={() => {
+              setOpenDeleteFolder(false);
+              setDeleteFolderId(null);
+            }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Cancel</Button>
+            <Button onClick={confirmDeleteFolder}
+                    className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

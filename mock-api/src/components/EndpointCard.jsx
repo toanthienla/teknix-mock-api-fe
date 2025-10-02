@@ -3,6 +3,7 @@ import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
+import statefulEndpoint from "@/assets/stateful.svg"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
 import {TableRow, TableCell} from "@/components/ui/table"
 
 export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
@@ -22,14 +22,21 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
 
   return (
     <TableRow className="border-b border-gray-300">
-      {/* Name + Actions */}
+      {/* Name */}
       <TableCell className="w-1/4 border-r border-gray-300">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {endpoint.is_stateful && (
+            <img
+              src={statefulEndpoint}
+              alt="stateful endpoint"
+              className="w-5 h-5"
+            />
+          )}
           <span
             className="font-semibold text-gray-800 cursor-pointer"
             onClick={onClick}
           >
-              {name}
+            {name}
           </span>
         </div>
       </TableCell>
@@ -68,6 +75,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
         })}
       </TableCell>
 
+      {/* Status */}
       <TableCell className="w-1/12 font-semibold text-center text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
         <span
           className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
@@ -78,6 +86,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
         </span>
       </TableCell>
 
+      {/* Actions */}
       <TableCell className="w-1/12 text-center">
         <div className="flex items-center gap-2">
           <Button
