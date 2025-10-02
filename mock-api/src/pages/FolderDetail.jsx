@@ -192,7 +192,7 @@ export default function Dashboard() {
     return true;
   };
 
-  const validateEditEndpoint = (id, name, path, method) => {
+  const validateEditEndpoint = (id, name, path, method, type) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -250,7 +250,7 @@ export default function Dashboard() {
       return false;
     }
 
-    if (!method) {
+    if (!method && !type) {
       toast.info("Method is required");
       return false;
     }
@@ -792,7 +792,7 @@ export default function Dashboard() {
   }, [editEName, editEFolderId, editEPath, editEMethod, editEActive, editEType, currentEndpoint]);
 
   const handleUpdateEndpoint = () => {
-    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
+    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod, editEType)) return;
     const updated = {
       id: editId,
       name: editEName,

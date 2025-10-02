@@ -597,6 +597,8 @@ const DashboardPage = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(null);
+  const [isStateful, setIsStateful] = useState(false);
+  const [isActive, setIsActive] = useState(true);
 
   const [openProjectsMap, setOpenProjectsMap] = useState(
     () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
@@ -610,7 +612,10 @@ const DashboardPage = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
   );
-
+  const [showStatefulConfirmDialog, setShowStatefulConfirmDialog] =
+    useState(false);
+  const [showStatelessConfirmDialog, setShowStatelessConfirmDialog] =
+    useState(false);
   const [statusData, setStatusData] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const [selectedResponse, setSelectedResponse] = useState(null);
@@ -653,6 +658,216 @@ const DashboardPage = () => {
 
     // Tự động đóng popover sau khi chèn
     setIsPopoverOpen(false);
+  };
+
+  // Thêm useEffect để cập nhật trạng thái stateful khi endpointId thay đổi
+  useEffect(() => {
+    if (currentEndpointId) {
+      const endpoint = endpoints.find(
+        (ep) => String(ep.id) === String(currentEndpointId)
+      );
+      if (endpoint) {
+        setIsStateful(endpoint.is_stateful);
+        setIsActive(endpoint.is_active);
+      }
+    }
+  }, [currentEndpointId, endpoints]);
+
+  const handleStateModeChange = () => {
+    if (!currentEndpointId) return;
+
+    // Hiển thị dialog khi chuyển từ stateless sang stateful
+    if (!isStateful) {
+      setShowStatefulConfirmDialog(true);
+      return;
+    }
+
+    // Hiển thị dialog khi chuyển từ stateful sang stateless
+    setShowStatelessConfirmDialog(true);
+  };
+
+  // Hàm xử lý xác nhận chuyển sang stateful
+  const handleConfirmStateful = () => {
+    setShowStatefulConfirmDialog(false);
+
+    const newIsStateful = true;
+    const previousState = isStateful;
+
+    // Cập nhật ngay trong state để UI phản hồi nhanh
+    setEndpoints((prev) =>
+      prev.map((ep) =>
+        String(ep.id) === String(currentEndpointId)
+          ? {
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
+          : ep
+      )
+    );
+    setIsStateful(newIsStateful);
+
+    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
+    const currentEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    );
+
+    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...currentEndpoint,
+        is_stateful: newIsStateful,
+        updated_at: new Date().toISOString(),
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          // Nếu có lỗi, khôi phục lại state
+          setEndpoints((prev) =>
+            prev.map((ep) =>
+              String(ep.id) === String(currentEndpointId)
+                ? { ...ep, is_stateful: previousState }
+                : ep
+            )
+          );
+          setIsStateful(previousState);
+          throw new Error("Failed to update endpoint mode");
+        }
+
+        toast.success(
+          `Endpoint switched to ${
+            newIsStateful ? "stateful" : "stateless"
+          } mode!`
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  // Hàm xử lý xác nhận chuyển sang stateless
+  const handleConfirmStateless = () => {
+    setShowStatelessConfirmDialog(false);
+
+    const newIsStateful = false;
+    const previousState = isStateful;
+
+    // Cập nhật ngay trong state để UI phản hồi nhanh
+    setEndpoints((prev) =>
+      prev.map((ep) =>
+        String(ep.id) === String(currentEndpointId)
+          ? {
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
+          : ep
+      )
+    );
+    setIsStateful(newIsStateful);
+
+    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
+    const currentEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    );
+
+    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...currentEndpoint,
+        is_stateful: newIsStateful,
+        updated_at: new Date().toISOString(),
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          // Nếu có lỗi, khôi phục lại state
+          setEndpoints((prev) =>
+            prev.map((ep) =>
+              String(ep.id) === String(currentEndpointId)
+                ? { ...ep, is_stateful: previousState }
+                : ep
+            )
+          );
+          setIsStateful(previousState);
+          throw new Error("Failed to update endpoint mode");
+        }
+
+        toast.success(
+          `Endpoint switched to ${
+            newIsStateful ? "stateful" : "stateless"
+          } mode!`
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  // Hàm xử lý thay đổi trạng thái active
+  const handleActiveToggle = () => {
+    if (!currentEndpointId) return;
+
+    const newIsActive = !isActive;
+    const previousState = isActive;
+
+    // Cập nhật ngay trong state để UI phản hồi nhanh
+    setEndpoints((prev) =>
+      prev.map((ep) =>
+        String(ep.id) === String(currentEndpointId)
+          ? {
+              ...ep,
+              is_active: newIsActive,
+              updated_at: new Date().toISOString(),
+            }
+          : ep
+      )
+    );
+    setIsActive(newIsActive);
+
+    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
+    const currentEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    );
+
+    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...currentEndpoint,
+        is_active: newIsActive,
+        updated_at: new Date().toISOString(),
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          // Nếu có lỗi, khôi phục lại state
+          setEndpoints((prev) =>
+            prev.map((ep) =>
+              String(ep.id) === String(currentEndpointId)
+                ? { ...ep, is_active: previousState }
+                : ep
+            )
+          );
+          setIsActive(previousState);
+          throw new Error("Failed to update endpoint status");
+        }
+
+        toast.success(
+          `Endpoint ${newIsActive ? "activated" : "deactivated"} successfully!`
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
   };
 
   // Hàm lấy text mẫu dựa trên section được chọn
@@ -763,7 +978,7 @@ const DashboardPage = () => {
         setFolders(data);
       })
       .catch((error) => {
-        console.error('Error fetching folders:', error);
+        console.error("Error fetching folders:", error);
       });
   };
 
@@ -1476,7 +1691,7 @@ const DashboardPage = () => {
             setOpenNewProject(true); // mở modal tạo project
           }}
           onAddFolder={(projectId) => {
-            console.log('Add folder for project:', projectId);
+            console.log("Add folder for project:", projectId);
           }}
         />
       </aside>
@@ -1532,6 +1747,9 @@ const DashboardPage = () => {
           onNewResponse={handleNewResponse}
           showNewProjectButton={false}
           showNewResponseButton={true}
+          showStateModeToggle={true}
+          isStateful={isStateful}
+          onStateModeChange={handleStateModeChange}
         />
 
         {/* Navigation Tabs */}
@@ -1558,12 +1776,12 @@ const DashboardPage = () => {
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                      : method === "PUT"
-                        ? "bg-orange-400 text-black hover:bg-orange-500"
-                        : method === "DELETE"
-                          ? "bg-red-400 text-black hover:bg-red-500"
-                          : "bg-gray-100 text-black hover:bg-gray-200"
+                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                    : method === "PUT"
+                    ? "bg-orange-400 text-black hover:bg-orange-500"
+                    : method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -1578,6 +1796,33 @@ const DashboardPage = () => {
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
                 </div>
+
+                {/* Nút toggle Active/Inactive */}
+                <div
+                  className="flex flex-row items-center gap-1 w-[80px] h-[20px] cursor-pointer"
+                  onClick={handleActiveToggle}
+                >
+                  <div className="flex flex-row items-center w-[40px] h-[20px]">
+                    <span className="w-[40px] h-[20px] font-inter font-semibold text-[10px] leading-[14px] text-black">
+                      {isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div className="relative w-[40px] h-[20px]">
+                    <div
+                      className={`flex flex-row items-center px-[1px] gap-[2px] w-[40px] h-[20px] rounded-[10px] transition-colors ${
+                        isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+                      }`}
+                    >
+                      <div
+                        className={`absolute w-[16px] h-[16px] top-[2px] rounded-full bg-white transition-all ${
+                          isActive ? "left-[22px]" : "left-[2px]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Icon chain */}
                 <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
                   <div className="w-[21px] h-[20px] relative">
                     <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
@@ -2049,6 +2294,82 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Dialog xác nhận chuyển sang stateful */}
+        <Dialog
+          open={showStatefulConfirmDialog}
+          onOpenChange={setShowStatefulConfirmDialog}
+        >
+          <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+            <DialogHeader className="flex justify-between items-start mb-4">
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                Switch to Stateful Mode
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="mb-6">
+              <p className="text-gray-700">
+                This endpoint will start storing and modifying data instead of
+                returning static responses. Are you sure you want to switch to
+                stateful mode?
+              </p>
+            </div>
+
+            <DialogFooter className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowStatefulConfirmDialog(false)}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-[#FA2F2F] hover:bg-[#E02929] text-white"
+                onClick={handleConfirmStateful}
+              >
+                Switch
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog xác nhận chuyển sang stateless */}
+        <Dialog
+          open={showStatelessConfirmDialog}
+          onOpenChange={setShowStatelessConfirmDialog}
+        >
+          <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+            <DialogHeader className="flex justify-between items-start mb-4">
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                Switch to Stateless Mode
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Switching to stateless mode will remove persisted state. All
+                requests will respond with predefined static data only.
+                Continue?
+              </p>
+            </div>
+
+            <DialogFooter className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowStatelessConfirmDialog(false)}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-[#FA2F2F] hover:bg-[#E02929] text-white"
+                onClick={handleConfirmStateless}
+              >
+                Switch
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Workspace */}
         <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>

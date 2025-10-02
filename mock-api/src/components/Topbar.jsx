@@ -13,6 +13,34 @@ import {
 import addIcon from "@/assets/Add.svg";
 import { Badge } from "@/components/ui/badge.jsx";
 
+const StateModeToggle = ({ isStateful, onToggle }) => {
+  return (
+    <div
+      className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+      onClick={onToggle}
+    >
+      <div className="flex flex-row items-center w-[60px] h-[30px]">
+        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+          {isStateful ? "Stateful" : "Stateless"}
+        </span>
+      </div>
+      <div className="relative w-[60px] h-[30px]">
+        <div
+          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+            isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+          }`}
+        >
+          <div
+            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+              isStateful ? "left-[32px]" : "left-[3px]"
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Topbar({
   breadcrumb = [],
   onSearch,
@@ -24,6 +52,9 @@ export default function Topbar({
   showNewResponseButton,
   showActiveEndpoint,
   activeEndpointCount,
+  showStateModeToggle,
+  isStateful,
+  onStateModeChange,
 }) {
   const [query, setQuery] = useState("");
 
@@ -136,6 +167,16 @@ export default function Topbar({
                 <Search size={16} />
               </div>
             </div>
+
+            {/* State Mode Toggle */}
+            {showStateModeToggle && (
+              <div className="flex-1 flex justify-end mr-4">
+                <StateModeToggle
+                  isStateful={isStateful}
+                  onToggle={onStateModeChange}
+                />
+              </div>
+            )}
 
             {/* New Response */}
             <Button
