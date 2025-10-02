@@ -5,14 +5,13 @@ import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
 import OpenIcon from "@/assets/opensidebar.svg"
-
+import statefulIcon from "@/assets/stateful.svg"
 export default function Sidebar({
                                   workspaces = [],
                                   current,
                                   setCurrent,
                                   onWorkspaceChange,
                                   endpoints = [],
-                                  statefulEndpoints = [],
                                   folders = [],
                                   onEditWorkspace,
                                   onDeleteWorkspace,
@@ -103,11 +102,6 @@ export default function Sidebar({
     setLockedMode(true);
   };
 
-  useEffect(() => {
-    console.log('folders:', folders);
-    console.log('endpoints(len):', endpoints.length, 'stateful(len):', statefulEndpoints.length);
-  }, [folders, endpoints, statefulEndpoints]);
-
   const handleRightClick = (e, wsId) => {
     e.preventDefault();
     const menuWidth = 200;
@@ -153,25 +147,24 @@ export default function Sidebar({
     }
   }, [projectId, projects]);
 
-  // Eager map of folderId -> all endpoints (regular + stateful)
+  // Map endpoints theo folder
   const folderEndpointsMap = useMemo(() => {
     const map = {};
     folders.forEach((f) => {
-      const regular = endpoints.filter(ep => String(ep.folder_id) === String(f.id));
-      const stateful = statefulEndpoints.filter(sep => String(sep.folder_id) === String(f.id));
-      map[f.id] = [...regular, ...stateful];
+      const eps = endpoints.filter((ep) => String(ep.folder_id) === String(f.id));
+      map[f.id] = eps;
     });
     return map;
-  }, [folders, endpoints, statefulEndpoints]);
+  }, [folders, endpoints]);
 
-  // Helper: check if this project has any content (folders, endpoints, stateful endpoints)
+  // Kiểm tra project có nội dung
   const projectHasContent = (p) => {
-    const projectFolders = folders.filter(f => String(f.project_id) === String(p.id));
+    const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
     const hasFolder = projectFolders.length > 0;
-    const endpointsInProjectFolders = endpoints.some(ep => projectFolders.some(f => String(f.id) === String(ep.folder_id)));
-    const statefulInProjectFolders = statefulEndpoints.some(sep => projectFolders.some(f => String(f.id) === String(sep.folder_id)));
-
-    return hasFolder || endpointsInProjectFolders || statefulInProjectFolders;
+    const endpointsInProjectFolders = endpoints.some((ep) =>
+      projectFolders.some((f) => String(f.id) === String(ep.folder_id))
+    );
+    return hasFolder || endpointsInProjectFolders;
   };
 
   return (
@@ -301,7 +294,6 @@ export default function Sidebar({
                 })
                 .map((p) => {
                   const isEpOpen = readOpenEndpoints(p.id);
-                  const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
 
                   const activePj = String(projectId) === String(p.id);
                   const shouldBoldProject = activePj && !folderId;
@@ -392,7 +384,9 @@ export default function Sidebar({
                                             String(folderId) === String(folder.id)
                                               ? "font-semibold text-slate-900"
                                               : "font-medium text-slate-700"
-                                          }`}>{folder.name}</span>
+                                          }`}>
+                                            {folder.name}
+                                          </span>
                                         </div>
                                         <span
                                           className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
@@ -405,15 +399,16 @@ export default function Sidebar({
                                         <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
                                           {folderEndpoints.length === 0 ? (
                                             <div className="text-gray-400 px-2 py-1 text-xs">
-                                              No endpoints in this folder
+                                              No endpoints in this folder.
                                             </div>
                                           ) : (
                                             folderEndpoints.map((ep) => {
                                               const activeEp = String(endpointId) === String(ep.id);
+
                                               return (
                                                 <div
                                                   key={ep.id}
-                                                  className={`px-3 py-2 rounded cursor-pointer text-sm ${
+                                                  className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${
                                                     activeEp
                                                       ? "bg-slate-100 font-medium text-slate-900"
                                                       : "hover:bg-slate-50 text-slate-600"
@@ -422,6 +417,13 @@ export default function Sidebar({
                                                     navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                                   }
                                                 >
+                                                  {ep.is_stateful && (
+                                                    <img
+                                                      src={statefulIcon}
+                                                      className="w-4 h-4"
+                                                      alt="stateful"
+                                                    />
+                                                  )}
                                                   <span>{ep.name}</span>
                                                 </div>
                                               );
@@ -509,7 +511,6 @@ export default function Sidebar({
                           ) : (
                             wsProjects.map((p) => {
                               const isEpOpen = readOpenEndpoints(p.id);
-                              const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
 
                               const activePj = String(projectId) === String(p.id);
                               const shouldBoldProject = activePj && !folderId;
@@ -623,10 +624,11 @@ export default function Sidebar({
                                                       ) : (
                                                         folderEndpoints.map((ep) => {
                                                           const activeEp = String(endpointId) === String(ep.id);
+
                                                           return (
                                                             <div
                                                               key={ep.id}
-                                                              className={`px-3 py-2 rounded cursor-pointer text-sm ${
+                                                              className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${
                                                                 activeEp
                                                                   ? "bg-slate-100 font-medium text-slate-900"
                                                                   : "hover:bg-slate-50 text-slate-600"
@@ -635,6 +637,13 @@ export default function Sidebar({
                                                                 navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
                                                               }
                                                             >
+                                                              {ep.is_stateful && (
+                                                                <img
+                                                                  src={statefulIcon}
+                                                                  className="w-4 h-4"
+                                                                  alt="stateful"
+                                                                />
+                                                              )}
                                                               <span>{ep.name}</span>
                                                             </div>
                                                           );
