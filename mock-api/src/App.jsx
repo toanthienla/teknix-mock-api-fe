@@ -4,7 +4,7 @@ import SignupPage from "./pages/Signup";
 import VerifyEmail from "@/pages/VerifyEmail.jsx";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectDetail from "./pages/ProjectDetail.jsx";
-import ProjectEndpoints from "./pages/ProjectEndpoints.jsx";
+import ProjectEndpoints from "./pages/FolderDetail.jsx";
 import EndpointDetail from "@/pages/EndpointDetail.jsx";
 import {ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
