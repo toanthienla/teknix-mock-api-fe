@@ -50,8 +50,6 @@ export default function Topbar({
   showNewProjectButton,
   showNewFolderButton,
   showNewResponseButton,
-  showActiveEndpoint,
-  activeEndpointCount,
   showStateModeToggle,
   isStateful,
   onStateModeChange,
@@ -115,127 +113,72 @@ export default function Topbar({
 
       {/* Search + Buttons bên phải */}
       <div className="flex items-center gap-4 ml-auto">
-        {showActiveEndpoint ? (
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16} />
-              </div>
-            </div>
-
-            {/* Active Endpoint Count */}
-            <Badge variant="outline" className="bg-blue-600 hover:bg-blue-700">
-              <span className="text-sm font-medium text-white">
-                {activeEndpointCount}
-              </span>
-            </Badge>
-            <span className="text-slate-700 font-medium -ml-2">Active</span>
-
-            {/* New Folder */}
-            {showNewFolderButton && (
-              <Button
-                onClick={onNewFolder}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Folder
-              </Button>
-            )}
+        {/* Luôn hiển thị search */}
+        <div className="relative w-[250px]">
+          <Input
+            placeholder="Search..."
+            value={query}
+            onChange={handleChange}
+            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+          />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+            <Search size={16} />
           </div>
-        ) : showNewResponseButton ? (
-          <div className="flex items-center gap-4">
-            {/* Nếu có Response thì gom Search + Toggle + Button chung nhóm */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16} />
-              </div>
-            </div>
+        </div>
 
-            {/* State Mode Toggle */}
-            {showStateModeToggle && (
-              <div className="flex-1 flex justify-end mr-4">
-                <StateModeToggle
-                  isStateful={isStateful}
-                  onToggle={onStateModeChange}
-                />
-              </div>
-            )}
-
-            {/* New Response */}
-            <Button
-              onClick={onNewResponse}
-              className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-            >
-              <img
-                src={addIcon}
-                alt="Add icon"
-                className="w-5 h-5 object-contain invert brightness-0"
-              />
-              New Response
-            </Button>
+        {/* State Mode Toggle - luôn hiển thị nếu được yêu cầu */}
+        {showStateModeToggle && (
+          <div className="flex-1 flex justify-end mr-4">
+            <StateModeToggle
+              isStateful={isStateful}
+              onToggle={onStateModeChange}
+            />
           </div>
-        ) : (
-          <>
-            {/* Trường hợp không có Response thì search đứng 1 mình */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16} />
-              </div>
-            </div>
+        )}
 
-            {/* Project button */}
-            {showNewProjectButton && (
-              <Button
-                onClick={onNewProject}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Project
-              </Button>
-            )}
+        {/* New Response - chỉ hiển thị khi không phải stateful */}
+        {showNewResponseButton && (
+          <Button
+            onClick={onNewResponse}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Response
+          </Button>
+        )}
 
-            {/* Folder button */}
-            {showNewFolderButton && (
-              <Button
-                onClick={onNewFolder}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Folder
-              </Button>
-            )}
-          </>
+        {/* Project button */}
+        {showNewProjectButton && (
+          <Button
+            onClick={onNewProject}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Project
+          </Button>
+        )}
+
+        {/* Folder button */}
+        {showNewFolderButton && (
+          <Button
+            onClick={onNewFolder}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Folder
+          </Button>
         )}
       </div>
     </div>
