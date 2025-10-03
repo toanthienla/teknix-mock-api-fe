@@ -78,16 +78,20 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchWorkspaces();
-    fetchProjects();
-    fetchEndpoints();
-    fetchFolders();
   }, []);
+
+  useEffect(() => {
+    if (currentWsId) {
+      fetchProjects(currentWsId);
+    } else {
+      setProjects([]);
+    }
+  }, [currentWsId]);
 
   useEffect(() => {
     if (projectId && projects.length > 0) {
       const project = projects.find((p) => String(p.id) === String(projectId));
       if (project) {
-        setCurrentWsId(project.workspace_id);
         setOpenProjectsMap((prev) => ({
           ...prev,
           [project.workspace_id]: true,
@@ -143,47 +147,132 @@ export default function DashboardPage() {
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
-    fetch(`${API_ROOT}/workspaces`)
+    return fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
         setWorkspaces(sorted);
-        // if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
       })
-      .catch(() => toast.error("Failed to load workspaces"));
+      .catch(() =>
+        toast.error("Failed to load workspaces", {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+        })
+      );
   };
 
-  const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
-        setProjects(sorted);
+  // Fetch projects theo workspace
+  const fetchProjects = (wsId) => {
+    if (!wsId) return;
+
+    fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
+      .then(r => r.json())
+      .then(rData => {
+        const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
+        setProjects(projectsArr);
+
+        // reset folders + endpoints trước khi fetch mới
+        setFolders([]);
+        setEndpoints([]);
+
+        projectsArr.forEach((p) => {
+          // fetch folders của từng project
+          fetch(`${API_ROOT}/folders?project_id=${p.id}`)
+            .then(r => r.json())
+            .then(fData => {
+              const fArr = Array.isArray(fData) ? fData : fData.data || [];
+              setFolders(prev => {
+                const merged = [...prev];
+                fArr.forEach(f => {
+                  if (!merged.some(ff => ff.id === f.id)) {
+                    merged.push(f);
+                  }
+                });
+                return merged;
+              });
+
+              // fetch endpoints cho từng folder
+              fArr.forEach((f) => {
+                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
+                  .then(r2 => r2.json())
+                  .then(eData => {
+                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
+
+                    const withProjectId = eArr.map(e => ({
+                      ...e,
+                      project_id: f.project_id
+                    }));
+
+                    setEndpoints(prev => {
+                      const merged = [...prev];
+                      withProjectId.forEach(e => {
+                        if (!merged.some(ee => ee.id === e.id)) {
+                          merged.push(e);
+                        }
+                      });
+                      return merged;
+                    });
+                  })
+                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
+              });
+            })
+            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
+        });
       })
-      .catch(() => toast.error("Failed to load projects"));
+      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
   };
 
-  const fetchEndpoints = () => {
-    fetch(`${API_ROOT}/endpoints`)
-      .then((res) => res.json())
-      .then((data) => setEndpoints(data));
-  };
+  // const fetchFolders = (projId) => {
+  //   if (!projId) return;
+  //   fetch(`${API_ROOT}/folders?project_id=${projId}`)
+  //     .then(res => res.json())
+  //     .then(data => setFolders(data))
+  //     .catch(() => toast.error("Failed to load folders"));
+  // };
+  //
+  // useEffect(() => {
+  //   if (projectId) {
+  //     fetchFolders(projectId);
+  //   } else {
+  //     setFolders([]);
+  //   }
+  // }, [projectId]);
 
-  const fetchFolders = async () => {
-    try {
-      console.log('DashboardPage: Fetching folders...');
-      const response = await fetch(`${API_ROOT}/folders`);
-      const data = await response.json();
-      console.log('DashboardPage: Folders fetched:', data);
-      setFolders(data);
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-    }
-  };
+  // Fetch endpoints theo folder
+  // const fetchEndpoints = (folderId) => {
+  //   if (!folderId) return;
+  //   fetch(`${API_ROOT}/endpoints?folder_id=${folderId}`)
+  //     .then(res => res.json())
+  //     .then(result => {
+  //       if (!result.success || !Array.isArray(result.data)) {
+  //         throw new Error("Invalid endpoints format");
+  //       }
+  //
+  //       // ✅ tìm project_id từ folder
+  //       const folder = folders.find(f => String(f.id) === String(folderId));
+  //       const projId = folder ? folder.project_id : null;
+  //
+  //       const withProjectId = result.data.map(ep => ({
+  //         ...ep,
+  //         project_id: projId,
+  //       }));
+  //
+  //       setEndpoints(prev => {
+  //         const merged = [...prev];
+  //         withProjectId.forEach(ep => {
+  //           if (!merged.some(e => e.id === ep.id)) {
+  //             merged.push(ep);
+  //           }
+  //         });
+  //         return merged;
+  //       });
+  //     })
+  //     .catch(() => toast.error("Failed to load endpoints"));
+  // };
 
   const handleAddFolder = (projectId) => {
     console.log('Add folder for project:', projectId);
@@ -282,11 +371,12 @@ export default function DashboardPage() {
     })
       .then((res) => res.json())
       .then((createdWs) => {
-        setWorkspaces((prev) => [...prev, createdWs]);
-        setCurrentWsId(createdWs.id);
-        localStorage.setItem("currentWorkspace", createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-        toast.success("Workspace created successfully");
+        fetchWorkspaces().then(() => {
+          setCurrentWsId(createdWs.id);
+          localStorage.setItem("currentWorkspace", createdWs.id);
+          setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+          toast.success("Workspace created successfully");
+        });
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
@@ -716,14 +806,8 @@ export default function DashboardPage() {
                   {sortedProjects.length > 0 ? (
                     sortedProjects.map((p) => {
                       // Lấy tất cả folders của project này
-                      const projectFolders = folders.filter(
-                        (f) => String(f.project_id) === String(p.id)
-                      );
-                      const folderIds = projectFolders.map((f) => String(f.id));
-
-                      // Lấy tất cả endpoints trong các folder đó
-                      const projectEndpoints = endpoints.filter((ep) =>
-                        folderIds.includes(String(ep.folder_id))
+                      const projectEndpoints = endpoints.filter(
+                        ep => String(ep.project_id) === String(p.id)
                       );
 
                       return (

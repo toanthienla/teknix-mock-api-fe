@@ -131,10 +131,6 @@ export default function Sidebar({
 
   const currentWorkspace = workspaces.find((ws) => String(ws.id) === String(current));
 
-  if (!currentWorkspace && current) {
-    setCurrent(null);
-  }
-
   useEffect(() => {
     if (projectId) {
       const project = projects.find((p) => String(p.id) === String(projectId));
@@ -223,13 +219,12 @@ export default function Sidebar({
                     className={`px-3 py-2 cursor-pointer hover:bg-slate-100 flex justify-between items-center ${
                       String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
                     }`}
+                    onClick={() => {
+                      handleSelectWorkspace(ws.id);
+                      setWsDropdownOpen(false);
+                    }}
                   >
-                    <span
-                      onClick={() => {
-                        handleSelectWorkspace(ws.id);
-                        setWsDropdownOpen(false);
-                      }}
-                    >
+                    <span>
                       {ws.name}
                     </span>
 
