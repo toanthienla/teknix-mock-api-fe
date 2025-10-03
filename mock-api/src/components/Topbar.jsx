@@ -1,7 +1,7 @@
-import React, {useState} from "react";
-import {Search} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import React, { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,34 +10,29 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import addIcon from "@/assets/Add.svg"
-import {Badge} from "@/components/ui/badge.jsx";
+import addIcon from "@/assets/Add.svg";
+import { Badge } from "@/components/ui/badge.jsx";
 
-// Sửa component EndpointStatusToggle để có thể toggle được và đổi màu
-const EndpointStatusToggle = () => {
-  const [isActive, setIsActive] = useState(true);
-
-  const toggle = () => {
-    setIsActive(!isActive);
-  };
-
+const StateModeToggle = ({ isStateful, onToggle }) => {
   return (
     <div
-      className="flex items-center cursor-pointer"
-      onClick={toggle}
+      className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+      onClick={onToggle}
     >
-      <span className="mr-2 font-inter font-semibold text-[16px] leading-[19px] text-black">
-        {isActive ? "Active" : "Inactive"}
-      </span>
+      <div className="flex flex-row items-center w-[60px] h-[30px]">
+        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+          {isStateful ? "Stateful" : "Stateless"}
+        </span>
+      </div>
       <div className="relative w-[60px] h-[30px]">
         <div
-          className={`flex items-center px-[4px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-            isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+            isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
           }`}
         >
           <div
             className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-              isActive ? "left-[32px]" : "left-[3px]"
+              isStateful ? "left-[32px]" : "left-[3px]"
             }`}
           />
         </div>
@@ -46,19 +41,19 @@ const EndpointStatusToggle = () => {
   );
 };
 
-
 export default function Topbar({
-                                 breadcrumb = [],
-                                 onSearch,
-                                 onNewProject,
-                                 onNewFolder,
-                                 onNewResponse,
-                                 showNewProjectButton,
-                                 showNewFolderButton,
-                                 showNewResponseButton,
-                                 showActiveEndpoint,
-                                 activeEndpointCount
-                               }) {
+  breadcrumb = [],
+  onSearch,
+  onNewProject,
+  onNewFolder,
+  onNewResponse,
+  showNewProjectButton,
+  showNewFolderButton,
+  showNewResponseButton,
+  showStateModeToggle,
+  isStateful,
+  onStateModeChange,
+}) {
   const [query, setQuery] = useState("");
 
   const handleChange = (e) => {
@@ -93,7 +88,10 @@ export default function Topbar({
                           href={item.href}
                           onClick={() => {
                             if (item.WORKSPACE_ID) {
-                              localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                              localStorage.setItem(
+                                "currentWorkspace",
+                                item.WORKSPACE_ID
+                              );
                             }
                           }}
                           className="font-medium text-slate-900"
@@ -102,7 +100,9 @@ export default function Topbar({
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator className="font-medium text-slate-900"/>}
+                    {!isLast && (
+                      <BreadcrumbSeparator className="font-medium text-slate-900" />
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -113,124 +113,72 @@ export default function Topbar({
 
       {/* Search + Buttons bên phải */}
       <div className="flex items-center gap-4 ml-auto">
-        {showActiveEndpoint ? (
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
-              </div>
-            </div>
-
-            {/* Active Endpoint Count */}
-            <Badge
-              variant="outline"
-              className="bg-blue-600 hover:bg-blue-700">
-              <span className="text-sm font-medium text-white">
-                {activeEndpointCount}
-              </span>
-            </Badge>
-            <span className="text-slate-700 font-medium -ml-2">
-               Active
-            </span>
-
-            {/* New Folder */}
-            {showNewFolderButton && (
-              <Button
-                onClick={onNewFolder}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Folder
-              </Button>
-            )}
+        {/* Luôn hiển thị search */}
+        <div className="relative w-[250px]">
+          <Input
+            placeholder="Search..."
+            value={query}
+            onChange={handleChange}
+            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
+          />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+            <Search size={16} />
           </div>
-        ) : showNewResponseButton ? (
-          <div className="flex items-center gap-4">
-            {/* Nếu có Response thì gom Search + Toggle + Button chung nhóm */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
-              </div>
-            </div>
+        </div>
 
-            {/* Toggle */}
-            <EndpointStatusToggle/>
-
-            {/* New Response */}
-            <Button
-              onClick={onNewResponse}
-              className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-            >
-              <img
-                src={addIcon}
-                alt="Add icon"
-                className="w-5 h-5 object-contain invert brightness-0"
-              />
-              New Response
-            </Button>
+        {/* State Mode Toggle - luôn hiển thị nếu được yêu cầu */}
+        {showStateModeToggle && (
+          <div className="flex-1 flex justify-end mr-4">
+            <StateModeToggle
+              isStateful={isStateful}
+              onToggle={onStateModeChange}
+            />
           </div>
-        ) : (
-          <>
-            {/* Trường hợp không có Response thì search đứng 1 mình */}
-            <div className="relative w-[250px]">
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={handleChange}
-                className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                <Search size={16}/>
-              </div>
-            </div>
+        )}
 
-            {/* Project button */}
-            {showNewProjectButton && (
-              <Button
-                onClick={onNewProject}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Project
-              </Button>
-            )}
+        {/* New Response - chỉ hiển thị khi không phải stateful */}
+        {showNewResponseButton && (
+          <Button
+            onClick={onNewResponse}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Response
+          </Button>
+        )}
 
-            {/* Folder button */}
-            {showNewFolderButton && (
-              <Button
-                onClick={onNewFolder}
-                className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
-              >
-                <img
-                  src={addIcon}
-                  alt="Add icon"
-                  className="w-5 h-5 object-contain invert brightness-0"
-                />
-                New Folder
-              </Button>
-            )}
-          </>
+        {/* Project button */}
+        {showNewProjectButton && (
+          <Button
+            onClick={onNewProject}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Project
+          </Button>
+        )}
+
+        {/* Folder button */}
+        {showNewFolderButton && (
+          <Button
+            onClick={onNewFolder}
+            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+          >
+            <img
+              src={addIcon}
+              alt="Add icon"
+              className="w-5 h-5 object-contain invert brightness-0"
+            />
+            New Folder
+          </Button>
         )}
       </div>
     </div>
