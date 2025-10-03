@@ -580,6 +580,10 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 };
 
 const DashboardPage = () => {
+  // Thêm state để quản lý data default
+  const [dataDefault, setDataDefault] = useState([]);
+  const [endpointData, setEndpointData] = useState(null);
+  const [dataDefaultString, setDataDefaultString] = useState("");
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
@@ -599,6 +603,10 @@ const DashboardPage = () => {
   const [currentWsId, setCurrentWsId] = useState(null);
   const [isStateful, setIsStateful] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [isInitialValueDialogOpen, setIsInitialValueDialogOpen] =
+    useState(false);
+  const [tempDataDefault, setTempDataDefault] = useState([]);
+  const [tempDataDefaultString, setTempDataDefaultString] = useState("");
 
   const [openProjectsMap, setOpenProjectsMap] = useState(
     () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
@@ -1100,6 +1108,101 @@ const DashboardPage = () => {
             }
           }
         }
+      });
+  };
+
+  const fetchEndpointDataByPath = (path) => {
+    return fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`)
+      .then((res) => {
+        if (!res.ok) {
+          // Nếu không tìm thấy endpoint data, trả về null thay vì lỗi
+          if (res.status === 404) return null;
+          throw new Error("Failed to fetch endpoint data");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setEndpointData(data);
+        if (data) {
+          setDataDefault(data.data_default || []);
+        } else {
+          // Nếu không có data, khởi tạo với mảng rỗng
+          setDataDefault([]);
+          setEndpointData({
+            path: path,
+            schema: {},
+            data_default: [],
+            data_current: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return data;
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+        return null;
+      });
+  };
+
+  // Fetch endpoint data khi endpointId thay đổi
+  useEffect(() => {
+    if (currentEndpointId) {
+      const currentEndpoint = endpoints.find(
+        (ep) => String(ep.id) === String(currentEndpointId)
+      );
+
+      if (currentEndpoint && currentEndpoint.path) {
+        fetchEndpointDataByPath(currentEndpoint.path);
+      }
+    }
+  }, [currentEndpointId, endpoints]);
+
+  // Hàm xử lý lưu data default
+  const handleSaveDataDefault = () => {
+    if (!currentEndpointId || !endpointData) return;
+
+    const currentEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    );
+
+    if (!currentEndpoint) return;
+
+    // Parse data default
+    let parsedData = [];
+    try {
+      parsedData = JSON.parse(JSON.stringify(dataDefault));
+    } catch {
+      toast.error("Invalid JSON format for data default");
+      return;
+    }
+
+    // Payload theo đúng cấu trúc yêu cầu
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: parsedData,
+    };
+
+    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update data default");
+        return res.json();
+      })
+      .then((updatedData) => {
+        // Cập nhật state với cả data_current được reset
+        setEndpointData(updatedData);
+        setDataDefault(updatedData.data_default || []);
+
+        toast.success("Data default updated successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
       });
   };
 
@@ -1787,6 +1890,60 @@ const DashboardPage = () => {
     }
   }, [selectedResponse]);
 
+  const handleOpenInitialValueDialog = () => {
+    // Sao chép dataDefault hiện tại để chỉnh sửa tạm thời
+    setTempDataDefault(JSON.parse(JSON.stringify(dataDefault)));
+    setIsInitialValueDialogOpen(true);
+  };
+
+  // Hàm xử lý khi lưu initial value
+  const handleSaveInitialValue = () => {
+    try {
+      // Parse và validate JSON
+      const parsedData = JSON.parse(tempDataDefaultString);
+
+      // Payload chỉ cần schema và data_default
+      const payload = {
+        schema: endpointData.schema || {},
+        data_default: parsedData,
+      };
+
+      fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to update initial value");
+          return res.json();
+        })
+        .then((updatedData) => {
+          // Cập nhật state với cả data_current được reset
+          setEndpointData(updatedData);
+          setDataDefault(updatedData.data_default || []);
+          setIsInitialValueDialogOpen(false);
+          toast.success("Initial value updated successfully!");
+        })
+        .catch((error) => {
+          console.error(error);
+          toast.error(error.message);
+        });
+    } catch (error) {
+      toast.error(
+        `Invalid JSON format: ${error.message}. Please fix the errors before saving.`
+      );
+    }
+  };
+
+  useEffect(() => {
+    setDataDefaultString(JSON.stringify(dataDefault, null, 2));
+  }, [dataDefault]);
+
+  // Cập nhật state string khi tempDataDefault thay đổi
+  useEffect(() => {
+    setTempDataDefaultString(JSON.stringify(tempDataDefault, null, 2));
+  }, [tempDataDefault]);
+
   // Thêm UI loading
   if (isLoading) {
     return (
@@ -2120,6 +2277,16 @@ const DashboardPage = () => {
                       className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Proxy
+                    </TabsTrigger>
+                  )}
+
+                  {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
+                  {isStateful && (
+                    <TabsTrigger
+                      value="dataDefault"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Data Default
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -2525,6 +2692,211 @@ const DashboardPage = () => {
                         </div>
                       </div>
                     </Card>
+                  </TabsContent>
+                )}
+                {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
+
+                {isStateful && (
+                  <TabsContent value="dataDefault" className="mt-0">
+                    <div className="mt-2">
+                      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-center mb-1">
+                            <h2 className="text-2xl font-medium text-[#37352F]">
+                              Initial Value
+                            </h2>
+                          </div>
+
+                          <div className="grid grid-cols-1 items-start gap-1">
+                            <div className="col-span-3 space-y-2">
+                              <div className="relative">
+                                <div className="w-full h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
+                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black">
+                                    {dataDefault.length === 0 ? "[]" : "[...]"}
+                                  </span>
+                                </div>
+                                <div
+                                  className="w-full h-[20px] text-right text-[14px] leading-[20px] text-[#2563EB] underline cursor-pointer mt-1"
+                                  onClick={handleOpenInitialValueDialog}
+                                >
+                                  Update initial value
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
+                            Current Value
+                          </div>
+                          <div className="grid grid-cols-1 items-start gap-1">
+                            <div className="col-span-3 space-y-2">
+                              <div className="relative">
+                                <Textarea
+                                  id="data-default"
+                                  value={dataDefaultString}
+                                  onChange={(e) => {
+                                    setDataDefaultString(e.target.value);
+                                    try {
+                                      // Chỉ cập nhật state khi JSON hợp lệ
+                                      setDataDefault(
+                                        JSON.parse(e.target.value)
+                                      );
+                                    } catch {
+                                      // Giữ nguyên state cũ nếu JSON không hợp lệ
+                                    }
+                                  }}
+                                  className="font-mono h-60 border-[#CBD5E1] rounded-md pb-8"
+                                  placeholder="Enter data default"
+                                />
+                                <FileCode
+                                  className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
+                                  size={26}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const textarea =
+                                      document.getElementById("data-default");
+                                    if (textarea) {
+                                      textarea.focus();
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1]"
+                                >
+                                  <Upload className="mr-2 h-4 w-4" /> Upload
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1]"
+                                  onClick={() => {
+                                    try {
+                                      const formatted = JSON.stringify(
+                                        JSON.parse(dataDefaultString),
+                                        null,
+                                        2
+                                      );
+                                      setDataDefaultString(formatted);
+                                      setDataDefault(JSON.parse(formatted));
+                                    } catch {
+                                      toast.error("Invalid JSON format");
+                                    }
+                                  }}
+                                >
+                                  <Code className="mr-2 h-4 w-4" /> Format
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                              onClick={handleSaveDataDefault}
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Dialog Update Initial Value */}
+                    <Dialog
+                      open={isInitialValueDialogOpen}
+                      onOpenChange={setIsInitialValueDialogOpen}
+                    >
+                      <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+                        <DialogHeader className="flex justify-between items-start mb-4">
+                          <DialogTitle className="text-xl font-bold text-slate-800">
+                            Update Initial Value
+                          </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="mb-6">
+                          <div className="relative">
+                            <Textarea
+                              id="initial-value"
+                              value={tempDataDefaultString}
+                              onChange={(e) => {
+                                setTempDataDefaultString(e.target.value);
+                                try {
+                                  // Chỉ cập nhật state khi JSON hợp lệ
+                                  setTempDataDefault(
+                                    JSON.parse(e.target.value)
+                                  );
+                                } catch {
+                                  // Giữ nguyên state cũ nếu JSON không hợp lệ
+                                }
+                              }}
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-8"
+                              placeholder="Enter initial value"
+                            />
+                            <FileCode
+                              className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
+                              size={26}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const textarea =
+                                  document.getElementById("initial-value");
+                                if (textarea) {
+                                  textarea.focus();
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="flex justify-end space-x-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                            >
+                              <Upload className="mr-1 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              onClick={() => {
+                                try {
+                                  const formatted = JSON.stringify(
+                                    JSON.parse(tempDataDefaultString),
+                                    null,
+                                    2
+                                  );
+                                  setTempDataDefaultString(formatted);
+                                  setTempDataDefault(JSON.parse(formatted));
+                                } catch {
+                                  toast.error("Invalid JSON format");
+                                }
+                              }}
+                            >
+                              <Code className="mr-1 h-4 w-4" /> Format
+                            </Button>
+                          </div>
+                        </div>
+
+                        <DialogFooter className="flex justify-end gap-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsInitialValueDialogOpen(false)}
+                            className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white w-[90px] h-[40px] rounded-[8px]"
+                            onClick={handleSaveInitialValue}
+                          >
+                            Update
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </TabsContent>
                 )}
               </Tabs>
