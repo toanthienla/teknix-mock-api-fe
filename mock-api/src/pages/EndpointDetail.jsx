@@ -988,48 +988,62 @@ const DashboardPage = () => {
     return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
-        const sortedData = [...data].sort((a, b) => a.priority - b.priority);
-        setEndpointResponses(sortedData);
+        // Xử lý riêng cho stateful endpoint
+        if (isStateful) {
+          // Chỉ lấy các trường cần thiết cho stateful
+          const statefulResponses = data.map((res) => ({
+            id: res.id,
+            endpoint_id: res.endpoint_id,
+            name: res.name,
+            status_code: res.status_code,
+            response_body: res.response_body,
+            delay_ms: res.delay_ms,
+            // Sử dụng giá trị từ backend thay vì tự set
+            is_stateful: res.is_stateful !== undefined ? res.is_stateful : true,
+            created_at: res.created_at,
+            updated_at: res.updated_at,
+          }));
 
-        const statusDataFormatted = sortedData.map((res) => ({
-          id: res.id,
-          code: res.status_code.toString(),
-          name: res.name,
-          isDefault: res.is_default,
-          isStateful: res.is_stateful,
-          bgColor: res.is_default ? "bg-slate-100" : "",
-          priority: res.priority,
-        }));
-        setStatusData(statusDataFormatted);
+          setEndpointResponses(statefulResponses);
 
-        if (!selectedResponse && data.length > 0) {
-          const defaultResponse = data.find((res) => res.is_default) || data[0];
-          setSelectedResponse(defaultResponse);
-          setResponseName(defaultResponse.name);
-          setStatusCode(defaultResponse.status_code.toString());
-          setResponseBody(
-            JSON.stringify(defaultResponse.response_body, null, 2)
-          );
-          setDelay(defaultResponse.delay_ms?.toString() || "0");
+          // Format dữ liệu cho UI
+          const statusDataFormatted = statefulResponses.map((res) => ({
+            id: res.id,
+            code: res.status_code.toString(),
+            name: res.name,
+            isStateful: res.is_stateful !== undefined ? res.is_stateful : true,
+            bgColor: "",
+          }));
 
-          setProxyUrl(defaultResponse.proxy_url || "");
-          setProxyMethod(defaultResponse.proxy_method || "GET");
-        } else if (selectedResponse) {
-          const existingResponse = data.find(
-            (res) => res.id === selectedResponse.id
-          );
-          if (existingResponse) {
-            setSelectedResponse(existingResponse);
-            setResponseName(existingResponse.name);
-            setStatusCode(existingResponse.status_code.toString());
+          setStatusData(statusDataFormatted);
+
+          // Chọn response đầu tiên làm response mặc định
+          if (!selectedResponse && statefulResponses.length > 0) {
+            const firstResponse = statefulResponses[0];
+            setSelectedResponse(firstResponse);
+            setResponseName(firstResponse.name);
+            setStatusCode(firstResponse.status_code.toString());
             setResponseBody(
-              JSON.stringify(existingResponse.response_body, null, 2)
+              JSON.stringify(firstResponse.response_body, null, 2)
             );
-            setDelay(existingResponse.delay_ms?.toString() || "0");
+            setDelay(firstResponse.delay_ms?.toString() || "0");
+          }
+        } else {
+          // Xử lý như hiện tại cho stateless
+          const sortedData = [...data].sort((a, b) => a.priority - b.priority);
+          setEndpointResponses(sortedData);
 
-            setProxyUrl(existingResponse.proxy_url || "");
-            setProxyMethod(existingResponse.proxy_method || "GET");
-          } else if (data.length > 0) {
+          const statusDataFormatted = sortedData.map((res) => ({
+            id: res.id,
+            code: res.status_code.toString(),
+            name: res.name,
+            isDefault: res.is_default,
+            bgColor: res.is_default ? "bg-slate-100" : "",
+            priority: res.priority,
+          }));
+          setStatusData(statusDataFormatted);
+
+          if (!selectedResponse && data.length > 0) {
             const defaultResponse =
               data.find((res) => res.is_default) || data[0];
             setSelectedResponse(defaultResponse);
@@ -1039,9 +1053,51 @@ const DashboardPage = () => {
               JSON.stringify(defaultResponse.response_body, null, 2)
             );
             setDelay(defaultResponse.delay_ms?.toString() || "0");
-
             setProxyUrl(defaultResponse.proxy_url || "");
             setProxyMethod(defaultResponse.proxy_method || "GET");
+          }
+        }
+
+        // Xử lý chung cho cả stateful và stateless
+        if (selectedResponse) {
+          const existingResponse = data.find(
+            (res) => res.id === selectedResponse.id
+          );
+          if (existingResponse) {
+            // Xử lý riêng cho stateful
+            if (isStateful) {
+              setSelectedResponse({
+                id: existingResponse.id,
+                endpoint_id: existingResponse.endpoint_id,
+                name: existingResponse.name,
+                status_code: existingResponse.status_code,
+                response_body: existingResponse.response_body,
+                delay_ms: existingResponse.delay_ms,
+                // Sử dụng giá trị từ backend thay vì tự set
+                is_stateful:
+                  existingResponse.is_stateful !== undefined
+                    ? existingResponse.is_stateful
+                    : true,
+                created_at: existingResponse.created_at,
+                updated_at: existingResponse.updated_at,
+              });
+              setResponseName(existingResponse.name);
+              setStatusCode(existingResponse.status_code.toString());
+              setResponseBody(
+                JSON.stringify(existingResponse.response_body, null, 2)
+              );
+              setDelay(existingResponse.delay_ms?.toString() || "0");
+            } else {
+              setSelectedResponse(existingResponse);
+              setResponseName(existingResponse.name);
+              setStatusCode(existingResponse.status_code.toString());
+              setResponseBody(
+                JSON.stringify(existingResponse.response_body, null, 2)
+              );
+              setDelay(existingResponse.delay_ms?.toString() || "0");
+              setProxyUrl(existingResponse.proxy_url || "");
+              setProxyMethod(existingResponse.proxy_method || "GET");
+            }
           }
         }
       });
@@ -1502,13 +1558,38 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoint_responses/${response.id}`)
       .then((res) => res.json())
       .then((data) => {
-        setSelectedResponse(data);
-        setResponseName(data.name);
-        setStatusCode(data.status_code.toString());
-        setResponseBody(JSON.stringify(data.response_body, null, 2));
-        setDelay(data.delay_ms?.toString() || "0");
-        setProxyUrl(data.proxy_url || "");
-        setProxyMethod(data.proxy_method || "GET");
+        if (isStateful) {
+          // Chỉ lấy các trường cần thiết cho stateful
+          const statefulResponse = {
+            id: data.id,
+            endpoint_id: data.endpoint_id,
+            name: data.name,
+            status_code: data.status_code,
+            response_body: data.response_body,
+            delay_ms: data.delay_ms,
+            // Sử dụng giá trị từ backend thay vì tự set
+            is_stateful:
+              data.is_stateful !== undefined ? data.is_stateful : true,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+          };
+
+          setSelectedResponse(statefulResponse);
+          setResponseName(statefulResponse.name);
+          setStatusCode(statefulResponse.status_code.toString());
+          setResponseBody(
+            JSON.stringify(statefulResponse.response_body, null, 2)
+          );
+          setDelay(statefulResponse.delay_ms?.toString() || "0");
+        } else {
+          setSelectedResponse(data);
+          setResponseName(data.name);
+          setStatusCode(data.status_code.toString());
+          setResponseBody(JSON.stringify(data.response_body, null, 2));
+          setDelay(data.delay_ms?.toString() || "0");
+          setProxyUrl(data.proxy_url || "");
+          setProxyMethod(data.proxy_method || "GET");
+        }
       })
       .catch(console.error);
   };
@@ -1546,19 +1627,32 @@ const DashboardPage = () => {
 
     const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
 
-    const payload = {
-      endpoint_id: currentEndpointId,
-      name: responseName,
-      status_code: parseInt(statusCode),
-      response_body: responseBodyObj,
-      condition: responseCondition,
-      is_default: selectedResponse
-        ? selectedResponse.is_default
-        : isFirstResponse,
-      delay_ms: parseInt(delay) || 0,
-      proxy_url: proxyUrl.trim() ? proxyUrl : null,
-      proxy_method: proxyUrl.trim() ? proxyMethod : null,
-    };
+    // Payload khác nhau cho stateful và stateless
+    let payload;
+    if (isStateful) {
+      payload = {
+        endpoint_id: currentEndpointId,
+        name: responseName,
+        status_code: parseInt(statusCode),
+        response_body: responseBodyObj,
+        delay_ms: parseInt(delay) || 0,
+        // Không gửi các trường không cần thiết cho stateful
+      };
+    } else {
+      payload = {
+        endpoint_id: currentEndpointId,
+        name: responseName,
+        status_code: parseInt(statusCode),
+        response_body: responseBodyObj,
+        condition: responseCondition,
+        is_default: selectedResponse
+          ? selectedResponse.is_default
+          : isFirstResponse,
+        delay_ms: parseInt(delay) || 0,
+        proxy_url: proxyUrl.trim() ? proxyUrl : null,
+        proxy_method: proxyUrl.trim() ? proxyMethod : null,
+      };
+    }
 
     const method = selectedResponse ? "PUT" : "POST";
     const url = selectedResponse
@@ -1578,44 +1672,93 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((updatedResponse) => {
-        // Chỉ cập nhật state từ response trả về, không cần fetch lại toàn bộ
-        setEndpointResponses((prev) =>
-          selectedResponse
-            ? prev.map((r) =>
-                r.id === updatedResponse.id ? updatedResponse : r
-              )
-            : [...prev, updatedResponse]
-        );
+        // Xử lý response trả về dựa trên chế độ
+        if (isStateful) {
+          const statefulResponse = {
+            id: updatedResponse.id,
+            endpoint_id: updatedResponse.endpoint_id,
+            name: updatedResponse.name,
+            status_code: updatedResponse.status_code,
+            response_body: updatedResponse.response_body,
+            delay_ms: updatedResponse.delay_ms,
+            is_stateful: true,
+            created_at: updatedResponse.created_at,
+            updated_at: updatedResponse.updated_at,
+          };
 
-        // Cập nhật statusData
-        setStatusData((prev) =>
-          selectedResponse
-            ? prev.map((s) =>
-                s.id === updatedResponse.id
-                  ? {
-                      ...s,
-                      code: updatedResponse.status_code.toString(),
-                      name: updatedResponse.name,
-                      isDefault: updatedResponse.is_default,
-                    }
-                  : s
-              )
-            : [
-                ...prev,
-                {
-                  id: updatedResponse.id,
-                  code: updatedResponse.status_code.toString(),
-                  name: updatedResponse.name,
-                  isDefault: updatedResponse.is_default,
-                },
-              ]
-        );
+          // Cập nhật state với response stateful
+          setEndpointResponses((prev) =>
+            selectedResponse
+              ? prev.map((r) =>
+                  r.id === statefulResponse.id ? statefulResponse : r
+                )
+              : [...prev, statefulResponse]
+          );
 
-        setProxyUrl(updatedResponse.proxy_url || "");
-        setProxyMethod(updatedResponse.proxy_method || "GET");
+          // Cập nhật statusData
+          setStatusData((prev) =>
+            selectedResponse
+              ? prev.map((s) =>
+                  s.id === statefulResponse.id
+                    ? {
+                        ...s,
+                        code: statefulResponse.status_code.toString(),
+                        name: statefulResponse.name,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: statefulResponse.id,
+                    code: statefulResponse.status_code.toString(),
+                    name: statefulResponse.name,
+                  },
+                ]
+          );
 
-        if (selectedResponse) {
-          setSelectedResponse(updatedResponse);
+          if (selectedResponse) {
+            setSelectedResponse(statefulResponse);
+          }
+        } else {
+          // Xử lý như hiện tại cho stateless
+          setEndpointResponses((prev) =>
+            selectedResponse
+              ? prev.map((r) =>
+                  r.id === updatedResponse.id ? updatedResponse : r
+                )
+              : [...prev, updatedResponse]
+          );
+
+          setStatusData((prev) =>
+            selectedResponse
+              ? prev.map((s) =>
+                  s.id === updatedResponse.id
+                    ? {
+                        ...s,
+                        code: updatedResponse.status_code.toString(),
+                        name: updatedResponse.name,
+                        isDefault: updatedResponse.is_default,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: updatedResponse.id,
+                    code: updatedResponse.status_code.toString(),
+                    name: updatedResponse.name,
+                    isDefault: updatedResponse.is_default,
+                  },
+                ]
+          );
+
+          setProxyUrl(updatedResponse.proxy_url || "");
+          setProxyMethod(updatedResponse.proxy_method || "GET");
+
+          if (selectedResponse) {
+            setSelectedResponse(updatedResponse);
+          }
         }
 
         if (selectedResponse) {
@@ -1957,20 +2100,28 @@ const DashboardPage = () => {
                     value="Header&Body"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
-                    Header&Body
+                    Header & Body
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="Rules"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Request Validate
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="proxy"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Proxy
-                  </TabsTrigger>
+
+                  {/* Ẩn hoàn toàn tab Request Validate khi stateful */}
+                  {!isStateful && (
+                    <TabsTrigger
+                      value="Rules"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Rules
+                    </TabsTrigger>
+                  )}
+
+                  {/* Ẩn hoàn toàn tab Proxy khi stateful */}
+                  {!isStateful && (
+                    <TabsTrigger
+                      value="proxy"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Proxy
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* TabsContent */}
@@ -1988,7 +2139,7 @@ const DashboardPage = () => {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="border-[#E5E5E5]"
+                              className="border-[#E5E5E1]"
                               onClick={() => {
                                 if (selectedResponse) {
                                   setDefaultResponse(selectedResponse.id);
@@ -2009,7 +2160,7 @@ const DashboardPage = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="border-[#E5E5E5]"
+                            className="border-[#E5E5E1]"
                             onClick={handleDeleteResponse}
                             disabled={selectedResponse?.is_default}
                           >
@@ -2036,8 +2187,16 @@ const DashboardPage = () => {
                           <Input
                             id="response-name"
                             value={responseName}
-                            onChange={(e) => setResponseName(e.target.value)}
-                            className="col-span-3 border-[#CBD5E1] rounded-md"
+                            onChange={(e) =>
+                              !isStateful && setResponseName(e.target.value)
+                            }
+                            disabled={isStateful}
+                            className={`col-span-3 border-[#CBD5E1] rounded-md ${
+                              isStateful ? "bg-gray-100 cursor-not-allowed" : ""
+                            }`}
+                            placeholder={
+                              isStateful ? "Read-only in stateful mode" : ""
+                            }
                           />
                         </div>
 
@@ -2052,11 +2211,18 @@ const DashboardPage = () => {
                           <div className="col-span-3">
                             <Select
                               value={statusCode}
-                              onValueChange={(value) => setStatusCode(value)}
+                              onValueChange={(value) =>
+                                !isStateful && setStatusCode(value)
+                              }
+                              disabled={isStateful}
                             >
                               <SelectTrigger
-                                id="status-code" // Thêm id để khớp với htmlFor của Label
-                                className="border-[#CBD5E1] rounded-md"
+                                id="status-code"
+                                className={`border-[#CBD5E1] rounded-md ${
+                                  isStateful
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
+                                }`}
                               >
                                 <SelectValue placeholder="Select status code" />
                               </SelectTrigger>
@@ -2075,7 +2241,6 @@ const DashboardPage = () => {
                           </div>
                         </div>
 
-                        {/* Sửa phần Response Header - chuyển từ Label thành div vì đây là tiêu đề nhóm */}
                         <div className="grid grid-cols-4 items-start gap-4">
                           <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
                             Response Header
@@ -2104,17 +2269,55 @@ const DashboardPage = () => {
                               <Textarea
                                 id="response-body"
                                 value={responseBody}
-                                onChange={(e) =>
-                                  setResponseBody(e.target.value)
+                                onChange={(e) => {
+                                  const canEdit = !(
+                                    isStateful &&
+                                    statusCode === "200" &&
+                                    method === "GET"
+                                  );
+                                  if (canEdit) {
+                                    setResponseBody(e.target.value);
+                                  }
+                                }}
+                                disabled={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
                                 }
-                                className="font-mono h-60 border-[#CBD5E1] rounded-md pb-8"
+                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pb-8 ${
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
+                                }`}
+                                placeholder={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "Read-only for 200 OK responses with GET method"
+                                    : ""
+                                }
                               />
                               <FileCode
-                                className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
+                                className={`absolute bottom-2 right-2 ${
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-gray-400 cursor-pointer hover:text-gray-600"
+                                }`}
                                 size={26}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setIsPopoverOpen(!isPopoverOpen);
+                                  const canEdit = !(
+                                    isStateful &&
+                                    statusCode === "200" &&
+                                    method === "GET"
+                                  );
+                                  if (canEdit) {
+                                    setIsPopoverOpen(!isPopoverOpen);
+                                  }
                                 }}
                               />
 
@@ -2205,6 +2408,11 @@ const DashboardPage = () => {
                                 variant="outline"
                                 size="sm"
                                 className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                }
                               >
                                 <Upload className="mr-2 h-4 w-4" /> Upload
                               </Button>
@@ -2212,6 +2420,11 @@ const DashboardPage = () => {
                                 variant="outline"
                                 size="sm"
                                 className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                }
                               >
                                 <Code className="mr-2 h-4 w-4" /> Format
                               </Button>
@@ -2247,67 +2460,73 @@ const DashboardPage = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="Rules" className="mt-0">
-                  <div></div>
-                  <div className="mt-2">
-                    <Frame
-                      responseName={selectedResponse?.name}
-                      selectedResponse={selectedResponse}
-                      onUpdateRules={setResponseCondition}
-                      onSave={handleSaveResponse}
-                    />
-                  </div>
-                </TabsContent>
+                {/* Chỉ render tab Rules khi không phải stateful */}
+                {!isStateful && (
+                  <TabsContent value="Rules" className="mt-0">
+                    <div></div>
+                    <div className="mt-2">
+                      <Frame
+                        responseName={selectedResponse?.name}
+                        selectedResponse={selectedResponse}
+                        onUpdateRules={setResponseCondition}
+                        onSave={handleSaveResponse}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
 
-                <TabsContent value="proxy" className="mt-0">
-                  <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-                    <div className="space-y-6">
-                      <div className="flex flex-col items-start gap-2.5">
-                        <Label className="text-sm font-medium text-[#000000] font-inter">
-                          Forward proxy URL
-                        </Label>
-                        <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                          <div className="flex flex-row items-center gap-[16px] w-full">
-                            <Select
-                              value={proxyMethod}
-                              onValueChange={setProxyMethod}
-                            >
-                              <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                <SelectValue placeholder="Method" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="GET">GET</SelectItem>
-                                <SelectItem value="POST">POST</SelectItem>
-                                <SelectItem value="PUT">PUT</SelectItem>
-                                <SelectItem value="DELETE">DELETE</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              id="proxy-url"
-                              name="proxy-url"
-                              placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
-                              value={proxyUrl}
-                              onChange={(e) => setProxyUrl(e.target.value)}
-                              className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
-                            />
+                {/* Chỉ render tab Proxy khi không phải stateful */}
+                {!isStateful && (
+                  <TabsContent value="proxy" className="mt-0">
+                    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                      <div className="space-y-6">
+                        <div className="flex flex-col items-start gap-2.5">
+                          <Label className="text-sm font-medium text-[#000000] font-inter">
+                            Forward proxy URL
+                          </Label>
+                          <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
+                            <div className="flex flex-row items-center gap-[16px] w-full">
+                              <Select
+                                value={proxyMethod}
+                                onValueChange={setProxyMethod}
+                              >
+                                <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
+                                  <SelectValue placeholder="Method" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="GET">GET</SelectItem>
+                                  <SelectItem value="POST">POST</SelectItem>
+                                  <SelectItem value="PUT">PUT</SelectItem>
+                                  <SelectItem value="DELETE">DELETE</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                id="proxy-url"
+                                name="proxy-url"
+                                placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
+                                value={proxyUrl}
+                                onChange={(e) => setProxyUrl(e.target.value)}
+                                className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              Use {"{{params.id}}"} for route parameters (e.g.
+                              /users/:id)
+                            </p>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            Use {"{{params.id}}"} for route parameters (e.g.
-                            /users/:id)
-                          </p>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
+                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            onClick={handleSaveResponse}
+                          >
+                            Save Changes
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex justify-end">
-                        <Button
-                          className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                          onClick={handleSaveResponse}
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </TabsContent>
+                    </Card>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </div>

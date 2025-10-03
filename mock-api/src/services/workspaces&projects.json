@@ -116,17 +116,17 @@
       "folder_id": 1,
       "is_active": false,
       "is_stateful": false,
-      "updated_at": "2025-10-03T01:50:35.384Z"
+      "updated_at": "2025-10-03T03:22:46.052Z"
     },
     {
       "id": "2",
       "name": "Create User",
       "path": "/users",
-      "method": "POST",
+      "method": "GET",
       "folder_id": 1,
       "is_active": true,
       "is_stateful": true,
-      "updated_at": "2025-10-03T02:14:20.357Z"
+      "updated_at": "2025-10-03T04:44:11.193Z"
     },
     {
       "id": "3",
@@ -241,30 +241,39 @@
   ],
   "endpoint_responses": [
     {
-      "endpoint_id": "1",
+      "endpoint_id": "2",
       "name": "Success",
       "status_code": 200,
       "response_body": {
         "id": 1,
         "username": "alice"
       },
-      "condition": {},
-      "is_default": true,
+      "condition": {
+        "params": {
+          "12": 1
+        }
+      },
       "delay_ms": 200,
       "proxy_url": null,
       "proxy_method": null,
       "id": "1"
     },
     {
-      "id": "2",
-      "endpoint_id": 1,
+      "endpoint_id": "1",
       "name": "User Not Found",
       "status_code": 404,
       "response_body": {
         "error": "User not found"
       },
-      "priority": 2,
-      "is_default": false
+      "condition": {
+        "params": {
+          "32": 1
+        }
+      },
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null,
+      "id": "2"
     },
     {
       "endpoint_id": "2",
@@ -274,23 +283,18 @@
         "id": 2,
         "username": "new_user"
       },
-      "condition": {},
-      "is_default": true,
       "delay_ms": 100,
-      "proxy_url": null,
-      "proxy_method": null,
       "id": "3"
     },
     {
-      "id": "4",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Duplicate Username",
       "status_code": 409,
       "response_body": {
         "error": "Username already exists"
       },
-      "priority": 2,
-      "is_default": false
+      "delay_ms": 0,
+      "id": "4"
     },
     {
       "id": "5",
