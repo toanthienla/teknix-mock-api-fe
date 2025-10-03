@@ -36,8 +36,6 @@ import refreshIcon from "@/assets/refresh.svg";
 import blueFolder from "@/assets/blue_folder.svg"
 
 export default function Dashboard() {
-  console.log('🔄 ProjectEndpoints component rendering...');
-
   const navigate = useNavigate();
   const {projectId, folderId} = useParams();
   // const location = useLocation();
@@ -46,14 +44,16 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [allEndpoints, setAllEndpoints] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [currentWsId, setCurrentWsId] = useState(null);
+  const [currentWsId, setCurrentWsId] = useState(
+    () => localStorage.getItem("currentWorkspace") || null
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("Recently created");
+  const [sortOption] = useState("Recently created");
 
   const [openProjectsMap, setOpenProjectsMap] = useState(
     () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
@@ -106,10 +106,6 @@ export default function Dashboard() {
       setIsLoading(true);
       try {
         fetchWorkspaces();
-        fetchProjects();
-        fetchAllEndpoints();
-        fetchFolders();
-
         // Wait a bit for all to complete
         setTimeout(() => setIsLoading(false), 1000);
       } catch (error) {
@@ -117,24 +113,16 @@ export default function Dashboard() {
         setIsLoading(false);
       }
     };
-
     loadData();
   }, []);
 
   useEffect(() => {
-    if (folderId) {
-      fetchEndpoints(folderId);
+    if (currentWsId) {
+      fetchProjects(currentWsId);
+    } else {
+      setProjects([]);
     }
-  }, [folderId]);
-
-  useEffect(() => {
-    if (!folderId && projectId) {
-      const projectEndpoints = allEndpoints.filter(
-        (ep) => String(ep.project_id) === String(projectId)
-      );
-      setEndpoints(projectEndpoints);
-    }
-  }, [folderId, projectId, allEndpoints]);
+  }, [currentWsId]);
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
@@ -173,7 +161,10 @@ export default function Dashboard() {
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
         setWorkspaces(sorted);
-        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+        if (sorted.length > 0 && !currentWsId) {
+          setCurrentWsId(sorted[0].id);
+          localStorage.setItem("currentWorkspace", sorted[0].id);
+        }
       })
       .catch(() =>
         toast.error("Failed to load workspaces", {
@@ -184,38 +175,64 @@ export default function Dashboard() {
       );
   };
 
-  const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
-        setProjects(sorted);
+  const fetchProjects = (wsId) => {
+    if (!wsId) return;
+
+    fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
+      .then(r => r.json())
+      .then(rData => {
+        const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
+        setProjects(projectsArr);
+
+        // reset folders + endpoints trước khi fetch mới
+        setFolders([]);
+        setEndpoints([]);
+
+        projectsArr.forEach((p) => {
+          // fetch folders của từng project
+          fetch(`${API_ROOT}/folders?project_id=${p.id}`)
+            .then(r => r.json())
+            .then(fData => {
+              const fArr = Array.isArray(fData) ? fData : fData.data || [];
+              setFolders(prev => {
+                const merged = [...prev];
+                fArr.forEach(f => {
+                  if (!merged.some(ff => ff.id === f.id)) {
+                    merged.push(f);
+                  }
+                });
+                return merged;
+              });
+
+              // fetch endpoints cho từng folder
+              fArr.forEach((f) => {
+                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
+                  .then(r2 => r2.json())
+                  .then(eData => {
+                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
+
+                    const withProjectId = eArr.map(e => ({
+                      ...e,
+                      project_id: f.project_id
+                    }));
+
+                    setEndpoints(prev => {
+                      const merged = [...prev];
+                      withProjectId.forEach(e => {
+                        if (!merged.some(ee => ee.id === e.id)) {
+                          merged.push(e);
+                        }
+                      });
+                      return merged;
+                    });
+                  })
+                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
+              });
+            })
+            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
+        });
       })
-      .catch(() => toast.error("Failed to load projects"));
-  };
-
-  const fetchAllEndpoints = () => {
-    fetch(`${API_ROOT}/endpoints`)
-      .then((res) => res.json())
-      .then((data) => setAllEndpoints(data))
-      .catch((err) => console.error("Error fetching all endpoints:", err));
-  };
-
-  const fetchEndpoints = (folderId) => {
-    if (!folderId) return;
-    fetch(`${API_ROOT}/endpoints?folder_id=${folderId}`)
-      .then((res) => res.json())
-      .then((data) => setEndpoints(data))
-      .catch((err) => console.error("Error fetching endpoints:", err));
-  };
-
-  const fetchFolders = () => {
-    fetch(`${API_ROOT}/folders`)
-      .then((res) => res.json())
-      .then((data) => setFolders(data))
-      .catch((err) => console.error("Error fetching folders:", err));
+      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
   };
 
   const fetchLogs = async (pid) => {
@@ -224,7 +241,7 @@ export default function Dashboard() {
       const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
       const data = await res.json();
 
-      // map logs với endpoint_responses
+      // enrich logs với endpoint + project_id
       const enrichedLogs = await Promise.all(
         data.map(async (log) => {
           if (!log.endpoint_id) return log;
@@ -236,17 +253,18 @@ export default function Dashboard() {
             const res = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
             const responses = await res.json();
 
-            // lấy response khớp với log (nếu có response_id trong log thì match, nếu không lấy cái đầu tiên)
             const matched = responses.find(r => String(r.id) === String(log.response_id)) || responses[0];
 
             return {
               ...log,
+              project_id: endpoint ? endpoint.project_id : null, // ✅ bổ sung project_id
               endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
             };
           } catch (err) {
             console.error("Error fetching endpoint_responses:", err);
             return {
               ...log,
+              project_id: endpoint ? endpoint.project_id : null, // ✅ luôn có project_id
               endpointResponseName: endpointName,
             };
           }
@@ -259,32 +277,6 @@ export default function Dashboard() {
       toast.error("Failed to load logs");
     }
   };
-
-  useEffect(() => {
-    if (!projectId) return;
-
-    // nếu đang xem 1 folder cụ thể thì fetchEndpoints(selectedFolderId) đã lo rồi
-    if (folderId) return;
-
-    // nếu dữ liệu chưa có thì clear hoặc chờ
-    if (!allEndpoints?.length || !folders?.length) {
-      setEndpoints([]);
-      return;
-    }
-
-    // Lấy id các folder thuộc project này
-    const folderIds = folders
-      .filter((f) => String(f.project_id) === String(projectId))
-      .map((f) => String(f.id));
-
-    // Lọc những endpoint có folder_id nằm trong folderIds
-    const projectEndpoints = allEndpoints.filter((ep) =>
-      folderIds.includes(String(ep.folder_id))
-    );
-
-    setEndpoints(projectEndpoints);
-  }, [projectId, folderId, allEndpoints, folders]);
-
 
   // -------------------- Folder --------------------
   const handleAddFolder = (targetProjectId = null) => {
@@ -326,7 +318,6 @@ export default function Dashboard() {
 
       // Update local state
       setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
-      setAllEndpoints(prev => prev.filter(e => String(e.folder_id) !== String(deleteFolderId)));
 
       toast.dismiss();
       toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
@@ -644,7 +635,7 @@ export default function Dashboard() {
           <Sidebar
             workspaces={workspaces}
             projects={projects}
-            endpoints={allEndpoints}
+            endpoints={endpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
@@ -687,7 +678,7 @@ export default function Dashboard() {
                       },
                       {
                         label: currentProject.name,
-                        href: `/projects/${currentProject.id}`,
+                        href: `/dashboard/${currentProject.id}`,
                       },
                     ]
                   : [
@@ -743,26 +734,32 @@ export default function Dashboard() {
                 <>
                   {/* Folder List */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 px-8">
-                    {folders
-                      .filter(f => String(f.project_id) === String(projectId))
-                      .map((folder) => (
-                        <div
-                          key={folder.id}
-                          className="flex flex-col items-center cursor-pointer hover:opacity-80"
-                          onClick={() =>
-                            navigate(`/dashboard/${projectId}/folder/${folder.id}`)
-                          }
-                        >
-                          <img
-                            src={blueFolder}
-                            alt="Folder"
-                            className="w-32 h-18"
-                          />
-                          <span className="mt-1 text-sm font-medium text-gray-800 text-center">
-                            {folder.name}
-                          </span>
-                        </div>
-                      ))}
+                    {folders.filter(f => String(f.project_id) === String(projectId)).length === 0 ? (
+                      <div className="col-span-full text-center text-slate-500 py-8">
+                        No folders found in this project.
+                      </div>
+                    ) : (
+                      folders
+                        .filter(f => String(f.project_id) === String(projectId))
+                        .map((folder) => (
+                          <div
+                            key={folder.id}
+                            className="flex flex-col items-center cursor-pointer hover:opacity-80"
+                            onClick={() =>
+                              navigate(`/dashboard/${projectId}/folder/${folder.id}`)
+                            }
+                          >
+                            <img
+                              src={blueFolder}
+                              alt="Folder"
+                              className="w-32 h-18"
+                            />
+                            <span className="mt-1 text-sm font-medium text-gray-800 text-center">
+                              {folder.name}
+                            </span>
+                          </div>
+                        ))
+                    )}
                   </div>
                 </>
               ) : activeTab === "logs" ? (
@@ -1051,7 +1048,7 @@ export default function Dashboard() {
             <Button
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2 bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
             >
               {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
             </Button>
