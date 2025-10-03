@@ -116,29 +116,17 @@
       "folder_id": 1,
       "is_active": false,
       "is_stateful": false,
-      "updated_at": "2025-10-02T14:17:37.344Z"
+      "updated_at": "2025-10-03T01:50:35.384Z"
     },
     {
       "id": "2",
-      "folder_id": 1,
       "name": "Create User",
-      "method": "POST",
       "path": "/users",
+      "method": "POST",
+      "folder_id": 1,
       "is_active": true,
       "is_stateful": true,
-      "schema": {
-        "id": {
-          "type": "integer",
-          "required": true
-        },
-        "username": {
-          "type": "string",
-          "required": true
-        }
-      },
-      "response_body_origin": "mock",
-      "created_at": "2025-09-20T08:05:00Z",
-      "updated_at": "2025-09-20T08:05:00Z"
+      "updated_at": "2025-10-03T02:14:20.357Z"
     },
     {
       "id": "3",
@@ -253,16 +241,19 @@
   ],
   "endpoint_responses": [
     {
-      "id": "1",
-      "endpoint_id": 1,
+      "endpoint_id": "1",
       "name": "Success",
       "status_code": 200,
       "response_body": {
         "id": 1,
         "username": "alice"
       },
-      "priority": 1,
-      "is_default": true
+      "condition": {},
+      "is_default": true,
+      "delay_ms": 200,
+      "proxy_url": null,
+      "proxy_method": null,
+      "id": "1"
     },
     {
       "id": "2",
@@ -276,16 +267,19 @@
       "is_default": false
     },
     {
-      "id": "3",
-      "endpoint_id": 2,
+      "endpoint_id": "2",
       "name": "Created",
       "status_code": 201,
       "response_body": {
         "id": 2,
         "username": "new_user"
       },
-      "priority": 1,
-      "is_default": true
+      "condition": {},
+      "is_default": true,
+      "delay_ms": 100,
+      "proxy_url": null,
+      "proxy_method": null,
+      "id": "3"
     },
     {
       "id": "4",
@@ -487,6 +481,420 @@
       "ip_address": "198.51.100.23",
       "latency_ms": 89,
       "created_at": "2025-09-19T10:00:00Z"
+    }
+  ],
+  "endpoint_data": [
+    {
+      "id": "1",
+      "path": "/users/poa",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "required": false
+          }
+        }
+      },
+      "data_default": [
+        {
+          "id": 1,
+          "username": "alice",
+          "email": "alice@example.com"
+        },
+        {
+          "id": 2,
+          "username": "bob",
+          "email": "bob@example.com"
+        }
+      ],
+      "data_current": [
+        {
+          "id": 1,
+          "username": "alice",
+          "email": "alice@example.com"
+        },
+        {
+          "id": 2,
+          "username": "bob",
+          "email": "bob@example.com"
+        }
+      ],
+      "created_at": "2025-09-20T08:00:00Z",
+      "updated_at": "2025-09-20T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "path": "/users",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "username": {
+            "type": "string",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "required": false
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user",
+              "guest"
+            ],
+            "default": "user"
+          }
+        }
+      },
+      "data_default": [
+        {
+          "id": 1,
+          "username": "john_doe",
+          "email": "john@example.com",
+          "role": "admin"
+        },
+        {
+          "id": 2,
+          "username": "jane_smith",
+          "email": "jane@example.com",
+          "role": "user"
+        }
+      ],
+      "data_current": [
+        {
+          "id": 1,
+          "username": "john_doe",
+          "email": "john@example.com",
+          "role": "admin"
+        },
+        {
+          "id": 2,
+          "username": "jane_smith",
+          "email": "jane@example.com",
+          "role": "user"
+        },
+        {
+          "id": 3,
+          "username": "new_user",
+          "email": "new@example.com",
+          "role": "user"
+        }
+      ],
+      "created_at": "2025-09-20T08:05:00Z",
+      "updated_at": "2025-09-20T09:15:00Z"
+    },
+    {
+      "id": "3",
+      "path": "/cars",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "brand": {
+            "type": "string",
+            "required": true
+          },
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "year": {
+            "type": "integer",
+            "required": false
+          },
+          "color": {
+            "type": "string",
+            "required": false
+          }
+        }
+      },
+      "data_default": [
+        {
+          "id": 1,
+          "brand": "Toyota",
+          "model": "Camry",
+          "year": 2023,
+          "color": "blue"
+        },
+        {
+          "id": 2,
+          "brand": "Honda",
+          "model": "Civic",
+          "year": 2022,
+          "color": "red"
+        }
+      ],
+      "data_current": [
+        {
+          "id": 1,
+          "brand": "Toyota",
+          "model": "Camry",
+          "year": 2023,
+          "color": "blue"
+        }
+      ],
+      "created_at": "2025-09-20T08:10:00Z",
+      "updated_at": "2025-09-20T10:20:00Z"
+    },
+    {
+      "id": "4",
+      "path": "/pipeline/build",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "required": true
+          },
+          "branch": {
+            "type": "string",
+            "default": "main"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "dev",
+              "staging",
+              "prod"
+            ],
+            "default": "dev"
+          }
+        }
+      },
+      "data_default": [],
+      "data_current": [
+        {
+          "project_id": 1,
+          "branch": "main",
+          "environment": "dev"
+        },
+        {
+          "project_id": 2,
+          "branch": "feature-1",
+          "environment": "staging"
+        }
+      ],
+      "created_at": "2025-09-20T08:20:00Z",
+      "updated_at": "2025-09-20T11:30:00Z"
+    },
+    {
+      "id": "5",
+      "path": "/pipeline/status",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "build_id": {
+            "type": "string",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "success",
+              "failed"
+            ],
+            "required": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "data_default": [
+        {
+          "build_id": "build_001",
+          "status": "success",
+          "timestamp": "2025-09-20T10:00:00Z"
+        }
+      ],
+      "data_current": [
+        {
+          "build_id": "build_001",
+          "status": "success",
+          "timestamp": "2025-09-20T10:00:00Z"
+        },
+        {
+          "build_id": "build_002",
+          "status": "running",
+          "timestamp": "2025-09-20T11:00:00Z"
+        }
+      ],
+      "created_at": "2025-09-20T08:25:00Z",
+      "updated_at": "2025-09-20T11:25:00Z"
+    },
+    {
+      "id": "6",
+      "path": "/testcases",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": true
+          },
+          "title": {
+            "type": "string",
+            "required": true
+          },
+          "description": {
+            "type": "string",
+            "required": false
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "pending"
+            ],
+            "default": "pending"
+          }
+        }
+      },
+      "data_default": [
+        {
+          "id": 101,
+          "title": "Login Test",
+          "description": "Test user login functionality",
+          "status": "pass"
+        },
+        {
+          "id": 102,
+          "title": "Logout Test",
+          "description": "Test user logout functionality",
+          "status": "pending"
+        }
+      ],
+      "data_current": [
+        {
+          "id": 101,
+          "title": "Login Test",
+          "description": "Test user login functionality",
+          "status": "pass"
+        },
+        {
+          "id": 102,
+          "title": "Logout Test",
+          "description": "Test user logout functionality",
+          "status": "pending"
+        },
+        {
+          "id": 103,
+          "title": "Register Test",
+          "description": "Test user registration",
+          "status": "fail"
+        }
+      ],
+      "created_at": "2025-09-20T08:30:00Z",
+      "updated_at": "2025-09-20T12:00:00Z"
+    },
+    {
+      "id": "7",
+      "path": "/testcases/run",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "test_id": {
+            "type": "integer",
+            "required": true
+          },
+          "environment": {
+            "type": "string",
+            "default": "staging"
+          },
+          "browser": {
+            "type": "string",
+            "enum": [
+              "chrome",
+              "firefox",
+              "safari"
+            ],
+            "default": "chrome"
+          }
+        }
+      },
+      "data_default": [],
+      "data_current": [
+        {
+          "test_id": 101,
+          "environment": "staging",
+          "browser": "chrome"
+        },
+        {
+          "test_id": 102,
+          "environment": "dev",
+          "browser": "firefox"
+        }
+      ],
+      "created_at": "2025-09-20T08:35:00Z",
+      "updated_at": "2025-09-20T12:15:00Z"
+    },
+    {
+      "id": "8",
+      "path": "/lkqp",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "required": false
+          },
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "value": {
+            "type": "number",
+            "required": false
+          }
+        }
+      },
+      "data_default": [
+        {
+          "id": 1,
+          "name": "sample",
+          "value": 100
+        },
+        {
+          "id": 2,
+          "name": "test",
+          "value": 200
+        }
+      ],
+      "data_current": [
+        {
+          "id": 1,
+          "name": "sample",
+          "value": 100
+        },
+        {
+          "id": 2,
+          "name": "test",
+          "value": 200
+        }
+      ],
+      "created_at": "2025-10-02T05:12:02Z",
+      "updated_at": "2025-10-02T05:12:02Z"
     }
   ]
 }

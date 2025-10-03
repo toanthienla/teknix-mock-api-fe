@@ -996,6 +996,7 @@ const DashboardPage = () => {
           code: res.status_code.toString(),
           name: res.name,
           isDefault: res.is_default,
+          isStateful: res.is_stateful,
           bgColor: res.is_default ? "bg-slate-100" : "",
           priority: res.priority,
         }));
@@ -1744,9 +1745,9 @@ const DashboardPage = () => {
               : []
           }
           onSearch={setSearchTerm}
-          onNewResponse={handleNewResponse}
+          onNewResponse={isStateful ? undefined : handleNewResponse}
           showNewProjectButton={false}
-          showNewResponseButton={true}
+          showNewResponseButton={!isStateful}
           showStateModeToggle={true}
           isStateful={isStateful}
           onStateModeChange={handleStateModeChange}
@@ -1890,11 +1891,19 @@ const DashboardPage = () => {
                             ? "ring-2 ring-blue-500"
                             : ""
                         }`}
-                        draggable={true}
-                        onDragStart={(e) => handleDragStart(e, index)}
-                        onDragOver={handleDragOver}
-                        onDragEnd={() => setDraggedItem(null)}
-                        onDrop={(e) => handleDrop(e, index)}
+                        draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
+                        onDragStart={
+                          !isStateful
+                            ? (e) => handleDragStart(e, index)
+                            : undefined
+                        }
+                        onDragOver={!isStateful ? handleDragOver : undefined}
+                        onDragEnd={
+                          !isStateful ? () => setDraggedItem(null) : undefined
+                        }
+                        onDrop={
+                          !isStateful ? (e) => handleDrop(e, index) : undefined
+                        }
                         onClick={() => {
                           const response = endpointResponses.find(
                             (r) => r.id === status.id
@@ -1904,7 +1913,10 @@ const DashboardPage = () => {
                       >
                         <TableCell className="w-[119.2px] h-[49px] p-2">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            {/* Hiển thị GripVertical chỉ khi không phải stateful */}
+                            {!isStateful && (
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            )}
                             <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
@@ -1917,16 +1929,18 @@ const DashboardPage = () => {
                             </div>
                           </div>
                         </TableCell>
-                        {/* Thêm cột Default badge */}
-                        <TableCell className="w-[80px] h-[49px] p-2">
-                          {status.isDefault && (
-                            <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
-                              <span className="text-xs font-medium text-[#0A0A0A]">
-                                Default
-                              </span>
-                            </div>
-                          )}
-                        </TableCell>
+                        {/* Hiển thị cột Default chỉ khi không phải stateful */}
+                        {!isStateful && (
+                          <TableCell className="w-[80px] h-[49px] p-2">
+                            {status.isDefault && (
+                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                                <span className="text-xs font-medium text-[#0A0A0A]">
+                                  Default
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1965,35 +1979,39 @@ const DashboardPage = () => {
                   <div className="mt-2">
                     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                       <div className="flex justify-between items-center mb-6">
-                        {/* Display Response Name instead of Endpoint Name */}
                         <h2 className="text-2xl font-bold text-[#37352F] mr-4">
                           {selectedResponse?.name || "No Response Selected"}
                         </h2>
                         <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="border-[#E5E5E5]"
-                            onClick={() => {
-                              if (selectedResponse) {
-                                setDefaultResponse(selectedResponse.id);
-                              }
-                            }}
-                          >
-                            <Star
-                              className={`h-4 w-4 ${
-                                selectedResponse?.is_default
-                                  ? "text-yellow-500 fill-yellow-500"
-                                  : "text-[#898883]"
-                              }`}
-                            />
-                          </Button>
+                          {/* Nút Default - ẩn khi stateful */}
+                          {!isStateful && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-[#E5E5E5]"
+                              onClick={() => {
+                                if (selectedResponse) {
+                                  setDefaultResponse(selectedResponse.id);
+                                }
+                              }}
+                            >
+                              <Star
+                                className={`h-4 w-4 ${
+                                  selectedResponse?.is_default
+                                    ? "text-yellow-500 fill-yellow-500"
+                                    : "text-[#898883]"
+                                }`}
+                              />
+                            </Button>
+                          )}
+
+                          {/* Nút Delete - luôn hiển thị nhưng disable khi là default response */}
                           <Button
                             variant="outline"
                             size="icon"
                             className="border-[#E5E5E5]"
                             onClick={handleDeleteResponse}
-                            disabled={selectedResponse?.is_default} // Thêm disabled prop
+                            disabled={selectedResponse?.is_default}
                           >
                             <Trash2
                               className={`h-4 w-4 ${
