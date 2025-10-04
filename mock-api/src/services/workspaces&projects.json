@@ -122,11 +122,11 @@
       "id": "2",
       "name": "Create User",
       "path": "/users",
-      "method": "GET",
+      "method": "POST",
       "folder_id": 1,
       "is_active": true,
       "is_stateful": true,
-      "updated_at": "2025-10-03T04:44:11.193Z"
+      "updated_at": "2025-10-04T08:14:58.307Z"
     },
     {
       "id": "3",
