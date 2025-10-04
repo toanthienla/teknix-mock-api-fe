@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import addIcon from "@/assets/Add.svg";
 import { Badge } from "@/components/ui/badge.jsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronDown } from "lucide-react";
 
 const StateModeToggle = ({ isStateful, onToggle }) => {
   return (
@@ -38,6 +46,42 @@ const StateModeToggle = ({ isStateful, onToggle }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const StateModeDropdown = ({ isStateful, onStateModeChange }) => {
+  return (
+    <Select
+      value={isStateful ? "stateful" : "stateless"}
+      onValueChange={(value) => {
+        if (
+          (value === "stateful" && !isStateful) ||
+          (value === "stateless" && isStateful)
+        ) {
+          onStateModeChange();
+        }
+      }}
+    >
+      <SelectTrigger className="w-[140px] h-10 border-[#CBD5E1]">
+        <SelectValue placeholder="Mode" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          value="stateful"
+          disabled={isStateful}
+          className={isStateful ? "text-gray-400" : ""}
+        >
+          Stateful
+        </SelectItem>
+        <SelectItem
+          value="stateless"
+          disabled={!isStateful}
+          className={!isStateful ? "text-gray-400" : ""}
+        >
+          Stateless
+        </SelectItem>
+      </SelectContent>
+    </Select>
   );
 };
 
@@ -129,9 +173,9 @@ export default function Topbar({
         {/* State Mode Toggle - luôn hiển thị nếu được yêu cầu */}
         {showStateModeToggle && (
           <div className="flex-1 flex justify-end mr-4">
-            <StateModeToggle
+            <StateModeDropdown
               isStateful={isStateful}
-              onToggle={onStateModeChange}
+              onStateModeChange={onStateModeChange}
             />
           </div>
         )}

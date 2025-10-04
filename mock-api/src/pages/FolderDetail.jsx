@@ -1392,6 +1392,7 @@ export default function Dashboard() {
             </Button>
             <Button
               onClick={handleUpdateEndpoint}
+              className="bg-blue-600 text-white hover:bg-blue-700"
               disabled={!hasEdited}
             >
               Update

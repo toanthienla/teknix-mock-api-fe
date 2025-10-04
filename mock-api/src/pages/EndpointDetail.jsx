@@ -144,6 +144,280 @@ const statusCodes = [
   },
 ];
 
+const SchemaBodyEditor = ({ endpointData, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+
+  // Khởi tạo schema fields từ endpointData
+  useEffect(() => {
+    if (endpointData?.schema) {
+      const fields = Object.entries(endpointData.schema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required !== undefined ? config.required : false,
+        })
+      );
+      setSchemaFields(fields);
+    }
+  }, [endpointData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+    setSelectedFieldId(newField.id);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => {
+      const filtered = prev.filter((field) => field.id !== id);
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[id];
+        return newErrors;
+      });
+      return filtered;
+    });
+
+    if (selectedFieldId === id) {
+      setSelectedFieldId(null);
+    }
+  };
+
+  const handleFieldClick = (id, event) => {
+    if (event.target.closest("button")) {
+      return;
+    }
+    setSelectedFieldId(id);
+  };
+
+  const handleNameChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
+    );
+
+    // Validate sau khi thay đổi
+    setTimeout(() => {
+      const field = schemaFields.find((f) => f.id === id);
+      if (field) {
+        const fieldErrors = validateField({ ...field, name: value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: fieldErrors,
+        }));
+      }
+    }, 0);
+  };
+
+  const handleTypeChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
+    );
+  };
+
+  const handleRequiredChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) =>
+        field.id === id ? { ...field, required: value === "true" } : field
+      )
+    );
+  };
+
+  const prepareSchema = () => {
+    const schema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        schema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+    return schema;
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    onSave(prepareSchema());
+  };
+
+  return (
+    <div>
+      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#37352F]">
+            Schema Definition
+          </h1>
+        </div>
+        {/* Thêm thanh header cho Schema Definition */}
+        <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+          <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Field Name
+            </span>
+          </div>
+          <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Type
+            </span>
+          </div>
+          <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Required
+            </span>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {schemaFields.map((field) => (
+            <div
+              key={field.id}
+              onClick={(e) => handleFieldClick(field.id, e)}
+              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
+                field.id === selectedFieldId
+                  ? "border-black"
+                  : "border-slate-300"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-[220px]">
+                  <Input
+                    value={field.name}
+                    onChange={(e) => handleNameChange(field.id, e.target.value)}
+                    className={`w-full ${
+                      errors[field.id]?.name ? "border-red-500" : ""
+                    }`}
+                    placeholder="Field name"
+                  />
+                </div>
+
+                <div className="w-[220px]">
+                  <Select
+                    value={field.type}
+                    onValueChange={(value) => handleTypeChange(field.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="string">string</SelectItem>
+                      <SelectItem value="number">number</SelectItem>
+                      <SelectItem value="boolean">boolean</SelectItem>
+                      <SelectItem value="array">array</SelectItem>
+                      <SelectItem value="object">object</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="w-[170px]">
+                  <Select
+                    value={field.required.toString()}
+                    onValueChange={(value) =>
+                      handleRequiredChange(field.id, value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Required" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">true</SelectItem>
+                      <SelectItem value="false">false</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteField(field.id);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Hiển thị lỗi */}
+              {errors[field.id]?.name && (
+                <div className="text-red-500 text-xs mt-1 pl-2">
+                  {errors[field.id].name}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Thông báo khi không có trường nào */}
+          {schemaFields.length === 0 && (
+            <div className="text-gray-500 text-sm mt-2 pl-2">
+              No schema fields defined.
+            </div>
+          )}
+
+          {/* Nút thêm trường và lưu */}
+          <div className="flex justify-between items-center mt-4">
+            <Button variant="outline" onClick={handleAddField}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add field
+            </Button>
+
+            <Button
+              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+              onClick={handleSave}
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
 const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
@@ -583,7 +857,6 @@ const DashboardPage = () => {
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
-  const [dataDefaultString, setDataDefaultString] = useState("");
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
@@ -641,6 +914,115 @@ const DashboardPage = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [targetWsId, setTargetWsId] = useState(null);
+  const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
+    useState(false);
+  const initialValuePopoverRef = useRef(null);
+
+  // Thêm state cho dialog xác nhận reset
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
+
+  // Hàm xử lý reset current values
+  const handleResetCurrentValues = () => {
+    if (!endpointData) return;
+
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: endpointData.data_default || [],
+    };
+
+    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to reset current values");
+        return res.json();
+      })
+      .then((updatedData) => {
+        // Cập nhật state với cả data_current được reset
+        setEndpointData(updatedData);
+        toast.success("Current values reset successfully!");
+        setShowResetConfirmDialog(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  const handleSaveSchema = (newSchema) => {
+    if (!endpointData) return;
+
+    const payload = {
+      schema: newSchema,
+      data_default: endpointData.data_default || [],
+    };
+
+    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update schema");
+        return res.json();
+      })
+      .then((updatedData) => {
+        // Cập nhật state với cả data_current được reset
+        setEndpointData(updatedData);
+        toast.success("Schema updated successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  const insertInitialValueTemplate = (template) => {
+    const textarea = document.getElementById("initial-value");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Chèn template tại vị trí con trỏ
+    const newValue =
+      tempDataDefaultString.substring(0, start) +
+      template +
+      tempDataDefaultString.substring(end);
+
+    setTempDataDefaultString(newValue);
+
+    // Di chuyển con trỏ sau template đã chèn
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + template.length,
+        start + template.length
+      );
+    }, 0);
+
+    // Tự động đóng popover sau khi chèn
+    setIsInitialValuePopoverOpen(false);
+  };
+
+  // Xử lý click outside popover
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        initialValuePopoverRef.current &&
+        !initialValuePopoverRef.current.contains(event.target)
+      ) {
+        setIsInitialValuePopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const insertTemplate = (template) => {
     const textarea = document.getElementById("response-body");
@@ -1158,53 +1540,6 @@ const DashboardPage = () => {
       }
     }
   }, [currentEndpointId, endpoints]);
-
-  // Hàm xử lý lưu data default
-  const handleSaveDataDefault = () => {
-    if (!currentEndpointId || !endpointData) return;
-
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    if (!currentEndpoint) return;
-
-    // Parse data default
-    let parsedData = [];
-    try {
-      parsedData = JSON.parse(JSON.stringify(dataDefault));
-    } catch {
-      toast.error("Invalid JSON format for data default");
-      return;
-    }
-
-    // Payload theo đúng cấu trúc yêu cầu
-    const payload = {
-      schema: endpointData.schema || {},
-      data_default: parsedData,
-    };
-
-    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to update data default");
-        return res.json();
-      })
-      .then((updatedData) => {
-        // Cập nhật state với cả data_current được reset
-        setEndpointData(updatedData);
-        setDataDefault(updatedData.data_default || []);
-
-        toast.success("Data default updated successfully!");
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
-      });
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -1899,10 +2234,8 @@ const DashboardPage = () => {
   // Hàm xử lý khi lưu initial value
   const handleSaveInitialValue = () => {
     try {
-      // Parse và validate JSON
       const parsedData = JSON.parse(tempDataDefaultString);
 
-      // Payload chỉ cần schema và data_default
       const payload = {
         schema: endpointData.schema || {},
         data_default: parsedData,
@@ -1918,7 +2251,7 @@ const DashboardPage = () => {
           return res.json();
         })
         .then((updatedData) => {
-          // Cập nhật state với cả data_current được reset
+          // ✅ Server tự động reset data_current giống data_default
           setEndpointData(updatedData);
           setDataDefault(updatedData.data_default || []);
           setIsInitialValueDialogOpen(false);
@@ -1934,10 +2267,6 @@ const DashboardPage = () => {
       );
     }
   };
-
-  useEffect(() => {
-    setDataDefaultString(JSON.stringify(dataDefault, null, 2));
-  }, [dataDefault]);
 
   // Cập nhật state string khi tempDataDefault thay đổi
   useEffect(() => {
@@ -2089,46 +2418,72 @@ const DashboardPage = () => {
               </Badge>
             </div>
 
+            {/* Dialog xác nhận reset current values */}
+            <Dialog
+              open={showResetConfirmDialog}
+              onOpenChange={setShowResetConfirmDialog}
+            >
+              <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+                <DialogHeader className="flex justify-between items-start mb-4">
+                  <DialogTitle className="text-xl font-bold text-slate-800">
+                    Reset Current Values
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="mb-6">
+                  <p className="text-gray-700">
+                    It will reset all Current Values back to Initial Values. Are
+                    you sure you want to reset?
+                  </p>
+                </div>
+
+                <DialogFooter className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowResetConfirmDialog(false)}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-[#FA2F2F] hover:bg-[#E02929] text-white w-[90px] h-[40px] rounded-[8px]"
+                    onClick={handleResetCurrentValues}
+                  >
+                    Reset
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex-1 max-w-[707px] ml-8">
-              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+            <div className="flex items-center gap-2">
+              {/*  reset state button */}
+              {isStateful && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6"
+                  onClick={() => setShowResetConfirmDialog(true)}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4V1L8 5L12 9V6C16.42 6 20 9.58 20 14C20 16.13 19.15 18.06 17.72 19.49L19.13 20.9C20.88 19.15 22 16.72 22 14C22 8.48 17.52 4 12 4ZM2 9C2 11.87 3.13 14.44 5.03 16.34L6.44 14.93C4.93 13.42 4 11.31 4 9C4 5.69 6.69 3 10 3V5.1C7.8 5.74 6 7.6 6 9.9C6 11.25 6.55 12.45 7.45 13.35L8.86 11.94C8.37 11.45 8.06 10.77 8.06 10.05C8.06 8.71 9.16 7.61 10.5 7.61C11.15 7.61 11.75 7.88 12.19 8.31L13.6 6.9C12.7 6.01 11.5 5.11 10 5.11C7.8 5.11 6 6.91 6 9.11C6 10.51 6.6 11.71 7.5 12.61L12 17.11V14H14V20H4V14H6V11.89L2 9Z"
+                      fill="#000000"
+                    />
+                  </svg>
+                </Button>
+              )}
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
                 <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
                 </div>
-
-                {/* Nút toggle Active/Inactive */}
-                <div
-                  className="flex flex-row items-center gap-1 w-[80px] h-[20px] cursor-pointer"
-                  onClick={handleActiveToggle}
-                >
-                  <div className="flex flex-row items-center w-[40px] h-[20px]">
-                    <span className="w-[40px] h-[20px] font-inter font-semibold text-[10px] leading-[14px] text-black">
-                      {isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                  <div className="relative w-[40px] h-[20px]">
-                    <div
-                      className={`flex flex-row items-center px-[1px] gap-[2px] w-[40px] h-[20px] rounded-[10px] transition-colors ${
-                        isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-                      }`}
-                    >
-                      <div
-                        className={`absolute w-[16px] h-[16px] top-[2px] rounded-full bg-white transition-all ${
-                          isActive ? "left-[22px]" : "left-[2px]"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Icon chain */}
                 <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
                   <div className="w-[21px] h-[20px] relative">
                     <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
                       <path
-                        d="M7.5 10H13.5M10.5 7V13"
                         stroke="#777671"
                         strokeWidth="1.5"
                         strokeLinecap="round"
@@ -2147,6 +2502,34 @@ const DashboardPage = () => {
                       </svg>
                     </svg>
                   </div>
+                </div>
+
+                {/* Nút toggle Active/Inactive */}
+                <div
+                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer"
+                  onClick={handleActiveToggle}
+                >
+                  {isActive ? (
+                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
+                      <polygon
+                        points="15,8 0,0 0,16"
+                        fill="#96FFC1"
+                        stroke="#777671"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect
+                        x="0.5"
+                        y="0.5"
+                        width="13"
+                        height="13"
+                        fill="#FF0000"
+                        stroke="#777671"
+                      />
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>
@@ -2188,7 +2571,7 @@ const DashboardPage = () => {
                           index === statusData.length - 1 ? "border-b-0" : ""
                         } ${draggedItem === index ? "opacity-50" : ""} ${
                           selectedResponse?.id === status.id
-                            ? "ring-2 ring-blue-500"
+                            ? "bg-gray-200"
                             : ""
                         }`}
                         draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
@@ -2289,6 +2672,15 @@ const DashboardPage = () => {
                       Data Default
                     </TabsTrigger>
                   )}
+                  {/* Thêm tab Schema Body chỉ khi ở chế độ stateful */}
+                  {isStateful && (
+                    <TabsTrigger
+                      value="schemaBody"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Schema Body
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* TabsContent */}
@@ -2323,25 +2715,25 @@ const DashboardPage = () => {
                             </Button>
                           )}
 
-                          {/* Nút Delete - luôn hiển thị nhưng disable khi là default response */}
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="border-[#E5E5E1]"
-                            onClick={handleDeleteResponse}
-                            disabled={selectedResponse?.is_default}
-                          >
-                            <Trash2
-                              className={`h-4 w-4 ${
-                                selectedResponse?.is_default
-                                  ? "text-gray-400"
-                                  : "text-[#898883]"
-                              }`}
-                            />
-                          </Button>
+                          {!isStateful && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-[#E5E5E1]"
+                              onClick={handleDeleteResponse}
+                              disabled={selectedResponse?.is_default}
+                            >
+                              <Trash2
+                                className={`h-4 w-4 ${
+                                  selectedResponse?.is_default
+                                    ? "text-gray-400"
+                                    : "text-[#898883]"
+                                }`}
+                              />
+                            </Button>
+                          )}
                         </div>
                       </div>
-
                       {/* Form */}
                       <div className="space-y-6">
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -2437,51 +2829,43 @@ const DashboardPage = () => {
                                 id="response-body"
                                 value={responseBody}
                                 onChange={(e) => {
-                                  const canEdit = !(
-                                    isStateful &&
-                                    statusCode === "200" &&
-                                    method === "GET"
-                                  );
+                                  const canEdit =
+                                    !isStateful ||
+                                    (statusCode !== "200" && method !== "GET");
                                   if (canEdit) {
                                     setResponseBody(e.target.value);
                                   }
                                 }}
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                                 className={`font-mono h-60 border-[#CBD5E1] rounded-md pb-8 ${
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                     ? "bg-gray-100 cursor-not-allowed"
                                     : ""
                                 }`}
                                 placeholder={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "Read-only for 200 OK responses with GET method"
+                                  (statusCode === "200" || method === "GET")
+                                    ? "Read-only for 200 OK responses or GET method"
                                     : ""
                                 }
                               />
                               <FileCode
                                 className={`absolute bottom-2 right-2 ${
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                     ? "text-gray-400 cursor-not-allowed"
                                     : "text-gray-400 cursor-pointer hover:text-gray-600"
                                 }`}
                                 size={26}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const canEdit = !(
-                                    isStateful &&
-                                    statusCode === "200" &&
-                                    method === "GET"
-                                  );
+                                  const canEdit =
+                                    !isStateful ||
+                                    (statusCode !== "200" && method !== "GET");
                                   if (canEdit) {
                                     setIsPopoverOpen(!isPopoverOpen);
                                   }
@@ -2577,8 +2961,7 @@ const DashboardPage = () => {
                                 className="border-[#E5E5E1]"
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                               >
                                 <Upload className="mr-2 h-4 w-4" /> Upload
@@ -2589,8 +2972,7 @@ const DashboardPage = () => {
                                 className="border-[#E5E5E1]"
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                               >
                                 <Code className="mr-2 h-4 w-4" /> Format
@@ -2694,6 +3076,18 @@ const DashboardPage = () => {
                     </Card>
                   </TabsContent>
                 )}
+
+                {isStateful && (
+                  <TabsContent value="schemaBody" className="mt-0">
+                    <div className="mt-2">
+                      <SchemaBodyEditor
+                        endpointData={endpointData}
+                        onSave={handleSaveSchema}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
+
                 {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
 
                 {isStateful && (
@@ -2725,81 +3119,25 @@ const DashboardPage = () => {
                             </div>
                           </div>
 
+                          {/* Sửa phần Current Value - chỉ hiển thị, không cho phép chỉnh sửa */}
                           <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
                             Current Value
                           </div>
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <Textarea
-                                  id="data-default"
-                                  value={dataDefaultString}
-                                  onChange={(e) => {
-                                    setDataDefaultString(e.target.value);
-                                    try {
-                                      // Chỉ cập nhật state khi JSON hợp lệ
-                                      setDataDefault(
-                                        JSON.parse(e.target.value)
-                                      );
-                                    } catch {
-                                      // Giữ nguyên state cũ nếu JSON không hợp lệ
-                                    }
-                                  }}
-                                  className="font-mono h-60 border-[#CBD5E1] rounded-md pb-8"
-                                  placeholder="Enter data default"
-                                />
-                                <FileCode
-                                  className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
-                                  size={26}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const textarea =
-                                      document.getElementById("data-default");
-                                    if (textarea) {
-                                      textarea.focus();
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-end space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-[#E5E5E1]"
-                                >
-                                  <Upload className="mr-2 h-4 w-4" /> Upload
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-[#E5E5E1]"
-                                  onClick={() => {
-                                    try {
-                                      const formatted = JSON.stringify(
-                                        JSON.parse(dataDefaultString),
-                                        null,
-                                        2
-                                      );
-                                      setDataDefaultString(formatted);
-                                      setDataDefault(JSON.parse(formatted));
-                                    } catch {
-                                      toast.error("Invalid JSON format");
-                                    }
-                                  }}
-                                >
-                                  <Code className="mr-2 h-4 w-4" /> Format
-                                </Button>
+                                {/* Thay Textarea bằng div chỉ đọc */}
+                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                  <pre className="whitespace-pre-wrap break-words m-0">
+                                    {JSON.stringify(
+                                      endpointData?.data_current || [],
+                                      null,
+                                      2
+                                    )}
+                                  </pre>
+                                </div>
                               </div>
                             </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button
-                              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                              onClick={handleSaveDataDefault}
-                            >
-                              Save Changes
-                            </Button>
                           </div>
                         </div>
                       </Card>
@@ -2841,13 +3179,93 @@ const DashboardPage = () => {
                               size={26}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const textarea =
-                                  document.getElementById("initial-value");
-                                if (textarea) {
-                                  textarea.focus();
-                                }
+                                setIsInitialValuePopoverOpen(
+                                  !isInitialValuePopoverOpen
+                                );
                               }}
                             />
+
+                            {/* Popover cho Initial Value */}
+                            {isInitialValuePopoverOpen && (
+                              <div
+                                ref={initialValuePopoverRef}
+                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                              >
+                                <div className="flex flex-col items-center gap-2 p-3.5">
+                                  <div className="w-full flex justify-between items-center">
+                                    <div className="font-semibold text-sm text-gray-800">
+                                      Variable Picker
+                                    </div>
+                                    <X
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsInitialValuePopoverOpen(false);
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="w-full flex justify-between">
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "url"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("url");
+                                      }}
+                                    >
+                                      URL Parameters
+                                    </div>
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "query"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("query");
+                                      }}
+                                    >
+                                      Query Parameters
+                                    </div>
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "state"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("state");
+                                      }}
+                                    >
+                                      Project State
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      insertInitialValueTemplate(
+                                        getTemplateText().template
+                                      );
+                                    }}
+                                  >
+                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      {getTemplateText().template}
+                                    </div>
+                                    <div className="text-[12px] text-gray-500">
+                                      {getTemplateText().description}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="flex justify-end space-x-2 mt-2">
                             <Button
