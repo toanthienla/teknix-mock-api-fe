@@ -925,22 +925,20 @@ const DashboardPage = () => {
   const handleResetCurrentValues = () => {
     if (!endpointData) return;
 
-    const payload = {
-      schema: endpointData.schema || {},
-      data_default: endpointData.data_default || [],
-    };
-
-    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    fetch(
+      `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
+        endpointData.path
+      )}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      }
+    )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to reset current values");
         return res.json();
       })
       .then((updatedData) => {
-        // Cập nhật state với cả data_current được reset
         setEndpointData(updatedData);
         toast.success("Current values reset successfully!");
         setShowResetConfirmDialog(false);
@@ -959,17 +957,19 @@ const DashboardPage = () => {
       data_default: endpointData.data_default || [],
     };
 
-    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    fetch(
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
       })
       .then((updatedData) => {
-        // Cập nhật state với cả data_current được reset
         setEndpointData(updatedData);
         toast.success("Schema updated successfully!");
       })
@@ -2241,19 +2241,40 @@ const DashboardPage = () => {
         data_default: parsedData,
       };
 
-      fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
+      // First update the endpoint data with new schema and data_default
+      fetch(
+        `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
+          endpointData.path
+        )}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      )
         .then((res) => {
-          if (!res.ok) throw new Error("Failed to update initial value");
+          if (!res.ok) throw new Error("Failed to update endpoint data");
           return res.json();
         })
-        .then((updatedData) => {
-          // ✅ Server tự động reset data_current giống data_default
-          setEndpointData(updatedData);
-          setDataDefault(updatedData.data_default || []);
+        .then(() => {
+          // Then reset current values to default
+          return fetch(
+            `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
+              endpointData.path
+            )}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to reset current values");
+          return res.json();
+        })
+        .then((finalData) => {
+          setEndpointData(finalData);
+          setDataDefault(finalData.data_default || []);
           setIsInitialValueDialogOpen(false);
           toast.success("Initial value updated successfully!");
         })
