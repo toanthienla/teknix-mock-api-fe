@@ -319,7 +319,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
               onClick={(e) => handleFieldClick(field.id, e)}
               className={`flex flex-col p-3 rounded-md border cursor-pointer ${
                 field.id === selectedFieldId
-                  ? "border-blue-600"
+                  ? "border-black"
                   : "border-slate-300"
               }`}
             >
@@ -917,6 +917,39 @@ const DashboardPage = () => {
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
+
+  // Thêm state cho dialog xác nhận reset
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
+
+  // Hàm xử lý reset current values
+  const handleResetCurrentValues = () => {
+    if (!endpointData) return;
+
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: endpointData.data_default || [],
+    };
+
+    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to reset current values");
+        return res.json();
+      })
+      .then((updatedData) => {
+        // Cập nhật state với cả data_current được reset
+        setEndpointData(updatedData);
+        toast.success("Current values reset successfully!");
+        setShowResetConfirmDialog(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
 
   const handleSaveSchema = (newSchema) => {
     if (!endpointData) return;
@@ -2385,13 +2418,90 @@ const DashboardPage = () => {
               </Badge>
             </div>
 
+            {/* Dialog xác nhận reset current values */}
+            <Dialog
+              open={showResetConfirmDialog}
+              onOpenChange={setShowResetConfirmDialog}
+            >
+              <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+                <DialogHeader className="flex justify-between items-start mb-4">
+                  <DialogTitle className="text-xl font-bold text-slate-800">
+                    Reset Current Values
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="mb-6">
+                  <p className="text-gray-700">
+                    It will reset all Current Values back to Initial Values. Are
+                    you sure you want to reset?
+                  </p>
+                </div>
+
+                <DialogFooter className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowResetConfirmDialog(false)}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-[#FA2F2F] hover:bg-[#E02929] text-white w-[90px] h-[40px] rounded-[8px]"
+                    onClick={handleResetCurrentValues}
+                  >
+                    Reset
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex-1 max-w-[707px] ml-8">
-              <div className="flex flex-row items-center p-0 gap-3.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
+            <div className="flex items-center gap-2">
+              {/*  reset state button */}
+              {isStateful && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6"
+                  onClick={() => setShowResetConfirmDialog(true)}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4V1L8 5L12 9V6C16.42 6 20 9.58 20 14C20 16.13 19.15 18.06 17.72 19.49L19.13 20.9C20.88 19.15 22 16.72 22 14C22 8.48 17.52 4 12 4ZM2 9C2 11.87 3.13 14.44 5.03 16.34L6.44 14.93C4.93 13.42 4 11.31 4 9C4 5.69 6.69 3 10 3V5.1C7.8 5.74 6 7.6 6 9.9C6 11.25 6.55 12.45 7.45 13.35L8.86 11.94C8.37 11.45 8.06 10.77 8.06 10.05C8.06 8.71 9.16 7.61 10.5 7.61C11.15 7.61 11.75 7.88 12.19 8.31L13.6 6.9C12.7 6.01 11.5 5.11 10 5.11C7.8 5.11 6 6.91 6 9.11C6 10.51 6.6 11.71 7.5 12.61L12 17.11V14H14V20H4V14H6V11.89L2 9Z"
+                      fill="#000000"
+                    />
+                  </svg>
+                </Button>
+              )}
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
                 <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
+                </div>
+                {/* Icon chain */}
+                <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
+                  <div className="w-[21px] h-[20px] relative">
+                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
+                      <path
+                        stroke="#777671"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                      </svg>
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Nút toggle Active/Inactive */}
@@ -2420,32 +2530,6 @@ const DashboardPage = () => {
                       />
                     </svg>
                   )}
-                </div>
-
-                {/* Icon chain */}
-                <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
-                  <div className="w-[21px] h-[20px] relative">
-                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
-                      <path
-                        d="M7.5 10H13.5M10.5 7V13"
-                        stroke="#777671"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                      </svg>
-                    </svg>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2487,7 +2571,7 @@ const DashboardPage = () => {
                           index === statusData.length - 1 ? "border-b-0" : ""
                         } ${draggedItem === index ? "opacity-50" : ""} ${
                           selectedResponse?.id === status.id
-                            ? "ring-2 ring-blue-500"
+                            ? "bg-gray-200"
                             : ""
                         }`}
                         draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
