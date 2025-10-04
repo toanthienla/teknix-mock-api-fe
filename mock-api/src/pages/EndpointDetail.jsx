@@ -144,6 +144,280 @@ const statusCodes = [
   },
 ];
 
+const SchemaBodyEditor = ({ endpointData, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+
+  // Khởi tạo schema fields từ endpointData
+  useEffect(() => {
+    if (endpointData?.schema) {
+      const fields = Object.entries(endpointData.schema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required !== undefined ? config.required : false,
+        })
+      );
+      setSchemaFields(fields);
+    }
+  }, [endpointData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+    setSelectedFieldId(newField.id);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => {
+      const filtered = prev.filter((field) => field.id !== id);
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[id];
+        return newErrors;
+      });
+      return filtered;
+    });
+
+    if (selectedFieldId === id) {
+      setSelectedFieldId(null);
+    }
+  };
+
+  const handleFieldClick = (id, event) => {
+    if (event.target.closest("button")) {
+      return;
+    }
+    setSelectedFieldId(id);
+  };
+
+  const handleNameChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
+    );
+
+    // Validate sau khi thay đổi
+    setTimeout(() => {
+      const field = schemaFields.find((f) => f.id === id);
+      if (field) {
+        const fieldErrors = validateField({ ...field, name: value });
+        setErrors((prev) => ({
+          ...prev,
+          [id]: fieldErrors,
+        }));
+      }
+    }, 0);
+  };
+
+  const handleTypeChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
+    );
+  };
+
+  const handleRequiredChange = (id, value) => {
+    setSchemaFields((prev) =>
+      prev.map((field) =>
+        field.id === id ? { ...field, required: value === "true" } : field
+      )
+    );
+  };
+
+  const prepareSchema = () => {
+    const schema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        schema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+    return schema;
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    onSave(prepareSchema());
+  };
+
+  return (
+    <div>
+      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#37352F]">
+            Schema Definition
+          </h1>
+        </div>
+        {/* Thêm thanh header cho Schema Definition */}
+        <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+          <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Field Name
+            </span>
+          </div>
+          <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Type
+            </span>
+          </div>
+          <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
+            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+              Required
+            </span>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {schemaFields.map((field) => (
+            <div
+              key={field.id}
+              onClick={(e) => handleFieldClick(field.id, e)}
+              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
+                field.id === selectedFieldId
+                  ? "border-blue-600"
+                  : "border-slate-300"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-[220px]">
+                  <Input
+                    value={field.name}
+                    onChange={(e) => handleNameChange(field.id, e.target.value)}
+                    className={`w-full ${
+                      errors[field.id]?.name ? "border-red-500" : ""
+                    }`}
+                    placeholder="Field name"
+                  />
+                </div>
+
+                <div className="w-[220px]">
+                  <Select
+                    value={field.type}
+                    onValueChange={(value) => handleTypeChange(field.id, value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="string">string</SelectItem>
+                      <SelectItem value="number">number</SelectItem>
+                      <SelectItem value="boolean">boolean</SelectItem>
+                      <SelectItem value="array">array</SelectItem>
+                      <SelectItem value="object">object</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="w-[170px]">
+                  <Select
+                    value={field.required.toString()}
+                    onValueChange={(value) =>
+                      handleRequiredChange(field.id, value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Required" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">true</SelectItem>
+                      <SelectItem value="false">false</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteField(field.id);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Hiển thị lỗi */}
+              {errors[field.id]?.name && (
+                <div className="text-red-500 text-xs mt-1 pl-2">
+                  {errors[field.id].name}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Thông báo khi không có trường nào */}
+          {schemaFields.length === 0 && (
+            <div className="text-gray-500 text-sm mt-2 pl-2">
+              No schema fields defined.
+            </div>
+          )}
+
+          {/* Nút thêm trường và lưu */}
+          <div className="flex justify-between items-center mt-4">
+            <Button variant="outline" onClick={handleAddField}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add field
+            </Button>
+
+            <Button
+              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+              onClick={handleSave}
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
 const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
@@ -643,6 +917,34 @@ const DashboardPage = () => {
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
+
+  const handleSaveSchema = (newSchema) => {
+    if (!endpointData) return;
+
+    const payload = {
+      schema: newSchema,
+      data_default: endpointData.data_default || [],
+    };
+
+    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update schema");
+        return res.json();
+      })
+      .then((updatedData) => {
+        // Cập nhật state với cả data_current được reset
+        setEndpointData(updatedData);
+        toast.success("Schema updated successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
 
   const insertInitialValueTemplate = (template) => {
     const textarea = document.getElementById("initial-value");
@@ -2286,6 +2588,15 @@ const DashboardPage = () => {
                       Data Default
                     </TabsTrigger>
                   )}
+                  {/* Thêm tab Schema Body chỉ khi ở chế độ stateful */}
+                  {isStateful && (
+                    <TabsTrigger
+                      value="schemaBody"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Schema Body
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* TabsContent */}
@@ -2681,6 +2992,18 @@ const DashboardPage = () => {
                     </Card>
                   </TabsContent>
                 )}
+
+                {isStateful && (
+                  <TabsContent value="schemaBody" className="mt-0">
+                    <div className="mt-2">
+                      <SchemaBodyEditor
+                        endpointData={endpointData}
+                        onSave={handleSaveSchema}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
+
                 {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
 
                 {isStateful && (
