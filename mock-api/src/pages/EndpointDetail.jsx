@@ -583,7 +583,6 @@ const DashboardPage = () => {
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
-  const [dataDefaultString, setDataDefaultString] = useState("");
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
@@ -641,6 +640,54 @@ const DashboardPage = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [targetWsId, setTargetWsId] = useState(null);
+  const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
+    useState(false);
+  const initialValuePopoverRef = useRef(null);
+
+  const insertInitialValueTemplate = (template) => {
+    const textarea = document.getElementById("initial-value");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Chèn template tại vị trí con trỏ
+    const newValue =
+      tempDataDefaultString.substring(0, start) +
+      template +
+      tempDataDefaultString.substring(end);
+
+    setTempDataDefaultString(newValue);
+
+    // Di chuyển con trỏ sau template đã chèn
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + template.length,
+        start + template.length
+      );
+    }, 0);
+
+    // Tự động đóng popover sau khi chèn
+    setIsInitialValuePopoverOpen(false);
+  };
+
+  // Xử lý click outside popover
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        initialValuePopoverRef.current &&
+        !initialValuePopoverRef.current.contains(event.target)
+      ) {
+        setIsInitialValuePopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const insertTemplate = (template) => {
     const textarea = document.getElementById("response-body");
@@ -1158,53 +1205,6 @@ const DashboardPage = () => {
       }
     }
   }, [currentEndpointId, endpoints]);
-
-  // Hàm xử lý lưu data default
-  const handleSaveDataDefault = () => {
-    if (!currentEndpointId || !endpointData) return;
-
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    if (!currentEndpoint) return;
-
-    // Parse data default
-    let parsedData = [];
-    try {
-      parsedData = JSON.parse(JSON.stringify(dataDefault));
-    } catch {
-      toast.error("Invalid JSON format for data default");
-      return;
-    }
-
-    // Payload theo đúng cấu trúc yêu cầu
-    const payload = {
-      schema: endpointData.schema || {},
-      data_default: parsedData,
-    };
-
-    fetch(`${API_ROOT}/endpoint_data/${endpointData.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to update data default");
-        return res.json();
-      })
-      .then((updatedData) => {
-        // Cập nhật state với cả data_current được reset
-        setEndpointData(updatedData);
-        setDataDefault(updatedData.data_default || []);
-
-        toast.success("Data default updated successfully!");
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
-      });
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -1899,10 +1899,8 @@ const DashboardPage = () => {
   // Hàm xử lý khi lưu initial value
   const handleSaveInitialValue = () => {
     try {
-      // Parse và validate JSON
       const parsedData = JSON.parse(tempDataDefaultString);
 
-      // Payload chỉ cần schema và data_default
       const payload = {
         schema: endpointData.schema || {},
         data_default: parsedData,
@@ -1918,7 +1916,7 @@ const DashboardPage = () => {
           return res.json();
         })
         .then((updatedData) => {
-          // Cập nhật state với cả data_current được reset
+          // ✅ Server tự động reset data_current giống data_default
           setEndpointData(updatedData);
           setDataDefault(updatedData.data_default || []);
           setIsInitialValueDialogOpen(false);
@@ -1934,10 +1932,6 @@ const DashboardPage = () => {
       );
     }
   };
-
-  useEffect(() => {
-    setDataDefaultString(JSON.stringify(dataDefault, null, 2));
-  }, [dataDefault]);
 
   // Cập nhật state string khi tempDataDefault thay đổi
   useEffect(() => {
@@ -2100,27 +2094,30 @@ const DashboardPage = () => {
 
                 {/* Nút toggle Active/Inactive */}
                 <div
-                  className="flex flex-row items-center gap-1 w-[80px] h-[20px] cursor-pointer"
+                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer"
                   onClick={handleActiveToggle}
                 >
-                  <div className="flex flex-row items-center w-[40px] h-[20px]">
-                    <span className="w-[40px] h-[20px] font-inter font-semibold text-[10px] leading-[14px] text-black">
-                      {isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                  <div className="relative w-[40px] h-[20px]">
-                    <div
-                      className={`flex flex-row items-center px-[1px] gap-[2px] w-[40px] h-[20px] rounded-[10px] transition-colors ${
-                        isActive ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-                      }`}
-                    >
-                      <div
-                        className={`absolute w-[16px] h-[16px] top-[2px] rounded-full bg-white transition-all ${
-                          isActive ? "left-[22px]" : "left-[2px]"
-                        }`}
+                  {isActive ? (
+                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
+                      <polygon
+                        points="15,8 0,0 0,16"
+                        fill="#96FFC1"
+                        stroke="#777671"
+                        strokeWidth="1"
                       />
-                    </div>
-                  </div>
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect
+                        x="0.5"
+                        y="0.5"
+                        width="13"
+                        height="13"
+                        fill="#FF0000"
+                        stroke="#777671"
+                      />
+                    </svg>
+                  )}
                 </div>
 
                 {/* Icon chain */}
@@ -2323,25 +2320,25 @@ const DashboardPage = () => {
                             </Button>
                           )}
 
-                          {/* Nút Delete - luôn hiển thị nhưng disable khi là default response */}
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="border-[#E5E5E1]"
-                            onClick={handleDeleteResponse}
-                            disabled={selectedResponse?.is_default}
-                          >
-                            <Trash2
-                              className={`h-4 w-4 ${
-                                selectedResponse?.is_default
-                                  ? "text-gray-400"
-                                  : "text-[#898883]"
-                              }`}
-                            />
-                          </Button>
+                          {!isStateful && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-[#E5E5E1]"
+                              onClick={handleDeleteResponse}
+                              disabled={selectedResponse?.is_default}
+                            >
+                              <Trash2
+                                className={`h-4 w-4 ${
+                                  selectedResponse?.is_default
+                                    ? "text-gray-400"
+                                    : "text-[#898883]"
+                                }`}
+                              />
+                            </Button>
+                          )}
                         </div>
                       </div>
-
                       {/* Form */}
                       <div className="space-y-6">
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -2437,51 +2434,43 @@ const DashboardPage = () => {
                                 id="response-body"
                                 value={responseBody}
                                 onChange={(e) => {
-                                  const canEdit = !(
-                                    isStateful &&
-                                    statusCode === "200" &&
-                                    method === "GET"
-                                  );
+                                  const canEdit =
+                                    !isStateful ||
+                                    (statusCode !== "200" && method !== "GET");
                                   if (canEdit) {
                                     setResponseBody(e.target.value);
                                   }
                                 }}
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                                 className={`font-mono h-60 border-[#CBD5E1] rounded-md pb-8 ${
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                     ? "bg-gray-100 cursor-not-allowed"
                                     : ""
                                 }`}
                                 placeholder={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "Read-only for 200 OK responses with GET method"
+                                  (statusCode === "200" || method === "GET")
+                                    ? "Read-only for 200 OK responses or GET method"
                                     : ""
                                 }
                               />
                               <FileCode
                                 className={`absolute bottom-2 right-2 ${
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                     ? "text-gray-400 cursor-not-allowed"
                                     : "text-gray-400 cursor-pointer hover:text-gray-600"
                                 }`}
                                 size={26}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const canEdit = !(
-                                    isStateful &&
-                                    statusCode === "200" &&
-                                    method === "GET"
-                                  );
+                                  const canEdit =
+                                    !isStateful ||
+                                    (statusCode !== "200" && method !== "GET");
                                   if (canEdit) {
                                     setIsPopoverOpen(!isPopoverOpen);
                                   }
@@ -2577,8 +2566,7 @@ const DashboardPage = () => {
                                 className="border-[#E5E5E1]"
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                               >
                                 <Upload className="mr-2 h-4 w-4" /> Upload
@@ -2589,8 +2577,7 @@ const DashboardPage = () => {
                                 className="border-[#E5E5E1]"
                                 disabled={
                                   isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
+                                  (statusCode === "200" || method === "GET")
                                 }
                               >
                                 <Code className="mr-2 h-4 w-4" /> Format
@@ -2725,81 +2712,25 @@ const DashboardPage = () => {
                             </div>
                           </div>
 
+                          {/* Sửa phần Current Value - chỉ hiển thị, không cho phép chỉnh sửa */}
                           <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
                             Current Value
                           </div>
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <Textarea
-                                  id="data-default"
-                                  value={dataDefaultString}
-                                  onChange={(e) => {
-                                    setDataDefaultString(e.target.value);
-                                    try {
-                                      // Chỉ cập nhật state khi JSON hợp lệ
-                                      setDataDefault(
-                                        JSON.parse(e.target.value)
-                                      );
-                                    } catch {
-                                      // Giữ nguyên state cũ nếu JSON không hợp lệ
-                                    }
-                                  }}
-                                  className="font-mono h-60 border-[#CBD5E1] rounded-md pb-8"
-                                  placeholder="Enter data default"
-                                />
-                                <FileCode
-                                  className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
-                                  size={26}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const textarea =
-                                      document.getElementById("data-default");
-                                    if (textarea) {
-                                      textarea.focus();
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-end space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-[#E5E5E1]"
-                                >
-                                  <Upload className="mr-2 h-4 w-4" /> Upload
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-[#E5E5E1]"
-                                  onClick={() => {
-                                    try {
-                                      const formatted = JSON.stringify(
-                                        JSON.parse(dataDefaultString),
-                                        null,
-                                        2
-                                      );
-                                      setDataDefaultString(formatted);
-                                      setDataDefault(JSON.parse(formatted));
-                                    } catch {
-                                      toast.error("Invalid JSON format");
-                                    }
-                                  }}
-                                >
-                                  <Code className="mr-2 h-4 w-4" /> Format
-                                </Button>
+                                {/* Thay Textarea bằng div chỉ đọc */}
+                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                  <pre className="whitespace-pre-wrap break-words m-0">
+                                    {JSON.stringify(
+                                      endpointData?.data_current || [],
+                                      null,
+                                      2
+                                    )}
+                                  </pre>
+                                </div>
                               </div>
                             </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button
-                              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                              onClick={handleSaveDataDefault}
-                            >
-                              Save Changes
-                            </Button>
                           </div>
                         </div>
                       </Card>
@@ -2841,13 +2772,93 @@ const DashboardPage = () => {
                               size={26}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const textarea =
-                                  document.getElementById("initial-value");
-                                if (textarea) {
-                                  textarea.focus();
-                                }
+                                setIsInitialValuePopoverOpen(
+                                  !isInitialValuePopoverOpen
+                                );
                               }}
                             />
+
+                            {/* Popover cho Initial Value */}
+                            {isInitialValuePopoverOpen && (
+                              <div
+                                ref={initialValuePopoverRef}
+                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                              >
+                                <div className="flex flex-col items-center gap-2 p-3.5">
+                                  <div className="w-full flex justify-between items-center">
+                                    <div className="font-semibold text-sm text-gray-800">
+                                      Variable Picker
+                                    </div>
+                                    <X
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsInitialValuePopoverOpen(false);
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="w-full flex justify-between">
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "url"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("url");
+                                      }}
+                                    >
+                                      URL Parameters
+                                    </div>
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "query"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("query");
+                                      }}
+                                    >
+                                      Query Parameters
+                                    </div>
+                                    <div
+                                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                        selectedSection === "state"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSection("state");
+                                      }}
+                                    >
+                                      Project State
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      insertInitialValueTemplate(
+                                        getTemplateText().template
+                                      );
+                                    }}
+                                  >
+                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      {getTemplateText().template}
+                                    </div>
+                                    <div className="text-[12px] text-gray-500">
+                                      {getTemplateText().description}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="flex justify-end space-x-2 mt-2">
                             <Button
