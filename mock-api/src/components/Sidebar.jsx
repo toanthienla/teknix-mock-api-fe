@@ -13,6 +13,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from "@/components/ui/context-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {Badge} from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
@@ -127,7 +128,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 w-64">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64 h-screen justify-between">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
@@ -454,6 +455,25 @@ export default function Sidebar({
                 })}
             </ul>
           )}
+        </div>
+      </div>
+
+      {/* Phần dưới: User Info luôn cố định */}
+      <div className="border border-slate-300 mx-2.5 my-5 rounded-lg px-4 py-3 flex items-center gap-3 bg-white">
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-shrink-0">
+            <Avatar className="w-9 h-9">
+              <AvatarImage src="/src/assets/user-avatar.svg" alt="User Avatar" />
+              <AvatarFallback>HC</AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-slate-800 text-sm">hancontam</span>
+            <span className="text-xs text-slate-500">hancontam@gmail.com</span>
+          </div>
+          <div>
+            <ChevronDown className="w-4 h-4 text-slate-500"/>
+          </div>
         </div>
       </div>
     </div>
