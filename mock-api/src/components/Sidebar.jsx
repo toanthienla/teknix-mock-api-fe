@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, Plus, MoreHorizontal } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import React, {useState, useEffect, useRef, useMemo} from "react";
+import {useNavigate, useParams} from "react-router-dom";
+import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
@@ -9,34 +9,34 @@ import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
 export default function Sidebar({
-  workspaces = [],
-  current,
-  setCurrent,
-  onWorkspaceChange,
-  endpoints = [],
-  folders = [],
-  onEditWorkspace,
-  onDeleteWorkspace,
-  onAddFolder,
-  onEditFolder,
-  onDeleteFolder,
-  projects = [],
-  openProjectsMap,
-  setOpenProjectsMap,
-  openEndpointsMap,
-  setOpenEndpointsMap,
-  openFoldersMap,
-  setOpenFoldersMap,
-  isCollapsed,
-  setIsCollapsed,
-  setOpenNewWs
-}) {
+                                  workspaces = [],
+                                  current,
+                                  setCurrent,
+                                  onWorkspaceChange,
+                                  endpoints = [],
+                                  folders = [],
+                                  onEditWorkspace,
+                                  onDeleteWorkspace,
+                                  onAddFolder,
+                                  onEditFolder,
+                                  onDeleteFolder,
+                                  projects = [],
+                                  openProjectsMap,
+                                  setOpenProjectsMap,
+                                  openEndpointsMap,
+                                  setOpenEndpointsMap,
+                                  openFoldersMap,
+                                  setOpenFoldersMap,
+                                  isCollapsed,
+                                  setIsCollapsed,
+                                  setOpenNewWs
+                                }) {
   const navigate = useNavigate();
-  const { projectId, endpointId, folderId } = useParams();
+  const {projectId, endpointId, folderId} = useParams();
 
   const [rightClickActionId, setRightClickActionId] = useState(null);
   const [rightClickFolderId, setRightClickFolderId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [menuPos, setMenuPos] = useState({x: 0, y: 0});
   const [lockedMode, setLockedMode] = useState(false);
 
   const actionMenuRef = useRef(null);
@@ -68,17 +68,17 @@ export default function Sidebar({
 
   const toggleProjects = (wsId) => {
     if (setOpenProjectsMap) {
-      setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+      setOpenProjectsMap((prev) => ({...prev, [wsId]: !prev[wsId]}));
     } else {
-      setLocalOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+      setLocalOpenProjectsMap((prev) => ({...prev, [wsId]: !prev[wsId]}));
     }
   };
 
   const toggleEndpoints = (pId) => {
     if (setOpenEndpointsMap) {
-      setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+      setOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
     } else {
-      setLocalOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+      setLocalOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
     }
   };
 
@@ -112,7 +112,7 @@ export default function Sidebar({
     let y = e.clientY + 5;
     if (x + menuWidth > window.innerWidth) x = e.clientX - menuWidth - padding;
     if (y + menuHeight > window.innerHeight) y = e.clientY - menuHeight - padding;
-    setMenuPos({ x, y });
+    setMenuPos({x, y});
     setRightClickActionId((prev) => (prev === wsId ? null : wsId));
   };
 
@@ -126,7 +126,7 @@ export default function Sidebar({
     let y = e.clientY + 5;
     if (x + menuWidth > window.innerWidth) x = e.clientX - menuWidth - padding;
     if (y + menuHeight > window.innerHeight) y = e.clientY - menuHeight - padding;
-    setMenuPos({ x, y });
+    setMenuPos({x, y});
     setRightClickFolderId((prev) => (prev === folderId ? null : folderId));
   };
 
@@ -188,7 +188,7 @@ export default function Sidebar({
             src={OpenIcon}
             alt="toggle sidebar"
             className={`w-6 h-6 transition-transform ${isCollapsed ? "rotate-180" : ""
-              }`}
+            }`}
           />
         </button>
       </div>
@@ -214,7 +214,7 @@ export default function Sidebar({
                   <DropdownMenuItem
                     key={ws.id}
                     className={`flex justify-between items-center cursor-pointer ${String(current) === String(ws.id) ? "bg-slate-50 font-semibold" : ""
-                      }`}
+                    }`}
                     onSelect={() => handleSelectWorkspace(ws.id)}
                   >
                     <span>{ws.name}</span>
@@ -224,7 +224,7 @@ export default function Sidebar({
                         e.stopPropagation();
                         setRightClickActionId((prev) => (prev === ws.id ? null : ws.id));
                         const rect = e.target.getBoundingClientRect();
-                        setMenuPos({ x: rect.right, y: rect.bottom });
+                        setMenuPos({x: rect.right, y: rect.bottom});
                       }}
                     />
                   </DropdownMenuItem>
@@ -242,485 +242,489 @@ export default function Sidebar({
               </DropdownMenuContent>
             </DropdownMenu>
 
-          {rightClickActionId && (
-            <div
-              ref={actionMenuRef}
-              className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] w-44 overflow-hidden"
-              style={{ top: menuPos.y, left: menuPos.x }}
-            >
-              <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
-                Actions
+            {rightClickActionId && (
+              <div
+                ref={actionMenuRef}
+                className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] w-44 overflow-hidden"
+                style={{top: menuPos.y, left: menuPos.x}}
+              >
+                <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+                  Actions
+                </div>
+                <button
+                  onClick={() => {
+                    const ws = workspaces.find((w) => w.id === rightClickActionId);
+                    onEditWorkspace?.(ws);
+                    setRightClickActionId(null);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                >
+                  <img src={editIcon} className="w-4 h-4" alt="edit"/> Edit
+                </button>
+
+                <button
+                  onClick={() => {
+                    onDeleteWorkspace?.(rightClickActionId);
+                    setRightClickActionId(null);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                >
+                  <img src={deleteIcon} className="w-4 h-4" alt="delete"/> Delete
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  const ws = workspaces.find((w) => w.id === rightClickActionId);
-                  onEditWorkspace?.(ws);
-                  setRightClickActionId(null);
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              >
-                <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
-              </button>
+            )}
 
-              <button
-                onClick={() => {
-                  onDeleteWorkspace?.(rightClickActionId);
-                  setRightClickActionId(null);
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              >
-                <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
-              </button>
-            </div>
-          )}
+            {/* Sidebar khi lockedMode = true → show projects */}
+            {lockedMode && currentWorkspace && (
+              <ul className="space-y-1">
+                {projects
+                  .filter((p) => {
+                    if (projectId) {
+                      return String(p.id) === String(projectId);
+                    }
+                    return String(p.workspace_id) === String(currentWorkspace.id);
+                  })
+                  .map((p) => {
+                    const isEpOpen = readOpenEndpoints(p.id);
+                    const activePj = String(projectId) === String(p.id);
+                    const shouldBoldProject = activePj && !folderId;
 
-          {/* Sidebar khi lockedMode = true → show projects */}
-          {lockedMode && currentWorkspace && (
-            <ul className="space-y-1">
-              {projects
-                .filter((p) => {
-                  if (projectId) {
-                    return String(p.id) === String(projectId);
-                  }
-                  return String(p.workspace_id) === String(currentWorkspace.id);
-                })
-                .map((p) => {
-                  const isEpOpen = readOpenEndpoints(p.id);
-                  const activePj = String(projectId) === String(p.id);
-                  const shouldBoldProject = activePj && !folderId;
-
-                  return (
-                    <li key={p.id}>
-                      <div
-                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer ${shouldBoldProject
+                    return (
+                      <li key={p.id}>
+                        <div
+                          className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer ${shouldBoldProject
                             ? "bg-slate-100 font-semibold text-slate-900"
                             : "hover:bg-slate-50 text-slate-600"
                           }`}
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
-                      >
+                          onClick={() => navigate(`/dashboard/${p.id}`)}
+                        >
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
+                          style={{backgroundColor: projectColorMap[p.id] || "#999"}}
                         />
-                        {p.name}
-                        <ChevronDown
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleEndpoints(p.id);
-                          }}
-                          className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
+                          {p.name}
+                          <ChevronDown
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleEndpoints(p.id);
+                            }}
+                            className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
                             }`}
-                        />
-                      </div>
+                          />
+                        </div>
 
-                      {/* Folders and Endpoints */}
-                      {isEpOpen && (
-                        <div className="ml-6 mt-1 space-y-1 text-xs">
-                          {(() => {
-                            const projectFolders = folders.filter(
-                              (f) => String(f.project_id) === String(p.id)
-                            );
-                            const hasContent = projectHasContent(p);
-
-                            if (!hasContent) {
-                              return (
-                                <div className="text-gray-500">
-                                  This project has no folders yet.
-                                </div>
+                        {/* Folders and Endpoints */}
+                        {isEpOpen && (
+                          <div className="ml-6 mt-1 space-y-1 text-xs">
+                            {(() => {
+                              const projectFolders = folders.filter(
+                                (f) => String(f.project_id) === String(p.id)
                               );
-                            }
+                              const hasContent = projectHasContent(p);
 
-                            return (
-                              <>
-                                {/* Render folders with their endpoints */}
-                                {projectFolders.map((folder) => {
-                                  const folderEndpoints = folderEndpointsMap[folder.id] || [];
-                                  const isFolderOpen =
-                                    (openFoldersMap
-                                      ? openFoldersMap[folder.id]
-                                      : localOpenFoldersMap[folder.id]) || false;
+                              if (!hasContent) {
+                                return (
+                                  <div className="text-gray-500">
+                                    This project has no folders yet.
+                                  </div>
+                                );
+                              }
 
-                                  return (
-                                    <div key={folder.id}>
-                                      {/* Folder header */}
-                                      <div
-                                        className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${String(folderId) === String(folder.id)
+                              return (
+                                <>
+                                  {/* Render folders with their endpoints */}
+                                  {projectFolders.map((folder) => {
+                                    const folderEndpoints = folderEndpointsMap[folder.id] || [];
+                                    const isFolderOpen =
+                                      (openFoldersMap
+                                        ? openFoldersMap[folder.id]
+                                        : localOpenFoldersMap[folder.id]) || false;
+
+                                    return (
+                                      <div key={folder.id}>
+                                        {/* Folder header */}
+                                        <div
+                                          className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${String(folderId) === String(folder.id)
                                             ? "bg-slate-200 hover:bg-slate-300 font-semibold"
                                             : "bg-white hover:bg-gray-50 border-gray-200"
                                           }`}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(`/dashboard/${p.id}/folder/${folder.id}`);
-                                        }}
-                                        onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <ChevronDown
-                                            className={`h-3 w-3 text-slate-500 transition-transform ${isFolderOpen ? "rotate-0" : "-rotate-90"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/dashboard/${p.id}/folder/${folder.id}`);
+                                          }}
+                                          onContextMenu={(e) => handleFolderRightClick(e, folder.id)}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <ChevronDown
+                                              className={`h-3 w-3 text-slate-500 transition-transform ${isFolderOpen ? "rotate-0" : "-rotate-90"
                                               }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (setOpenFoldersMap) {
-                                                setOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id]
-                                                }));
-                                              } else {
-                                                setLocalOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id]
-                                                }));
-                                              }
-                                            }}
-                                          />
-                                          <span
-                                            className={`text-sm ${String(folderId) === String(folder.id)
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (setOpenFoldersMap) {
+                                                  setOpenFoldersMap((prev) => ({
+                                                    ...prev,
+                                                    [folder.id]: !prev[folder.id]
+                                                  }));
+                                                } else {
+                                                  setLocalOpenFoldersMap((prev) => ({
+                                                    ...prev,
+                                                    [folder.id]: !prev[folder.id]
+                                                  }));
+                                                }
+                                              }}
+                                            />
+                                            <span
+                                              className={`text-sm ${String(folderId) === String(folder.id)
                                                 ? "font-semibold text-slate-900"
                                                 : "font-medium text-slate-700"
                                               }`}
-                                          >
+                                            >
                                             {folder.name}
                                           </span>
-                                        </div>
-                                        <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
+                                          </div>
+                                          <span
+                                            className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
                                           {folderEndpoints.length}
                                         </span>
-                                      </div>
+                                        </div>
 
-                                      {/* Folder endpoints */}
-                                      {isFolderOpen && (
-                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-500 pl-4">
-                                          {folderEndpoints.length === 0 ? (
-                                            <div className="text-gray-400 px-2 py-1 text-xs">
-                                              No endpoints in this folder.
-                                            </div>
-                                          ) : (
-                                            folderEndpoints.map((ep) => {
-                                              const activeEp = String(endpointId) === String(ep.id);
+                                        {/* Folder endpoints */}
+                                        {isFolderOpen && (
+                                          <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-500 pl-4">
+                                            {folderEndpoints.length === 0 ? (
+                                              <div className="text-gray-400 px-2 py-1 text-xs">
+                                                No endpoints in this folder.
+                                              </div>
+                                            ) : (
+                                              folderEndpoints.map((ep) => {
+                                                const activeEp = String(endpointId) === String(ep.id);
 
-                                              return (
-                                                <div
-                                                  key={ep.id}
-                                                  className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${activeEp
+                                                return (
+                                                  <div
+                                                    key={ep.id}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${activeEp
                                                       ? "bg-slate-100 font-medium text-slate-900"
                                                       : "hover:bg-slate-50 text-slate-600"
                                                     }`}
-                                                  onClick={() =>
-                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                                  }
-                                                >
-                                                  {ep.is_stateful && (
-                                                    <img
-                                                      src={statefulIcon}
-                                                      className="w-4 h-4"
-                                                      alt="stateful"
-                                                    />
-                                                  )}
-                                                  <span>{ep.name}</span>
-                                                </div>
-                                              );
-                                            })
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                                <div
-                                  className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onAddFolder) {
-                                      onAddFolder(p.id);
-                                    }
-                                  }}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                  <span>New folder...</span>
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-            </ul>
-          )}
+                                                    onClick={() =>
+                                                      navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                    }
+                                                  >
+                                                    {ep.is_stateful && (
+                                                      <img
+                                                        src={statefulIcon}
+                                                        className="w-4 h-4"
+                                                        alt="stateful"
+                                                      />
+                                                    )}
+                                                    <span>{ep.name}</span>
+                                                  </div>
+                                                );
+                                              })
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                  <div
+                                    className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onAddFolder) {
+                                        onAddFolder(p.id);
+                                      }
+                                    }}
+                                  >
+                                    <Plus className="w-4 h-4"/>
+                                    <span>New folder...</span>
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+              </ul>
+            )}
 
-          {!lockedMode && (
-            <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
-              <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50 border-b">
-                WORKSPACES
-              </div>
-              <ul className="space-y-1">
-                {workspaces.map((ws) => {
-                  const activeWs = String(current) === String(ws.id);
-                  const isOpen = readOpenProjects(ws.id);
-                  const wsProjects = projects.filter(
-                    (p) => String(p.workspace_id) === String(ws.id)
-                  );
-                  const isActionOpen = rightClickActionId === ws.id;
+            {!lockedMode && (
+              <div className="border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
+                <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50 border-b">
+                  WORKSPACES
+                </div>
+                <ul className="space-y-1">
+                  {workspaces.map((ws) => {
+                    const activeWs = String(current) === String(ws.id);
+                    const isOpen = readOpenProjects(ws.id);
+                    const wsProjects = projects.filter(
+                      (p) => String(p.workspace_id) === String(ws.id)
+                    );
+                    const isActionOpen = rightClickActionId === ws.id;
 
-                  return (
-                    <li key={ws.id} className="group relative">
-                      <div
-                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 cursor-pointer ${activeWs
+                    return (
+                      <li key={ws.id} className="group relative">
+                        <div
+                          className={`w-full flex items-center justify-between gap-2 px-3 py-2 cursor-pointer ${activeWs
                             ? "bg-slate-100 font-semibold text-slate-900"
                             : "hover:bg-slate-50"
                           }`}
-                        onClick={() => handleSelectWorkspace(ws.id)}
-                        onContextMenu={(e) => handleRightClick(e, ws.id)}
-                      >
-                        <span>{ws.name}</span>
-                        {activeWs && (
-                          <MoreHorizontal
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleProjects(ws.id);
-                            }}
-                            className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
-                          />
-                        )}
-                      </div>
+                          onClick={() => handleSelectWorkspace(ws.id)}
+                          onContextMenu={(e) => handleRightClick(e, ws.id)}
+                        >
+                          <span>{ws.name}</span>
+                          {activeWs && (
+                            <MoreHorizontal
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProjects(ws.id);
+                              }}
+                              className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+                            />
+                          )}
+                        </div>
 
-                      {activeWs && isOpen && (
-                        <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
-                          {wsProjects.length === 0 ? (
-                            <div className="text-xs text-gray-500">
-                              This workspace has no projects yet.
-                            </div>
-                          ) : (
-                            wsProjects.map((p) => {
-                              const isEpOpen = readOpenEndpoints(p.id);
-                              const activePj = String(projectId) === String(p.id);
-                              const shouldBoldProject = activePj && !folderId;
+                        {activeWs && isOpen && (
+                          <div className="ml-8 mt-1 space-y-1 text-sm text-slate-600">
+                            {wsProjects.length === 0 ? (
+                              <div className="text-xs text-gray-500">
+                                This workspace has no projects yet.
+                              </div>
+                            ) : (
+                              wsProjects.map((p) => {
+                                const isEpOpen = readOpenEndpoints(p.id);
+                                const activePj = String(projectId) === String(p.id);
+                                const shouldBoldProject = activePj && !folderId;
 
-                              return (
-                                <div key={p.id}>
-                                  <div
-                                    className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${shouldBoldProject
+                                return (
+                                  <div key={p.id}>
+                                    <div
+                                      className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${shouldBoldProject
                                         ? "bg-slate-100 font-semibold text-slate-900"
                                         : "hover:bg-slate-50 text-slate-600"
                                       }`}
-                                    onClick={() => navigate(`/dashboard/${p.id}`)}
-                                  >
+                                      onClick={() => navigate(`/dashboard/${p.id}`)}
+                                    >
                                     <span
                                       className="w-2 h-2 rounded-full"
                                       style={{
                                         backgroundColor: projectColorMap[p.id] || "#999",
                                       }}
                                     />
-                                    {p.name}
-                                    <ChevronDown
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleEndpoints(p.id);
-                                      }}
-                                      className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
+                                      {p.name}
+                                      <ChevronDown
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleEndpoints(p.id);
+                                        }}
+                                        className={`w-4 h-4 text-slate-400 transition-transform ${isEpOpen ? "rotate-0" : "-rotate-90"
                                         }`}
-                                    />
-                                  </div>
+                                      />
+                                    </div>
 
-                                  {isEpOpen && (
-                                    <div className="ml-6 mt-1 space-y-1 text-xs">
-                                      {(() => {
-                                        const projectFolders = folders.filter(
-                                          (f) => String(f.project_id) === String(p.id)
-                                        );
-                                        const hasContent = projectHasContent(p);
-
-                                        if (!hasContent) {
-                                          return (
-                                            <div className="text-gray-500">
-                                              This project has no endpoints yet.
-                                            </div>
+                                    {isEpOpen && (
+                                      <div className="ml-6 mt-1 space-y-1 text-xs">
+                                        {(() => {
+                                          const projectFolders = folders.filter(
+                                            (f) => String(f.project_id) === String(p.id)
                                           );
-                                        }
+                                          const hasContent = projectHasContent(p);
 
-                                        return (
-                                          <>
-                                            {projectFolders.map((folder) => {
-                                              const folderEndpoints = folderEndpointsMap[folder.id] || [];
-                                              const isFolderOpen =
-                                                (openFoldersMap
-                                                  ? openFoldersMap[folder.id]
-                                                  : localOpenFoldersMap[folder.id]) || false;
+                                          if (!hasContent) {
+                                            return (
+                                              <div className="text-gray-500">
+                                                This project has no endpoints yet.
+                                              </div>
+                                            );
+                                          }
 
-                                              return (
-                                                <div key={folder.id}>
-                                                  <div
-                                                    className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${String(folderId) === String(folder.id)
+                                          return (
+                                            <>
+                                              {projectFolders.map((folder) => {
+                                                const folderEndpoints = folderEndpointsMap[folder.id] || [];
+                                                const isFolderOpen =
+                                                  (openFoldersMap
+                                                    ? openFoldersMap[folder.id]
+                                                    : localOpenFoldersMap[folder.id]) || false;
+
+                                                return (
+                                                  <div key={folder.id}>
+                                                    <div
+                                                      className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${String(folderId) === String(folder.id)
                                                         ? "bg-slate-200 hover:bg-slate-300 border border-slate-400 font-semibold"
                                                         : "bg-white hover:bg-gray-50 border border-gray-200"
                                                       }`}
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      navigate(`/dashboard/${p.id}/folder/${folder.id}`);
-                                                    }}
-                                                  >
-                                                    <div className="flex items-center gap-2">
-                                                      <ChevronDown
-                                                        className={`h-3 w-3 text-slate-500 transition-transform ${isFolderOpen ? "rotate-0" : "-rotate-90"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/dashboard/${p.id}/folder/${folder.id}`);
+                                                      }}
+                                                    >
+                                                      <div className="flex items-center gap-2">
+                                                        <ChevronDown
+                                                          className={`h-3 w-3 text-slate-500 transition-transform ${isFolderOpen ? "rotate-0" : "-rotate-90"
                                                           }`}
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          if (setOpenFoldersMap) {
-                                                            setOpenFoldersMap((prev) => ({
-                                                              ...prev,
-                                                              [folder.id]: !prev[folder.id]
-                                                            }));
-                                                          } else {
-                                                            setLocalOpenFoldersMap((prev) => ({
-                                                              ...prev,
-                                                              [folder.id]: !prev[folder.id]
-                                                            }));
-                                                          }
-                                                        }}
-                                                      />
-                                                      <span
-                                                        className={`text-sm ${String(folderId) === String(folder.id)
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (setOpenFoldersMap) {
+                                                              setOpenFoldersMap((prev) => ({
+                                                                ...prev,
+                                                                [folder.id]: !prev[folder.id]
+                                                              }));
+                                                            } else {
+                                                              setLocalOpenFoldersMap((prev) => ({
+                                                                ...prev,
+                                                                [folder.id]: !prev[folder.id]
+                                                              }));
+                                                            }
+                                                          }}
+                                                        />
+                                                        <span
+                                                          className={`text-sm ${String(folderId) === String(folder.id)
                                                             ? "font-semibold text-slate-900"
                                                             : "font-medium text-slate-700"
                                                           }`}
-                                                      >
+                                                        >
                                                         {folder.name}
                                                       </span>
-                                                    </div>
-                                                    <span className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
+                                                      </div>
+                                                      <span
+                                                        className="text-xs text-slate-600 bg-white px-2 py-0.5 rounded-full border">
                                                       {folderEndpoints.length}
                                                     </span>
-                                                  </div>
+                                                    </div>
 
-                                                  {isFolderOpen && (
-                                                    <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
-                                                      {folderEndpoints.length === 0 ? (
-                                                        <div className="text-gray-400 px-2 py-1 text-xs">
-                                                          No endpoints in this folder
-                                                        </div>
-                                                      ) : (
-                                                        folderEndpoints.map((ep) => {
-                                                          const activeEp = String(endpointId) === String(ep.id);
+                                                    {isFolderOpen && (
+                                                      <div
+                                                        className="ml-3 mt-1 space-y-1 border-l-2 border-slate-300 pl-4">
+                                                        {folderEndpoints.length === 0 ? (
+                                                          <div className="text-gray-400 px-2 py-1 text-xs">
+                                                            No endpoints in this folder
+                                                          </div>
+                                                        ) : (
+                                                          folderEndpoints.map((ep) => {
+                                                            const activeEp = String(endpointId) === String(ep.id);
 
-                                                          return (
-                                                            <div
-                                                              key={ep.id}
-                                                              className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${activeEp
+                                                            return (
+                                                              <div
+                                                                key={ep.id}
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm ${activeEp
                                                                   ? "bg-slate-100 font-medium text-slate-900"
                                                                   : "hover:bg-slate-50 text-slate-600"
                                                                 }`}
-                                                              onClick={() =>
-                                                                navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
-                                                              }
-                                                            >
-                                                              {ep.is_stateful && (
-                                                                <img
-                                                                  src={statefulIcon}
-                                                                  className="w-4 h-4"
-                                                                  alt="stateful"
-                                                                />
-                                                              )}
-                                                              <span>{ep.name}</span>
-                                                            </div>
-                                                          );
-                                                        })
-                                                      )}
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              );
-                                            })}
-                                            <div
-                                              className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (onAddFolder) {
-                                                  onAddFolder(p.id);
-                                                }
-                                              }}
-                                            >
-                                              <Plus className="w-4 h-4" />
-                                              <span>New folder...</span>
-                                            </div>
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
-
-                      {isActionOpen && (
-                        <div
-                          ref={actionMenuRef}
-                          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
-                          style={{ top: menuPos.y, left: menuPos.x }}
-                        >
-                          <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
-                            Actions
+                                                                onClick={() =>
+                                                                  navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)
+                                                                }
+                                                              >
+                                                                {ep.is_stateful && (
+                                                                  <img
+                                                                    src={statefulIcon}
+                                                                    className="w-4 h-4"
+                                                                    alt="stateful"
+                                                                  />
+                                                                )}
+                                                                <span>{ep.name}</span>
+                                                              </div>
+                                                            );
+                                                          })
+                                                        )}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })}
+                                              <div
+                                                className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (onAddFolder) {
+                                                    onAddFolder(p.id);
+                                                  }
+                                                }}
+                                              >
+                                                <Plus className="w-4 h-4"/>
+                                                <span>New folder...</span>
+                                              </div>
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
                           </div>
-                          <button
-                            onClick={() => onEditWorkspace && onEditWorkspace(ws)}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+                        )}
+
+                        {isActionOpen && (
+                          <div
+                            ref={actionMenuRef}
+                            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-44 overflow-hidden"
+                            style={{top: menuPos.y, left: menuPos.x}}
                           >
-                            <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
-                          </button>
-                          <button
-                            onClick={() => onDeleteWorkspace && onDeleteWorkspace(ws.id)}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
-                          >
-                            <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+                              Actions
+                            </div>
+                            <button
+                              onClick={() => onEditWorkspace && onEditWorkspace(ws)}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+                            >
+                              <img src={editIcon} className="w-4 h-4" alt="edit"/> Edit
+                            </button>
+                            <button
+                              onClick={() => onDeleteWorkspace && onDeleteWorkspace(ws.id)}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+                            >
+                              <img src={deleteIcon} className="w-4 h-4" alt="delete"/> Delete
+                            </button>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {rightClickFolderId && (
+            <div
+              ref={folderMenuRef}
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
+              style={{top: menuPos.y, left: menuPos.x}}
+            >
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
+                Actions
+              </div>
+              <button
+                onClick={() => {
+                  if (onEditFolder) {
+                    const folder = folders.find((f) => f.id === rightClickFolderId);
+                    onEditFolder(folder);
+                  }
+                  setRightClickFolderId(null);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+              >
+                <img src={editIcon} className="w-4 h-4" alt="edit"/> Edit
+              </button>
+              <button
+                onClick={() => {
+                  if (onDeleteFolder) {
+                    onDeleteFolder(rightClickFolderId);
+                  }
+                  setRightClickFolderId(null);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
+              >
+                <img src={deleteIcon} className="w-4 h-4" alt="delete"/> Delete
+              </button>
             </div>
           )}
         </div>
-
-        {rightClickFolderId && (
-          <div
-            ref={folderMenuRef}
-            className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 overflow-hidden"
-            style={{ top: menuPos.y, left: menuPos.x }}
-          >
-            <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
-              Actions
-            </div>
-            <button
-              onClick={() => {
-                if (onEditFolder) {
-                  const folder = folders.find((f) => f.id === rightClickFolderId);
-                  onEditFolder(folder);
-                }
-                setRightClickFolderId(null);
-              }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
-            >
-              <img src={editIcon} className="w-4 h-4" alt="edit" /> Edit
-            </button>
-            <button
-              onClick={() => {
-                if (onDeleteFolder) {
-                  onDeleteFolder(rightClickFolderId);
-                }
-                setRightClickFolderId(null);
-              }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-slate-100"
-            >
-              <img src={deleteIcon} className="w-4 h-4" alt="delete" /> Delete
-            </button>
-          </div>
-        )}
       </div>
     </div>
-  );
+  )
 }
