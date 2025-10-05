@@ -2037,7 +2037,12 @@ const DashboardPage = () => {
   };
 
   const handleResponseSelect = (response) => {
-    fetch(`${API_ROOT}/endpoint_responses/${response.id}`)
+    // Sử dụng endpoint khác nhau cho stateful và stateless
+    const url = isStateful
+      ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
+      : `${API_ROOT}/endpoint_responses/${response.id}`;
+
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         if (isStateful) {
@@ -2075,7 +2080,6 @@ const DashboardPage = () => {
       })
       .catch(console.error);
   };
-
   const handleNewResponse = () => {
     // Reset form khi tạo mới
     setSelectedResponse(null);
