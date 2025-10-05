@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, Plus, MoreHorizontal } from "lucide-react";
+import React, {useState, useEffect, useMemo} from "react";
+import {useNavigate, useParams} from "react-router-dom";
+import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from "@/components/ui/context-menu";
-import { Badge } from "@/components/ui/badge";
+import {Badge} from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
@@ -44,7 +44,7 @@ export default function Sidebar({
                                   setOpenNewWs,
                                 }) {
   const navigate = useNavigate();
-  const { projectId, endpointId, folderId } = useParams();
+  const {projectId, endpointId, folderId} = useParams();
 
   const [localOpenProjectsMap, setLocalOpenProjectsMap] = useState({});
   const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
@@ -65,7 +65,7 @@ export default function Sidebar({
     projects.forEach((p) => {
       newMap[p.id] =
         projectColorMap[p.id] ||
-        randomColor({ luminosity: "bright", seed: p.id });
+        randomColor({luminosity: "bright", seed: p.id});
     });
     setProjectColorMap(newMap);
   }, [projects]);
@@ -80,9 +80,9 @@ export default function Sidebar({
 
   const toggleEndpoints = (pId) => {
     if (setOpenEndpointsMap) {
-      setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+      setOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
     } else {
-      setLocalOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+      setLocalOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
     }
   };
 
@@ -166,9 +166,10 @@ export default function Sidebar({
           <div className="px-1 mb-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium">
+                <button
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium">
                   <span>{currentWorkspace?.name || "Select Workspace"}</span>
-                  <ChevronDown className="w-4 h-4 text-slate-500 transition-transform" />
+                  <ChevronDown className="w-4 h-4 text-slate-500 transition-transform"/>
                 </button>
               </DropdownMenuTrigger>
 
@@ -193,7 +194,7 @@ export default function Sidebar({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 hover:bg-slate-100 rounded">
-                          <MoreHorizontal className="w-4 h-4 text-slate-500" />
+                          <MoreHorizontal className="w-4 h-4 text-slate-500"/>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-44">
@@ -204,7 +205,7 @@ export default function Sidebar({
                           className="hover:text-black font-semibold"
                           onSelect={() => onEditWorkspace?.(ws)}
                         >
-                          <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
+                          <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="hover:text-black font-semibold"
@@ -214,7 +215,7 @@ export default function Sidebar({
                             onDeleteWorkspace?.(ws.id);
                           }}
                         >
-                          <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
+                          <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/> Delete
                         </DropdownMenuItem>
 
                       </DropdownMenuContent>
@@ -227,7 +228,7 @@ export default function Sidebar({
                   className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
                   onClick={() => setOpenNewWs?.(true)}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4"/>
                   <span>New workspace</span>
                 </div>
               </DropdownMenuContent>
@@ -258,7 +259,7 @@ export default function Sidebar({
                       >
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
+                          style={{backgroundColor: projectColorMap[p.id] || "#999"}}
                         />
                         {p.name}
                         <ChevronDown
@@ -297,6 +298,7 @@ export default function Sidebar({
                                     (openFoldersMap
                                       ? openFoldersMap[folder.id]
                                       : localOpenFoldersMap[folder.id]) || false;
+                                  const activeFolder = String(folderId) === String(folder.id);
 
                                   return (
                                     <div key={folder.id}>
@@ -305,7 +307,7 @@ export default function Sidebar({
                                         <ContextMenuTrigger asChild>
                                           <div
                                             className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
-                                              String(folderId) === String(folder.id)
+                                              activeFolder
                                                 ? "bg-slate-200 hover:bg-slate-300 font-semibold"
                                                 : "bg-white hover:bg-gray-50 border-gray-200"
                                             }`}
@@ -313,19 +315,38 @@ export default function Sidebar({
                                               e.stopPropagation();
                                               navigate(`/dashboard/${p.id}/folder/${folder.id}`);
 
-                                              // Toggle folder open/close
                                               if (setOpenFoldersMap) {
-                                                setOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id],
-                                                }));
+                                                setOpenFoldersMap((prev) => {
+                                                  const newMap = {};
+                                                  // Đóng tất cả folder khác
+                                                  Object.keys(prev).forEach((key) => {
+                                                    newMap[key] = false;
+                                                  });
+                                                  // Nếu folder hiện tại đang mở thì giữ nguyên
+                                                  if (prev[folder.id]) {
+                                                    newMap[folder.id] = true;
+                                                  } else {
+                                                    // Nếu folder khác được click thì mở nó
+                                                    newMap[folder.id] = true;
+                                                  }
+                                                  return newMap;
+                                                });
                                               } else {
-                                                setLocalOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id],
-                                                }));
+                                                setLocalOpenFoldersMap((prev) => {
+                                                  const newMap = {};
+                                                  Object.keys(prev).forEach((key) => {
+                                                    newMap[key] = false;
+                                                  });
+                                                  if (prev[folder.id]) {
+                                                    newMap[folder.id] = true;
+                                                  } else {
+                                                    newMap[folder.id] = true;
+                                                  }
+                                                  return newMap;
+                                                });
                                               }
                                             }}
+
                                           >
                                             <div className="flex items-center justify-between w-full">
                                               <div className="flex items-center gap-2">
@@ -341,16 +362,17 @@ export default function Sidebar({
                                               </div>
 
                                               {/* Endpoint count */}
-                                              <Badge
-                                                variant={folderEndpoints.length === 0 ? "secondary" : "outline"}
-                                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                                  folderEndpoints.length === 0
-                                                    ? "text-slate-500 bg-slate-100"
-                                                    : "text-black border-black bg-slate-200"
-                                                }`}
-                                              >
-                                                {folderEndpoints.length}
-                                              </Badge>
+                                              {folderEndpoints.length > 0 && (
+                                                <Badge
+                                                  className={
+                                                    activeFolder
+                                                      ? "text-xs px-2 py-0.75 rounded-full text-black border-black bg-slate-200 hover:bg-slate-200"
+                                                      : "text-xs px-2 py-0.75 rounded-full bg-slate-200 text-black hover:bg-slate-200"
+                                                  }
+                                                >
+                                                  {folderEndpoints.length}
+                                                </Badge>
+                                              )}
                                             </div>
 
                                           </div>
@@ -362,17 +384,17 @@ export default function Sidebar({
                                             Actions
                                           </div>
                                           <ContextMenuItem onSelect={() => onEditFolder?.(folder)}>
-                                            <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
+                                            <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/> Edit
                                           </ContextMenuItem>
                                           <ContextMenuItem onSelect={() => onDeleteFolder?.(folder.id)}>
-                                            <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
+                                            <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/> Delete
                                           </ContextMenuItem>
                                         </ContextMenuContent>
                                       </ContextMenu>
 
                                       {/* Endpoints */}
                                       {isFolderOpen && (
-                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-800 pl-4">
+                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-800 pl-2">
                                           {folderEndpoints.length === 0 ? (
                                             <div className="text-gray-400 px-2 py-1 text-xs">
                                               No endpoints in this folder.
@@ -392,14 +414,14 @@ export default function Sidebar({
                                                 >
                                                   {/* Dấu chấm hiển thị trên đường thẳng */}
                                                   <div
-                                                    className={`absolute left-[-20px] w-[6px] h-[6px] rounded-full border ${
-                                                      activeEp ? "bg-slate-800 border-slate-800" : ""
+                                                    className={`${
+                                                      activeEp ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800" : ""
                                                     }`}
-                                                    style={{ top: "50%", transform: "translateY(-50%)" }}
+                                                    style={{top: "50%", transform: "translateY(-50%)"}}
                                                   ></div>
 
                                                   {ep.is_stateful && (
-                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful" />
+                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful"/>
                                                   )}
                                                   <span>{ep.name}</span>
                                                 </div>
@@ -419,7 +441,7 @@ export default function Sidebar({
                                     if (onAddFolder) onAddFolder(p.id);
                                   }}
                                 >
-                                  <Plus className="w-4 h-4" />
+                                  <Plus className="w-4 h-4"/>
                                   <span>New folder...</span>
                                 </div>
                               </>
