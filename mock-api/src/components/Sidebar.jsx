@@ -13,7 +13,8 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from "@/components/ui/context-menu";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {Badge} from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
@@ -21,34 +22,31 @@ import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
 export default function Sidebar({
-                                  workspaces = [],
-                                  current,
-                                  setCurrent,
-                                  onWorkspaceChange,
-                                  endpoints = [],
-                                  folders = [],
-                                  onEditWorkspace,
-                                  onDeleteWorkspace,
-                                  onAddFolder,
-                                  onEditFolder,
-                                  onDeleteFolder,
-                                  projects = [],
-                                  openProjectsMap,
-                                  setOpenProjectsMap,
-                                  openEndpointsMap,
-                                  setOpenEndpointsMap,
-                                  openFoldersMap,
-                                  setOpenFoldersMap,
-                                  isCollapsed,
-                                  setIsCollapsed,
-                                  setOpenNewWs,
-                                }) {
+  workspaces = [],
+  current,
+  setCurrent,
+  onWorkspaceChange,
+  endpoints = [],
+  folders = [],
+  onEditWorkspace,
+  onDeleteWorkspace,
+  onAddFolder,
+  onEditFolder,
+  onDeleteFolder,
+  projects = [],
+  openProjectsMap,
+  setOpenProjectsMap,
+  openEndpointsMap,
+  setOpenEndpointsMap,
+  openFoldersMap,
+  setOpenFoldersMap,
+  isCollapsed,
+  setIsCollapsed,
+  setOpenNewWs,
+}) {
   const navigate = useNavigate();
   const { projectId, endpointId, folderId } = useParams();
 
-  const [localOpenProjectsMap, setLocalOpenProjectsMap] = useState({});
-  const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
-  const [localOpenFoldersMap, setLocalOpenFoldersMap] = useState({});
   const [projectColorMap, setProjectColorMap] = useState({});
 
   useEffect(() => {
@@ -65,31 +63,55 @@ export default function Sidebar({
     projects.forEach((p) => {
       newMap[p.id] =
         projectColorMap[p.id] ||
-        randomColor({ luminosity: "bright", seed: p.id });
+        randomColor({ luminosity: "light", seed: p.id }); // Đồng bộ với ProjectCard
     });
     setProjectColorMap(newMap);
-  }, [projects]);
 
-  const readOpenProjects = (wsId) =>
-    (openProjectsMap ? openProjectsMap[wsId] : localOpenProjectsMap[wsId]) ||
-    false;
+    // Reset openProjectsMap khi projects thay đổi, chỉ giữ project đang chọn (nếu có)
+    setOpenProjectsMap((prev) => {
+      const newOpenProjectsMap = {};
+      if (projectId) {
+        const project = projects.find((p) => String(p.id) === String(projectId));
+        if (project) {
+          newOpenProjectsMap[project.workspace_id] = true;
+        }
+      }
+      return newOpenProjectsMap;
+    });
+  }, [projects, projectId]);
 
-  const readOpenEndpoints = (pId) =>
-    (openEndpointsMap ? openEndpointsMap[pId] : localOpenEndpointsMap[pId]) ||
-    false;
+  const readOpenProjects = (wsId) => (openProjectsMap ? openProjectsMap[wsId] : false);
+
+  const readOpenEndpoints = (pId) => (openEndpointsMap ? openEndpointsMap[pId] : false);
+
+  const readOpenFolders = (fId) => (openFoldersMap ? openFoldersMap[fId] : false);
+
+  const toggleProjects = (wsId) => {
+    setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+  };
 
   const toggleEndpoints = (pId) => {
-    if (setOpenEndpointsMap) {
-      setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
-    } else {
-      setLocalOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
-    }
+    setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+  };
+
+  const toggleFolders = (fId) => {
+    setOpenFoldersMap((prev) => {
+      const newMap = {};
+      Object.keys(prev).forEach((key) => {
+        newMap[key] = false;
+      });
+      newMap[fId] = !prev[fId];
+      return newMap;
+    });
   };
 
   const handleSelectWorkspace = (wsId) => {
     if (setCurrent) setCurrent(wsId);
     if (onWorkspaceChange) onWorkspaceChange(wsId);
     localStorage.setItem("currentWorkspace", wsId);
+    setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
+    setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
+    setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
     navigate("/dashboard");
   };
 
@@ -104,9 +126,16 @@ export default function Sidebar({
         const wsId = project.workspace_id;
         if (setCurrent) setCurrent(wsId);
         if (onWorkspaceChange) onWorkspaceChange(wsId);
+        setOpenProjectsMap((prev) => ({ ...prev, [wsId]: true }));
+        if (folderId || endpointId) {
+          setOpenEndpointsMap((prev) => ({ ...prev, [projectId]: true }));
+          if (folderId) {
+            setOpenFoldersMap((prev) => ({ ...prev, [folderId]: true }));
+          }
+        }
       }
     }
-  }, [projectId, projects]);
+  }, [projectId, folderId, endpointId, projects]);
 
   const folderEndpointsMap = useMemo(() => {
     const map = {};
@@ -127,7 +156,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 w-64">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64 h-screen justify-between">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
@@ -140,6 +169,9 @@ export default function Sidebar({
               onWorkspaceChange?.(firstWsId);
               localStorage.setItem("currentWorkspace", firstWsId);
             }
+            setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
+            setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
+            setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
             navigate("/dashboard");
           }}
         >
@@ -208,15 +240,10 @@ export default function Sidebar({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="hover:text-black font-semibold"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            console.log("Deleting workspace", ws.id);
-                            onDeleteWorkspace?.(ws.id);
-                          }}
+                          onSelect={() => onDeleteWorkspace?.(ws.id)}
                         >
                           <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
                         </DropdownMenuItem>
-
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -242,6 +269,7 @@ export default function Sidebar({
                   projectId ? String(p.id) === String(projectId) : String(p.workspace_id) === String(currentWorkspace.id)
                 )
                 .map((p) => {
+                  const isProjectOpen = readOpenProjects(p.workspace_id);
                   const isEpOpen = readOpenEndpoints(p.id);
                   const activePj = String(projectId) === String(p.id);
                   const shouldBoldProject = activePj && !folderId && !endpointId;
@@ -254,26 +282,20 @@ export default function Sidebar({
                             ? "bg-slate-100 font-semibold text-slate-900"
                             : "hover:bg-slate-50 text-slate-600"
                         }`}
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
+                        onClick={() => {
+                          navigate(`/dashboard/${p.id}`);
+                          toggleProjects(p.workspace_id);
+                        }}
                       >
                         <span
-                          className="w-2 h-2 rounded-full"
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
                         />
                         {p.name}
-                        <ChevronDown
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleEndpoints(p.id);
-                          }}
-                          className={`w-4 h-4 text-slate-400 transition-transform ${
-                            isEpOpen ? "rotate-0" : "-rotate-90"
-                          }`}
-                        />
                       </div>
 
                       {/* Folders */}
-                      {isEpOpen && (
+                      {isProjectOpen && (
                         <div className="ml-6 mt-1 space-y-1 text-xs">
                           {(() => {
                             const projectFolders = folders.filter(
@@ -293,10 +315,8 @@ export default function Sidebar({
                               <>
                                 {projectFolders.map((folder) => {
                                   const folderEndpoints = folderEndpointsMap[folder.id] || [];
-                                  const isFolderOpen =
-                                    (openFoldersMap
-                                      ? openFoldersMap[folder.id]
-                                      : localOpenFoldersMap[folder.id]) || false;
+                                  const isFolderOpen = readOpenFolders(folder.id);
+                                  const activeFolder = String(folderId) === String(folder.id);
 
                                   return (
                                     <div key={folder.id}>
@@ -305,33 +325,21 @@ export default function Sidebar({
                                         <ContextMenuTrigger asChild>
                                           <div
                                             className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
-                                              String(folderId) === String(folder.id)
+                                              activeFolder
                                                 ? "bg-slate-200 hover:bg-slate-300 font-semibold"
                                                 : "bg-white hover:bg-gray-50 border-gray-200"
                                             }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               navigate(`/dashboard/${p.id}/folder/${folder.id}`);
-
-                                              // Toggle folder open/close
-                                              if (setOpenFoldersMap) {
-                                                setOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id],
-                                                }));
-                                              } else {
-                                                setLocalOpenFoldersMap((prev) => ({
-                                                  ...prev,
-                                                  [folder.id]: !prev[folder.id],
-                                                }));
-                                              }
+                                              toggleFolders(folder.id);
                                             }}
                                           >
                                             <div className="flex items-center justify-between w-full">
                                               <div className="flex items-center gap-2">
                                                 <span
                                                   className={`text-sm ${
-                                                    String(folderId) === String(folder.id)
+                                                    activeFolder
                                                       ? "font-semibold text-slate-900"
                                                       : "font-medium text-slate-700"
                                                   }`}
@@ -339,20 +347,18 @@ export default function Sidebar({
                                                   {folder.name}
                                                 </span>
                                               </div>
-
-                                              {/* Endpoint count */}
-                                              <Badge
-                                                variant={folderEndpoints.length === 0 ? "secondary" : "outline"}
-                                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                                  folderEndpoints.length === 0
-                                                    ? "text-slate-500 bg-slate-100"
-                                                    : "text-black border-black bg-slate-200"
-                                                }`}
-                                              >
-                                                {folderEndpoints.length}
-                                              </Badge>
+                                              {folderEndpoints.length > 0 && (
+                                                <Badge
+                                                  className={
+                                                    activeFolder
+                                                      ? "text-xs px-2 py-0.75 rounded-full text-black border-black bg-slate-200 hover:bg-slate-200"
+                                                      : "text-xs px-2 py-0.75 rounded-full bg-slate-200 text-black hover:bg-slate-200"
+                                                  }
+                                                >
+                                                  {folderEndpoints.length}
+                                                </Badge>
+                                              )}
                                             </div>
-
                                           </div>
                                         </ContextMenuTrigger>
 
@@ -372,7 +378,7 @@ export default function Sidebar({
 
                                       {/* Endpoints */}
                                       {isFolderOpen && (
-                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-800 pl-4">
+                                        <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-800 pl-2">
                                           {folderEndpoints.length === 0 ? (
                                             <div className="text-gray-400 px-2 py-1 text-xs">
                                               No endpoints in this folder.
@@ -390,20 +396,19 @@ export default function Sidebar({
                                                   }`}
                                                   onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
                                                 >
-                                                  {/* Dấu chấm hiển thị trên đường thẳng */}
                                                   <div
-                                                    className={`absolute left-[-20px] w-[6px] h-[6px] rounded-full border ${
-                                                      activeEp ? "bg-slate-800 border-slate-800" : ""
+                                                    className={`${
+                                                      activeEp
+                                                        ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800"
+                                                        : ""
                                                     }`}
                                                     style={{ top: "50%", transform: "translateY(-50%)" }}
                                                   ></div>
-
                                                   {ep.is_stateful && (
                                                     <img src={statefulIcon} className="w-4 h-4" alt="stateful" />
                                                   )}
                                                   <span>{ep.name}</span>
                                                 </div>
-
                                               );
                                             })
                                           )}
@@ -432,6 +437,25 @@ export default function Sidebar({
                 })}
             </ul>
           )}
+        </div>
+      </div>
+
+      {/* Phần dưới: User Info luôn cố định */}
+      <div className="border border-slate-300 mx-2.5 my-5 rounded-lg px-4 py-3 flex items-center gap-3 bg-white">
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-shrink-0">
+            <Avatar className="w-9 h-9">
+              <AvatarImage src="/src/assets/user-avatar.svg" alt="User Avatar" />
+              <AvatarFallback>HC</AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-slate-800 text-sm">hancontam</span>
+            <span className="text-xs text-slate-500">hancontam@gmail.com</span>
+          </div>
+          <div>
+            <ChevronDown className="w-4 h-4 text-slate-500"/>
+          </div>
         </div>
       </div>
     </div>

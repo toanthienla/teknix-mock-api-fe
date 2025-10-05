@@ -78,20 +78,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchWorkspaces();
+    fetchProjects();
+    fetchEndpoints();
+    fetchFolders();
   }, []);
-
-  useEffect(() => {
-    if (currentWsId) {
-      fetchProjects(currentWsId);
-    } else {
-      setProjects([]);
-    }
-  }, [currentWsId]);
 
   useEffect(() => {
     if (projectId && projects.length > 0) {
       const project = projects.find((p) => String(p.id) === String(projectId));
       if (project) {
+        setCurrentWsId(project.workspace_id);
         setOpenProjectsMap((prev) => ({
           ...prev,
           [project.workspace_id]: true,
@@ -147,132 +143,47 @@ export default function DashboardPage() {
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
-    return fetch(`${API_ROOT}/workspaces`)
+    fetch(`${API_ROOT}/workspaces`)
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
           (a, b) => new Date(a.created_at) - new Date(b.created_at)
         );
         setWorkspaces(sorted);
-        if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
+        // if (sorted.length > 0 && !currentWsId) setCurrentWsId(sorted[0].id);
       })
-      .catch(() =>
-        toast.error("Failed to load workspaces", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
-      );
+      .catch(() => toast.error("Failed to load workspaces"));
   };
 
-  // Fetch projects theo workspace
-  const fetchProjects = (wsId) => {
-    if (!wsId) return;
-
-    fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
-      .then(r => r.json())
-      .then(rData => {
-        const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
-        setProjects(projectsArr);
-
-        // reset folders + endpoints trước khi fetch mới
-        setFolders([]);
-        setEndpoints([]);
-
-        projectsArr.forEach((p) => {
-          // fetch folders của từng project
-          fetch(`${API_ROOT}/folders?project_id=${p.id}`)
-            .then(r => r.json())
-            .then(fData => {
-              const fArr = Array.isArray(fData) ? fData : fData.data || [];
-              setFolders(prev => {
-                const merged = [...prev];
-                fArr.forEach(f => {
-                  if (!merged.some(ff => ff.id === f.id)) {
-                    merged.push(f);
-                  }
-                });
-                return merged;
-              });
-
-              // fetch endpoints cho từng folder
-              fArr.forEach((f) => {
-                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
-                  .then(r2 => r2.json())
-                  .then(eData => {
-                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
-
-                    const withProjectId = eArr.map(e => ({
-                      ...e,
-                      project_id: f.project_id
-                    }));
-
-                    setEndpoints(prev => {
-                      const merged = [...prev];
-                      withProjectId.forEach(e => {
-                        if (!merged.some(ee => ee.id === e.id)) {
-                          merged.push(e);
-                        }
-                      });
-                      return merged;
-                    });
-                  })
-                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
-              });
-            })
-            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
-        });
+  const fetchProjects = () => {
+    fetch(`${API_ROOT}/projects`)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+        );
+        setProjects(sorted);
       })
-      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
+      .catch(() => toast.error("Failed to load projects"));
   };
 
-  // const fetchFolders = (projId) => {
-  //   if (!projId) return;
-  //   fetch(`${API_ROOT}/folders?project_id=${projId}`)
-  //     .then(res => res.json())
-  //     .then(data => setFolders(data))
-  //     .catch(() => toast.error("Failed to load folders"));
-  // };
-  //
-  // useEffect(() => {
-  //   if (projectId) {
-  //     fetchFolders(projectId);
-  //   } else {
-  //     setFolders([]);
-  //   }
-  // }, [projectId]);
+  const fetchEndpoints = () => {
+    fetch(`${API_ROOT}/endpoints`)
+      .then((res) => res.json())
+      .then((data) => setEndpoints(data));
+  };
 
-  // Fetch endpoints theo folder
-  // const fetchEndpoints = (folderId) => {
-  //   if (!folderId) return;
-  //   fetch(`${API_ROOT}/endpoints?folder_id=${folderId}`)
-  //     .then(res => res.json())
-  //     .then(result => {
-  //       if (!result.success || !Array.isArray(result.data)) {
-  //         throw new Error("Invalid endpoints format");
-  //       }
-  //
-  //       // ✅ tìm project_id từ folder
-  //       const folder = folders.find(f => String(f.id) === String(folderId));
-  //       const projId = folder ? folder.project_id : null;
-  //
-  //       const withProjectId = result.data.map(ep => ({
-  //         ...ep,
-  //         project_id: projId,
-  //       }));
-  //
-  //       setEndpoints(prev => {
-  //         const merged = [...prev];
-  //         withProjectId.forEach(ep => {
-  //           if (!merged.some(e => e.id === ep.id)) {
-  //             merged.push(ep);
-  //           }
-  //         });
-  //         return merged;
-  //       });
-  //     })
-  //     .catch(() => toast.error("Failed to load endpoints"));
-  // };
+  const fetchFolders = async () => {
+    try {
+      console.log('DashboardPage: Fetching folders...');
+      const response = await fetch(`${API_ROOT}/folders`);
+      const data = await response.json();
+      console.log('DashboardPage: Folders fetched:', data);
+      setFolders(data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
 
   const handleAddFolder = (projectId) => {
     console.log('Add folder for project:', projectId);
@@ -371,12 +282,11 @@ export default function DashboardPage() {
     })
       .then((res) => res.json())
       .then((createdWs) => {
-        fetchWorkspaces().then(() => {
-          setCurrentWsId(createdWs.id);
-          localStorage.setItem("currentWorkspace", createdWs.id);
-          setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
-          toast.success("Workspace created successfully");
-        });
+        setWorkspaces((prev) => [...prev, createdWs]);
+        setCurrentWsId(createdWs.id);
+        localStorage.setItem("currentWorkspace", createdWs.id);
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        toast.success("Workspace created successfully");
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
@@ -486,7 +396,7 @@ export default function DashboardPage() {
   };
 
   // -------------------- Project --------------------
-  const validateProject = (title, desc, editMode = false, editId = null) => {
+  const validateProject = (title, desc, editMode = false, editId = null, workspaceId) => {
     const titleTrim = title.trim();
     const descTrim = desc.trim();
 
@@ -523,7 +433,7 @@ export default function DashboardPage() {
 
     const duplicate = projects.some(
       (p) =>
-        p.workspace_id === currentWsId &&
+        String(p.workspace_id) === String(workspaceId) &&
         (!editMode || p.id !== editId) &&
         p.name.toLowerCase() === titleTrim.toLowerCase()
     );
@@ -535,7 +445,8 @@ export default function DashboardPage() {
   };
 
   const handleCreateProject = () => {
-    if (!validateProject(newTitle, newDesc)) return;
+    const workspaceId = targetWsId || currentWsId;
+    if (!validateProject(newTitle, newDesc, false, null, workspaceId)) return;
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
@@ -557,10 +468,7 @@ export default function DashboardPage() {
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-        setOpenProjectsMap((prev) => ({
-          ...prev,
-          [createdProject.workspace_id]: true,
-        }));
+        setOpenProjectsMap({ [createdProject.workspace_id]: true });
 
         setNewTitle("");
         setNewDesc("");
@@ -591,7 +499,7 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!validateProject(editTitle, editDesc, true, editId)) return;
+    if (!validateProject(editTitle, editDesc, true, editId, original.workspace_id)) return;
 
     fetch(`${API_ROOT}/projects/${editId}`, {
       method: "PUT",
@@ -600,7 +508,7 @@ export default function DashboardPage() {
         id: editId,
         name: editTitle.trim(),
         description: editDesc.trim(),
-        workspace_id: currentWsId,
+        workspace_id: original.workspace_id,
         created_at: original.created_at, //Giữ lại created_at
         updated_at: new Date().toISOString(),
       }),
@@ -717,7 +625,7 @@ export default function DashboardPage() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
-            setOpenNewWs={setOpenNewWs}   // 👈 Thêm dòng này
+            setOpenNewWs={setOpenNewWs}
           />
 
         </aside>
@@ -806,8 +714,14 @@ export default function DashboardPage() {
                   {sortedProjects.length > 0 ? (
                     sortedProjects.map((p) => {
                       // Lấy tất cả folders của project này
-                      const projectEndpoints = endpoints.filter(
-                        ep => String(ep.project_id) === String(p.id)
+                      const projectFolders = folders.filter(
+                        (f) => String(f.project_id) === String(p.id)
+                      );
+                      const folderIds = projectFolders.map((f) => String(f.id));
+
+                      // Lấy tất cả endpoints trong các folder đó
+                      const projectEndpoints = endpoints.filter((ep) =>
+                        folderIds.includes(String(ep.folder_id))
                       );
 
                       return (
@@ -885,7 +799,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className=" text-white bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleCreateProject}
             >
               Create
@@ -901,6 +815,7 @@ export default function DashboardPage() {
             <DialogTitle className="text-lg font-semibold">Edit Project</DialogTitle>
             <div className="mt-1 text-sm text-slate-500">Project details</div>
           </DialogHeader>
+
 
           <div className="mt-4 space-y-4">
             <div>
@@ -962,7 +877,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="text-white bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleUpdateProject}
               disabled={
                 editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
@@ -996,7 +911,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ✅ New Workspace */}
+      {/* New Workspace */}
       <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
         <DialogContent>
           <DialogHeader>
@@ -1025,7 +940,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="text-white bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -1059,7 +974,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="text-white bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleEditWorkspace}
               disabled={
                 editWsName.trim() === (workspaces.find((w) => w.id === editWsId)?.name || "")
