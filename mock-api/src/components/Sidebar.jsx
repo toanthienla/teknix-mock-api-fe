@@ -1,6 +1,6 @@
-import React, {useState, useEffect, useMemo} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {ChevronDown, Plus, MoreHorizontal} from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronDown, Plus, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from "@/components/ui/context-menu";
-import {Badge} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
@@ -21,34 +21,31 @@ import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
 export default function Sidebar({
-                                  workspaces = [],
-                                  current,
-                                  setCurrent,
-                                  onWorkspaceChange,
-                                  endpoints = [],
-                                  folders = [],
-                                  onEditWorkspace,
-                                  onDeleteWorkspace,
-                                  onAddFolder,
-                                  onEditFolder,
-                                  onDeleteFolder,
-                                  projects = [],
-                                  openProjectsMap,
-                                  setOpenProjectsMap,
-                                  openEndpointsMap,
-                                  setOpenEndpointsMap,
-                                  openFoldersMap,
-                                  setOpenFoldersMap,
-                                  isCollapsed,
-                                  setIsCollapsed,
-                                  setOpenNewWs,
-                                }) {
+  workspaces = [],
+  current,
+  setCurrent,
+  onWorkspaceChange,
+  endpoints = [],
+  folders = [],
+  onEditWorkspace,
+  onDeleteWorkspace,
+  onAddFolder,
+  onEditFolder,
+  onDeleteFolder,
+  projects = [],
+  openProjectsMap,
+  setOpenProjectsMap,
+  openEndpointsMap,
+  setOpenEndpointsMap,
+  openFoldersMap,
+  setOpenFoldersMap,
+  isCollapsed,
+  setIsCollapsed,
+  setOpenNewWs,
+}) {
   const navigate = useNavigate();
-  const {projectId, endpointId, folderId} = useParams();
+  const { projectId, endpointId, folderId } = useParams();
 
-  const [localOpenProjectsMap, setLocalOpenProjectsMap] = useState({});
-  const [localOpenEndpointsMap, setLocalOpenEndpointsMap] = useState({});
-  const [localOpenFoldersMap, setLocalOpenFoldersMap] = useState({});
   const [projectColorMap, setProjectColorMap] = useState({});
 
   useEffect(() => {
@@ -65,31 +62,43 @@ export default function Sidebar({
     projects.forEach((p) => {
       newMap[p.id] =
         projectColorMap[p.id] ||
-        randomColor({luminosity: "bright", seed: p.id});
+        randomColor({ luminosity: "bright", seed: p.id });
     });
     setProjectColorMap(newMap);
   }, [projects]);
 
-  const readOpenProjects = (wsId) =>
-    (openProjectsMap ? openProjectsMap[wsId] : localOpenProjectsMap[wsId]) ||
-    false;
+  const readOpenProjects = (wsId) => (openProjectsMap ? openProjectsMap[wsId] : false);
 
-  const readOpenEndpoints = (pId) =>
-    (openEndpointsMap ? openEndpointsMap[pId] : localOpenEndpointsMap[pId]) ||
-    false;
+  const readOpenEndpoints = (pId) => (openEndpointsMap ? openEndpointsMap[pId] : false);
+
+  const readOpenFolders = (fId) => (openFoldersMap ? openFoldersMap[fId] : false);
+
+  const toggleProjects = (wsId) => {
+    setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
+  };
 
   const toggleEndpoints = (pId) => {
-    if (setOpenEndpointsMap) {
-      setOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
-    } else {
-      setLocalOpenEndpointsMap((prev) => ({...prev, [pId]: !prev[pId]}));
-    }
+    setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+  };
+
+  const toggleFolders = (fId) => {
+    setOpenFoldersMap((prev) => {
+      const newMap = {};
+      Object.keys(prev).forEach((key) => {
+        newMap[key] = false;
+      });
+      newMap[fId] = !prev[fId];
+      return newMap;
+    });
   };
 
   const handleSelectWorkspace = (wsId) => {
     if (setCurrent) setCurrent(wsId);
     if (onWorkspaceChange) onWorkspaceChange(wsId);
     localStorage.setItem("currentWorkspace", wsId);
+    setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
+    setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
+    setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
     navigate("/dashboard");
   };
 
@@ -104,9 +113,16 @@ export default function Sidebar({
         const wsId = project.workspace_id;
         if (setCurrent) setCurrent(wsId);
         if (onWorkspaceChange) onWorkspaceChange(wsId);
+        setOpenProjectsMap((prev) => ({ ...prev, [wsId]: true }));
+        if (folderId || endpointId) {
+          setOpenEndpointsMap((prev) => ({ ...prev, [projectId]: true }));
+          if (folderId) {
+            setOpenFoldersMap((prev) => ({ ...prev, [folderId]: true }));
+          }
+        }
       }
     }
-  }, [projectId, projects]);
+  }, [projectId, folderId, endpointId, projects]);
 
   const folderEndpointsMap = useMemo(() => {
     const map = {};
@@ -140,6 +156,9 @@ export default function Sidebar({
               onWorkspaceChange?.(firstWsId);
               localStorage.setItem("currentWorkspace", firstWsId);
             }
+            setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
+            setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
+            setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
             navigate("/dashboard");
           }}
         >
@@ -166,10 +185,9 @@ export default function Sidebar({
           <div className="px-1 mb-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium">
+                <button className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium">
                   <span>{currentWorkspace?.name || "Select Workspace"}</span>
-                  <ChevronDown className="w-4 h-4 text-slate-500 transition-transform"/>
+                  <ChevronDown className="w-4 h-4 text-slate-500 transition-transform" />
                 </button>
               </DropdownMenuTrigger>
 
@@ -194,7 +212,7 @@ export default function Sidebar({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 hover:bg-slate-100 rounded">
-                          <MoreHorizontal className="w-4 h-4 text-slate-500"/>
+                          <MoreHorizontal className="w-4 h-4 text-slate-500" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-44">
@@ -205,19 +223,14 @@ export default function Sidebar({
                           className="hover:text-black font-semibold"
                           onSelect={() => onEditWorkspace?.(ws)}
                         >
-                          <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/> Edit
+                          <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="hover:text-black font-semibold"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            console.log("Deleting workspace", ws.id);
-                            onDeleteWorkspace?.(ws.id);
-                          }}
+                          onSelect={() => onDeleteWorkspace?.(ws.id)}
                         >
-                          <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/> Delete
+                          <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
                         </DropdownMenuItem>
-
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -228,7 +241,7 @@ export default function Sidebar({
                   className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
                   onClick={() => setOpenNewWs?.(true)}
                 >
-                  <Plus className="w-4 h-4"/>
+                  <Plus className="w-4 h-4" />
                   <span>New workspace</span>
                 </div>
               </DropdownMenuContent>
@@ -243,6 +256,7 @@ export default function Sidebar({
                   projectId ? String(p.id) === String(projectId) : String(p.workspace_id) === String(currentWorkspace.id)
                 )
                 .map((p) => {
+                  const isProjectOpen = readOpenProjects(p.workspace_id);
                   const isEpOpen = readOpenEndpoints(p.id);
                   const activePj = String(projectId) === String(p.id);
                   const shouldBoldProject = activePj && !folderId && !endpointId;
@@ -255,26 +269,20 @@ export default function Sidebar({
                             ? "bg-slate-100 font-semibold text-slate-900"
                             : "hover:bg-slate-50 text-slate-600"
                         }`}
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
+                        onClick={() => {
+                          navigate(`/dashboard/${p.id}`);
+                          toggleProjects(p.workspace_id);
+                        }}
                       >
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{backgroundColor: projectColorMap[p.id] || "#999"}}
+                          style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
                         />
                         {p.name}
-                        <ChevronDown
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleEndpoints(p.id);
-                          }}
-                          className={`w-4 h-4 text-slate-400 transition-transform ${
-                            isEpOpen ? "rotate-0" : "-rotate-90"
-                          }`}
-                        />
                       </div>
 
                       {/* Folders */}
-                      {isEpOpen && (
+                      {isProjectOpen && (
                         <div className="ml-6 mt-1 space-y-1 text-xs">
                           {(() => {
                             const projectFolders = folders.filter(
@@ -294,10 +302,7 @@ export default function Sidebar({
                               <>
                                 {projectFolders.map((folder) => {
                                   const folderEndpoints = folderEndpointsMap[folder.id] || [];
-                                  const isFolderOpen =
-                                    (openFoldersMap
-                                      ? openFoldersMap[folder.id]
-                                      : localOpenFoldersMap[folder.id]) || false;
+                                  const isFolderOpen = readOpenFolders(folder.id);
                                   const activeFolder = String(folderId) === String(folder.id);
 
                                   return (
@@ -314,45 +319,14 @@ export default function Sidebar({
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               navigate(`/dashboard/${p.id}/folder/${folder.id}`);
-
-                                              if (setOpenFoldersMap) {
-                                                setOpenFoldersMap((prev) => {
-                                                  const newMap = {};
-                                                  // Đóng tất cả folder khác
-                                                  Object.keys(prev).forEach((key) => {
-                                                    newMap[key] = false;
-                                                  });
-                                                  // Nếu folder hiện tại đang mở thì giữ nguyên
-                                                  if (prev[folder.id]) {
-                                                    newMap[folder.id] = true;
-                                                  } else {
-                                                    // Nếu folder khác được click thì mở nó
-                                                    newMap[folder.id] = true;
-                                                  }
-                                                  return newMap;
-                                                });
-                                              } else {
-                                                setLocalOpenFoldersMap((prev) => {
-                                                  const newMap = {};
-                                                  Object.keys(prev).forEach((key) => {
-                                                    newMap[key] = false;
-                                                  });
-                                                  if (prev[folder.id]) {
-                                                    newMap[folder.id] = true;
-                                                  } else {
-                                                    newMap[folder.id] = true;
-                                                  }
-                                                  return newMap;
-                                                });
-                                              }
+                                              toggleFolders(folder.id);
                                             }}
-
                                           >
                                             <div className="flex items-center justify-between w-full">
                                               <div className="flex items-center gap-2">
                                                 <span
                                                   className={`text-sm ${
-                                                    String(folderId) === String(folder.id)
+                                                    activeFolder
                                                       ? "font-semibold text-slate-900"
                                                       : "font-medium text-slate-700"
                                                   }`}
@@ -360,8 +334,6 @@ export default function Sidebar({
                                                   {folder.name}
                                                 </span>
                                               </div>
-
-                                              {/* Endpoint count */}
                                               {folderEndpoints.length > 0 && (
                                                 <Badge
                                                   className={
@@ -374,7 +346,6 @@ export default function Sidebar({
                                                 </Badge>
                                               )}
                                             </div>
-
                                           </div>
                                         </ContextMenuTrigger>
 
@@ -384,10 +355,10 @@ export default function Sidebar({
                                             Actions
                                           </div>
                                           <ContextMenuItem onSelect={() => onEditFolder?.(folder)}>
-                                            <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/> Edit
+                                            <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
                                           </ContextMenuItem>
                                           <ContextMenuItem onSelect={() => onDeleteFolder?.(folder.id)}>
-                                            <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/> Delete
+                                            <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
                                           </ContextMenuItem>
                                         </ContextMenuContent>
                                       </ContextMenu>
@@ -412,20 +383,19 @@ export default function Sidebar({
                                                   }`}
                                                   onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
                                                 >
-                                                  {/* Dấu chấm hiển thị trên đường thẳng */}
                                                   <div
                                                     className={`${
-                                                      activeEp ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800" : ""
+                                                      activeEp
+                                                        ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800"
+                                                        : ""
                                                     }`}
-                                                    style={{top: "50%", transform: "translateY(-50%)"}}
+                                                    style={{ top: "50%", transform: "translateY(-50%)" }}
                                                   ></div>
-
                                                   {ep.is_stateful && (
-                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful"/>
+                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful" />
                                                   )}
                                                   <span>{ep.name}</span>
                                                 </div>
-
                                               );
                                             })
                                           )}
@@ -441,7 +411,7 @@ export default function Sidebar({
                                     if (onAddFolder) onAddFolder(p.id);
                                   }}
                                 >
-                                  <Plus className="w-4 h-4"/>
+                                  <Plus className="w-4 h-4" />
                                   <span>New folder...</span>
                                 </div>
                               </>
