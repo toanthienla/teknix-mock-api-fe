@@ -799,8 +799,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   placeholder="value"
                 />
 
-              {/* Gạch dọc trước thùng rác */}
-<div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+                {/* Gạch dọc trước thùng rác */}
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
 
                 <Button
                   variant="ghost"
@@ -831,29 +831,27 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
           )}
 
           {/* Nút Add full width, căn phải, style giống hàng input */}
-<div className="flex flex-col gap-3 mt-4">
- <Button
-  variant="outline"
-  onClick={handleAddRule}
-  className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
->
-  <Plus className="mr-2 h-4 w-4" />
-  Add
-</Button>
+          <div className="flex flex-col gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={handleAddRule}
+              className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add
+            </Button>
 
-
-  {selectedResponse && (
-    <div className="flex justify-end">
-      <Button
-        className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-        onClick={handleSave}
-      >
-        Save Changes
-      </Button>
-    </div>
-  )}
-</div>
-
+            {selectedResponse && (
+              <div className="flex justify-end">
+                <Button
+                  className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                  onClick={handleSave}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
     </div>
@@ -924,6 +922,8 @@ const DashboardPage = () => {
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
+  const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
 
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
@@ -1085,12 +1085,13 @@ const DashboardPage = () => {
 
   // Hàm xử lý xác nhận chuyển sang stateful
   const handleConfirmStateful = () => {
+    setIsSwitchingMode(true);
     setShowStatefulConfirmDialog(false);
 
     const newIsStateful = true;
     const previousState = isStateful;
 
-    // Cập nhật ngay trong state để UI phản hồi nhanh
+    // Update state immediately for UI responsiveness
     setEndpoints((prev) =>
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
@@ -1110,7 +1111,7 @@ const DashboardPage = () => {
     })
       .then((res) => {
         if (!res.ok) {
-          // Nếu có lỗi, khôi phục lại state
+          // If error, revert state
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
@@ -1124,7 +1125,7 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((updatedEndpoint) => {
-        // Cập nhật endpoint với dữ liệu trả về từ API
+        // Update endpoint with data from API
         setEndpoints((prev) =>
           prev.map((ep) =>
             String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
@@ -1132,7 +1133,7 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // Sau khi chuyển sang stateful, cần fetch lại endpoint data
+        // After switching to stateful, need to fetch endpoint data
         const currentEndpoint = endpoints.find(
           (ep) => String(ep.id) === String(currentEndpointId)
         );
@@ -1141,22 +1142,29 @@ const DashboardPage = () => {
           fetchEndpointDataByPath(currentEndpoint.path);
         }
 
+        // Fetch endpoint responses in stateful mode
+        fetchEndpointResponses(true);
+
         toast.success("Endpoint switched to stateful mode!");
       })
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
+      })
+      .finally(() => {
+        setIsSwitchingMode(false);
       });
   };
 
   // Hàm xử lý xác nhận chuyển sang stateless
   const handleConfirmStateless = () => {
+    setIsSwitchingMode(true);
     setShowStatelessConfirmDialog(false);
 
     const newIsStateful = false;
     const previousState = isStateful;
 
-    // Cập nhật ngay trong state để UI phản hồi nhanh
+    // Update state immediately for UI responsiveness
     setEndpoints((prev) =>
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
@@ -1170,14 +1178,14 @@ const DashboardPage = () => {
     );
     setIsStateful(newIsStateful);
 
-    // Gọi API mới để chuyển đổi sang stateless
+    // Call new API to convert to stateless
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
         if (!res.ok) {
-          // Nếu có lỗi, khôi phục lại state
+          // If error, revert state
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
@@ -1191,7 +1199,7 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((updatedEndpoint) => {
-        // Cập nhật endpoint với dữ liệu trả về từ API
+        // Update endpoint with data from API
         setEndpoints((prev) =>
           prev.map((ep) =>
             String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
@@ -1199,14 +1207,17 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // Sau khi chuyển sang stateless, cần fetch lại endpoint responses
-        fetchEndpointResponses();
+        // After switching to stateless, need to fetch endpoint responses
+        fetchEndpointResponses(false);
 
         toast.success("Endpoint switched to stateless mode!");
       })
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
+      })
+      .finally(() => {
+        setIsSwitchingMode(false);
       });
   };
 
@@ -1382,15 +1393,15 @@ const DashboardPage = () => {
       });
   };
 
-  const fetchEndpointResponses = () => {
+  const fetchEndpointResponses = (isStatefulMode) => {
     const endpointIdStr = String(currentEndpointId);
 
     return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
-        // Xử lý riêng cho stateful endpoint
-        if (isStateful) {
-          // Chỉ lấy các trường cần thiết cho stateful
+        // Processing for stateful endpoint
+        if (isStatefulMode) {
+          // Only take necessary fields for stateful
           const statefulResponses = data.map((res) => ({
             id: res.id,
             endpoint_id: res.endpoint_id,
@@ -1398,7 +1409,7 @@ const DashboardPage = () => {
             status_code: res.status_code,
             response_body: res.response_body,
             delay_ms: res.delay_ms,
-            // Sử dụng giá trị từ backend thay vì tự set
+            // Use value from backend instead of self-setting
             is_stateful: res.is_stateful !== undefined ? res.is_stateful : true,
             created_at: res.created_at,
             updated_at: res.updated_at,
@@ -1406,7 +1417,7 @@ const DashboardPage = () => {
 
           setEndpointResponses(statefulResponses);
 
-          // Format dữ liệu cho UI
+          // Format data for UI
           const statusDataFormatted = statefulResponses.map((res) => ({
             id: res.id,
             code: res.status_code.toString(),
@@ -1417,7 +1428,7 @@ const DashboardPage = () => {
 
           setStatusData(statusDataFormatted);
 
-          // Chọn response đầu tiên làm response mặc định
+          // Select first response as default
           if (!selectedResponse && statefulResponses.length > 0) {
             const firstResponse = statefulResponses[0];
             setSelectedResponse(firstResponse);
@@ -1429,7 +1440,7 @@ const DashboardPage = () => {
             setDelay(firstResponse.delay_ms?.toString() || "0");
           }
         } else {
-          // Xử lý như hiện tại cho stateless
+          // Processing as current for stateless
           const sortedData = [...data].sort((a, b) => a.priority - b.priority);
           setEndpointResponses(sortedData);
 
@@ -1458,14 +1469,14 @@ const DashboardPage = () => {
           }
         }
 
-        // Xử lý chung cho cả stateful và stateless
+        // Common processing for both stateful and stateless
         if (selectedResponse) {
           const existingResponse = data.find(
             (res) => res.id === selectedResponse.id
           );
           if (existingResponse) {
-            // Xử lý riêng cho stateful
-            if (isStateful) {
+            // Processing for stateful
+            if (isStatefulMode) {
               setSelectedResponse({
                 id: existingResponse.id,
                 endpoint_id: existingResponse.endpoint_id,
@@ -1473,7 +1484,7 @@ const DashboardPage = () => {
                 status_code: existingResponse.status_code,
                 response_body: existingResponse.response_body,
                 delay_ms: existingResponse.delay_ms,
-                // Sử dụng giá trị từ backend thay vì tự set
+                // Use value from backend instead of self-setting
                 is_stateful:
                   existingResponse.is_stateful !== undefined
                     ? existingResponse.is_stateful
@@ -1540,7 +1551,12 @@ const DashboardPage = () => {
 
   // Fetch endpoint data khi endpointId thay đổi
   useEffect(() => {
-    if (currentEndpointId) {
+    if (
+      currentEndpointId &&
+      isStateful &&
+      isEndpointsLoaded &&
+      !isSwitchingMode
+    ) {
       const currentEndpoint = endpoints.find(
         (ep) => String(ep.id) === String(currentEndpointId)
       );
@@ -1548,8 +1564,18 @@ const DashboardPage = () => {
       if (currentEndpoint && currentEndpoint.path) {
         fetchEndpointDataByPath(currentEndpoint.path);
       }
+    } else if (!isStateful && isEndpointsLoaded && !isSwitchingMode) {
+      // Clear endpoint data when in stateless mode
+      setEndpointData(null);
+      setDataDefault([]);
     }
-  }, [currentEndpointId, endpoints]);
+  }, [
+    currentEndpointId,
+    endpoints,
+    isStateful,
+    isEndpointsLoaded,
+    isSwitchingMode,
+  ]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -1570,11 +1596,17 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
-    if (currentEndpointId) {
+    if (currentEndpointId && isEndpointsLoaded && !isSwitchingMode) {
       setIsLoading(true);
-      fetchEndpointResponses().finally(() => setIsLoading(false));
+      fetchEndpointResponses(isStateful).finally(() => setIsLoading(false));
     }
-  }, [currentEndpointId]);
+  }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
+
+  useEffect(() => {
+    if (endpoints.length > 0) {
+      setIsEndpointsLoaded(true);
+    }
+  }, [endpoints]);
 
   useEffect(() => {
     if (endpointResponses.length > 0 && !selectedResponse) {
@@ -2421,7 +2453,7 @@ const DashboardPage = () => {
                 ? "w-[calc(100%+16rem)] -translate-x-64"
                 : "w-full"
             }`}
-        > 
+        >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -2643,40 +2675,38 @@ const DashboardPage = () => {
               </div>
             </div>
 
-           {/* Cột phải - Navigation và Content */}
-<div className="w-2/3">
-  {/* Navigation Tabs */}
-  <Tabs defaultValue="Header&Body" className="w-full">
-    {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
-    <TabsList className="flex w-full justify-start bg-transparent mb-4 space-x-6">
-      <TabsTrigger
-        value="Header&Body"
-        className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-      >
-        Header & Body
-      </TabsTrigger>
+            {/* Cột phải - Navigation và Content */}
+            <div className="w-2/3">
+              {/* Navigation Tabs */}
+              <Tabs defaultValue="Header&Body" className="w-full">
+                {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
+                <TabsList className="flex w-full justify-start bg-transparent mb-4 space-x-6">
+                  <TabsTrigger
+                    value="Header&Body"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                  >
+                    Header & Body
+                  </TabsTrigger>
 
-      {/* Ẩn hoàn toàn tab Request Validate khi stateful */}
-      {!isStateful && (
-        <TabsTrigger
-          value="Rules"
-          className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-        >
-          Rules
-        </TabsTrigger>
-      )}
+                  {/* Ẩn hoàn toàn tab Request Validate khi stateful */}
+                  {!isStateful && (
+                    <TabsTrigger
+                      value="Rules"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Rules
+                    </TabsTrigger>
+                  )}
 
-      {/* Ẩn hoàn toàn tab Proxy khi stateful */}
-      {!isStateful && (
-        <TabsTrigger
-          value="proxy"
-          className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-        >
-          Proxy
-        </TabsTrigger>
-      )}
-   
-
+                  {/* Ẩn hoàn toàn tab Proxy khi stateful */}
+                  {!isStateful && (
+                    <TabsTrigger
+                      value="proxy"
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Proxy
+                    </TabsTrigger>
+                  )}
 
                   {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
                   {isStateful && (
@@ -2855,7 +2885,7 @@ const DashboardPage = () => {
                                   isStateful &&
                                   (statusCode === "200" || method === "GET")
                                 }
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pb-8 ${
+                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
                                   isStateful &&
                                   (statusCode === "200" || method === "GET")
                                     ? "bg-gray-100 cursor-not-allowed"
@@ -2868,24 +2898,59 @@ const DashboardPage = () => {
                                     : ""
                                 }
                               />
-                              <FileCode
-                                className={`absolute bottom-2 right-2 ${
-                                  isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                    ? "text-gray-400 cursor-not-allowed"
-                                    : "text-gray-400 cursor-pointer hover:text-gray-600"
-                                }`}
-                                size={26}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const canEdit =
-                                    !isStateful ||
-                                    (statusCode !== "200" && method !== "GET");
-                                  if (canEdit) {
-                                    setIsPopoverOpen(!isPopoverOpen);
-                                  }
-                                }}
-                              />
+                              {/* Nhóm nút trên cùng bên phải */}
+                              <div className="absolute top-2 right-2 flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                >
+                                  <Upload className="mr-1 h-4 w-4" /> Upload
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (
+                                      !isStateful ||
+                                      (statusCode !== "200" && method !== "GET")
+                                    ) {
+                                      try {
+                                        const formatted = JSON.stringify(
+                                          JSON.parse(responseBody),
+                                          null,
+                                          2
+                                        );
+                                        setResponseBody(formatted);
+                                      } catch {
+                                        toast.error("Invalid JSON format");
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Code className="mr-1 h-4 w-4" /> Format
+                                </Button>
+                              </div>
+
+                              {/* Nhóm nút dưới cùng bên phải */}
+                              <div className="absolute bottom-2 right-2 flex space-x-2">
+                                <FileCode
+                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                  size={26}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const canEdit =
+                                      !isStateful ||
+                                      (statusCode !== "200" &&
+                                        method !== "GET");
+                                    if (canEdit) {
+                                      setIsPopoverOpen(!isPopoverOpen);
+                                    }
+                                  }}
+                                />
+                              </div>
 
                               {/* Popover */}
                               {isPopoverOpen && (
@@ -2968,30 +3033,6 @@ const DashboardPage = () => {
                                   </div>
                                 </div>
                               )}
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#E5E5E1]"
-                                disabled={
-                                  isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                }
-                              >
-                                <Upload className="mr-2 h-4 w-4" /> Upload
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#E5E5E1]"
-                                disabled={
-                                  isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                }
-                              >
-                                <Code className="mr-2 h-4 w-4" /> Format
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -3186,19 +3227,53 @@ const DashboardPage = () => {
                                   // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-8"
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16"
                               placeholder="Enter initial value"
                             />
-                            <FileCode
-                              className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
-                              size={26}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsInitialValuePopoverOpen(
-                                  !isInitialValuePopoverOpen
-                                );
-                              }}
-                            />
+                            {/* Nhóm nút trên cùng bên phải */}
+                            <div className="absolute top-2 right-2 flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              >
+                                <Upload className="mr-1 h-4 w-4" /> Upload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                onClick={() => {
+                                  try {
+                                    const formatted = JSON.stringify(
+                                      JSON.parse(tempDataDefaultString),
+                                      null,
+                                      2
+                                    );
+                                    setTempDataDefaultString(formatted);
+                                    setTempDataDefault(JSON.parse(formatted));
+                                  } catch {
+                                    toast.error("Invalid JSON format");
+                                  }
+                                }}
+                              >
+                                <Code className="mr-1 h-4 w-4" /> Format
+                              </Button>
+                            </div>
+
+                            {/* Nhóm nút dưới cùng bên phải */}
+                            <div className="absolute bottom-2 right-2 flex space-x-2">
+                              <FileCode
+                                className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                size={26}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsInitialValuePopoverOpen(
+                                    !isInitialValuePopoverOpen
+                                  );
+                                }}
+                              />
+                            </div>
 
                             {/* Popover cho Initial Value */}
                             {isInitialValuePopoverOpen && (
@@ -3281,35 +3356,6 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
-                          </div>
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                            >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                              onClick={() => {
-                                try {
-                                  const formatted = JSON.stringify(
-                                    JSON.parse(tempDataDefaultString),
-                                    null,
-                                    2
-                                  );
-                                  setTempDataDefaultString(formatted);
-                                  setTempDataDefault(JSON.parse(formatted));
-                                } catch {
-                                  toast.error("Invalid JSON format");
-                                }
-                              }}
-                            >
-                              <Code className="mr-1 h-4 w-4" /> Format
-                            </Button>
                           </div>
                         </div>
 
@@ -3561,7 +3607,6 @@ const DashboardPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* New Response Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
             <DialogHeader>
@@ -3633,13 +3678,45 @@ const DashboardPage = () => {
 
               <div>
                 <Label htmlFor="new-response-body">Body</Label>
-                <Textarea
-                  id="new-response-body"
-                  placeholder="Enter response body"
-                  value={responseBody}
-                  onChange={(e) => setResponseBody(e.target.value)}
-                  className="h-32 font-mono"
-                />
+                <div className="relative">
+                  <Textarea
+                    id="new-response-body"
+                    placeholder="Enter response body"
+                    value={responseBody}
+                    onChange={(e) => setResponseBody(e.target.value)}
+                    className="h-32 font-mono pb-16"
+                  />
+                  {/* Nhóm nút trên cùng bên phải */}
+                  <div className="absolute top-2 right-2 flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                    >
+                      <Upload className="mr-1 h-4 w-4" /> Upload
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          const formatted = JSON.stringify(
+                            JSON.parse(responseBody),
+                            null,
+                            2
+                          );
+                          setResponseBody(formatted);
+                        } catch {
+                          toast.error("Invalid JSON format");
+                        }
+                      }}
+                    >
+                      <Code className="mr-1 h-4 w-4" /> Format
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div>

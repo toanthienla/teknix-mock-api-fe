@@ -125,8 +125,8 @@
       "method": "POST",
       "folder_id": 1,
       "is_active": true,
-      "is_stateful": false,
-      "updated_at": "2025-10-05T01:36:25.125Z"
+      "is_stateful": true,
+      "updated_at": "2025-10-05T08:55:16.973Z"
     },
     {
       "id": "3",
@@ -269,6 +269,17 @@
       "is_active": true,
       "is_stateful": true,
       "updated_at": "2025-10-02T09:17:33.462Z"
+    },
+    {
+      "id": "66a6",
+      "name": "huh",
+      "path": "/yessir",
+      "method": "PUT",
+      "folder_id": 1,
+      "is_stateful": false,
+      "is_active": true,
+      "created_at": "2025-10-05T08:57:41.845Z",
+      "updated_at": "2025-10-05T08:57:41.845Z"
     }
   ],
   "endpoint_responses": [
@@ -309,21 +320,10 @@
     },
     {
       "endpoint_id": "2",
-      "name": "Created",
-      "status_code": 201,
-      "response_body": {
-        "id": 2,
-        "username": "new_user"
-      },
-      "delay_ms": 100,
-      "id": "3"
-    },
-    {
-      "endpoint_id": "2",
       "name": "Duplicate Username",
       "status_code": 409,
       "response_body": {
-        "error": "Username already exists"
+        "error": "Username alreadys exists"
       },
       "delay_ms": 0,
       "id": "4"
@@ -456,6 +456,22 @@
       },
       "priority": 2,
       "is_default": false
+    },
+    {
+      "id": "5cf5",
+      "endpoint_id": "2",
+      "name": "Hello",
+      "status_code": 201,
+      "response_body": "yesssit",
+      "condition": {
+        "params": {
+          "12": 1
+        }
+      },
+      "is_default": false,
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null
     }
   ],
   "project_request_logs": [
