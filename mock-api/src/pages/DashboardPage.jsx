@@ -34,7 +34,6 @@ export default function DashboardPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [allStatefulEndpoints, setAllStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [currentWsId, setCurrentWsId] = useState(
     () => localStorage.getItem("currentWorkspace") || null
@@ -81,7 +80,6 @@ export default function DashboardPage() {
     fetchWorkspaces();
     fetchProjects();
     fetchEndpoints();
-    fetchAllStatefulEndpoints();
     fetchFolders();
   }, []);
 
@@ -174,14 +172,6 @@ export default function DashboardPage() {
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
   };
-
-  const fetchAllStatefulEndpoints = () => {
-    fetch(`${API_ROOT}/stateful_endpoints`)
-      .then((res) => res.json())
-      .then((data) => setAllStatefulEndpoints(data))
-      .catch((err) => console.error("Error fetching all stateful endpoints:", err));
-  };
-
 
   const fetchFolders = async () => {
     try {
@@ -406,7 +396,7 @@ export default function DashboardPage() {
   };
 
   // -------------------- Project --------------------
-  const validateProject = (title, desc, editMode = false, editId = null) => {
+  const validateProject = (title, desc, editMode = false, editId = null, workspaceId) => {
     const titleTrim = title.trim();
     const descTrim = desc.trim();
 
@@ -443,7 +433,7 @@ export default function DashboardPage() {
 
     const duplicate = projects.some(
       (p) =>
-        p.workspace_id === currentWsId &&
+        String(p.workspace_id) === String(workspaceId) &&
         (!editMode || p.id !== editId) &&
         p.name.toLowerCase() === titleTrim.toLowerCase()
     );
@@ -455,7 +445,8 @@ export default function DashboardPage() {
   };
 
   const handleCreateProject = () => {
-    if (!validateProject(newTitle, newDesc)) return;
+    const workspaceId = targetWsId || currentWsId;
+    if (!validateProject(newTitle, newDesc, false, null, workspaceId)) return;
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
@@ -477,10 +468,7 @@ export default function DashboardPage() {
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-        setOpenProjectsMap((prev) => ({
-          ...prev,
-          [createdProject.workspace_id]: true,
-        }));
+        setOpenProjectsMap({ [createdProject.workspace_id]: true });
 
         setNewTitle("");
         setNewDesc("");
@@ -511,7 +499,7 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!validateProject(editTitle, editDesc, true, editId)) return;
+    if (!validateProject(editTitle, editDesc, true, editId, original.workspace_id)) return;
 
     fetch(`${API_ROOT}/projects/${editId}`, {
       method: "PUT",
@@ -520,7 +508,7 @@ export default function DashboardPage() {
         id: editId,
         name: editTitle.trim(),
         description: editDesc.trim(),
-        workspace_id: currentWsId,
+        workspace_id: original.workspace_id,
         created_at: original.created_at, //Giữ lại created_at
         updated_at: new Date().toISOString(),
       }),
@@ -611,7 +599,6 @@ export default function DashboardPage() {
             workspaces={workspaces}
             projects={projects}
             endpoints={endpoints}
-            statefulEndpoints={allStatefulEndpoints}
             folders={folders}
             current={currentWsId}
             setCurrent={setCurrentWsId}
@@ -638,7 +625,7 @@ export default function DashboardPage() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
-            setOpenNewWs={setOpenNewWs}   // 👈 Thêm dòng này
+            setOpenNewWs={setOpenNewWs}
           />
 
         </aside>
@@ -812,7 +799,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-black/90"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleCreateProject}
             >
               Create
@@ -890,7 +877,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-black/90"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleUpdateProject}
               disabled={
                 editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
@@ -924,7 +911,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ✅ New Workspace */}
+      {/* New Workspace */}
       <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
         <DialogContent>
           <DialogHeader>
@@ -953,7 +940,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-gray-800"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -987,7 +974,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-gray-800"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleEditWorkspace}
               disabled={
                 editWsName.trim() === (workspaces.find((w) => w.id === editWsId)?.name || "")
