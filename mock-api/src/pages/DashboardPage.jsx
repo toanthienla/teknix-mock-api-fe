@@ -809,7 +809,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-black/90"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleCreateProject}
             >
               Create
@@ -887,7 +887,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-black/90"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleUpdateProject}
               disabled={
                 editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
@@ -950,7 +950,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-gray-800"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -984,7 +984,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-black text-white hover:bg-gray-800"
+              className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleEditWorkspace}
               disabled={
                 editWsName.trim() === (workspaces.find((w) => w.id === editWsId)?.name || "")
