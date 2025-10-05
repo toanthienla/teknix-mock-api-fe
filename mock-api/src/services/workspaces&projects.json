@@ -472,6 +472,22 @@
       "delay_ms": 0,
       "proxy_url": null,
       "proxy_method": null
+    },
+    {
+      "id": "c71a",
+      "endpoint_id": "1",
+      "name": "What?",
+      "status_code": 200,
+      "response_body": "Giga",
+      "condition": {
+        "params": {
+          "32": 1
+        }
+      },
+      "is_default": false,
+      "delay_ms": 0,
+      "proxy_url": null,
+      "proxy_method": null
     }
   ],
   "project_request_logs": [

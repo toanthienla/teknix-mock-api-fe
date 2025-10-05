@@ -3160,9 +3160,16 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <div className="w-full h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
-                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black">
-                                    {dataDefault.length === 0 ? "[]" : "[...]"}
+                                <div className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
+                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
+                                    {dataDefault && dataDefault.length > 0
+                                      ? JSON.stringify(dataDefault).length > 50
+                                        ? `${JSON.stringify(dataDefault).slice(
+                                            0,
+                                            50
+                                          )}...`
+                                        : JSON.stringify(dataDefault)
+                                      : "[]"}
                                   </span>
                                 </div>
                                 <div
@@ -3185,11 +3192,13 @@ const DashboardPage = () => {
                                 {/* Thay Textarea bằng div chỉ đọc */}
                                 <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                   <pre className="whitespace-pre-wrap break-words m-0">
-                                    {JSON.stringify(
-                                      endpointData?.data_current || [],
-                                      null,
-                                      2
-                                    )}
+                                    {endpointData?.data_current
+                                      ? JSON.stringify(
+                                          endpointData.data_current,
+                                          null,
+                                          2
+                                        )
+                                      : "[]"}
                                   </pre>
                                 </div>
                               </div>
