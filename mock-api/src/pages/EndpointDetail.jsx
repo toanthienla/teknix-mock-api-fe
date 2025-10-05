@@ -926,6 +926,9 @@ const DashboardPage = () => {
   const initialValuePopoverRef = useRef(null);
 const [openNewWs, setOpenNewWs] = useState(false);
 const [newWsName, setNewWsName] = useState("");
+const [openNewFolder, setOpenNewFolder] = useState(false);
+const [targetProjectId, setTargetProjectId] = useState(null);
+const [newFolderName, setNewFolderName] = useState("");
 
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
@@ -1668,6 +1671,24 @@ const [newWsName, setNewWsName] = useState("");
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
+const handleAddFolder = (projectId, name) => {
+  fetch(`${API_ROOT}/folders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.trim(),
+      project_id: projectId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then((res) => res.json())
+    .then((createdFolder) => {
+      setFolders((prev) => [...prev, createdFolder]);
+      toast.success("Folder created successfully!");
+    })
+    .catch(() => toast.error("Failed to create folder"));
+};
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
@@ -2354,8 +2375,10 @@ const [newWsName, setNewWsName] = useState("");
     setOpenNewProject(true);
   }}
   onAddFolder={(projectId) => {
-    console.log("Add folder for project:", projectId);
-  }}
+  setTargetProjectId(projectId);
+  setOpenNewFolder(true);
+}}
+
 />
 
       </aside>
@@ -2397,6 +2420,53 @@ const [newWsName, setNewWsName] = useState("");
             handleAddWorkspace(newWsName); // gọi hàm tạo workspace
             setNewWsName("");
             setOpenNewWs(false);
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Modal: New Folder */}
+{openNewFolder && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
+      <h2 className="text-lg font-semibold mb-4 text-slate-800">
+        New Folder
+      </h2>
+
+      <input
+        type="text"
+        placeholder="Folder name"
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
+        value={newFolderName}
+        onChange={(e) => setNewFolderName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
+          }
+        }}
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+          onClick={() => setOpenNewFolder(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => {
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
           }}
         >
           Create
