@@ -1200,7 +1200,7 @@ const DashboardPage = () => {
         setIsStateful(updatedEndpoint.is_stateful);
 
         // Sau khi chuyển sang stateless, fetch endpoint responses
-        fetchEndpointResponses();
+        fetchEndpointResponses(String(endpointId));
 
         toast.success("Endpoint switched to stateless mode!");
       })
@@ -1382,8 +1382,7 @@ const DashboardPage = () => {
       });
   };
 
-  const fetchEndpointResponses = () => {
-    const endpointIdStr = String(currentEndpointId);
+  const fetchEndpointResponses = (endpointIdStr) => {
 
     // Chỉ fetch endpoint responses nếu không phải là stateful
     if (isStateful) {
@@ -1463,7 +1462,7 @@ const DashboardPage = () => {
         } else {
           // Chỉ fetch endpoint responses nếu chuyển từ stateful sang stateless
           if (wasStateful) {
-            fetchEndpointResponses();
+            fetchEndpointResponses(String(endpointId));
           }
         }
       }
@@ -1543,6 +1542,41 @@ const DashboardPage = () => {
       setCurrentEndpointId(endpoints[0].id);
     }
   }, [endpointId, endpoints]);
+
+  // Khi endpointId trong URL thay đổi → cập nhật ngay dữ liệu endpoint tương ứng
+  useEffect(() => {
+    if (!endpointId || endpoints.length === 0) return;
+
+    const newEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(endpointId)
+    );
+    if (!newEndpoint) return;
+
+    setCurrentEndpointId(String(endpointId));
+    setIsStateful(newEndpoint.is_stateful);
+    setIsActive(newEndpoint.is_active);
+
+    // Reset các state liên quan
+    setSelectedResponse(null);
+    setResponseName("");
+    setStatusCode("");
+    setResponseBody("");
+    setDelay("0");
+    setProxyUrl("");
+    setProxyMethod("GET");
+    setEndpointData(null);
+    setEndpointResponses([]);
+    setStatusData([]);
+
+    // Fetch dữ liệu phù hợp với loại endpoint
+    if (newEndpoint.is_stateful && newEndpoint.path) {
+      fetchEndpointDataByPath(newEndpoint.path);
+    } else {
+      fetchEndpointResponses(String(endpointId));
+    }
+
+  }, [endpointId, endpoints]);
+
 
   useEffect(() => {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
@@ -1780,7 +1814,7 @@ const DashboardPage = () => {
       })
       .then(() => {
         // Fetch lại danh sách responses sau khi xóa
-        fetchEndpointResponses();
+        fetchEndpointResponses(String(endpointId));
 
         // Thêm toast thông báo thành công
         toast.success("Response deleted successfully!");
@@ -1914,7 +1948,7 @@ const DashboardPage = () => {
         console.error("Error setting default response:", error);
         toast.error("Failed to set default response!");
 
-        fetchEndpointResponses();
+        fetchEndpointResponses(String(endpointId));
       });
   };
 
