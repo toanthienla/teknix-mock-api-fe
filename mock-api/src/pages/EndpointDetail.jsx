@@ -1146,6 +1146,7 @@ const DashboardPage = () => {
         fetchEndpointResponses(true);
 
         toast.success("Endpoint switched to stateful mode!");
+        window.location.reload();
       })
       .catch((error) => {
         console.error(error);
@@ -1211,6 +1212,7 @@ const DashboardPage = () => {
         fetchEndpointResponses(false);
 
         toast.success("Endpoint switched to stateless mode!");
+        window.location.reload();
       })
       .catch((error) => {
         console.error(error);
