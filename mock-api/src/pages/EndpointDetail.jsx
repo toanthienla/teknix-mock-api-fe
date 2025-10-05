@@ -44,103 +44,99 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
+import reset_icon from "../assets/reset_state_button.svg";
+import chain_icon from "../assets/Chain.svg";
 
 const statusCodes = [
   {
     code: "100",
-    description: "Continue – Request received, continue with request.",
+    description: "Continue.",
   },
   {
     code: "101",
-    description:
-      "Switching Protocols – Protocol switching requested by client.",
+    description: "Switching Protocols.",
   },
   {
     code: "102",
-    description: "Processing – Request is being processed (WebDAV).",
+    description: "Processing.",
   },
-  { code: "200", description: "OK – Request succeeded." },
-  { code: "201", description: "Created – Resource created successfully." },
+  { code: "200", description: "OK." },
+  { code: "201", description: "Created." },
   {
     code: "202",
-    description:
-      "Accepted – Request accepted for processing (not completed yet).",
+    description: "Accepted.",
   },
   {
     code: "204",
-    description: "No Content – Request succeeded, but no content returned.",
+    description: "No Content.",
   },
   {
     code: "206",
-    description:
-      "Partial Content – Partial response (used for range requests).",
+    description: "Partial Content.",
   },
   {
     code: "301",
-    description: "Moved Permanently – Resource has a new permanent URL.",
+    description: "Moved Permanently.",
   },
-  { code: "302", description: "Found – Temporary redirect." },
-  { code: "303", description: "See Other – Redirect with GET method." },
+  { code: "302", description: "Found." },
+  { code: "303", description: "See Other." },
   {
     code: "304",
-    description: "Not Modified – Cached resource is still valid.",
+    description: "Not Modified.",
   },
   {
     code: "307",
-    description: "Temporary Redirect – Same as 302 but method is preserved.",
+    description: "Temporary Redirect.",
   },
   {
     code: "308",
-    description: "Permanent Redirect – Same as 301 but method is preserved.",
+    description: "Permanent Redirect.",
   },
-  { code: "400", description: "Bad Request – Invalid request syntax." },
-  { code: "401", description: "Unauthorized – Authentication required." },
+  { code: "400", description: "Bad Request." },
+  { code: "401", description: "Unauthorized." },
   {
     code: "403",
-    description: "Forbidden – Client not allowed to access resource.",
+    description: "Forbidden.",
   },
-  { code: "404", description: "Not Found – Resource not found." },
+  { code: "404", description: "Not Found." },
   {
     code: "405",
-    description: "Method Not Allowed – HTTP method not supported.",
+    description: "Method Not Allowed.",
   },
   {
     code: "408",
-    description: "Request Timeout – Client took too long to send request.",
+    description: "Request Timeout.",
   },
   {
     code: "409",
-    description: "Conflict – Request conflicts with resource state.",
+    description: "Conflict.",
   },
-  { code: "410", description: "Gone – Resource is permanently unavailable." },
+  { code: "410", description: "Gone." },
   {
     code: "415",
-    description:
-      "Unsupported Media Type – Server does not support request format.",
+    description: "Unsupported Media Type.",
   },
-  { code: "429", description: "Too Many Requests – Rate limiting exceeded." },
-  { code: "500", description: "Internal Server Error – Generic server error." },
+  { code: "429", description: "Too Many Requests." },
+  { code: "500", description: "Internal Server Error." },
   {
     code: "501",
-    description: "Not Implemented – Server does not support functionality.",
+    description: "Not Implemented.",
   },
   {
     code: "502",
-    description: "Bad Gateway – Invalid response from upstream server.",
+    description: "Bad Gateway.",
   },
   {
     code: "503",
-    description:
-      "Service Unavailable – Server temporarily overloaded/unavailable.",
+    description: "Service Unavailable.",
   },
   {
     code: "504",
-    description: "Gateway Timeout – Upstream server took too long.",
+    description: "Gateway Timeout.",
   },
   {
     code: "505",
-    description:
-      "HTTP Version Not Supported – Server doesn’t support HTTP version.",
+    description: "HTTP Version Not Supported.",
   },
 ];
 
@@ -1097,20 +1093,9 @@ const DashboardPage = () => {
     );
     setIsStateful(newIsStateful);
 
-    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
-      method: "PUT",
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...currentEndpoint,
-        is_stateful: newIsStateful,
-        updated_at: new Date().toISOString(),
-      }),
     })
       .then((res) => {
         if (!res.ok) {
@@ -1123,14 +1108,29 @@ const DashboardPage = () => {
             )
           );
           setIsStateful(previousState);
-          throw new Error("Failed to update endpoint mode");
+          throw new Error("Failed to convert endpoint to stateful mode");
+        }
+        return res.json();
+      })
+      .then((updatedEndpoint) => {
+        // Cập nhật endpoint với dữ liệu trả về từ API
+        setEndpoints((prev) =>
+          prev.map((ep) =>
+            String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
+          )
+        );
+        setIsStateful(updatedEndpoint.is_stateful);
+
+        // Sau khi chuyển sang stateful, cần fetch lại endpoint data
+        const currentEndpoint = endpoints.find(
+          (ep) => String(ep.id) === String(currentEndpointId)
+        );
+
+        if (currentEndpoint && currentEndpoint.path) {
+          fetchEndpointDataByPath(currentEndpoint.path);
         }
 
-        toast.success(
-          `Endpoint switched to ${
-            newIsStateful ? "stateful" : "stateless"
-          } mode!`
-        );
+        toast.success("Endpoint switched to stateful mode!");
       })
       .catch((error) => {
         console.error(error);
@@ -1159,20 +1159,10 @@ const DashboardPage = () => {
     );
     setIsStateful(newIsStateful);
 
-    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
-      method: "PUT",
+    // Gọi API mới để chuyển đổi sang stateless
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...currentEndpoint,
-        is_stateful: newIsStateful,
-        updated_at: new Date().toISOString(),
-      }),
     })
       .then((res) => {
         if (!res.ok) {
@@ -1185,14 +1175,23 @@ const DashboardPage = () => {
             )
           );
           setIsStateful(previousState);
-          throw new Error("Failed to update endpoint mode");
+          throw new Error("Failed to convert endpoint to stateless mode");
         }
-
-        toast.success(
-          `Endpoint switched to ${
-            newIsStateful ? "stateful" : "stateless"
-          } mode!`
+        return res.json();
+      })
+      .then((updatedEndpoint) => {
+        // Cập nhật endpoint với dữ liệu trả về từ API
+        setEndpoints((prev) =>
+          prev.map((ep) =>
+            String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
+          )
         );
+        setIsStateful(updatedEndpoint.is_stateful);
+
+        // Sau khi chuyển sang stateless, cần fetch lại endpoint responses
+        fetchEndpointResponses();
+
+        toast.success("Endpoint switched to stateless mode!");
       })
       .catch((error) => {
         console.error(error);
@@ -2415,7 +2414,7 @@ const DashboardPage = () => {
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <h2 className="text-2xl font-bold text-[#37352F] mr-4">
                 {endpoints.find(
                   (ep) => String(ep.id) === String(currentEndpointId)
@@ -2439,95 +2438,39 @@ const DashboardPage = () => {
               </Badge>
             </div>
 
-            {/* Dialog xác nhận reset current values */}
-            <Dialog
-              open={showResetConfirmDialog}
-              onOpenChange={setShowResetConfirmDialog}
-            >
-              <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
-                <DialogHeader className="flex justify-between items-start mb-4">
-                  <DialogTitle className="text-xl font-bold text-slate-800">
-                    Reset Current Values
-                  </DialogTitle>
-                </DialogHeader>
-
-                <div className="mb-6">
-                  <p className="text-gray-700">
-                    It will reset all Current Values back to Initial Values. Are
-                    you sure you want to reset?
-                  </p>
-                </div>
-
-                <DialogFooter className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowResetConfirmDialog(false)}
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="bg-[#FA2F2F] hover:bg-[#E02929] text-white w-[90px] h-[40px] rounded-[8px]"
-                    onClick={handleResetCurrentValues}
-                  >
-                    Reset
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-4 flex-1 min-w-0">
               {/*  reset state button */}
               {isStateful && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6"
+                  className="w-6 h-6 flex-shrink-0"
                   onClick={() => setShowResetConfirmDialog(true)}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 4V1L8 5L12 9V6C16.42 6 20 9.58 20 14C20 16.13 19.15 18.06 17.72 19.49L19.13 20.9C20.88 19.15 22 16.72 22 14C22 8.48 17.52 4 12 4ZM2 9C2 11.87 3.13 14.44 5.03 16.34L6.44 14.93C4.93 13.42 4 11.31 4 9C4 5.69 6.69 3 10 3V5.1C7.8 5.74 6 7.6 6 9.9C6 11.25 6.55 12.45 7.45 13.35L8.86 11.94C8.37 11.45 8.06 10.77 8.06 10.05C8.06 8.71 9.16 7.61 10.5 7.61C11.15 7.61 11.75 7.88 12.19 8.31L13.6 6.9C12.7 6.01 11.5 5.11 10 5.11C7.8 5.11 6 6.91 6 9.11C6 10.51 6.6 11.71 7.5 12.61L12 17.11V14H14V20H4V14H6V11.89L2 9Z"
-                      fill="#000000"
-                    />
-                  </svg>
+                  <img
+                    src={reset_icon}
+                    alt="Create Icon"
+                    className="w-4 h-4 object-contain"
+                  />
                 </Button>
               )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md">
-                <div className="w-[658px] h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5">
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
                 </div>
                 {/* Icon chain */}
-                <div className="flex flex-row items-center gap-3 w-[21px] h-[20px]">
-                  <div className="w-[21px] h-[20px] relative">
-                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none">
-                      <path
-                        stroke="#777671"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                      </svg>
-                    </svg>
-                  </div>
-                </div>
+                <img
+                  src={chain_icon}
+                  alt="Chain Icon"
+                  className="w-6 h-6 object-contain flex-shrink-0"
+                />
 
                 {/* Nút toggle Active/Inactive */}
                 <div
-                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer"
+                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer flex-shrink-0"
                   onClick={handleActiveToggle}
                 >
                   {isActive ? (
@@ -2555,6 +2498,43 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Dialog xác nhận reset current values */}
+          <Dialog
+            open={showResetConfirmDialog}
+            onOpenChange={setShowResetConfirmDialog}
+          >
+            <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+              <DialogHeader className="flex justify-between items-start mb-4">
+                <DialogTitle className="text-xl font-bold text-slate-800">
+                  Reset Current Values
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="mb-6">
+                <p className="text-gray-700">
+                  It will reset all Current Values back to Initial Values. Are
+                  you sure you want to reset?
+                </p>
+              </div>
+
+              <DialogFooter className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowResetConfirmDialog(false)}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#FA2F2F] hover:bg-[#E02929] text-white w-[90px] h-[40px] rounded-[8px]"
+                  onClick={handleResetCurrentValues}
+                >
+                  Reset
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <div className="flex gap-6">
             {/* Cột trái - Response Configuration */}
@@ -2592,7 +2572,7 @@ const DashboardPage = () => {
                           index === statusData.length - 1 ? "border-b-0" : ""
                         } ${draggedItem === index ? "opacity-50" : ""} ${
                           selectedResponse?.id === status.id
-                            ? "bg-gray-200"
+                            ? "bg-gray-100"
                             : ""
                         }`}
                         draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
@@ -3595,20 +3575,30 @@ const DashboardPage = () => {
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="new-status-code">Status Code</Label>
-                <select
-                  id="new-status-code"
-                  value={statusCode}
-                  onChange={(e) => setStatusCode(e.target.value)}
-                  className="w-full p-2 border border-[#CBD5E1] rounded-md"
+              <div className="grid grid-cols-5 items-center gap-1">
+                <Label
+                  htmlFor="new-status-code"
+                  className="text-right text-sm font-medium text-[#000000]"
                 >
-                  {statusCodes.map((status) => (
-                    <option key={status.code} value={status.code}>
-                      {status.code} - {status.description}
-                    </option>
-                  ))}
-                </select>
+                  Status Code
+                </Label>
+                <div className="col-span-5">
+                  <Select value={statusCode} onValueChange={setStatusCode}>
+                    <SelectTrigger
+                      id="new-status-code"
+                      className="border-[#CBD5E1] rounded-md"
+                    >
+                      <SelectValue placeholder="Select status code" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                      {statusCodes.map((status) => (
+                        <SelectItem key={status.code} value={status.code}>
+                          {status.code} - {status.description.split("–")[0]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-4">

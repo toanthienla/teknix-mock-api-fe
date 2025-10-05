@@ -125,8 +125,8 @@
       "method": "POST",
       "folder_id": 1,
       "is_active": true,
-      "is_stateful": true,
-      "updated_at": "2025-10-04T10:47:17.329Z"
+      "is_stateful": false,
+      "updated_at": "2025-10-05T01:36:25.125Z"
     },
     {
       "id": "3",
