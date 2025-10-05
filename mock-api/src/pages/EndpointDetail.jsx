@@ -1072,7 +1072,7 @@ const DashboardPage = () => {
     setShowStatelessConfirmDialog(true);
   };
 
-  // Hàm xử lý xác nhận chuyển sang stateful
+  // Cập nhật hàm handleConfirmStateful
   const handleConfirmStateful = () => {
     setShowStatefulConfirmDialog(false);
 
@@ -1121,7 +1121,7 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // Sau khi chuyển sang stateful, cần fetch lại endpoint data
+        // Sau khi chuyển sang stateful, fetch endpoint data
         const currentEndpoint = endpoints.find(
           (ep) => String(ep.id) === String(currentEndpointId)
         );
@@ -1138,7 +1138,7 @@ const DashboardPage = () => {
       });
   };
 
-  // Hàm xử lý xác nhận chuyển sang stateless
+  // Cập nhật hàm handleConfirmStateless
   const handleConfirmStateless = () => {
     setShowStatelessConfirmDialog(false);
 
@@ -1188,7 +1188,7 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // Sau khi chuyển sang stateless, cần fetch lại endpoint responses
+        // Sau khi chuyển sang stateless, fetch endpoint responses
         fetchEndpointResponses();
 
         toast.success("Endpoint switched to stateless mode!");
@@ -1374,129 +1374,101 @@ const DashboardPage = () => {
   const fetchEndpointResponses = () => {
     const endpointIdStr = String(currentEndpointId);
 
+    // Chỉ fetch endpoint responses nếu không phải là stateful
+    if (isStateful) {
+      return Promise.resolve([]);
+    }
+
     return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
       .then((res) => res.json())
       .then((data) => {
-        // Xử lý riêng cho stateful endpoint
-        if (isStateful) {
-          // Chỉ lấy các trường cần thiết cho stateful
-          const statefulResponses = data.map((res) => ({
-            id: res.id,
-            endpoint_id: res.endpoint_id,
-            name: res.name,
-            status_code: res.status_code,
-            response_body: res.response_body,
-            delay_ms: res.delay_ms,
-            // Sử dụng giá trị từ backend thay vì tự set
-            is_stateful: res.is_stateful !== undefined ? res.is_stateful : true,
-            created_at: res.created_at,
-            updated_at: res.updated_at,
-          }));
+        // Xử lý cho stateless
+        const sortedData = [...data].sort((a, b) => a.priority - b.priority);
+        setEndpointResponses(sortedData);
 
-          setEndpointResponses(statefulResponses);
+        const statusDataFormatted = sortedData.map((res) => ({
+          id: res.id,
+          code: res.status_code.toString(),
+          name: res.name,
+          isDefault: res.is_default,
+          bgColor: res.is_default ? "bg-slate-100" : "",
+          priority: res.priority,
+        }));
+        setStatusData(statusDataFormatted);
 
-          // Format dữ liệu cho UI
-          const statusDataFormatted = statefulResponses.map((res) => ({
-            id: res.id,
-            code: res.status_code.toString(),
-            name: res.name,
-            isStateful: res.is_stateful !== undefined ? res.is_stateful : true,
-            bgColor: "",
-          }));
-
-          setStatusData(statusDataFormatted);
-
-          // Chọn response đầu tiên làm response mặc định
-          if (!selectedResponse && statefulResponses.length > 0) {
-            const firstResponse = statefulResponses[0];
-            setSelectedResponse(firstResponse);
-            setResponseName(firstResponse.name);
-            setStatusCode(firstResponse.status_code.toString());
-            setResponseBody(
-              JSON.stringify(firstResponse.response_body, null, 2)
-            );
-            setDelay(firstResponse.delay_ms?.toString() || "0");
-          }
-        } else {
-          // Xử lý như hiện tại cho stateless
-          const sortedData = [...data].sort((a, b) => a.priority - b.priority);
-          setEndpointResponses(sortedData);
-
-          const statusDataFormatted = sortedData.map((res) => ({
-            id: res.id,
-            code: res.status_code.toString(),
-            name: res.name,
-            isDefault: res.is_default,
-            bgColor: res.is_default ? "bg-slate-100" : "",
-            priority: res.priority,
-          }));
-          setStatusData(statusDataFormatted);
-
-          if (!selectedResponse && data.length > 0) {
-            const defaultResponse =
-              data.find((res) => res.is_default) || data[0];
-            setSelectedResponse(defaultResponse);
-            setResponseName(defaultResponse.name);
-            setStatusCode(defaultResponse.status_code.toString());
-            setResponseBody(
-              JSON.stringify(defaultResponse.response_body, null, 2)
-            );
-            setDelay(defaultResponse.delay_ms?.toString() || "0");
-            setProxyUrl(defaultResponse.proxy_url || "");
-            setProxyMethod(defaultResponse.proxy_method || "GET");
-          }
-        }
-
-        // Xử lý chung cho cả stateful và stateless
-        if (selectedResponse) {
-          const existingResponse = data.find(
-            (res) => res.id === selectedResponse.id
+        if (!selectedResponse && data.length > 0) {
+          const defaultResponse = data.find((res) => res.is_default) || data[0];
+          setSelectedResponse(defaultResponse);
+          setResponseName(defaultResponse.name);
+          setStatusCode(defaultResponse.status_code.toString());
+          setResponseBody(
+            JSON.stringify(defaultResponse.response_body, null, 2)
           );
-          if (existingResponse) {
-            // Xử lý riêng cho stateful
-            if (isStateful) {
-              setSelectedResponse({
-                id: existingResponse.id,
-                endpoint_id: existingResponse.endpoint_id,
-                name: existingResponse.name,
-                status_code: existingResponse.status_code,
-                response_body: existingResponse.response_body,
-                delay_ms: existingResponse.delay_ms,
-                // Sử dụng giá trị từ backend thay vì tự set
-                is_stateful:
-                  existingResponse.is_stateful !== undefined
-                    ? existingResponse.is_stateful
-                    : true,
-                created_at: existingResponse.created_at,
-                updated_at: existingResponse.updated_at,
-              });
-              setResponseName(existingResponse.name);
-              setStatusCode(existingResponse.status_code.toString());
-              setResponseBody(
-                JSON.stringify(existingResponse.response_body, null, 2)
-              );
-              setDelay(existingResponse.delay_ms?.toString() || "0");
-            } else {
-              setSelectedResponse(existingResponse);
-              setResponseName(existingResponse.name);
-              setStatusCode(existingResponse.status_code.toString());
-              setResponseBody(
-                JSON.stringify(existingResponse.response_body, null, 2)
-              );
-              setDelay(existingResponse.delay_ms?.toString() || "0");
-              setProxyUrl(existingResponse.proxy_url || "");
-              setProxyMethod(existingResponse.proxy_method || "GET");
-            }
-          }
+          setDelay(defaultResponse.delay_ms?.toString() || "0");
+          setProxyUrl(defaultResponse.proxy_url || "");
+          setProxyMethod(defaultResponse.proxy_method || "GET");
         }
+
+        return data;
       });
   };
 
+  const prevIsStatefulRef = useRef(isStateful);
+
+  useEffect(() => {
+    prevIsStatefulRef.current = isStateful;
+  }, [isStateful]);
+
+  // Cập nhật useEffect để fetch dữ liệu phù hợp với chế độ stateful/stateless
+  useEffect(() => {
+    if (currentEndpointId) {
+      const currentEndpoint = endpoints.find(
+        (ep) => String(ep.id) === String(currentEndpointId)
+      );
+
+      if (currentEndpoint) {
+        const wasStateful = prevIsStatefulRef.current;
+        setIsStateful(currentEndpoint.is_stateful);
+        setIsActive(currentEndpoint.is_active);
+
+        // Reset các state không cần thiết khi chuyển đổi chế độ
+        if (currentEndpoint.is_stateful && !wasStateful) {
+          // Khi chuyển từ stateless sang stateful: reset response data
+          setStatusData([]);
+          setEndpointResponses([]);
+        } else if (!currentEndpoint.is_stateful && wasStateful) {
+          // Khi chuyển từ stateful sang stateless: reset endpoint data
+          setEndpointData(null);
+          setDataDefault([]);
+        }
+
+        // Fetch dữ liệu phù hợp với chế độ hiện tại
+        if (currentEndpoint.is_stateful && currentEndpoint.path) {
+          // Chỉ fetch endpoint data nếu chuyển từ stateless sang stateful
+          // hoặc đang ở chế độ stateful nhưng path thay đổi
+          if (!wasStateful || currentEndpoint.path !== endpointData?.path) {
+            fetchEndpointDataByPath(currentEndpoint.path);
+          }
+        } else {
+          // Chỉ fetch endpoint responses nếu chuyển từ stateful sang stateless
+          if (wasStateful) {
+            fetchEndpointResponses();
+          }
+        }
+      }
+    }
+  }, [currentEndpointId, endpoints]);
+
+  // Hàm fetchEndpointDataByPath giữ nguyên nhưng thêm kiểm tra isStateful
   const fetchEndpointDataByPath = (path) => {
+    // Chỉ fetch nếu đang ở chế độ stateful
+    if (!isStateful) {
+      return Promise.resolve(null);
+    }
+
     return fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`)
       .then((res) => {
         if (!res.ok) {
-          // Nếu không tìm thấy endpoint data, trả về null thay vì lỗi
           if (res.status === 404) return null;
           throw new Error("Failed to fetch endpoint data");
         }
@@ -1507,7 +1479,6 @@ const DashboardPage = () => {
         if (data) {
           setDataDefault(data.data_default || []);
         } else {
-          // Nếu không có data, khởi tạo với mảng rỗng
           setDataDefault([]);
           setEndpointData({
             path: path,
@@ -1527,19 +1498,6 @@ const DashboardPage = () => {
       });
   };
 
-  // Fetch endpoint data khi endpointId thay đổi
-  useEffect(() => {
-    if (currentEndpointId) {
-      const currentEndpoint = endpoints.find(
-        (ep) => String(ep.id) === String(currentEndpointId)
-      );
-
-      if (currentEndpoint && currentEndpoint.path) {
-        fetchEndpointDataByPath(currentEndpoint.path);
-      }
-    }
-  }, [currentEndpointId, endpoints]);
-
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -1557,13 +1515,6 @@ const DashboardPage = () => {
 
     loadData();
   }, []);
-
-  useEffect(() => {
-    if (currentEndpointId) {
-      setIsLoading(true);
-      fetchEndpointResponses().finally(() => setIsLoading(false));
-    }
-  }, [currentEndpointId]);
 
   useEffect(() => {
     if (endpointResponses.length > 0 && !selectedResponse) {
@@ -2841,7 +2792,7 @@ const DashboardPage = () => {
                                   isStateful &&
                                   (statusCode === "200" || method === "GET")
                                 }
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pb-8 ${
+                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
                                   isStateful &&
                                   (statusCode === "200" || method === "GET")
                                     ? "bg-gray-100 cursor-not-allowed"
@@ -2854,6 +2805,50 @@ const DashboardPage = () => {
                                     : ""
                                 }
                               />
+
+                              {/* Upload and Format buttons at top right corner with text labels */}
+                              <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1] px-2 py-1 text-xs"
+                                  disabled={
+                                    isStateful &&
+                                    (statusCode === "200" || method === "GET")
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Handle upload logic here
+                                  }}
+                                >
+                                  Upload
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-[#E5E5E1] px-2 py-1 text-xs"
+                                  disabled={
+                                    isStateful &&
+                                    (statusCode === "200" || method === "GET")
+                                  }
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const formatted = JSON.stringify(
+                                        JSON.parse(responseBody),
+                                        null,
+                                        2
+                                      );
+                                      setResponseBody(formatted);
+                                    } catch {
+                                      toast.error("Invalid JSON format");
+                                    }
+                                  }}
+                                >
+                                  Format
+                                </Button>
+                              </div>
+
                               <FileCode
                                 className={`absolute bottom-2 right-2 ${
                                   isStateful &&
@@ -2954,30 +2949,6 @@ const DashboardPage = () => {
                                   </div>
                                 </div>
                               )}
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#E5E5E1]"
-                                disabled={
-                                  isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                }
-                              >
-                                <Upload className="mr-2 h-4 w-4" /> Upload
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#E5E5E1]"
-                                disabled={
-                                  isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                }
-                              >
-                                <Code className="mr-2 h-4 w-4" /> Format
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -3172,9 +3143,46 @@ const DashboardPage = () => {
                                   // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-8"
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pr-16"
                               placeholder="Enter initial value"
                             />
+
+                            {/* Upload and Format buttons at top right corner with text labels */}
+                            <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1] px-2 py-1 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Handle upload logic here
+                                }}
+                              >
+                                Upload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1] px-2 py-1 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const formatted = JSON.stringify(
+                                      JSON.parse(tempDataDefaultString),
+                                      null,
+                                      2
+                                    );
+                                    setTempDataDefaultString(formatted);
+                                    setTempDataDefault(JSON.parse(formatted));
+                                  } catch {
+                                    toast.error("Invalid JSON format");
+                                  }
+                                }}
+                              >
+                                Format
+                              </Button>
+                            </div>
+
                             <FileCode
                               className="absolute bottom-2 right-2 text-gray-400 cursor-pointer hover:text-gray-600"
                               size={26}
@@ -3267,35 +3275,6 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
-                          </div>
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                            >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                              onClick={() => {
-                                try {
-                                  const formatted = JSON.stringify(
-                                    JSON.parse(tempDataDefaultString),
-                                    null,
-                                    2
-                                  );
-                                  setTempDataDefaultString(formatted);
-                                  setTempDataDefault(JSON.parse(formatted));
-                                } catch {
-                                  toast.error("Invalid JSON format");
-                                }
-                              }}
-                            >
-                              <Code className="mr-1 h-4 w-4" /> Format
-                            </Button>
                           </div>
                         </div>
 
@@ -3619,13 +3598,50 @@ const DashboardPage = () => {
 
               <div>
                 <Label htmlFor="new-response-body">Body</Label>
-                <Textarea
-                  id="new-response-body"
-                  placeholder="Enter response body"
-                  value={responseBody}
-                  onChange={(e) => setResponseBody(e.target.value)}
-                  className="h-32 font-mono"
-                />
+                <div className="relative">
+                  <Textarea
+                    id="new-response-body"
+                    placeholder="Enter response body"
+                    value={responseBody}
+                    onChange={(e) => setResponseBody(e.target.value)}
+                    className="h-32 font-mono pr-16"
+                  />
+
+                  {/* Upload and Format buttons at top right corner with text labels */}
+                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#E5E5E1] px-2 py-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle upload logic here
+                      }}
+                    >
+                      Upload
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#E5E5E1] px-2 py-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          const formatted = JSON.stringify(
+                            JSON.parse(responseBody),
+                            null,
+                            2
+                          );
+                          setResponseBody(formatted);
+                        } catch {
+                          toast.error("Invalid JSON format");
+                        }
+                      }}
+                    >
+                      Format
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div>
