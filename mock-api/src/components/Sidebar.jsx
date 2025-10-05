@@ -90,9 +90,9 @@ export default function Sidebar({
     setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
   };
 
-  const toggleEndpoints = (pId) => {
-    setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
-  };
+  // const toggleEndpoints = (pId) => {
+  //   setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+  // };
 
   const toggleFolders = (fId) => {
     setOpenFoldersMap((prev) => {

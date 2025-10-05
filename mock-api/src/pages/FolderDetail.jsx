@@ -338,65 +338,57 @@ export default function Dashboard() {
       );
   };
 
-  const fetchProjects = (wsId) => {
+  const fetchProjects = async (wsId) => {
     if (!wsId) return;
 
-    fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
-      .then(r => r.json())
-      .then(rData => {
-        const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
-        setProjects(projectsArr);
+    try {
+      const res = await fetch(`${API_ROOT}/projects?workspace_id=${wsId}`);
+      const rData = await res.json();
+      const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
+      setProjects(projectsArr);
 
-        // reset folders + endpoints trước khi fetch mới
-        setFolders([]);
-        setEndpoints([]);
+      // reset trước khi nạp mới
+      setFolders([]);
+      setEndpoints([]);
 
-        projectsArr.forEach((p) => {
-          // fetch folders của từng project
-          fetch(`${API_ROOT}/folders?project_id=${p.id}`)
-            .then(r => r.json())
-            .then(fData => {
-              const fArr = Array.isArray(fData) ? fData : fData.data || [];
-              setFolders(prev => {
-                const merged = [...prev];
-                fArr.forEach(f => {
-                  if (!merged.some(ff => ff.id === f.id)) {
-                    merged.push(f);
-                  }
-                });
-                return merged;
-              });
+      // tạo mảng tạm để gom toàn bộ dữ liệu
+      const allFolders = [];
+      const allEndpoints = [];
 
-              // fetch endpoints cho từng folder
-              fArr.forEach((f) => {
-                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
-                  .then(r2 => r2.json())
-                  .then(eData => {
-                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
+      for (const p of projectsArr) {
+        const fRes = await fetch(`${API_ROOT}/folders?project_id=${p.id}`);
+        const fData = await fRes.json();
+        const fArr = Array.isArray(fData) ? fData : fData.data || [];
 
-                    const withProjectId = eArr.map(e => ({
-                      ...e,
-                      project_id: f.project_id
-                    }));
-
-                    setEndpoints(prev => {
-                      const merged = [...prev];
-                      withProjectId.forEach(e => {
-                        if (!merged.some(ee => ee.id === e.id)) {
-                          merged.push(e);
-                        }
-                      });
-                      return merged;
-                    });
-                  })
-                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
-              });
-            })
-            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
+        // gom folder
+        fArr.forEach(f => {
+          if (!allFolders.some(ff => ff.id === f.id)) {
+            allFolders.push(f);
+          }
         });
-      })
-      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
+
+        // gom endpoint của từng folder
+        for (const f of fArr) {
+          const eRes = await fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`);
+          const eData = await eRes.json();
+          const eArr = Array.isArray(eData) ? eData : eData.data || [];
+
+          eArr.forEach(e => {
+            if (!allEndpoints.some(ee => ee.id === e.id)) {
+              allEndpoints.push({ ...e, project_id: f.project_id });
+            }
+          });
+        }
+      }
+
+      // set 1 lần duy nhất để tránh mất dữ liệu
+      setFolders(allFolders);
+      setEndpoints(allEndpoints);
+    } catch (error) {
+      console.error(`Failed to fetch projects or nested data:`, error);
+    }
   };
+
 
   // -------------------- Folder helpers (unchanged) --------------------
   const handleAddFolder = (targetProjectId = null) => {
