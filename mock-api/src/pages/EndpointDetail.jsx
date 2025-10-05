@@ -799,6 +799,9 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   placeholder="value"
                 />
 
+              {/* Gạch dọc trước thùng rác */}
+<div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -827,22 +830,30 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
             </div>
           )}
 
-          {/* Sửa lại container cho 2 nút để chúng nằm cùng hàng */}
-          <div className="flex justify-between items-center mt-4">
-            <Button variant="outline" onClick={handleAddRule}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add rule
-            </Button>
+          {/* Nút Add full width, căn phải, style giống hàng input */}
+<div className="flex flex-col gap-3 mt-4">
+ <Button
+  variant="outline"
+  onClick={handleAddRule}
+  className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
+>
+  <Plus className="mr-2 h-4 w-4" />
+  Add
+</Button>
 
-            {selectedResponse && (
-              <Button
-                className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                onClick={handleSave}
-              >
-                Save Changes
-              </Button>
-            )}
-          </div>
+
+  {selectedResponse && (
+    <div className="flex justify-end">
+      <Button
+        className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+        onClick={handleSave}
+      >
+        Save Changes
+      </Button>
+    </div>
+  )}
+</div>
+
         </div>
       </Card>
     </div>
@@ -2410,7 +2421,7 @@ const DashboardPage = () => {
                 ? "w-[calc(100%+16rem)] -translate-x-64"
                 : "w-full"
             }`}
-        >
+        > 
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -2632,37 +2643,40 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Cột phải - Navigation và Content */}
-            <div className="w-2/3">
-              {/* Navigation Tabs */}
-              <Tabs defaultValue="Header&Body" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-transparent mb-4">
-                  <TabsTrigger
-                    value="Header&Body"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                  >
-                    Header & Body
-                  </TabsTrigger>
+           {/* Cột phải - Navigation và Content */}
+<div className="w-2/3">
+  {/* Navigation Tabs */}
+  <Tabs defaultValue="Header&Body" className="w-full">
+    {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
+    <TabsList className="flex w-full justify-start bg-transparent mb-4 space-x-6">
+      <TabsTrigger
+        value="Header&Body"
+        className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+      >
+        Header & Body
+      </TabsTrigger>
 
-                  {/* Ẩn hoàn toàn tab Request Validate khi stateful */}
-                  {!isStateful && (
-                    <TabsTrigger
-                      value="Rules"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                    >
-                      Rules
-                    </TabsTrigger>
-                  )}
+      {/* Ẩn hoàn toàn tab Request Validate khi stateful */}
+      {!isStateful && (
+        <TabsTrigger
+          value="Rules"
+          className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+        >
+          Rules
+        </TabsTrigger>
+      )}
 
-                  {/* Ẩn hoàn toàn tab Proxy khi stateful */}
-                  {!isStateful && (
-                    <TabsTrigger
-                      value="proxy"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
-                    >
-                      Proxy
-                    </TabsTrigger>
-                  )}
+      {/* Ẩn hoàn toàn tab Proxy khi stateful */}
+      {!isStateful && (
+        <TabsTrigger
+          value="proxy"
+          className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+        >
+          Proxy
+        </TabsTrigger>
+      )}
+   
+
 
                   {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
                   {isStateful && (
