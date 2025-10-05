@@ -156,7 +156,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 w-64 h-screen justify-between">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64 min-h-screen max-h-full justify-between">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
