@@ -62,10 +62,22 @@ export default function Sidebar({
     projects.forEach((p) => {
       newMap[p.id] =
         projectColorMap[p.id] ||
-        randomColor({ luminosity: "bright", seed: p.id });
+        randomColor({ luminosity: "light", seed: p.id }); // Đồng bộ với ProjectCard
     });
     setProjectColorMap(newMap);
-  }, [projects]);
+
+    // Reset openProjectsMap khi projects thay đổi, chỉ giữ project đang chọn (nếu có)
+    setOpenProjectsMap((prev) => {
+      const newOpenProjectsMap = {};
+      if (projectId) {
+        const project = projects.find((p) => String(p.id) === String(projectId));
+        if (project) {
+          newOpenProjectsMap[project.workspace_id] = true;
+        }
+      }
+      return newOpenProjectsMap;
+    });
+  }, [projects, projectId]);
 
   const readOpenProjects = (wsId) => (openProjectsMap ? openProjectsMap[wsId] : false);
 
@@ -275,7 +287,7 @@ export default function Sidebar({
                         }}
                       >
                         <span
-                          className="w-2 h-2 rounded-full"
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
                         />
                         {p.name}
