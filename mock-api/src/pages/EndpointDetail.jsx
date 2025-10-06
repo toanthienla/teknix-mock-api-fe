@@ -932,13 +932,19 @@ const DashboardPage = () => {
   const handleResetCurrentValues = () => {
     if (!endpointData) return;
 
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: endpointData.data_default || [],
+      // Thêm flag để reset current values
+      reset_current: true,
+    };
+
     fetch(
-      `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-        endpointData.path
-      )}`,
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
     )
       .then((res) => {
@@ -2039,7 +2045,7 @@ const DashboardPage = () => {
   const handleResponseSelect = (response) => {
     // Sử dụng endpoint khác nhau cho stateful và stateless
     const url = isStateful
-      ? `${API_ROOT}/endpoint_responses_stateful/${response.id}`
+      ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
       : `${API_ROOT}/endpoint_responses/${response.id}`;
 
     fetch(url)
@@ -2080,6 +2086,7 @@ const DashboardPage = () => {
       })
       .catch(console.error);
   };
+
   const handleNewResponse = () => {
     // Reset form khi tạo mới
     setSelectedResponse(null);
@@ -2287,9 +2294,11 @@ const DashboardPage = () => {
       const payload = {
         schema: endpointData.schema || {},
         data_default: parsedData,
+        // Thêm flag để reset current values khi cập nhật
+        reset_current: true,
       };
 
-      // First update the endpoint data with new schema and data_default
+      // Chỉ gọi một lần API để cập nhật và reset
       fetch(
         `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
           endpointData.path
@@ -2302,22 +2311,6 @@ const DashboardPage = () => {
       )
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
-          return res.json();
-        })
-        .then(() => {
-          // Then reset current values to default
-          return fetch(
-            `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-              endpointData.path
-            )}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to reset current values");
           return res.json();
         })
         .then((finalData) => {
