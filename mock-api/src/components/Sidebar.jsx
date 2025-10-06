@@ -45,7 +45,6 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate();
   const { projectId, endpointId, folderId } = useParams();
-
   const [projectColorMap, setProjectColorMap] = useState({});
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export default function Sidebar({
     projects.forEach((p) => {
       newMap[p.id] =
         projectColorMap[p.id] ||
-        randomColor({ luminosity: "light", seed: p.id }); // Đồng bộ với ProjectCard
+        randomColor({ luminosity: "light", seed: p.id });
     });
     setProjectColorMap(newMap);
 
@@ -78,24 +77,29 @@ export default function Sidebar({
     });
   }, [projects, projectId]);
 
-  const readOpenProjects = (wsId) => (openProjectsMap ? openProjectsMap[wsId] : false);
-  const readOpenEndpoints = (pId) => (openEndpointsMap ? openEndpointsMap[pId] : false);
-  const readOpenFolders = (fId) => (openFoldersMap ? openFoldersMap[fId] : false);
+  const readOpenProjects = (wsId) =>
+    openProjectsMap ? openProjectsMap[wsId] : false;
+  const readOpenEndpoints = (pId) =>
+    openEndpointsMap ? openEndpointsMap[pId] : false;
+  const readOpenFolders = (fId) =>
+    openFoldersMap ? openFoldersMap[fId] : false;
 
   const toggleProjects = (wsId) => {
     setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
   };
 
-  const toggleEndpoints = (pId) => {
-    setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
-  };
-
-   const toggleFolders = (fId, pId) => {
-    // Đóng tất cả folder, chỉ mở folder vừa chọn
+  const toggleFolders = (fId, pId) => {
+    // ✅ Khi click folder, chỉ mở đúng folder đó
     const newMap = {};
     newMap[fId] = true;
     setOpenFoldersMap(newMap);
     navigate(`/dashboard/${pId}/folder/${fId}`);
+  };
+
+  const handleBackToProject = (pId) => {
+    // ✅ Khi quay về project, đóng toàn bộ folder
+    setOpenFoldersMap({});
+    navigate(`/dashboard/${pId}`);
   };
 
   const handleSelectWorkspace = (wsId) => {
@@ -112,7 +116,6 @@ export default function Sidebar({
     (ws) => String(ws.id) === String(current)
   );
 
-  // ✅ Giữ folder mở khi load lại trang có folderId
   useEffect(() => {
     if (folderId) {
       setOpenFoldersMap((prev) => ({ ...prev, [folderId]: true }));
@@ -138,7 +141,9 @@ export default function Sidebar({
   }, [projectId, folderId, endpointId, projects]);
 
   const projectHasContent = (p) => {
-    const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
+    const projectFolders = folders.filter(
+      (f) => String(f.project_id) === String(p.id)
+    );
     const hasFolder = projectFolders.length > 0;
     const endpointsInProjectFolders = endpoints.some((ep) =>
       projectFolders.some((f) => String(f.id) === String(ep.folder_id))
@@ -212,7 +217,6 @@ export default function Sidebar({
                       {ws.name}
                     </DropdownMenuItem>
 
-                    {/* Workspace Actions */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 hover:bg-slate-100 rounded">
@@ -224,23 +228,30 @@ export default function Sidebar({
                           Actions
                         </div>
                         <DropdownMenuItem
-                          className="hover:text-black font-semibold"
                           onSelect={() => onEditWorkspace?.(ws)}
                         >
-                          <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
+                          <img
+                            src={editIcon}
+                            className="w-4 h-4 mr-2"
+                            alt="edit"
+                          />
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="hover:text-black font-semibold"
                           onSelect={() => onDeleteWorkspace?.(ws.id)}
                         >
-                          <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
+                          <img
+                            src={deleteIcon}
+                            className="w-4 h-4 mr-2"
+                            alt="delete"
+                          />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                 ))}
 
-                {/* Add new workspace */}
                 <div
                   className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
                   onClick={() => setOpenNewWs?.(true)}
@@ -256,14 +267,19 @@ export default function Sidebar({
           {currentWorkspace && (
             <ul className="space-y-1">
               {projects
-                .filter((p) =>
-                  projectId ? String(p.id) === String(projectId) : String(p.workspace_id) === String(currentWorkspace.id)
+                .filter(
+                  (p) =>
+                    projectId
+                      ? String(p.id) === String(projectId)
+                      : String(p.workspace_id) ===
+                        String(currentWorkspace.id)
                 )
                 .map((p) => {
                   const isProjectOpen = readOpenProjects(p.workspace_id);
                   const isEpOpen = readOpenEndpoints(p.id);
                   const activePj = String(projectId) === String(p.id);
-                  const shouldBoldProject = activePj && !folderId && !endpointId;
+                  const shouldBoldProject =
+                    activePj && !folderId && !endpointId;
 
                   return (
                     <li key={p.id}>
@@ -274,13 +290,15 @@ export default function Sidebar({
                             : "hover:bg-slate-50 text-slate-600"
                         }`}
                         onClick={() => {
-                          navigate(`/dashboard/${p.id}`);
+                          handleBackToProject(p.id); // ✅ Đóng toàn bộ folder
                           toggleProjects(p.workspace_id);
                         }}
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: projectColorMap[p.id] || "#999" }}
+                          style={{
+                            backgroundColor: projectColorMap[p.id] || "#999",
+                          }}
                         />
                         {p.name}
                       </div>
@@ -305,9 +323,14 @@ export default function Sidebar({
                             return (
                               <>
                                 {projectFolders.map((folder) => {
-                                  const folderEndpoints = endpoints.filter((ep) => String(ep.folder_id) === String(folder.id));
-                                  const isFolderOpen = readOpenFolders(folder.id);
-                                  const activeFolder = String(folderId) === String(folder.id);
+                                  const folderEndpoints = endpoints.filter(
+                                    (ep) =>
+                                      String(ep.folder_id) === String(folder.id)
+                                  );
+                                  const isFolderOpen =
+                                    readOpenFolders(folder.id);
+                                  const activeFolder =
+                                    String(folderId) === String(folder.id);
 
                                   return (
                                     <div key={folder.id}>
@@ -355,11 +378,29 @@ export default function Sidebar({
                                           <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                                             Actions
                                           </div>
-                                          <ContextMenuItem onSelect={() => onEditFolder?.(folder)}>
-                                            <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" /> Edit
+                                          <ContextMenuItem
+                                            onSelect={() =>
+                                              onEditFolder?.(folder)
+                                            }
+                                          >
+                                            <img
+                                              src={editIcon}
+                                              className="w-4 h-4 mr-2"
+                                              alt="edit"
+                                            />
+                                            Edit
                                           </ContextMenuItem>
-                                          <ContextMenuItem onSelect={() => onDeleteFolder?.(folder.id)}>
-                                            <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete" /> Delete
+                                          <ContextMenuItem
+                                            onSelect={() =>
+                                              onDeleteFolder?.(folder.id)
+                                            }
+                                          >
+                                            <img
+                                              src={deleteIcon}
+                                              className="w-4 h-4 mr-2"
+                                              alt="delete"
+                                            />
+                                            Delete
                                           </ContextMenuItem>
                                         </ContextMenuContent>
                                       </ContextMenu>
@@ -373,7 +414,9 @@ export default function Sidebar({
                                             </div>
                                           ) : (
                                             folderEndpoints.map((ep) => {
-                                              const activeEp = String(endpointId) === String(ep.id);
+                                              const activeEp =
+                                                String(endpointId) ===
+                                                String(ep.id);
                                               return (
                                                 <div
                                                   key={ep.id}
@@ -382,25 +425,24 @@ export default function Sidebar({
                                                       ? "bg-slate-100 font-medium text-slate-900"
                                                       : "hover:bg-slate-50 text-slate-600"
                                                   }`}
-                                                  // ✅ Giữ trạng thái mở khi click endpoint
                                                   onClick={() => {
-                                                    setOpenFoldersMap((prev) => ({
-                                                      ...prev,
-                                                      [folder.id]: true,
-                                                    }));
-                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`);
+                                                    setOpenFoldersMap(
+                                                      (prev) => ({
+                                                        ...prev,
+                                                        [folder.id]: true,
+                                                      })
+                                                    );
+                                                    navigate(
+                                                      `/dashboard/${p.id}/endpoint/${ep.id}`
+                                                    );
                                                   }}
                                                 >
-                                                  <div
-                                                    className={`${
-                                                      activeEp
-                                                        ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800"
-                                                        : ""
-                                                    }`}
-                                                    style={{ top: "50%", transform: "translateY(-50%)" }}
-                                                  ></div>
                                                   {ep.is_stateful && (
-                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful" />
+                                                    <img
+                                                      src={statefulIcon}
+                                                      className="w-4 h-4"
+                                                      alt="stateful"
+                                                    />
                                                   )}
                                                   <span>{ep.name}</span>
                                                 </div>
@@ -416,7 +458,8 @@ export default function Sidebar({
                                   className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 text-slate-600"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (onAddFolder) onAddFolder(p.id);
+                                    if (onAddFolder)
+                                      onAddFolder(p.id);
                                   }}
                                 >
                                   <Plus className="w-4 h-4" />
