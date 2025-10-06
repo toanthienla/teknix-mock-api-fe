@@ -287,6 +287,7 @@ export default function DashboardPage() {
         localStorage.setItem("currentWorkspace", createdWs.id);
         setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Workspace created successfully");
+        fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
   };

@@ -743,16 +743,55 @@ export default function Dashboard() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEndpoint),
       });
+
       if (!res.ok) throw new Error();
       const created = await res.json();
-      setEndpoints(prev => [...prev, created]);
+
+      // Cập nhật danh sách endpoint hiển thị
+      setEndpoints((prev) => [...prev, created]);
       setOpenNew(false);
       toast.success("Endpoint created!");
+
+      // Nếu endpoint mới là stateful, tự động gọi API chuyển đổi
+      if (newEType === true) {
+        try {
+          const convertRes = await fetch(
+            `${API_ROOT}/endpoints/${created.id}/convert-to-stateful`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (!convertRes.ok) throw new Error("Failed to convert endpoint to stateful");
+
+          const updatedEndpoint = await convertRes.json();
+
+          // Cập nhật lại endpoint vừa tạo
+          setEndpoints((prev) =>
+            prev.map((ep) =>
+              String(ep.id) === String(created.id) ? updatedEndpoint : ep
+            )
+          );
+
+          // // Fetch dữ liệu nếu cần
+          // if (updatedEndpoint.path) {
+          //   fetchEndpointDataByPath(updatedEndpoint.path);
+          // }
+          // fetchEndpointResponses(true);
+
+          toast.success("Endpoint automatically set to stateful!");
+        } catch (error) {
+          console.error(error);
+          toast.error(error.message);
+        }
+      }
     } catch {
       toast.error("Failed to create endpoint");
     }

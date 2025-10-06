@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { API_ROOT } from "../utils/constants";
+import React, {useState, useEffect, useRef} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Card} from "@/components/ui/card";
+import {Textarea} from "@/components/ui/textarea";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {API_ROOT} from "../utils/constants";
 import Sidebar from "../components/Sidebar";
 import {
   Table,
@@ -27,7 +27,7 @@ import {
   FileCode,
   X,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -60,8 +60,8 @@ const statusCodes = [
     code: "102",
     description: "Processing.",
   },
-  { code: "200", description: "OK." },
-  { code: "201", description: "Created." },
+  {code: "200", description: "OK."},
+  {code: "201", description: "Created."},
   {
     code: "202",
     description: "Accepted.",
@@ -78,8 +78,8 @@ const statusCodes = [
     code: "301",
     description: "Moved Permanently.",
   },
-  { code: "302", description: "Found." },
-  { code: "303", description: "See Other." },
+  {code: "302", description: "Found."},
+  {code: "303", description: "See Other."},
   {
     code: "304",
     description: "Not Modified.",
@@ -92,13 +92,13 @@ const statusCodes = [
     code: "308",
     description: "Permanent Redirect.",
   },
-  { code: "400", description: "Bad Request." },
-  { code: "401", description: "Unauthorized." },
+  {code: "400", description: "Bad Request."},
+  {code: "401", description: "Unauthorized."},
   {
     code: "403",
     description: "Forbidden.",
   },
-  { code: "404", description: "Not Found." },
+  {code: "404", description: "Not Found."},
   {
     code: "405",
     description: "Method Not Allowed.",
@@ -111,13 +111,13 @@ const statusCodes = [
     code: "409",
     description: "Conflict.",
   },
-  { code: "410", description: "Gone." },
+  {code: "410", description: "Gone."},
   {
     code: "415",
     description: "Unsupported Media Type.",
   },
-  { code: "429", description: "Too Many Requests." },
-  { code: "500", description: "Internal Server Error." },
+  {code: "429", description: "Too Many Requests."},
+  {code: "500", description: "Internal Server Error."},
   {
     code: "501",
     description: "Not Implemented.",
@@ -140,7 +140,7 @@ const statusCodes = [
   },
 ];
 
-const SchemaBodyEditor = ({ endpointData, onSave }) => {
+const SchemaBodyEditor = ({endpointData, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
@@ -209,7 +209,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     setSchemaFields((prev) => {
       const filtered = prev.filter((field) => field.id !== id);
       setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
+        const newErrors = {...prevErrors};
         delete newErrors[id];
         return newErrors;
       });
@@ -230,14 +230,14 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
+      prev.map((field) => (field.id === id ? {...field, name: value} : field))
     );
 
     // Validate sau khi thay đổi
     setTimeout(() => {
       const field = schemaFields.find((f) => f.id === id);
       if (field) {
-        const fieldErrors = validateField({ ...field, name: value });
+        const fieldErrors = validateField({...field, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: fieldErrors,
@@ -248,14 +248,14 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleTypeChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
+      prev.map((field) => (field.id === id ? {...field, type: value} : field))
     );
   };
 
   const handleRequiredChange = (id, value) => {
     setSchemaFields((prev) =>
       prev.map((field) =>
-        field.id === id ? { ...field, required: value === "true" } : field
+        field.id === id ? {...field, required: value === "true"} : field
       )
     );
   };
@@ -337,7 +337,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     onValueChange={(value) => handleTypeChange(field.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="string">string</SelectItem>
@@ -357,7 +357,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Required" />
+                      <SelectValue placeholder="Required"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="true">true</SelectItem>
@@ -374,7 +374,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     handleDeleteField(field.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -397,7 +397,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
           {/* Nút thêm trường và lưu */}
           <div className="flex justify-between items-center mt-4">
             <Button variant="outline" onClick={handleAddField}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add field
             </Button>
 
@@ -414,7 +414,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   );
 };
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   const [errors, setErrors] = useState({});
@@ -559,13 +559,13 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -613,7 +613,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -632,14 +632,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -650,14 +650,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -749,7 +749,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -774,7 +774,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                <div
+                  className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
                   <span
                     className="text-[32px] text-black"
                     style={{
@@ -800,7 +801,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                 />
 
                 {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch"/>
 
                 <Button
                   variant="ghost"
@@ -810,7 +811,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -837,7 +838,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
               onClick={handleAddRule}
               className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add
             </Button>
 
@@ -869,7 +870,7 @@ const DashboardPage = () => {
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
-  const { projectId, endpointId } = useParams();
+  const {projectId, endpointId} = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -938,7 +939,7 @@ const DashboardPage = () => {
       )}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
       }
     )
       .then((res) => {
@@ -968,7 +969,7 @@ const DashboardPage = () => {
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
       }
     )
@@ -1096,10 +1097,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1107,7 +1108,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then((res) => {
         if (!res.ok) {
@@ -1115,7 +1116,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
+                ? {...ep, is_stateful: previousState}
                 : ep
             )
           );
@@ -1170,10 +1171,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1182,7 +1183,7 @@ const DashboardPage = () => {
     // Call new API to convert to stateless
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then((res) => {
         if (!res.ok) {
@@ -1190,7 +1191,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
+                ? {...ep, is_stateful: previousState}
                 : ep
             )
           );
@@ -1235,10 +1236,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_active: newIsActive,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_active: newIsActive,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1252,7 +1253,7 @@ const DashboardPage = () => {
     // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         ...currentEndpoint,
         is_active: newIsActive,
@@ -1265,7 +1266,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_active: previousState }
+                ? {...ep, is_active: previousState}
                 : ep
             )
           );
@@ -1336,8 +1337,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-        (w) => String(w.id) === String(currentProject.workspace_id)
-      )
+      (w) => String(w.id) === String(currentProject.workspace_id)
+    )
     : null;
 
   const method =
@@ -1655,8 +1656,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -1684,7 +1685,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1695,7 +1696,7 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -1709,7 +1710,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1718,7 +1719,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1737,11 +1738,11 @@ const DashboardPage = () => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -1813,7 +1814,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(newProject),
     })
       .then((res) => res.json())
@@ -1906,7 +1907,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, priority: updated.priority }
+              ? {...response, priority: updated.priority}
               : response;
           })
         );
@@ -1917,7 +1918,7 @@ const DashboardPage = () => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? { ...status, priority: updated.priority } : status;
+            return updated ? {...status, priority: updated.priority} : status;
           })
         );
 
@@ -1959,7 +1960,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, is_default: updated.is_default }
+              ? {...response, is_default: updated.is_default}
               : response;
           })
         );
@@ -1971,7 +1972,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? { ...status, isDefault: updated.is_default }
+              ? {...status, isDefault: updated.is_default}
               : status;
           })
         );
@@ -2016,7 +2017,7 @@ const DashboardPage = () => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = { ...newStatusData[draggedItem] };
+      const draggedItemContent = {...newStatusData[draggedItem]};
 
       newStatusData.splice(draggedItem, 1);
 
@@ -2147,7 +2148,7 @@ const DashboardPage = () => {
 
     fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -2176,8 +2177,8 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === statefulResponse.id ? statefulResponse : r
-                )
+                r.id === statefulResponse.id ? statefulResponse : r
+              )
               : [...prev, statefulResponse]
           );
 
@@ -2185,22 +2186,22 @@ const DashboardPage = () => {
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === statefulResponse.id
-                    ? {
-                        ...s,
-                        code: statefulResponse.status_code.toString(),
-                        name: statefulResponse.name,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: statefulResponse.id,
+                s.id === statefulResponse.id
+                  ? {
+                    ...s,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: statefulResponse.id,
+                  code: statefulResponse.status_code.toString(),
+                  name: statefulResponse.name,
+                },
+              ]
           );
 
           if (selectedResponse) {
@@ -2211,32 +2212,32 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === updatedResponse.id ? updatedResponse : r
-                )
+                r.id === updatedResponse.id ? updatedResponse : r
+              )
               : [...prev, updatedResponse]
           );
 
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === updatedResponse.id
-                    ? {
-                        ...s,
-                        code: updatedResponse.status_code.toString(),
-                        name: updatedResponse.name,
-                        isDefault: updatedResponse.is_default,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: updatedResponse.id,
+                s.id === updatedResponse.id
+                  ? {
+                    ...s,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: updatedResponse.id,
+                  code: updatedResponse.status_code.toString(),
+                  name: updatedResponse.name,
+                  isDefault: updatedResponse.is_default,
+                },
+              ]
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
@@ -2296,7 +2297,7 @@ const DashboardPage = () => {
         )}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload),
         }
       )
@@ -2312,7 +2313,7 @@ const DashboardPage = () => {
             )}`,
             {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              headers: {"Content-Type": "application/json"},
             }
           );
         })
@@ -2337,6 +2338,14 @@ const DashboardPage = () => {
     }
   };
 
+  const currentEndpoint = endpoints.find(
+    (ep) => String(ep.id) === String(currentEndpointId)
+  );
+
+  const currentFolder = currentEndpoint
+    ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
+    : null;
+
   // Cập nhật state string khi tempDataDefault thay đổi
   useEffect(() => {
     setTempDataDefaultString(JSON.stringify(tempDataDefault, null, 2));
@@ -2347,7 +2356,7 @@ const DashboardPage = () => {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4"/>
           <p className="text-lg font-medium text-gray-700">
             Loading endpoint data...
           </p>
@@ -2403,26 +2412,9 @@ const DashboardPage = () => {
           breadcrumb={
             currentWorkspace
               ? currentProject
-                ? currentEndpointId
-                  ? [
-                      {
-                        label: currentWorkspace.name,
-                        WORKSPACE_ID: currentWorkspace.id,
-                        href: "/dashboard", // workspace chỉ cần /dashboard
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) => String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null, // endpoint không có link
-                      },
-                    ]
-                  : [
+                ? currentFolder
+                  ? currentEndpointId
+                    ? [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2432,14 +2424,51 @@ const DashboardPage = () => {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
                       },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}/folder/${currentFolder.id}`,
+                      },
+                      {
+                        label:
+                          endpoints.find(
+                            (ep) => String(ep.id) === String(currentEndpointId)
+                          )?.name || "Endpoint",
+                        href: null,
+                      },
                     ]
-                : [
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                      },
+                    ]
+                  : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
                   ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                  },
+                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -2455,10 +2484,10 @@ const DashboardPage = () => {
         <div
           className={`transition-all duration-300 px-8 pt-4 pb-8
             ${
-              isSidebarCollapsed
-                ? "w-[calc(100%+16rem)] -translate-x-64"
-                : "w-full"
-            }`}
+            isSidebarCollapsed
+              ? "w-[calc(100%+16rem)] -translate-x-64"
+              : "w-full"
+          }`}
         >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
@@ -2475,12 +2504,12 @@ const DashboardPage = () => {
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                    : method === "PUT"
-                    ? "bg-orange-400 text-black hover:bg-orange-500"
-                    : method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                      : method === "PUT"
+                        ? "bg-orange-400 text-black hover:bg-orange-500"
+                        : method === "DELETE"
+                          ? "bg-red-400 text-black hover:bg-red-500"
+                          : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -2504,8 +2533,10 @@ const DashboardPage = () => {
                   />
                 </Button>
               )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
-                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+              <div
+                className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+                <div
+                  className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -2592,18 +2623,22 @@ const DashboardPage = () => {
               <div className="rounded-md border border-solid border-slate-300">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                    <TableRow
+                      className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
                       <TableHead className="w-[119.2px] h-10 px-1 py-0">
                         <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                          <div
+                            className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
                             Status Code
                           </div>
                         </div>
                       </TableHead>
                       <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                         <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                          <div
+                            className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                               Name Response
                             </div>
                           </div>
@@ -2648,16 +2683,18 @@ const DashboardPage = () => {
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
                             {/* Hiển thị GripVertical chỉ khi không phải stateful */}
                             {!isStateful && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
                             )}
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.name}
                             </div>
                           </div>
@@ -2666,7 +2703,8 @@ const DashboardPage = () => {
                         {!isStateful && (
                           <TableCell className="w-[80px] h-[49px] p-2">
                             {status.isDefault && (
-                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                              <div
+                                className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
                                 <span className="text-xs font-medium text-[#0A0A0A]">
                                   Default
                                 </span>
@@ -2834,7 +2872,7 @@ const DashboardPage = () => {
                                     : ""
                                 }`}
                               >
-                                <SelectValue placeholder="Select status code" />
+                                <SelectValue placeholder="Select status code"/>
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
@@ -2911,7 +2949,7 @@ const DashboardPage = () => {
                                   size="sm"
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                 >
-                                  <Upload className="mr-1 h-4 w-4" /> Upload
+                                  <Upload className="mr-1 h-4 w-4"/> Upload
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -2936,7 +2974,7 @@ const DashboardPage = () => {
                                     }
                                   }}
                                 >
-                                  <Code className="mr-1 h-4 w-4" /> Format
+                                  <Code className="mr-1 h-4 w-4"/> Format
                                 </Button>
                               </div>
 
@@ -3102,7 +3140,7 @@ const DashboardPage = () => {
                                 onValueChange={setProxyMethod}
                               >
                                 <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                  <SelectValue placeholder="Method" />
+                                  <SelectValue placeholder="Method"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="GET">GET</SelectItem>
@@ -3166,14 +3204,16 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <div className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
-                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
+                                <div
+                                  className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
+                                  <span
+                                    className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
                                     {dataDefault && dataDefault.length > 0
                                       ? JSON.stringify(dataDefault).length > 50
                                         ? `${JSON.stringify(dataDefault).slice(
-                                            0,
-                                            50
-                                          )}...`
+                                          0,
+                                          50
+                                        )}...`
                                         : JSON.stringify(dataDefault)
                                       : "[]"}
                                   </span>
@@ -3196,14 +3236,15 @@ const DashboardPage = () => {
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
                                 {/* Thay Textarea bằng div chỉ đọc */}
-                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                <div
+                                  className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                   <pre className="whitespace-pre-wrap break-words m-0">
                                     {endpointData?.data_current
                                       ? JSON.stringify(
-                                          endpointData.data_current,
-                                          null,
-                                          2
-                                        )
+                                        endpointData.data_current,
+                                        null,
+                                        2
+                                      )
                                       : "[]"}
                                   </pre>
                                 </div>
@@ -3252,7 +3293,7 @@ const DashboardPage = () => {
                                 size="sm"
                                 className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                               >
-                                <Upload className="mr-1 h-4 w-4" /> Upload
+                                <Upload className="mr-1 h-4 w-4"/> Upload
                               </Button>
                               <Button
                                 variant="outline"
@@ -3272,7 +3313,7 @@ const DashboardPage = () => {
                                   }
                                 }}
                               >
-                                <Code className="mr-1 h-4 w-4" /> Format
+                                <Code className="mr-1 h-4 w-4"/> Format
                               </Button>
                             </div>
 
@@ -3663,7 +3704,7 @@ const DashboardPage = () => {
                       id="new-status-code"
                       className="border-[#CBD5E1] rounded-md"
                     >
-                      <SelectValue placeholder="Select status code" />
+                      <SelectValue placeholder="Select status code"/>
                     </SelectTrigger>
                     <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                       {statusCodes.map((status) => (
@@ -3709,7 +3750,7 @@ const DashboardPage = () => {
                       size="sm"
                       className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                     >
-                      <Upload className="mr-1 h-4 w-4" /> Upload
+                      <Upload className="mr-1 h-4 w-4"/> Upload
                     </Button>
                     <Button
                       variant="outline"
@@ -3729,7 +3770,7 @@ const DashboardPage = () => {
                         }
                       }}
                     >
-                      <Code className="mr-1 h-4 w-4" /> Format
+                      <Code className="mr-1 h-4 w-4"/> Format
                     </Button>
                   </div>
                 </div>
