@@ -3703,67 +3703,41 @@ const DashboardPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* New Project */}
-        <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
-          <DialogContent className="max-w-lg rounded-2xl p-6">
+        {/* New Workspace */}
+        <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">
-                New Project
-              </DialogTitle>
-              <div className="mt-1 text-sm text-slate-500">Project details</div>
+              <DialogTitle>New Workspace</DialogTitle>
             </DialogHeader>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name
-                </label>
-                <Input
-                  placeholder="Project name"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateProject();
-                    }
-                  }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Description
-                </label>
-                <Textarea
-                  placeholder="Project description"
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  maxLength={200}
-                  className="min-h-[50px] resize-y"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleCreateProject();
-                    }
-                  }}
-                />
-                <p className="text-xs text-slate-400 text-right mt-1">
-                  {newDesc.length}/200
-                </p>
-              </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Name
+              </label>
+              <Input
+                placeholder="Workspace name"
+                value={newWsName}
+                onChange={(e) => setNewWsName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddWorkspace(newWsName);
+                    setNewWsName("");
+                    setOpenNewWs(false);
+                  }
+                }}
+              />
             </div>
-
-            <DialogFooter className="flex justify-end gap-3 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setOpenNewProject(false)}
-              >
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenNewWs(false)}>
                 Cancel
               </Button>
               <Button
                 className="bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleCreateProject}
+                onClick={() => {
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }}
               >
                 Create
               </Button>

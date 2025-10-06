@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Plus, MoreHorizontal } from "lucide-react";
 import {
@@ -414,9 +414,7 @@ export default function Sidebar({
                                             </div>
                                           ) : (
                                             folderEndpoints.map((ep) => {
-                                              const activeEp =
-                                                String(endpointId) ===
-                                                String(ep.id);
+                                              const activeEp = String(endpointId) === String(ep.id);
                                               return (
                                                 <div
                                                   key={ep.id}
@@ -437,12 +435,16 @@ export default function Sidebar({
                                                     );
                                                   }}
                                                 >
+                                                  <div
+                                                    className={`${
+                                                      activeEp
+                                                        ? "absolute left-[-12px] w-[6px] h-[6px] rounded-full border bg-slate-800 border-slate-800"
+                                                        : ""
+                                                    }`}
+                                                    style={{ top: "50%", transform: "translateY(-50%)" }}
+                                                  ></div>
                                                   {ep.is_stateful && (
-                                                    <img
-                                                      src={statefulIcon}
-                                                      className="w-4 h-4"
-                                                      alt="stateful"
-                                                    />
+                                                    <img src={statefulIcon} className="w-4 h-4" alt="stateful" />
                                                   )}
                                                   <span>{ep.name}</span>
                                                 </div>
