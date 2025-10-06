@@ -27,7 +27,7 @@ import {
   FileCode,
   X,
 } from "lucide-react";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -193,6 +193,13 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
       toast.error("Please fix errors before adding new field");
       return;
     }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
 
     setSchemaFields((prev) => [...prev, newField]);
     setSelectedFieldId(newField.id);
@@ -369,24 +376,14 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] ml-2"
-                  onClick={() => {
-                    try {
-                      if (responseBody.trim()) {
-                        const formatted = JSON.stringify(JSON.parse(responseBody), null, 2);
-                        setResponseBody(formatted);
-                      }
-                    } catch (err) {
-                      alert('Nội dung không phải JSON hợp lệ!');
-                    }
-                  }}
-                >
-                  <Code className="mr-1 h-4 w-4" /> Format
-                </Button>
               </div>
+
+              {/* Hiển thị lỗi */}
+              {errors[field.id]?.name && (
+                <div className="text-red-500 text-xs mt-1 pl-2">
+                  {errors[field.id].name}
+                </div>
+              )}
             </div>
           ))}
 
@@ -403,6 +400,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
               <Plus className="mr-2 h-4 w-4" />
               Add field
             </Button>
+
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
               onClick={handleSave}
@@ -802,7 +800,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                 />
 
                 {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch"/>
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
 
                 <Button
                   variant="ghost"
@@ -839,7 +837,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
               onClick={handleAddRule}
               className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
             >
-              <Plus className="mr-2 h-4 w-4"/>
+              <Plus className="mr-2 h-4 w-4" />
               Add
             </Button>
 
@@ -937,13 +935,19 @@ const DashboardPage = () => {
   const handleResetCurrentValues = () => {
     if (!endpointData) return;
 
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: endpointData.data_default || [],
+      // Thêm flag để reset current values
+      reset_current: true,
+    };
+
     fetch(
-      `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-        endpointData.path
-      )}`,
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
     )
       .then((res) => {
@@ -1101,10 +1105,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1175,10 +1179,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1240,10 +1244,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_active: newIsActive,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_active: newIsActive,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1341,8 +1345,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-      (w) => String(w.id) === String(currentProject.workspace_id)
-    )
+        (w) => String(w.id) === String(currentProject.workspace_id)
+      )
     : null;
 
   const method =
@@ -1660,8 +1664,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
-    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -1689,7 +1693,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1700,7 +1704,7 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -1732,7 +1736,7 @@ const handleAddFolder = (projectId, name) => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1741,7 +1745,7 @@ const handleAddFolder = (projectId, name) => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1760,11 +1764,11 @@ const handleAddFolder = (projectId, name) => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -1836,7 +1840,7 @@ const handleAddFolder = (projectId, name) => {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newProject),
     })
       .then((res) => res.json())
@@ -1929,7 +1933,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? {...response, priority: updated.priority}
+              ? { ...response, priority: updated.priority }
               : response;
           })
         );
@@ -1940,7 +1944,7 @@ const handleAddFolder = (projectId, name) => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? {...status, priority: updated.priority} : status;
+            return updated ? { ...status, priority: updated.priority } : status;
           })
         );
 
@@ -1982,7 +1986,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? {...response, is_default: updated.is_default}
+              ? { ...response, is_default: updated.is_default }
               : response;
           })
         );
@@ -1994,7 +1998,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? {...status, isDefault: updated.is_default}
+              ? { ...status, isDefault: updated.is_default }
               : status;
           })
         );
@@ -2039,7 +2043,7 @@ const handleAddFolder = (projectId, name) => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = {...newStatusData[draggedItem]};
+      const draggedItemContent = { ...newStatusData[draggedItem] };
 
       newStatusData.splice(draggedItem, 1);
 
@@ -2311,37 +2315,23 @@ const handleAddFolder = (projectId, name) => {
       const payload = {
         schema: endpointData.schema || {},
         data_default: parsedData,
+        // Thêm flag để reset current values khi cập nhật
+        reset_current: true,
       };
 
-      // First update the endpoint data with new schema and data_default
+      // Chỉ gọi một lần API để cập nhật và reset
       fetch(
         `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
           endpointData.path
         )}`,
         {
           method: "PUT",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       )
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
-          return res.json();
-        })
-        .then(() => {
-          // Then reset current values to default
-          return fetch(
-            `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-              endpointData.path
-            )}`,
-            {
-              method: "PUT",
-              headers: {"Content-Type": "application/json"},
-            }
-          );
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to reset current values");
           return res.json();
         })
         .then((finalData) => {
@@ -2379,7 +2369,7 @@ const handleAddFolder = (projectId, name) => {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4"/>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
           <p className="text-lg font-medium text-gray-700">
             Loading endpoint data...
           </p>
@@ -2621,12 +2611,12 @@ const handleAddFolder = (projectId, name) => {
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                      : method === "PUT"
-                        ? "bg-orange-400 text-black hover:bg-orange-500"
-                        : method === "DELETE"
-                          ? "bg-red-400 text-black hover:bg-red-500"
-                          : "bg-gray-100 text-black hover:bg-gray-200"
+                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                    : method === "PUT"
+                    ? "bg-orange-400 text-black hover:bg-orange-500"
+                    : method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -2650,10 +2640,8 @@ const handleAddFolder = (projectId, name) => {
                   />
                 </Button>
               )}
-              <div
-                className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
-                <div
-                  className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -2796,7 +2784,7 @@ const handleAddFolder = (projectId, name) => {
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
                             {/* Hiển thị GripVertical chỉ khi không phải stateful */}
                             {!isStateful && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                             )}
                             <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
@@ -3059,7 +3047,7 @@ const handleAddFolder = (projectId, name) => {
                                   size="sm"
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                 >
-                                  <Upload className="mr-1 h-4 w-4"/> Upload
+                                  <Upload className="mr-1 h-4 w-4" /> Upload
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -3084,7 +3072,7 @@ const handleAddFolder = (projectId, name) => {
                                     }
                                   }}
                                 >
-                                  <Code className="mr-1 h-4 w-4"/> Format
+                                  <Code className="mr-1 h-4 w-4" /> Format
                                 </Button>
                               </div>
 
@@ -3338,16 +3326,14 @@ const handleAddFolder = (projectId, name) => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <div
-                                  className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
-                                  <span
-                                    className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
+                                <div className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
+                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
                                     {dataDefault && dataDefault.length > 0
                                       ? JSON.stringify(dataDefault).length > 50
                                         ? `${JSON.stringify(dataDefault).slice(
-                                          0,
-                                          50
-                                        )}...`
+                                            0,
+                                            50
+                                          )}...`
                                         : JSON.stringify(dataDefault)
                                       : "[]"}
                                   </span>
@@ -3374,10 +3360,10 @@ const handleAddFolder = (projectId, name) => {
                                   <pre className="whitespace-pre-wrap break-words m-0">
                                     {endpointData?.data_current
                                       ? JSON.stringify(
-                                        endpointData.data_current,
-                                        null,
-                                        2
-                                      )
+                                          endpointData.data_current,
+                                          null,
+                                          2
+                                        )
                                       : "[]"}
                                   </pre>
                                 </div>
@@ -3426,7 +3412,7 @@ const handleAddFolder = (projectId, name) => {
                                 size="sm"
                                 className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                               >
-                                <Upload className="mr-1 h-4 w-4"/> Upload
+                                <Upload className="mr-1 h-4 w-4" /> Upload
                               </Button>
                               <Button
                                 variant="outline"
@@ -3446,7 +3432,7 @@ const handleAddFolder = (projectId, name) => {
                                   }
                                 }}
                               >
-                                <Code className="mr-1 h-4 w-4"/> Format
+                                <Code className="mr-1 h-4 w-4" /> Format
                               </Button>
                             </div>
 
@@ -3866,7 +3852,7 @@ const handleAddFolder = (projectId, name) => {
                       id="new-status-code"
                       className="border-[#CBD5E1] rounded-md"
                     >
-                      <SelectValue placeholder="Select status code"/>
+                      <SelectValue placeholder="Select status code" />
                     </SelectTrigger>
                     <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                       {statusCodes.map((status) => (
@@ -3912,7 +3898,7 @@ const handleAddFolder = (projectId, name) => {
                       size="sm"
                       className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                     >
-                      <Upload className="mr-1 h-4 w-4"/> Upload
+                      <Upload className="mr-1 h-4 w-4" /> Upload
                     </Button>
                     <Button
                       variant="outline"
@@ -3932,7 +3918,7 @@ const handleAddFolder = (projectId, name) => {
                         }
                       }}
                     >
-                      <Code className="mr-1 h-4 w-4"/> Format
+                      <Code className="mr-1 h-4 w-4" /> Format
                     </Button>
                   </div>
                 </div>
