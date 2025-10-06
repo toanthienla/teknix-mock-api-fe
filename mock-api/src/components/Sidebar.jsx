@@ -13,8 +13,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from "@/components/ui/context-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {Badge} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
@@ -22,28 +21,28 @@ import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
 export default function Sidebar({
-                                  workspaces = [],
-                                  current,
-                                  setCurrent,
-                                  onWorkspaceChange,
-                                  endpoints = [],
-                                  folders = [],
-                                  onEditWorkspace,
-                                  onDeleteWorkspace,
-                                  onAddFolder,
-                                  onEditFolder,
-                                  onDeleteFolder,
-                                  projects = [],
-                                  openProjectsMap,
-                                  setOpenProjectsMap,
-                                  openEndpointsMap,
-                                  setOpenEndpointsMap,
-                                  openFoldersMap,
-                                  setOpenFoldersMap,
-                                  isCollapsed,
-                                  setIsCollapsed,
-                                  setOpenNewWs,
-                                }) {
+  workspaces = [],
+  current,
+  setCurrent,
+  onWorkspaceChange,
+  endpoints = [],
+  folders = [],
+  onEditWorkspace,
+  onDeleteWorkspace,
+  onAddFolder,
+  onEditFolder,
+  onDeleteFolder,
+  projects = [],
+  openProjectsMap,
+  setOpenProjectsMap,
+  openEndpointsMap,
+  setOpenEndpointsMap,
+  openFoldersMap,
+  setOpenFoldersMap,
+  isCollapsed,
+  setIsCollapsed,
+  setOpenNewWs,
+}) {
   const navigate = useNavigate();
   const { projectId, endpointId, folderId } = useParams();
 
@@ -84,26 +83,22 @@ export default function Sidebar({
 
   const readOpenEndpoints = (pId) => (openEndpointsMap ? openEndpointsMap[pId] : false);
 
-  const readOpenFolders = (fId) => (openFoldersMap ? openFoldersMap[fId] : false);
+  // Chỉ mở folder đang chọn
+  const readOpenFolders = (fId) => String(folderId) === String(fId);
 
   const toggleProjects = (wsId) => {
     setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
   };
 
-  // const toggleEndpoints = (pId) => {
-  //   setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
-  // };
-  //
-  // const toggleFolders = (fId) => {
-  //   setOpenFoldersMap((prev) => {
-  //     const newMap = {};
-  //     Object.keys(prev).forEach((key) => {
-  //       newMap[key] = false;
-  //     });
-  //     newMap[fId] = !prev[fId];
-  //     return newMap;
-  //   });
-  // };
+  const toggleEndpoints = (pId) => {
+    setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
+  };
+
+  // Khi chọn folder mới, chỉ mở folder đó, các folder khác đóng lại
+  const toggleFolders = (fId, pId) => {
+    navigate(`/dashboard/${pId}/folder/${fId}`);
+    setOpenFoldersMap({ [fId]: true });
+  };
 
   const handleSelectWorkspace = (wsId) => {
     if (setCurrent) setCurrent(wsId);
@@ -137,14 +132,7 @@ export default function Sidebar({
     }
   }, [projectId, folderId, endpointId, projects]);
 
-  const folderEndpointsMap = useMemo(() => {
-    const map = {};
-    folders.forEach((f) => {
-      const eps = endpoints.filter((ep) => String(ep.folder_id) === String(f.id));
-      map[f.id] = eps;
-    });
-    return map;
-  }, [folders, endpoints]);
+  // Bỏ folderEndpointsMap, dùng filter trực tiếp
 
   const projectHasContent = (p) => {
     const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
@@ -156,7 +144,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 w-64 min-h-screen max-h-full justify-between">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
@@ -314,7 +302,7 @@ export default function Sidebar({
                             return (
                               <>
                                 {projectFolders.map((folder) => {
-                                  const folderEndpoints = folderEndpointsMap[folder.id] || [];
+                                  const folderEndpoints = endpoints.filter((ep) => String(ep.folder_id) === String(folder.id));
                                   const isFolderOpen = readOpenFolders(folder.id);
                                   const activeFolder = String(folderId) === String(folder.id);
 
@@ -331,8 +319,7 @@ export default function Sidebar({
                                             }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              navigate(`/dashboard/${p.id}/folder/${folder.id}`);
-                                              // toggleFolders(folder.id);
+                                              toggleFolders(folder.id, p.id);
                                             }}
                                           >
                                             <div className="flex items-center justify-between w-full">
@@ -437,25 +424,6 @@ export default function Sidebar({
                 })}
             </ul>
           )}
-        </div>
-      </div>
-
-      {/* Phần dưới: User Info luôn cố định */}
-      <div className="border border-slate-300 mx-2.5 my-5 rounded-lg px-4 py-3 flex items-center gap-3 bg-white">
-        <div className="flex items-center gap-3 w-full">
-          <div className="flex-shrink-0">
-            <Avatar className="w-9 h-9">
-              <AvatarImage src="/src/assets/user-avatar.svg" alt="User Avatar" />
-              <AvatarFallback>HC</AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-slate-800 text-sm">hancontam</span>
-            <span className="text-xs text-slate-500">hancontam@gmail.com</span>
-          </div>
-          <div>
-            <ChevronDown className="w-4 h-4 text-slate-500"/>
-          </div>
         </div>
       </div>
     </div>
