@@ -951,10 +951,17 @@ const DashboardPage = () => {
         if (!res.ok) throw new Error("Failed to reset current values");
         return res.json();
       })
-      .then((updatedData) => {
-        setEndpointData(updatedData);
-        toast.success("Current values reset successfully!");
-        setShowResetConfirmDialog(false);
+      .then(() => {
+        // Fetch lại endpoint data sau khi reset
+        return fetchEndpointDataByPath(endpointData.path);
+      })
+      .then((finalData) => {
+        if (finalData) {
+          setEndpointData(finalData);
+          setDataDefault(finalData.data_default || []);
+          toast.success("Current values reset successfully!");
+          setShowResetConfirmDialog(false);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -1226,66 +1233,6 @@ const DashboardPage = () => {
       })
       .finally(() => {
         setIsSwitchingMode(false);
-      });
-  };
-
-  // Hàm xử lý thay đổi trạng thái active
-  const handleActiveToggle = () => {
-    if (!currentEndpointId) return;
-
-    const newIsActive = !isActive;
-    const previousState = isActive;
-
-    // Cập nhật ngay trong state để UI phản hồi nhanh
-    setEndpoints((prev) =>
-      prev.map((ep) =>
-        String(ep.id) === String(currentEndpointId)
-          ? {
-              ...ep,
-              is_active: newIsActive,
-              updated_at: new Date().toISOString(),
-            }
-          : ep
-      )
-    );
-    setIsActive(newIsActive);
-
-    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...currentEndpoint,
-        is_active: newIsActive,
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          // Nếu có lỗi, khôi phục lại state
-          setEndpoints((prev) =>
-            prev.map((ep) =>
-              String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_active: previousState }
-                : ep
-            )
-          );
-          setIsActive(previousState);
-          throw new Error("Failed to update endpoint status");
-        }
-
-        toast.success(
-          `Endpoint ${newIsActive ? "activated" : "deactivated"} successfully!`
-        );
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
       });
   };
 
@@ -2313,11 +2260,17 @@ const DashboardPage = () => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
           return res.json();
         })
+        .then(() => {
+          // Fetch lại endpoint data sau khi cập nhật
+          return fetchEndpointDataByPath(endpointData.path);
+        })
         .then((finalData) => {
-          setEndpointData(finalData);
-          setDataDefault(finalData.data_default || []);
-          setIsInitialValueDialogOpen(false);
-          toast.success("Initial value updated successfully!");
+          if (finalData) {
+            setEndpointData(finalData);
+            setDataDefault(finalData.data_default || []);
+            setIsInitialValueDialogOpen(false);
+            toast.success("Initial value updated successfully!");
+          }
         })
         .catch((error) => {
           console.error(error);
@@ -2510,11 +2463,8 @@ const DashboardPage = () => {
                   className="w-6 h-6 object-contain flex-shrink-0"
                 />
 
-                {/* Nút toggle Active/Inactive */}
-                <div
-                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer flex-shrink-0"
-                  onClick={handleActiveToggle}
-                >
+                {/* Hiển thị trạng thái Active/Inactive (chỉ đọc) */}
+                <div className="flex flex-row items-center w-[20px] h-[10px] flex-shrink-0">
                   {isActive ? (
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
                       <polygon
