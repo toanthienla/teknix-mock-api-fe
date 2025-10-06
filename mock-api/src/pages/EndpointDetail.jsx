@@ -213,6 +213,9 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
         delete newErrors[id];
         return newErrors;
       });
+
+      toast.info("Field removed locally. Click 'Save Changes' to apply.");
+
       return filtered;
     });
 
@@ -2155,13 +2158,11 @@ const DashboardPage = () => {
     // Payload khác nhau cho stateful và stateless
     let payload;
     if (isStateful) {
+      // Chỉ gửi đúng 3 trường được yêu cầu cho stateful mode
       payload = {
-        endpoint_id: currentEndpointId,
         name: responseName,
-        status_code: parseInt(statusCode),
         response_body: responseBodyObj,
         delay_ms: parseInt(delay) || 0,
-        // Không gửi các trường không cần thiết cho stateful
       };
     } else {
       payload = {
@@ -2199,16 +2200,22 @@ const DashboardPage = () => {
       .then((updatedResponse) => {
         // Xử lý response trả về dựa trên chế độ
         if (isStateful) {
+          // Giữ nguyên status_code hiện tại khi cập nhật response stateful
+          const currentStatefulResponse = {
+            ...updatedResponse,
+            status_code: selectedResponse?.status_code || 200,
+          };
+
           const statefulResponse = {
-            id: updatedResponse.id,
-            endpoint_id: updatedResponse.endpoint_id,
-            name: updatedResponse.name,
-            status_code: updatedResponse.status_code,
-            response_body: updatedResponse.response_body,
-            delay_ms: updatedResponse.delay_ms,
+            id: currentStatefulResponse.id,
+            endpoint_id: currentStatefulResponse.endpoint_id,
+            name: currentStatefulResponse.name,
+            status_code: currentStatefulResponse.status_code,
+            response_body: currentStatefulResponse.response_body,
+            delay_ms: currentStatefulResponse.delay_ms,
             is_stateful: true,
-            created_at: updatedResponse.created_at,
-            updated_at: updatedResponse.updated_at,
+            created_at: currentStatefulResponse.created_at,
+            updated_at: currentStatefulResponse.updated_at,
           };
 
           // Cập nhật state với response stateful
@@ -2982,16 +2989,9 @@ const DashboardPage = () => {
                           <Input
                             id="response-name"
                             value={responseName}
-                            onChange={(e) =>
-                              !isStateful && setResponseName(e.target.value)
-                            }
-                            disabled={isStateful}
-                            className={`col-span-3 border-[#CBD5E1] rounded-md ${
-                              isStateful ? "bg-gray-100 cursor-not-allowed" : ""
-                            }`}
-                            placeholder={
-                              isStateful ? "Read-only in stateful mode" : ""
-                            }
+                            onChange={(e) => setResponseName(e.target.value)}
+                            className="col-span-3 border-[#CBD5E1] rounded-md"
+                            placeholder="Enter response name"
                           />
                         </div>
 
