@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { API_ROOT } from "../utils/constants";
+import React, {useState, useEffect, useRef} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Card} from "@/components/ui/card";
+import {Textarea} from "@/components/ui/textarea";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {API_ROOT} from "../utils/constants";
 import Sidebar from "../components/Sidebar";
 import {
   Table,
@@ -27,7 +27,7 @@ import {
   FileCode,
   X,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useParams } from "react-router-dom";
+import {useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -60,8 +60,8 @@ const statusCodes = [
     code: "102",
     description: "Processing.",
   },
-  { code: "200", description: "OK." },
-  { code: "201", description: "Created." },
+  {code: "200", description: "OK."},
+  {code: "201", description: "Created."},
   {
     code: "202",
     description: "Accepted.",
@@ -78,8 +78,8 @@ const statusCodes = [
     code: "301",
     description: "Moved Permanently.",
   },
-  { code: "302", description: "Found." },
-  { code: "303", description: "See Other." },
+  {code: "302", description: "Found."},
+  {code: "303", description: "See Other."},
   {
     code: "304",
     description: "Not Modified.",
@@ -92,13 +92,13 @@ const statusCodes = [
     code: "308",
     description: "Permanent Redirect.",
   },
-  { code: "400", description: "Bad Request." },
-  { code: "401", description: "Unauthorized." },
+  {code: "400", description: "Bad Request."},
+  {code: "401", description: "Unauthorized."},
   {
     code: "403",
     description: "Forbidden.",
   },
-  { code: "404", description: "Not Found." },
+  {code: "404", description: "Not Found."},
   {
     code: "405",
     description: "Method Not Allowed.",
@@ -111,13 +111,13 @@ const statusCodes = [
     code: "409",
     description: "Conflict.",
   },
-  { code: "410", description: "Gone." },
+  {code: "410", description: "Gone."},
   {
     code: "415",
     description: "Unsupported Media Type.",
   },
-  { code: "429", description: "Too Many Requests." },
-  { code: "500", description: "Internal Server Error." },
+  {code: "429", description: "Too Many Requests."},
+  {code: "500", description: "Internal Server Error."},
   {
     code: "501",
     description: "Not Implemented.",
@@ -140,7 +140,7 @@ const statusCodes = [
   },
 ];
 
-const SchemaBodyEditor = ({ endpointData, onSave }) => {
+const SchemaBodyEditor = ({endpointData, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
@@ -209,7 +209,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     setSchemaFields((prev) => {
       const filtered = prev.filter((field) => field.id !== id);
       setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
+        const newErrors = {...prevErrors};
         delete newErrors[id];
         return newErrors;
       });
@@ -230,14 +230,14 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
+      prev.map((field) => (field.id === id ? {...field, name: value} : field))
     );
 
     // Validate sau khi thay đổi
     setTimeout(() => {
       const field = schemaFields.find((f) => f.id === id);
       if (field) {
-        const fieldErrors = validateField({ ...field, name: value });
+        const fieldErrors = validateField({...field, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: fieldErrors,
@@ -248,14 +248,14 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleTypeChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
+      prev.map((field) => (field.id === id ? {...field, type: value} : field))
     );
   };
 
   const handleRequiredChange = (id, value) => {
     setSchemaFields((prev) =>
       prev.map((field) =>
-        field.id === id ? { ...field, required: value === "true" } : field
+        field.id === id ? {...field, required: value === "true"} : field
       )
     );
   };
@@ -337,7 +337,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     onValueChange={(value) => handleTypeChange(field.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="string">string</SelectItem>
@@ -357,7 +357,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Required" />
+                      <SelectValue placeholder="Required"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="true">true</SelectItem>
@@ -374,7 +374,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     handleDeleteField(field.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -397,7 +397,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
           {/* Nút thêm trường và lưu */}
           <div className="flex justify-between items-center mt-4">
             <Button variant="outline" onClick={handleAddField}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add field
             </Button>
 
@@ -414,7 +414,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   );
 };
 
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
+const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   const [errors, setErrors] = useState({});
@@ -559,13 +559,13 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -613,7 +613,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -632,14 +632,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -650,14 +650,14 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -749,7 +749,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -774,7 +774,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                <div
+                  className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
                   <span
                     className="text-[32px] text-black"
                     style={{
@@ -800,7 +801,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                 />
 
                 {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch"/>
 
                 <Button
                   variant="ghost"
@@ -810,7 +811,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
@@ -837,7 +838,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
               onClick={handleAddRule}
               className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               Add
             </Button>
 
@@ -869,7 +870,7 @@ const DashboardPage = () => {
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
-  const { projectId, endpointId } = useParams();
+  const {projectId, endpointId} = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -915,18 +916,21 @@ const DashboardPage = () => {
   const [editWsName, setEditWsName] = useState("");
   const [proxyUrl, setProxyUrl] = useState("");
   const [proxyMethod, setProxyMethod] = useState("GET");
-  const [openNewProject, setOpenNewProject] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [targetWsId, setTargetWsId] = useState(null);
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
   const [openNewWs, setOpenNewWs] = useState(false);
   const [newWsName, setNewWsName] = useState("");
-  const [openNewFolder, setOpenNewFolder] = useState(false);
   const [targetProjectId, setTargetProjectId] = useState(null);
+
+  const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [deleteFolderId, setDeleteFolderId] = useState(null);
+  const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
+
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
 
@@ -948,7 +952,7 @@ const DashboardPage = () => {
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
       }
     )
@@ -956,10 +960,17 @@ const DashboardPage = () => {
         if (!res.ok) throw new Error("Failed to reset current values");
         return res.json();
       })
-      .then((updatedData) => {
-        setEndpointData(updatedData);
-        toast.success("Current values reset successfully!");
-        setShowResetConfirmDialog(false);
+      .then(() => {
+        // Fetch lại endpoint data sau khi reset
+        return fetchEndpointDataByPath(endpointData.path);
+      })
+      .then((finalData) => {
+        if (finalData) {
+          setEndpointData(finalData);
+          setDataDefault(finalData.data_default || []);
+          toast.success("Current values reset successfully!");
+          setShowResetConfirmDialog(false);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -979,7 +990,7 @@ const DashboardPage = () => {
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
       }
     )
@@ -1107,10 +1118,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1118,7 +1129,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then((res) => {
         if (!res.ok) {
@@ -1126,7 +1137,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
+                ? {...ep, is_stateful: previousState}
                 : ep
             )
           );
@@ -1181,10 +1192,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1193,7 +1204,7 @@ const DashboardPage = () => {
     // Call new API to convert to stateless
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then((res) => {
         if (!res.ok) {
@@ -1201,7 +1212,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
+                ? {...ep, is_stateful: previousState}
                 : ep
             )
           );
@@ -1231,66 +1242,6 @@ const DashboardPage = () => {
       })
       .finally(() => {
         setIsSwitchingMode(false);
-      });
-  };
-
-  // Hàm xử lý thay đổi trạng thái active
-  const handleActiveToggle = () => {
-    if (!currentEndpointId) return;
-
-    const newIsActive = !isActive;
-    const previousState = isActive;
-
-    // Cập nhật ngay trong state để UI phản hồi nhanh
-    setEndpoints((prev) =>
-      prev.map((ep) =>
-        String(ep.id) === String(currentEndpointId)
-          ? {
-              ...ep,
-              is_active: newIsActive,
-              updated_at: new Date().toISOString(),
-            }
-          : ep
-      )
-    );
-    setIsActive(newIsActive);
-
-    // Lấy endpoint hiện tại để có toàn bộ dữ liệu
-    const currentEndpoint = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    );
-
-    // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...currentEndpoint,
-        is_active: newIsActive,
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          // Nếu có lỗi, khôi phục lại state
-          setEndpoints((prev) =>
-            prev.map((ep) =>
-              String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_active: previousState }
-                : ep
-            )
-          );
-          setIsActive(previousState);
-          throw new Error("Failed to update endpoint status");
-        }
-
-        toast.success(
-          `Endpoint ${newIsActive ? "activated" : "deactivated"} successfully!`
-        );
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
       });
   };
 
@@ -1347,8 +1298,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-        (w) => String(w.id) === String(currentProject.workspace_id)
-      )
+      (w) => String(w.id) === String(currentProject.workspace_id)
+    )
     : null;
 
   const method =
@@ -1666,8 +1617,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -1695,7 +1646,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1706,29 +1657,11 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
-const handleAddFolder = (projectId, name) => {
-  fetch(`${API_ROOT}/folders`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: name.trim(),
-      project_id: projectId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }),
-  })
-    .then((res) => res.json())
-    .then((createdFolder) => {
-      setFolders((prev) => [...prev, createdFolder]);
-      toast.success("Folder created successfully!");
-    })
-    .catch(() => toast.error("Failed to create folder"));
-};
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
@@ -1738,7 +1671,7 @@ const handleAddFolder = (projectId, name) => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1747,7 +1680,7 @@ const handleAddFolder = (projectId, name) => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1766,11 +1699,11 @@ const handleAddFolder = (projectId, name) => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -1782,89 +1715,165 @@ const handleAddFolder = (projectId, name) => {
     }
   };
 
-  const validateProject = (title, desc, editMode = false, editId = null) => {
-    const titleTrim = title.trim();
-    const descTrim = desc.trim();
+  const validateFolderName = (name) => {
+    const trimmed = name.trim();
 
-    if (!titleTrim) {
-      toast.warning("Project name cannot be empty");
-      return false;
-    }
-    if (titleTrim.length > 50) {
-      toast.warning("Project name cannot exceed 50 chars");
-      return false;
-    }
-    if (/^[0-9]/.test(titleTrim)) {
-      toast.warning("Project name cannot start with a number");
-      return false;
-    }
-    if (/ {2,}/.test(titleTrim)) {
-      toast.warning("Project name cannot contain multiple spaces");
-      return false;
-    }
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
-      toast.warning(
-        "Only letters, numbers, and spaces allowed (no special characters)"
-      );
-      return false;
-    }
-    if (!descTrim) {
-      toast.info("Project description cannot be empty");
-      return false;
-    }
-    if (descTrim.length > 200) {
-      toast.warning("Project description max 200 chars");
-      return false;
+    if (!trimmed) {
+      return "Folder name cannot be empty";
     }
 
-    const duplicate = projects.some(
-      (p) =>
-        p.workspace_id === currentWsId &&
-        (!editMode || p.id !== editId) &&
-        p.name.toLowerCase() === titleTrim.toLowerCase()
+    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed)) {
+      return "Must start with a letter, no special chars, single spaces allowed";
+    }
+
+    if (trimmed.length > 20) {
+      return "Folder name max 20 chars";
+    }
+
+    const projectFolders = folders.filter(f =>
+      String(f.project_id) === String(projectId) &&
+      f.id !== editingFolderId
     );
-    if (duplicate) {
-      toast.warning("Project name already exists in this workspace");
-      return false;
+    if (projectFolders.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+      return "Folder name already exists in this project";
     }
-    return true;
+
+    return "";
   };
 
-  const handleCreateProject = () => {
-    if (!validateProject(newTitle, newDesc)) return;
-    const newProject = {
-      name: newTitle.trim(),
-      description: newDesc.trim(),
-      workspace_id: targetWsId || currentWsId, // ưu tiên workspace được chọn
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+  const handleCreateFolder = async () => {
+    toast.dismiss();
 
-    fetch(`${API_ROOT}/projects`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newProject),
-    })
-      .then((res) => res.json())
-      .then((createdProject) => {
-        setProjects((prev) => [...prev, createdProject]);
+    if (editingFolderId) {
+      const originalFolder = folders.find(f => f.id === editingFolderId);
+      if (originalFolder && newFolderName.trim() === originalFolder.name && newFolderDesc.trim() === (originalFolder.description || "")) {
+        setOpenNewFolder(false);
+        setNewFolderName("");
+        setNewFolderDesc("");
+        setEditingFolderId(null);
+        return;
+      }
+    }
 
-        // mở workspace tương ứng
-        setCurrentWsId(createdProject.workspace_id);
-        localStorage.setItem("currentWorkspace", createdProject.workspace_id);
+    const validationError = validateFolderName(newFolderName);
+    if (validationError) {
+      toast.warning(validationError);
+      return;
+    }
 
-        setOpenProjectsMap((prev) => ({
-          ...prev,
-          [createdProject.workspace_id]: true,
-        }));
+    if (isCreatingFolder) {
+      return;
+    }
 
-        setNewTitle("");
-        setNewDesc("");
-        setTargetWsId(null); // reset sau khi tạo xong
-        setOpenNewProject(false);
-        toast.success("Project created successfully");
-      })
-      .catch(() => toast.error("Failed to create project"));
+    setIsCreatingFolder(true);
+
+    try {
+      const folderData = {
+        name: newFolderName.trim(),
+        description: newFolderDesc.trim(),
+        project_id: targetProjectId || projectId,
+        created_at: editingFolderId ? undefined : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      let response;
+      if (editingFolderId) {
+        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({id: editingFolderId, ...folderData}),
+        });
+      } else {
+        response = await fetch(`${API_ROOT}/folders`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(folderData),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to save folder');
+      }
+
+      const savedFolder = await response.json();
+
+      if (editingFolderId) {
+        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
+        toast.success(`Folder "${savedFolder.name}" updated successfully!`);
+      } else {
+        setFolders((prev) => [...prev, savedFolder]);
+        toast.success(`Folder "${savedFolder.name}" created successfully!`);
+      }
+
+      setNewFolderName("");
+      setNewFolderDesc("");
+      setEditingFolderId(null);
+      setTargetProjectId(null);
+      setOpenNewFolder(false);
+    } catch (error) {
+      console.error('Error saving folder:', error);
+      toast.error('Failed to save folder. Please try again.');
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  const handleAddFolder = (targetProjectId = null) => {
+    setTargetProjectId(targetProjectId || projectId);
+    setOpenNewFolder(true);
+  };
+
+  const handleEditFolder = (folder) => {
+    setNewFolderName(folder.name);
+    setNewFolderDesc(folder.description || "");
+    setEditingFolderId(folder.id);
+    setOpenNewFolder(true);
+  };
+
+  const handleDeleteFolder = async (folderIdParam) => {
+    setDeleteFolderId(folderIdParam);
+    setOpenDeleteFolder(true);
+  };
+
+  const hasChanges = () => {
+    if (!editingFolderId) return true;
+    const originalFolder = folders.find(f => f.id === editingFolderId);
+    if (!originalFolder) return true;
+    return newFolderName.trim() !== originalFolder.name ||
+      newFolderDesc.trim() !== (originalFolder.description || "");
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!deleteFolderId) return;
+
+    try {
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(deleteFolderId));
+
+      await Promise.all(
+        endpointsToDelete.map(e =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+        )
+      );
+
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {method: "DELETE"});
+
+      setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
+
+      toast.dismiss();
+      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+
+      if (folderId === deleteFolderId) {
+        navigate(`/projects/${projectId}`);
+      }
+
+      setOpenDeleteFolder(false);
+      setDeleteFolderId(null);
+    } catch (error) {
+      console.error('Delete folder error:', error);
+      toast.error("Failed to delete folder");
+    }
   };
 
   const handleDeleteResponse = () => {
@@ -1935,7 +1944,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, priority: updated.priority }
+              ? {...response, priority: updated.priority}
               : response;
           })
         );
@@ -1946,7 +1955,7 @@ const handleAddFolder = (projectId, name) => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? { ...status, priority: updated.priority } : status;
+            return updated ? {...status, priority: updated.priority} : status;
           })
         );
 
@@ -1988,7 +1997,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, is_default: updated.is_default }
+              ? {...response, is_default: updated.is_default}
               : response;
           })
         );
@@ -2000,7 +2009,7 @@ const handleAddFolder = (projectId, name) => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? { ...status, isDefault: updated.is_default }
+              ? {...status, isDefault: updated.is_default}
               : status;
           })
         );
@@ -2045,7 +2054,7 @@ const handleAddFolder = (projectId, name) => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = { ...newStatusData[draggedItem] };
+      const draggedItemContent = {...newStatusData[draggedItem]};
 
       newStatusData.splice(draggedItem, 1);
 
@@ -2328,7 +2337,7 @@ const handleAddFolder = (projectId, name) => {
         )}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload),
         }
       )
@@ -2336,11 +2345,17 @@ const handleAddFolder = (projectId, name) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
           return res.json();
         })
+        .then(() => {
+          // Fetch lại endpoint data sau khi cập nhật
+          return fetchEndpointDataByPath(endpointData.path);
+        })
         .then((finalData) => {
-          setEndpointData(finalData);
-          setDataDefault(finalData.data_default || []);
-          setIsInitialValueDialogOpen(false);
-          toast.success("Initial value updated successfully!");
+          if (finalData) {
+            setEndpointData(finalData);
+            setDataDefault(finalData.data_default || []);
+            setIsInitialValueDialogOpen(false);
+            toast.success("Initial value updated successfully!");
+          }
         })
         .catch((error) => {
           console.error(error);
@@ -2371,7 +2386,7 @@ const handleAddFolder = (projectId, name) => {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4"/>
           <p className="text-lg font-medium text-gray-700">
             Loading endpoint data...
           </p>
@@ -2409,108 +2424,134 @@ const handleAddFolder = (projectId, name) => {
           setOpenFoldersMap={setOpenFoldersMap}
           isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
           setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
-          onAddProject={(workspaceId) => {
-            setTargetWsId(workspaceId); // lưu workspace đang chọn
-            setOpenNewProject(true); // mở modal tạo project
-          }}
-          onAddFolder={(projectId) => {
-            console.log("Add folder for project:", projectId);
-          }}
+          onAddFolder={handleAddFolder}
+          setOpenNewWs={setOpenNewWs}
+          onEditFolder={handleEditFolder}
+          onDeleteFolder={handleDeleteFolder}
         />
       </aside>
-      {/* Modal: New Workspace */}
-{openNewWs && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
-      <h2 className="text-lg font-semibold mb-4 text-slate-800">New Workspace</h2>
 
-     <input
-  type="text"
-  placeholder="Workspace name"
-  className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
-  value={newWsName}
-  onChange={(e) => setNewWsName(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (!newWsName.trim()) return;
-      handleAddWorkspace(newWsName);
-      setNewWsName("");
-      setOpenNewWs(false);
-    }
-  }}
-/>
+      {/* Edit Workspace */}
+      <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-slate-800">
+              Edit Workspace
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-1">
+                Workspace Name
+              </label>
+              <Input
+                value={editWsName}
+                onChange={(e) => setEditWsName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleEditWorkspace();
+                  }
+                }}
+                placeholder="Enter workspace name"
+                autoFocus
+                className="h-10"
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenEditWs(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleEditWorkspace}
+            >
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
+      {/* New Workspace */}
+      <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenNewWs(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => {
+                handleAddWorkspace(newWsName);
+                setNewWsName("");
+                setOpenNewWs(false);
+              }}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
-          onClick={() => setOpenNewWs(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          onClick={() => {
-            if (!newWsName.trim()) return;
-            handleAddWorkspace(newWsName); // gọi hàm tạo workspace
-            setNewWsName("");
-            setOpenNewWs(false);
-          }}
-        >
-          Create
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{/* Modal: New Folder */}
-{openNewFolder && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
-      <h2 className="text-lg font-semibold mb-4 text-slate-800">
-        New Folder
-      </h2>
-
-      <input
-        type="text"
-        placeholder="Folder name"
-        className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
-        value={newFolderName}
-        onChange={(e) => setNewFolderName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            if (!newFolderName.trim()) return;
-            handleAddFolder(targetProjectId, newFolderName);
-            setNewFolderName("");
-            setOpenNewFolder(false);
-          }
-        }}
-      />
-
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
-          onClick={() => setOpenNewFolder(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          onClick={() => {
-            if (!newFolderName.trim()) return;
-            handleAddFolder(targetProjectId, newFolderName);
-            setNewFolderName("");
-            setOpenNewFolder(false);
-          }}
-        >
-          Create
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      {/* Confirm Delete Workspace */}
+      <Dialog
+        open={!!confirmDeleteWs}
+        onOpenChange={() => setConfirmDeleteWs(null)}
+      >
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Workspace</DialogTitle>
+          </DialogHeader>
+          <p>
+            Are you sure you want to delete this workspace and all its
+            projects?
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteWs(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                handleDeleteWorkspace(confirmDeleteWs);
+                setConfirmDeleteWs(null);
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
       {/* Main Content */}
@@ -2613,12 +2654,12 @@ const handleAddFolder = (projectId, name) => {
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                    : method === "PUT"
-                    ? "bg-orange-400 text-black hover:bg-orange-500"
-                    : method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                      : method === "PUT"
+                        ? "bg-orange-400 text-black hover:bg-orange-500"
+                        : method === "DELETE"
+                          ? "bg-red-400 text-black hover:bg-red-500"
+                          : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -2642,8 +2683,10 @@ const handleAddFolder = (projectId, name) => {
                   />
                 </Button>
               )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
-                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+              <div
+                className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+                <div
+                  className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -2655,11 +2698,8 @@ const handleAddFolder = (projectId, name) => {
                   className="w-6 h-6 object-contain flex-shrink-0"
                 />
 
-                {/* Nút toggle Active/Inactive */}
-                <div
-                  className="flex flex-row items-center w-[20px] h-[10px] cursor-pointer flex-shrink-0"
-                  onClick={handleActiveToggle}
-                >
+                {/* Hiển thị trạng thái Active/Inactive (chỉ đọc) */}
+                <div className="flex flex-row items-center w-[20px] h-[10px] flex-shrink-0">
                   {isActive ? (
                     <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
                       <polygon
@@ -2730,18 +2770,22 @@ const handleAddFolder = (projectId, name) => {
               <div className="rounded-md border border-solid border-slate-300">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                    <TableRow
+                      className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
                       <TableHead className="w-[119.2px] h-10 px-1 py-0">
                         <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                          <div
+                            className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
                             Status Code
                           </div>
                         </div>
                       </TableHead>
                       <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                         <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                          <div
+                            className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                               Name Response
                             </div>
                           </div>
@@ -2786,16 +2830,18 @@ const handleAddFolder = (projectId, name) => {
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
                             {/* Hiển thị GripVertical chỉ khi không phải stateful */}
                             {!isStateful && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
                             )}
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div
+                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.name}
                             </div>
                           </div>
@@ -2804,7 +2850,8 @@ const handleAddFolder = (projectId, name) => {
                         {!isStateful && (
                           <TableCell className="w-[80px] h-[49px] p-2">
                             {status.isDefault && (
-                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                              <div
+                                className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
                                 <span className="text-xs font-medium text-[#0A0A0A]">
                                   Default
                                 </span>
@@ -2972,7 +3019,7 @@ const handleAddFolder = (projectId, name) => {
                                     : ""
                                 }`}
                               >
-                                <SelectValue placeholder="Select status code" />
+                                <SelectValue placeholder="Select status code"/>
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
@@ -3049,7 +3096,7 @@ const handleAddFolder = (projectId, name) => {
                                   size="sm"
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                 >
-                                  <Upload className="mr-1 h-4 w-4" /> Upload
+                                  <Upload className="mr-1 h-4 w-4"/> Upload
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -3074,7 +3121,7 @@ const handleAddFolder = (projectId, name) => {
                                     }
                                   }}
                                 >
-                                  <Code className="mr-1 h-4 w-4" /> Format
+                                  <Code className="mr-1 h-4 w-4"/> Format
                                 </Button>
                               </div>
 
@@ -3188,7 +3235,7 @@ const handleAddFolder = (projectId, name) => {
                                   (statusCode === "200" || method === "GET")
                                 }
                               >
-                                <Upload className="mr-2 h-4 w-4" /> Upload
+                                <Upload className="mr-2 h-4 w-4"/> Upload
                               </Button>
                               <Button
                                 variant="outline"
@@ -3199,7 +3246,7 @@ const handleAddFolder = (projectId, name) => {
                                   (statusCode === "200" || method === "GET")
                                 }
                               >
-                                <Code className="mr-2 h-4 w-4" /> Format
+                                <Code className="mr-2 h-4 w-4"/> Format
                               </Button>
                             </div>
                           </div>
@@ -3328,14 +3375,16 @@ const handleAddFolder = (projectId, name) => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <div className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
-                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
+                                <div
+                                  className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
+                                  <span
+                                    className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
                                     {dataDefault && dataDefault.length > 0
                                       ? JSON.stringify(dataDefault).length > 50
                                         ? `${JSON.stringify(dataDefault).slice(
-                                            0,
-                                            50
-                                          )}...`
+                                          0,
+                                          50
+                                        )}...`
                                         : JSON.stringify(dataDefault)
                                       : "[]"}
                                   </span>
@@ -3358,14 +3407,15 @@ const handleAddFolder = (projectId, name) => {
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
                                 {/* Thay Textarea bằng div chỉ đọc */}
-                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                <div
+                                  className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                   <pre className="whitespace-pre-wrap break-words m-0">
                                     {endpointData?.data_current
                                       ? JSON.stringify(
-                                          endpointData.data_current,
-                                          null,
-                                          2
-                                        )
+                                        endpointData.data_current,
+                                        null,
+                                        2
+                                      )
                                       : "[]"}
                                   </pre>
                                 </div>
@@ -3414,7 +3464,7 @@ const handleAddFolder = (projectId, name) => {
                                 size="sm"
                                 className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                               >
-                                <Upload className="mr-1 h-4 w-4" /> Upload
+                                <Upload className="mr-1 h-4 w-4"/> Upload
                               </Button>
                               <Button
                                 variant="outline"
@@ -3434,7 +3484,7 @@ const handleAddFolder = (projectId, name) => {
                                   }
                                 }}
                               >
-                                <Code className="mr-1 h-4 w-4" /> Format
+                                <Code className="mr-1 h-4 w-4"/> Format
                               </Button>
                             </div>
 
@@ -3540,7 +3590,7 @@ const handleAddFolder = (projectId, name) => {
                               size="sm"
                               className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                             >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
+                              <Upload className="mr-1 h-4 w-4"/> Upload
                             </Button>
                             <Button
                               variant="outline"
@@ -3560,7 +3610,7 @@ const handleAddFolder = (projectId, name) => {
                                 }
                               }}
                             >
-                              <Code className="mr-1 h-4 w-4" /> Format
+                              <Code className="mr-1 h-4 w-4"/> Format
                             </Button>
                           </div>
                         </div>
@@ -3665,154 +3715,6 @@ const handleAddFolder = (projectId, name) => {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Workspace */}
-        <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-800">
-                Edit Workspace
-              </DialogTitle>
-            </DialogHeader>
-            <div className="mt-2 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">
-                  Workspace Name
-                </label>
-                <Input
-                  value={editWsName}
-                  onChange={(e) => setEditWsName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleEditWorkspace();
-                    }
-                  }}
-                  placeholder="Enter workspace name"
-                  autoFocus
-                  className="h-10"
-                />
-              </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpenEditWs(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                className="bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleEditWorkspace}
-              >
-                Update
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* New Project */}
-        <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
-          <DialogContent className="max-w-lg rounded-2xl p-6">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">
-                New Project
-              </DialogTitle>
-              <div className="mt-1 text-sm text-slate-500">Project details</div>
-            </DialogHeader>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name
-                </label>
-                <Input
-                  placeholder="Project name"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateProject();
-                    }
-                  }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Description
-                </label>
-                <Textarea
-                  placeholder="Project description"
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  maxLength={200}
-                  className="min-h-[50px] resize-y"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleCreateProject();
-                    }
-                  }}
-                />
-                <p className="text-xs text-slate-400 text-right mt-1">
-                  {newDesc.length}/200
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter className="flex justify-end gap-3 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setOpenNewProject(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleCreateProject}
-              >
-                Create
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Confirm Delete Workspace */}
-        <Dialog
-          open={!!confirmDeleteWs}
-          onOpenChange={() => setConfirmDeleteWs(null)}
-        >
-          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-            <DialogHeader>
-              <DialogTitle>Delete Workspace</DialogTitle>
-            </DialogHeader>
-            <p>
-              Are you sure you want to delete this workspace and all its
-              projects?
-            </p>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setConfirmDeleteWs(null)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-red-600 text-white hover:bg-red-700"
-                onClick={() => {
-                  handleDeleteWorkspace(confirmDeleteWs);
-                  setConfirmDeleteWs(null);
-                }}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {/* New Response Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
@@ -3854,7 +3756,7 @@ const handleAddFolder = (projectId, name) => {
                       id="new-status-code"
                       className="border-[#CBD5E1] rounded-md"
                     >
-                      <SelectValue placeholder="Select status code" />
+                      <SelectValue placeholder="Select status code"/>
                     </SelectTrigger>
                     <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                       {statusCodes.map((status) => (
@@ -3900,7 +3802,7 @@ const handleAddFolder = (projectId, name) => {
                       size="sm"
                       className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                     >
-                      <Upload className="mr-1 h-4 w-4" /> Upload
+                      <Upload className="mr-1 h-4 w-4"/> Upload
                     </Button>
                     <Button
                       variant="outline"
@@ -3920,7 +3822,7 @@ const handleAddFolder = (projectId, name) => {
                         }
                       }}
                     >
-                      <Code className="mr-1 h-4 w-4" /> Format
+                      <Code className="mr-1 h-4 w-4"/> Format
                     </Button>
                   </div>
                 </div>
@@ -3954,35 +3856,97 @@ const handleAddFolder = (projectId, name) => {
           </DialogContent>
         </Dialog>
 
-        {/* Confirm Delete Workspace */}
-        <Dialog
-          open={!!confirmDeleteWs}
-          onOpenChange={() => setConfirmDeleteWs(null)}
-        >
-          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
-            <DialogHeader>
-              <DialogTitle>Delete Workspace</DialogTitle>
+        {/* New Folder Dialog */}
+        <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
+          <DialogContent
+            className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
+          >
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                {editingFolderId ? "Edit Folder" : "New Folder"}
+              </DialogTitle>
             </DialogHeader>
-            <p>
-              Are you sure you want to delete this workspace and all its
-              projects?
-            </p>
-            <DialogFooter>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
+                  Name
+                </Label>
+                <Input
+                  id="folder-name"
+                  placeholder="Enter folder name"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
+                      e.preventDefault();
+                      if (hasChanges()) {
+                        handleCreateFolder();
+                      } else {
+                        setOpenNewFolder(false);
+                        setNewFolderName("");
+                        setNewFolderDesc("");
+                        setEditingFolderId(null);
+                      }
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setOpenNewFolder(false);
+                      setNewFolderName("");
+                      setNewFolderDesc("");
+                      setEditingFolderId(null);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 flex gap-2">
               <Button
-                variant="outline"
-                onClick={() => setConfirmDeleteWs(null)}
+                variant="ghost"
+                onClick={() => {
+                  setOpenNewFolder(false);
+                  setNewFolderName("");
+                  setNewFolderDesc("");
+                  setEditingFolderId(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-red-600 text-white hover:bg-red-700"
-                onClick={() => {
-                  handleDeleteWorkspace(confirmDeleteWs);
-                  setConfirmDeleteWs(null);
-                }}
+                onClick={handleCreateFolder}
+                disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
+                className="px-4 py-2  text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
               >
-                Delete
+                {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Folder Dialog */}
+        <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
+          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-lg font-semibold text-gray-900">Delete Folder</DialogTitle>
+            </DialogHeader>
+
+            <div className="py-2">
+              <p className="text-sm text-gray-600">Are you sure you want to delete this folder and all its endpoints? This
+                action cannot be undone.</p>
+            </div>
+
+            <DialogFooter className="pt-4 flex gap-2">
+              <Button variant="ghost" onClick={() => {
+                setOpenDeleteFolder(false);
+                setDeleteFolderId(null);
+              }}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Cancel</Button>
+              <Button onClick={confirmDeleteFolder}
+                      className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">Delete</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
