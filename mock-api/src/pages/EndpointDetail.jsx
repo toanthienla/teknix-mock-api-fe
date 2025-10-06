@@ -922,6 +922,11 @@ const DashboardPage = () => {
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+  const [openNewFolder, setOpenNewFolder] = useState(false);
+  const [targetProjectId, setTargetProjectId] = useState(null);
+  const [newFolderName, setNewFolderName] = useState("");
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
 
@@ -932,13 +937,19 @@ const DashboardPage = () => {
   const handleResetCurrentValues = () => {
     if (!endpointData) return;
 
+    const payload = {
+      schema: endpointData.schema || {},
+      data_default: endpointData.data_default || [],
+      // Thêm flag để reset current values
+      reset_current: true,
+    };
+
     fetch(
-      `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-        endpointData.path
-      )}`,
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
     )
       .then((res) => {
@@ -1700,6 +1711,24 @@ const DashboardPage = () => {
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
+const handleAddFolder = (projectId, name) => {
+  fetch(`${API_ROOT}/folders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.trim(),
+      project_id: projectId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then((res) => res.json())
+    .then((createdFolder) => {
+      setFolders((prev) => [...prev, createdFolder]);
+      toast.success("Folder created successfully!");
+    })
+    .catch(() => toast.error("Failed to create folder"));
+};
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
@@ -2080,6 +2109,7 @@ const DashboardPage = () => {
       })
       .catch(console.error);
   };
+
   const handleNewResponse = () => {
     // Reset form khi tạo mới
     setSelectedResponse(null);
@@ -2147,7 +2177,7 @@ const DashboardPage = () => {
 
     fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -2176,8 +2206,8 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === statefulResponse.id ? statefulResponse : r
-                )
+                r.id === statefulResponse.id ? statefulResponse : r
+              )
               : [...prev, statefulResponse]
           );
 
@@ -2185,22 +2215,22 @@ const DashboardPage = () => {
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === statefulResponse.id
-                    ? {
-                        ...s,
-                        code: statefulResponse.status_code.toString(),
-                        name: statefulResponse.name,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: statefulResponse.id,
+                s.id === statefulResponse.id
+                  ? {
+                    ...s,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: statefulResponse.id,
+                  code: statefulResponse.status_code.toString(),
+                  name: statefulResponse.name,
+                },
+              ]
           );
 
           if (selectedResponse) {
@@ -2211,32 +2241,32 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === updatedResponse.id ? updatedResponse : r
-                )
+                r.id === updatedResponse.id ? updatedResponse : r
+              )
               : [...prev, updatedResponse]
           );
 
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === updatedResponse.id
-                    ? {
-                        ...s,
-                        code: updatedResponse.status_code.toString(),
-                        name: updatedResponse.name,
-                        isDefault: updatedResponse.is_default,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: updatedResponse.id,
+                s.id === updatedResponse.id
+                  ? {
+                    ...s,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: updatedResponse.id,
+                  code: updatedResponse.status_code.toString(),
+                  name: updatedResponse.name,
+                  isDefault: updatedResponse.is_default,
+                },
+              ]
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
@@ -2287,9 +2317,11 @@ const DashboardPage = () => {
       const payload = {
         schema: endpointData.schema || {},
         data_default: parsedData,
+        // Thêm flag để reset current values khi cập nhật
+        reset_current: true,
       };
 
-      // First update the endpoint data with new schema and data_default
+      // Chỉ gọi một lần API để cập nhật và reset
       fetch(
         `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
           endpointData.path
@@ -2302,22 +2334,6 @@ const DashboardPage = () => {
       )
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
-          return res.json();
-        })
-        .then(() => {
-          // Then reset current values to default
-          return fetch(
-            `${API_ROOT}/endpoint_data/set_default?path=${encodeURIComponent(
-              endpointData.path
-            )}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-        })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to reset current values");
           return res.json();
         })
         .then((finalData) => {
@@ -2336,6 +2352,14 @@ const DashboardPage = () => {
       );
     }
   };
+
+  const currentEndpoint = endpoints.find(
+    (ep) => String(ep.id) === String(currentEndpointId)
+  );
+
+  const currentFolder = currentEndpoint
+    ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
+    : null;
 
   // Cập nhật state string khi tempDataDefault thay đổi
   useEffect(() => {
@@ -2394,6 +2418,100 @@ const DashboardPage = () => {
           }}
         />
       </aside>
+      {/* Modal: New Workspace */}
+{openNewWs && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
+      <h2 className="text-lg font-semibold mb-4 text-slate-800">New Workspace</h2>
+
+     <input
+  type="text"
+  placeholder="Workspace name"
+  className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
+  value={newWsName}
+  onChange={(e) => setNewWsName(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!newWsName.trim()) return;
+      handleAddWorkspace(newWsName);
+      setNewWsName("");
+      setOpenNewWs(false);
+    }
+  }}
+/>
+
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+          onClick={() => setOpenNewWs(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => {
+            if (!newWsName.trim()) return;
+            handleAddWorkspace(newWsName); // gọi hàm tạo workspace
+            setNewWsName("");
+            setOpenNewWs(false);
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Modal: New Folder */}
+{openNewFolder && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
+      <h2 className="text-lg font-semibold mb-4 text-slate-800">
+        New Folder
+      </h2>
+
+      <input
+        type="text"
+        placeholder="Folder name"
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
+        value={newFolderName}
+        onChange={(e) => setNewFolderName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
+          }
+        }}
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+          onClick={() => setOpenNewFolder(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => {
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Main Content */}
       <div className={`pt-8 flex-1 transition-all duration-300`}>
@@ -2403,26 +2521,9 @@ const DashboardPage = () => {
           breadcrumb={
             currentWorkspace
               ? currentProject
-                ? currentEndpointId
-                  ? [
-                      {
-                        label: currentWorkspace.name,
-                        WORKSPACE_ID: currentWorkspace.id,
-                        href: "/dashboard", // workspace chỉ cần /dashboard
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) => String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null, // endpoint không có link
-                      },
-                    ]
-                  : [
+                ? currentFolder
+                  ? currentEndpointId
+                    ? [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2432,14 +2533,51 @@ const DashboardPage = () => {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
                       },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}/folder/${currentFolder.id}`,
+                      },
+                      {
+                        label:
+                          endpoints.find(
+                            (ep) => String(ep.id) === String(currentEndpointId)
+                          )?.name || "Endpoint",
+                        href: null,
+                      },
                     ]
-                : [
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                      },
+                    ]
+                  : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                    },
                   ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                  },
+                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -2455,10 +2593,10 @@ const DashboardPage = () => {
         <div
           className={`transition-all duration-300 px-8 pt-4 pb-8
             ${
-              isSidebarCollapsed
-                ? "w-[calc(100%+16rem)] -translate-x-64"
-                : "w-full"
-            }`}
+            isSidebarCollapsed
+              ? "w-[calc(100%+16rem)] -translate-x-64"
+              : "w-full"
+          }`}
         >
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
@@ -3040,6 +3178,30 @@ const DashboardPage = () => {
                                 </div>
                               )}
                             </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  (statusCode === "200" || method === "GET")
+                                }
+                              >
+                                <Upload className="mr-2 h-4 w-4" /> Upload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  (statusCode === "200" || method === "GET")
+                                }
+                              >
+                                <Code className="mr-2 h-4 w-4" /> Format
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
@@ -3102,7 +3264,7 @@ const DashboardPage = () => {
                                 onValueChange={setProxyMethod}
                               >
                                 <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                  <SelectValue placeholder="Method" />
+                                  <SelectValue placeholder="Method"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="GET">GET</SelectItem>
@@ -3371,6 +3533,35 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
+                          </div>
+                          <div className="flex justify-end space-x-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                            >
+                              <Upload className="mr-1 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              onClick={() => {
+                                try {
+                                  const formatted = JSON.stringify(
+                                    JSON.parse(tempDataDefaultString),
+                                    null,
+                                    2
+                                  );
+                                  setTempDataDefaultString(formatted);
+                                  setTempDataDefault(JSON.parse(formatted));
+                                } catch {
+                                  toast.error("Invalid JSON format");
+                                }
+                              }}
+                            >
+                              <Code className="mr-1 h-4 w-4" /> Format
+                            </Button>
                           </div>
                         </div>
 

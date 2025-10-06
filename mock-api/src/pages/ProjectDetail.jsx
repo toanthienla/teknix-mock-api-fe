@@ -495,6 +495,7 @@ export default function Dashboard() {
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
+        fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
