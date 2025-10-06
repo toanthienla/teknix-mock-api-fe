@@ -1062,14 +1062,17 @@ const DashboardPage = () => {
         if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
       })
-      .then((updatedData) => {
-        // Cập nhật endpointData với toàn bộ dữ liệu trả về từ API
-        setEndpointData(updatedData);
-
-        // Cập nhật dataDefault để đảm bảo UI phản ánh đúng giá trị mới
-        setDataDefault(updatedData.data_default || []);
-
-        toast.success("Schema updated successfully!");
+      .then(() => {
+        // Fetch lại endpoint data sau khi cập nhật thành công
+        return fetchEndpointDataByPath(endpointData.path);
+      })
+      .then((finalData) => {
+        if (finalData) {
+          // Hàm fetchEndpointDataByPath đã cập nhật state rồi,
+          // nhưng vẫn cần cập nhật dataDefault để đảm bảo UI đồng bộ
+          setDataDefault(finalData.data_default || []);
+          toast.success("Schema updated successfully!");
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -2900,25 +2903,29 @@ const DashboardPage = () => {
                                 onChange={(e) => {
                                   const canEdit =
                                     !isStateful ||
-                                    (statusCode !== "200" && method !== "GET");
+                                    statusCode !== "200" ||
+                                    method !== "GET";
                                   if (canEdit) {
                                     setResponseBody(e.target.value);
                                   }
                                 }}
                                 disabled={
                                   isStateful &&
-                                  (statusCode === "200" || method === "GET")
+                                  statusCode === "200" &&
+                                  method === "GET"
                                 }
                                 className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
                                   isStateful &&
-                                  (statusCode === "200" || method === "GET")
+                                  statusCode === "200" &&
+                                  method === "GET"
                                     ? "bg-gray-100 cursor-not-allowed"
                                     : ""
                                 }`}
                                 placeholder={
                                   isStateful &&
-                                  (statusCode === "200" || method === "GET")
-                                    ? "Read-only for 200 OK responses or GET method"
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "Read-only for 200 OK responses with GET method"
                                     : ""
                                 }
                               />
@@ -2937,10 +2944,11 @@ const DashboardPage = () => {
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (
+                                    const canEdit =
                                       !isStateful ||
-                                      (statusCode !== "200" && method !== "GET")
-                                    ) {
+                                      statusCode !== "200" ||
+                                      method !== "GET";
+                                    if (canEdit) {
                                       try {
                                         const formatted = JSON.stringify(
                                           JSON.parse(responseBody),
@@ -2956,6 +2964,24 @@ const DashboardPage = () => {
                                 >
                                   <Code className="mr-1 h-4 w-4" /> Format
                                 </Button>
+                              </div>
+
+                              {/* Nhóm nút dưới cùng bên phải */}
+                              <div className="absolute bottom-2 right-2 flex space-x-2">
+                                <FileCode
+                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                  size={26}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const canEdit =
+                                      !isStateful ||
+                                      statusCode !== "200" ||
+                                      method !== "GET";
+                                    if (canEdit) {
+                                      setIsPopoverOpen(!isPopoverOpen);
+                                    }
+                                  }}
+                                />
                               </div>
 
                               {/* Nhóm nút dưới cùng bên phải */}
