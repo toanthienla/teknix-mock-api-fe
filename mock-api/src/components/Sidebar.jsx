@@ -66,7 +66,6 @@ export default function Sidebar({
     });
     setProjectColorMap(newMap);
 
-    // Reset openProjectsMap khi projects thay đổi, chỉ giữ project đang chọn (nếu có)
     setOpenProjectsMap((prev) => {
       const newOpenProjectsMap = {};
       if (projectId) {
@@ -80,11 +79,8 @@ export default function Sidebar({
   }, [projects, projectId]);
 
   const readOpenProjects = (wsId) => (openProjectsMap ? openProjectsMap[wsId] : false);
-
   const readOpenEndpoints = (pId) => (openEndpointsMap ? openEndpointsMap[pId] : false);
-
-  // Chỉ mở folder đang chọn
-  const readOpenFolders = (fId) => String(folderId) === String(fId);
+  const readOpenFolders = (fId) => (openFoldersMap ? openFoldersMap[fId] : false);
 
   const toggleProjects = (wsId) => {
     setOpenProjectsMap((prev) => ({ ...prev, [wsId]: !prev[wsId] }));
@@ -94,25 +90,34 @@ export default function Sidebar({
     setOpenEndpointsMap((prev) => ({ ...prev, [pId]: !prev[pId] }));
   };
 
-  // Khi chọn folder mới, chỉ mở folder đó, các folder khác đóng lại
-  const toggleFolders = (fId, pId) => {
+   const toggleFolders = (fId, pId) => {
+    // Đóng tất cả folder, chỉ mở folder vừa chọn
+    const newMap = {};
+    newMap[fId] = true;
+    setOpenFoldersMap(newMap);
     navigate(`/dashboard/${pId}/folder/${fId}`);
-    setOpenFoldersMap({ [fId]: true });
   };
 
   const handleSelectWorkspace = (wsId) => {
     if (setCurrent) setCurrent(wsId);
     if (onWorkspaceChange) onWorkspaceChange(wsId);
     localStorage.setItem("currentWorkspace", wsId);
-    setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
-    setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
-    setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
+    setOpenProjectsMap({});
+    setOpenEndpointsMap({});
+    setOpenFoldersMap({});
     navigate("/dashboard");
   };
 
   const currentWorkspace = workspaces.find(
     (ws) => String(ws.id) === String(current)
   );
+
+  // ✅ Giữ folder mở khi load lại trang có folderId
+  useEffect(() => {
+    if (folderId) {
+      setOpenFoldersMap((prev) => ({ ...prev, [folderId]: true }));
+    }
+  }, [folderId]);
 
   useEffect(() => {
     if (projectId) {
@@ -131,8 +136,6 @@ export default function Sidebar({
       }
     }
   }, [projectId, folderId, endpointId, projects]);
-
-  // Bỏ folderEndpointsMap, dùng filter trực tiếp
 
   const projectHasContent = (p) => {
     const projectFolders = folders.filter((f) => String(f.project_id) === String(p.id));
@@ -157,9 +160,9 @@ export default function Sidebar({
               onWorkspaceChange?.(firstWsId);
               localStorage.setItem("currentWorkspace", firstWsId);
             }
-            setOpenProjectsMap({}); // Reset openProjectsMap để đóng tất cả projects
-            setOpenEndpointsMap({}); // Reset openEndpointsMap để đóng tất cả endpoints
-            setOpenFoldersMap({}); // Reset openFoldersMap để đóng tất cả folders
+            setOpenProjectsMap({});
+            setOpenEndpointsMap({});
+            setOpenFoldersMap({});
             navigate("/dashboard");
           }}
         >
@@ -308,7 +311,6 @@ export default function Sidebar({
 
                                   return (
                                     <div key={folder.id}>
-                                      {/* Folder with Context Menu */}
                                       <ContextMenu>
                                         <ContextMenuTrigger asChild>
                                           <div
@@ -349,7 +351,6 @@ export default function Sidebar({
                                           </div>
                                         </ContextMenuTrigger>
 
-                                        {/* Context Menu Content */}
                                         <ContextMenuContent className="w-44">
                                           <div className="px-3 py-2 text-xs font-semibold text-slate-500 bg-gray-50">
                                             Actions
@@ -381,7 +382,14 @@ export default function Sidebar({
                                                       ? "bg-slate-100 font-medium text-slate-900"
                                                       : "hover:bg-slate-50 text-slate-600"
                                                   }`}
-                                                  onClick={() => navigate(`/dashboard/${p.id}/endpoint/${ep.id}`)}
+                                                  // ✅ Giữ trạng thái mở khi click endpoint
+                                                  onClick={() => {
+                                                    setOpenFoldersMap((prev) => ({
+                                                      ...prev,
+                                                      [folder.id]: true,
+                                                    }));
+                                                    navigate(`/dashboard/${p.id}/endpoint/${ep.id}`);
+                                                  }}
                                                 >
                                                   <div
                                                     className={`${
