@@ -194,13 +194,6 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
       return;
     }
 
-    const newField = {
-      id: `field-${Date.now()}`,
-      name: "",
-      type: "string",
-      required: false,
-    };
-
     setSchemaFields((prev) => [...prev, newField]);
     setSelectedFieldId(newField.id);
   };
@@ -376,14 +369,24 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] ml-2"
+                  onClick={() => {
+                    try {
+                      if (responseBody.trim()) {
+                        const formatted = JSON.stringify(JSON.parse(responseBody), null, 2);
+                        setResponseBody(formatted);
+                      }
+                    } catch (err) {
+                      alert('Nội dung không phải JSON hợp lệ!');
+                    }
+                  }}
+                >
+                  <Code className="mr-1 h-4 w-4" /> Format
+                </Button>
               </div>
-
-              {/* Hiển thị lỗi */}
-              {errors[field.id]?.name && (
-                <div className="text-red-500 text-xs mt-1 pl-2">
-                  {errors[field.id].name}
-                </div>
-              )}
             </div>
           ))}
 
@@ -400,7 +403,6 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
               <Plus className="mr-2 h-4 w-4" />
               Add field
             </Button>
-
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
               onClick={handleSave}
