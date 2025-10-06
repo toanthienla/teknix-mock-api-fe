@@ -145,15 +145,37 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
 
-  // Khởi tạo schema fields từ endpointData
+  // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
-      const fields = Object.entries(endpointData.schema).map(
+      // Đảm bảo luôn có field "id"
+      const schemaWithId = {
+        id: { type: "number", required: false },
+        ...endpointData.schema,
+      };
+
+      const fields = Object.entries(schemaWithId).map(
         ([name, config], index) => ({
           id: `field-${index}`,
           name,
           type: config.type || "string",
           required: config.required !== undefined ? config.required : false,
+          isDefault: name === "id", // Đánh dấu field id là mặc định
+        })
+      );
+      setSchemaFields(fields);
+    } else {
+      // Nếu không có schema, khởi tạo với field id mặc định
+      const defaultSchema = {
+        id: { type: "number", required: false },
+      };
+      const fields = Object.entries(defaultSchema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required !== undefined ? config.required : false,
+          isDefault: true,
         })
       );
       setSchemaFields(fields);
@@ -161,6 +183,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   }, [endpointData]);
 
   const validateField = (field) => {
+    // Không validate field mặc định
+    if (field.isDefault) return {};
+
     const newErrors = {};
 
     if (!field.name.trim()) {
@@ -177,6 +202,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     let isValid = true;
 
     schemaFields.forEach((field) => {
+      // Bỏ qua field mặc định khi validate
+      if (field.isDefault) return;
+
       const fieldErrors = validateField(field);
       if (Object.keys(fieldErrors).length > 0) {
         allErrors[field.id] = fieldErrors;
@@ -199,6 +227,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
       name: "",
       type: "string",
       required: false,
+      isDefault: false,
     };
 
     setSchemaFields((prev) => [...prev, newField]);
@@ -206,6 +235,12 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleDeleteField = (id) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.isDefault) {
+      toast.error("Default field cannot be deleted");
+      return;
+    }
+
     setSchemaFields((prev) => {
       const filtered = prev.filter((field) => field.id !== id);
       setErrors((prevErrors) => {
@@ -225,6 +260,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleFieldClick = (id, event) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.isDefault) return;
+
     if (event.target.closest("button")) {
       return;
     }
@@ -232,6 +270,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleNameChange = (id, value) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.isDefault) return;
+
     setSchemaFields((prev) =>
       prev.map((field) => (field.id === id ? { ...field, name: value } : field))
     );
@@ -239,7 +280,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     // Validate sau khi thay đổi
     setTimeout(() => {
       const field = schemaFields.find((f) => f.id === id);
-      if (field) {
+      if (field && !field.isDefault) {
         const fieldErrors = validateField({ ...field, name: value });
         setErrors((prev) => ({
           ...prev,
@@ -250,12 +291,18 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleTypeChange = (id, value) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.isDefault) return;
+
     setSchemaFields((prev) =>
       prev.map((field) => (field.id === id ? { ...field, type: value } : field))
     );
   };
 
   const handleRequiredChange = (id, value) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.isDefault) return;
+
     setSchemaFields((prev) =>
       prev.map((field) =>
         field.id === id ? { ...field, required: value === "true" } : field
@@ -265,6 +312,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const prepareSchema = () => {
     const schema = {};
+
     schemaFields.forEach((field) => {
       if (field.name.trim()) {
         schema[field.name] = {
@@ -273,6 +321,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
         };
       }
     });
+
     return schema;
   };
 
@@ -282,7 +331,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
       return;
     }
 
-    onSave(prepareSchema());
+    // Chuẩn bị schema và gọi callback onSave từ parent
+    const newSchema = prepareSchema();
+    onSave(newSchema);
   };
 
   return (
@@ -320,24 +371,31 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                 field.id === selectedFieldId
                   ? "border-black"
                   : "border-slate-300"
-              }`}
+              } ${field.isDefault ? "bg-gray-50" : ""}`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-[220px]">
                   <Input
                     value={field.name}
-                    onChange={(e) => handleNameChange(field.id, e.target.value)}
+                    onChange={(e) =>
+                      !field.isDefault &&
+                      handleNameChange(field.id, e.target.value)
+                    }
                     className={`w-full ${
-                      errors[field.id]?.name ? "border-red-500" : ""
-                    }`}
+                      field.isDefault ? "bg-gray-100 cursor-not-allowed" : ""
+                    } ${errors[field.id]?.name ? "border-red-500" : ""}`}
                     placeholder="Field name"
+                    disabled={field.isDefault}
                   />
                 </div>
 
                 <div className="w-[220px]">
                   <Select
                     value={field.type}
-                    onValueChange={(value) => handleTypeChange(field.id, value)}
+                    onValueChange={(value) =>
+                      !field.isDefault && handleTypeChange(field.id, value)
+                    }
+                    disabled={field.isDefault}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -356,8 +414,9 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                   <Select
                     value={field.required.toString()}
                     onValueChange={(value) =>
-                      handleRequiredChange(field.id, value)
+                      !field.isDefault && handleRequiredChange(field.id, value)
                     }
+                    disabled={field.isDefault}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Required" />
@@ -376,8 +435,13 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                     e.stopPropagation();
                     handleDeleteField(field.id);
                   }}
+                  disabled={field.isDefault}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      field.isDefault ? "text-gray-400" : ""
+                    }`}
+                  />
                 </Button>
               </div>
 
@@ -385,6 +449,13 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
               {errors[field.id]?.name && (
                 <div className="text-red-500 text-xs mt-1 pl-2">
                   {errors[field.id].name}
+                </div>
+              )}
+
+              {/* Hiển thị thông báo cho field mặc định */}
+              {field.isDefault && (
+                <div className="text-gray-500 text-xs mt-1 pl-2">
+                  This is a default field and cannot be modified
                 </div>
               )}
             </div>
@@ -977,7 +1048,6 @@ const DashboardPage = () => {
 
     const payload = {
       schema: newSchema,
-      data_default: endpointData.data_default || [],
     };
 
     fetch(
@@ -993,7 +1063,12 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((updatedData) => {
+        // Cập nhật endpointData với toàn bộ dữ liệu trả về từ API
         setEndpointData(updatedData);
+
+        // Cập nhật dataDefault để đảm bảo UI phản ánh đúng giá trị mới
+        setDataDefault(updatedData.data_default || []);
+
         toast.success("Schema updated successfully!");
       })
       .catch((error) => {
