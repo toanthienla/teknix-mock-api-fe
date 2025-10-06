@@ -927,6 +927,8 @@ const DashboardPage = () => {
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [targetProjectId, setTargetProjectId] = useState(null);
   const [newFolderName, setNewFolderName] = useState("");
+  const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
 
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);

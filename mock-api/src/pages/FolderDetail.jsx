@@ -116,11 +116,6 @@ export default function Dashboard() {
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
-  const [editEPath, setEditEPath] = useState("");
-  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
-  const [editEMethod, setEditEMethod] = useState("");
-  const [editEActive, setEditEActive] = useState(true);
-  const [editEType, setEditEType] = useState(false); // false = stateless, true = stateful
 
   // dialogs
   const [openNew, setOpenNew] = useState(false);
@@ -197,7 +192,7 @@ export default function Dashboard() {
     return true;
   };
 
-  const validateEditEndpoint = (id, name, path, method) => {
+  const validateEditEndpoint = (id, name) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -220,43 +215,6 @@ export default function Dashboard() {
     );
     if (duplicateName) {
       toast.warning("Name already exists");
-      return false;
-    }
-
-    if (!path.trim()) {
-      toast.info("Path is required");
-      return false;
-    }
-    if (!path.startsWith("/")) {
-      toast.info("Path must start with '/'");
-      return false;
-    }
-    if (path.length > 1 && path.endsWith("/")) {
-      toast.info("Path must not end with '/'");
-      return false;
-    }
-
-    if (!validPath.test(path.trim())) {
-      toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
-      return false;
-    }
-
-    const duplicateEndpoint = endpoints.some(
-      (ep) =>
-        ep.id !== id &&
-        String(ep.folder_id) === String(folderId) &&
-        ep.path.trim() === path.trim() &&
-        ep.method.toUpperCase() === method.toUpperCase()
-    );
-    if (duplicateEndpoint) {
-      toast.warning(
-        `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`
-      );
-      return false;
-    }
-
-    if (!method) {
-      toast.info("Method is required");
       return false;
     }
 
@@ -802,12 +760,6 @@ export default function Dashboard() {
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
-    setEditEPath(e.path);
-    setEditEFolderId(e.folder_id);
-    setEditEMethod(e.method);
-    setEditEActive(e.is_active);
-    setEditEType(e.is_stateful);
-
     setCurrentEndpoint(e);
     setOpenEdit(true);
   };
@@ -815,25 +767,15 @@ export default function Dashboard() {
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
     return (
-      editEName !== currentEndpoint.name ||
-      editEFolderId !== currentEndpoint.folder_id ||
-      editEPath !== currentEndpoint.path ||
-      editEMethod !== currentEndpoint.method ||
-      editEActive !== currentEndpoint.is_active ||
-      editEType !== currentEndpoint.is_stateful
+      editEName !== currentEndpoint.name
     );
-  }, [editEName, editEFolderId, editEPath, editEMethod, editEActive, editEType, currentEndpoint]);
+  }, [editEName]);
 
   const handleUpdateEndpoint = () => {
-    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod, editEType)) return;
+    if (!validateEditEndpoint(editId, editEName)) return;
     const updated = {
       id: editId,
       name: editEName,
-      path: editEPath,
-      method: editEMethod,
-      folder_id: Number(editEFolderId),
-      is_active: editEActive,
-      is_stateful: editEType,
       updated_at: new Date().toISOString(),
     };
 
@@ -1316,101 +1258,6 @@ export default function Dashboard() {
                 value={editEName}
                 onChange={(e) => setEditEName(e.target.value)}
               />
-            </div>
-
-            {/* Folder select - only folders for current project */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
-              <Select value={String(editEFolderId)} onValueChange={(v) => setEditEFolderId(v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a folder"/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Folders</SelectLabel>
-                    {folders
-                      .filter((f) => String(f.project_id) === String(projectId))
-                      .map((f) => (
-                        <SelectItem key={f.id} value={String(f.id)}>
-                          {f.name}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Path */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
-              <Input
-                placeholder="/examples/example/:id"
-                value={editEPath}
-                onChange={(e) => setEditEPath(e.target.value)}
-              />
-            </div>
-
-            {/* Method */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
-              <Select
-                value={editEMethod}
-                onValueChange={(v) => setEditEMethod(v)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a method"/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Method</SelectLabel>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
-                    <SelectItem value="PUT">PUT</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Type */}
-            <div className="flex gap-4 pt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Type:</h3>
-              <RadioGroup
-                value={String(editEType)}
-                onValueChange={(val) => {
-                  const boolVal = val === "true";
-                  setEditEType(boolVal);
-                }}
-                className="flex items-center gap-6"
-              >
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="false" />
-                  <span className="text-sm">Stateless</span>
-                </label>
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="true" />
-                  <span className="text-sm">Stateful</span>
-                </label>
-              </RadioGroup>
-            </div>
-
-            {/* Status */}
-            <div className="flex gap-4 pt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Status:</h3>
-              <RadioGroup
-                value={editEActive ? "active" : "inactive"}
-                onValueChange={(val) => setEditEActive(val === "active")}
-                className="flex items-center gap-6"
-              >
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="active" />
-                  <span className="text-sm">Active</span>
-                </label>
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="inactive" />
-                  <span className="text-sm">Inactive</span>
-                </label>
-              </RadioGroup>
             </div>
           </div>
           <DialogFooter>
