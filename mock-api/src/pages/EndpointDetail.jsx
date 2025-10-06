@@ -1,12 +1,12 @@
-import React, {useState, useEffect, useRef} from "react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Card} from "@/components/ui/card";
-import {Textarea} from "@/components/ui/textarea";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {Badge} from "@/components/ui/badge";
-import {API_ROOT} from "../utils/constants";
+import React, { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { API_ROOT } from "../utils/constants";
 import Sidebar from "../components/Sidebar";
 import {
   Table,
@@ -60,8 +60,8 @@ const statusCodes = [
     code: "102",
     description: "Processing.",
   },
-  {code: "200", description: "OK."},
-  {code: "201", description: "Created."},
+  { code: "200", description: "OK." },
+  { code: "201", description: "Created." },
   {
     code: "202",
     description: "Accepted.",
@@ -78,8 +78,8 @@ const statusCodes = [
     code: "301",
     description: "Moved Permanently.",
   },
-  {code: "302", description: "Found."},
-  {code: "303", description: "See Other."},
+  { code: "302", description: "Found." },
+  { code: "303", description: "See Other." },
   {
     code: "304",
     description: "Not Modified.",
@@ -92,13 +92,13 @@ const statusCodes = [
     code: "308",
     description: "Permanent Redirect.",
   },
-  {code: "400", description: "Bad Request."},
-  {code: "401", description: "Unauthorized."},
+  { code: "400", description: "Bad Request." },
+  { code: "401", description: "Unauthorized." },
   {
     code: "403",
     description: "Forbidden.",
   },
-  {code: "404", description: "Not Found."},
+  { code: "404", description: "Not Found." },
   {
     code: "405",
     description: "Method Not Allowed.",
@@ -111,13 +111,13 @@ const statusCodes = [
     code: "409",
     description: "Conflict.",
   },
-  {code: "410", description: "Gone."},
+  { code: "410", description: "Gone." },
   {
     code: "415",
     description: "Unsupported Media Type.",
   },
-  {code: "429", description: "Too Many Requests."},
-  {code: "500", description: "Internal Server Error."},
+  { code: "429", description: "Too Many Requests." },
+  { code: "500", description: "Internal Server Error." },
   {
     code: "501",
     description: "Not Implemented.",
@@ -140,7 +140,7 @@ const statusCodes = [
   },
 ];
 
-const SchemaBodyEditor = ({endpointData, onSave}) => {
+const SchemaBodyEditor = ({ endpointData, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
@@ -209,7 +209,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
     setSchemaFields((prev) => {
       const filtered = prev.filter((field) => field.id !== id);
       setErrors((prevErrors) => {
-        const newErrors = {...prevErrors};
+        const newErrors = { ...prevErrors };
         delete newErrors[id];
         return newErrors;
       });
@@ -230,14 +230,14 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
 
   const handleNameChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? {...field, name: value} : field))
+      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
     );
 
     // Validate sau khi thay đổi
     setTimeout(() => {
       const field = schemaFields.find((f) => f.id === id);
       if (field) {
-        const fieldErrors = validateField({...field, name: value});
+        const fieldErrors = validateField({ ...field, name: value });
         setErrors((prev) => ({
           ...prev,
           [id]: fieldErrors,
@@ -248,14 +248,14 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
 
   const handleTypeChange = (id, value) => {
     setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? {...field, type: value} : field))
+      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
     );
   };
 
   const handleRequiredChange = (id, value) => {
     setSchemaFields((prev) =>
       prev.map((field) =>
-        field.id === id ? {...field, required: value === "true"} : field
+        field.id === id ? { ...field, required: value === "true" } : field
       )
     );
   };
@@ -337,7 +337,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
                     onValueChange={(value) => handleTypeChange(field.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type"/>
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="string">string</SelectItem>
@@ -357,7 +357,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Required"/>
+                      <SelectValue placeholder="Required" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="true">true</SelectItem>
@@ -374,7 +374,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
                     handleDeleteField(field.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4"/>
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -397,7 +397,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
           {/* Nút thêm trường và lưu */}
           <div className="flex justify-between items-center mt-4">
             <Button variant="outline" onClick={handleAddField}>
-              <Plus className="mr-2 h-4 w-4"/>
+              <Plus className="mr-2 h-4 w-4" />
               Add field
             </Button>
 
@@ -414,7 +414,7 @@ const SchemaBodyEditor = ({endpointData, onSave}) => {
   );
 };
 
-const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
+const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   const [errors, setErrors] = useState({});
@@ -559,13 +559,13 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
       prevRows.map((row) =>
         row.id === id
           ? {
-            ...row,
-            type: newType,
-            name:
-              row.name === "" || row.name === getPlaceholderText(row.type)
-                ? ""
-                : row.name,
-          }
+              ...row,
+              type: newType,
+              name:
+                row.name === "" || row.name === getPlaceholderText(row.type)
+                  ? ""
+                  : row.name,
+            }
           : row
       )
     );
@@ -613,7 +613,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
       setErrors((prev) => {
-        const newErrors = {...prev};
+        const newErrors = { ...prev };
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -632,14 +632,14 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? {...r, name: value} : r))
+      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
     );
 
     // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({...row, name: value});
+        const rowErrors = validateRule({ ...row, name: value });
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -650,14 +650,14 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? {...r, value} : r))
+      prev.map((r) => (r.id === id ? { ...r, value } : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({...row, value});
+        const rowErrors = validateRule({ ...row, value });
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -749,7 +749,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type"/>
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -774,8 +774,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-                <div
-                  className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
                   <span
                     className="text-[32px] text-black"
                     style={{
@@ -811,7 +810,7 @@ const Frame = ({responseName, selectedResponse, onUpdateRules, onSave}) => {
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4"/>
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -870,7 +869,7 @@ const DashboardPage = () => {
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
-  const {projectId, endpointId} = useParams();
+  const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -923,8 +922,11 @@ const DashboardPage = () => {
   const [isInitialValuePopoverOpen, setIsInitialValuePopoverOpen] =
     useState(false);
   const initialValuePopoverRef = useRef(null);
-  const [isSwitchingMode, setIsSwitchingMode] = useState(false);
-  const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+  const [openNewFolder, setOpenNewFolder] = useState(false);
+  const [targetProjectId, setTargetProjectId] = useState(null);
+  const [newFolderName, setNewFolderName] = useState("");
 
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
@@ -939,7 +941,7 @@ const DashboardPage = () => {
       )}`,
       {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
       }
     )
       .then((res) => {
@@ -969,7 +971,7 @@ const DashboardPage = () => {
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
       {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }
     )
@@ -1108,7 +1110,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
         if (!res.ok) {
@@ -1116,7 +1118,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? {...ep, is_stateful: previousState}
+                ? { ...ep, is_stateful: previousState }
                 : ep
             )
           );
@@ -1183,7 +1185,7 @@ const DashboardPage = () => {
     // Call new API to convert to stateless
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
         if (!res.ok) {
@@ -1191,7 +1193,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? {...ep, is_stateful: previousState}
+                ? { ...ep, is_stateful: previousState }
                 : ep
             )
           );
@@ -1253,7 +1255,7 @@ const DashboardPage = () => {
     // Gửi request cập nhật với TOÀN BỘ DỮ LIỆU endpoint
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...currentEndpoint,
         is_active: newIsActive,
@@ -1266,7 +1268,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? {...ep, is_active: previousState}
+                ? { ...ep, is_active: previousState }
                 : ep
             )
           );
@@ -1701,6 +1703,24 @@ const DashboardPage = () => {
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
+const handleAddFolder = (projectId, name) => {
+  fetch(`${API_ROOT}/folders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name.trim(),
+      project_id: projectId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }),
+  })
+    .then((res) => res.json())
+    .then((createdFolder) => {
+      setFolders((prev) => [...prev, createdFolder]);
+      toast.success("Folder created successfully!");
+    })
+    .catch(() => toast.error("Failed to create folder"));
+};
 
   const handleEditWorkspace = () => {
     const err = validateWsName(editWsName, editWsId);
@@ -2081,6 +2101,7 @@ const DashboardPage = () => {
       })
       .catch(console.error);
   };
+
   const handleNewResponse = () => {
     // Reset form khi tạo mới
     setSelectedResponse(null);
@@ -2403,6 +2424,100 @@ const DashboardPage = () => {
           }}
         />
       </aside>
+      {/* Modal: New Workspace */}
+{openNewWs && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
+      <h2 className="text-lg font-semibold mb-4 text-slate-800">New Workspace</h2>
+
+     <input
+  type="text"
+  placeholder="Workspace name"
+  className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
+  value={newWsName}
+  onChange={(e) => setNewWsName(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!newWsName.trim()) return;
+      handleAddWorkspace(newWsName);
+      setNewWsName("");
+      setOpenNewWs(false);
+    }
+  }}
+/>
+
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+          onClick={() => setOpenNewWs(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => {
+            if (!newWsName.trim()) return;
+            handleAddWorkspace(newWsName); // gọi hàm tạo workspace
+            setNewWsName("");
+            setOpenNewWs(false);
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Modal: New Folder */}
+{openNewFolder && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-[400px]">
+      <h2 className="text-lg font-semibold mb-4 text-slate-800">
+        New Folder
+      </h2>
+
+      <input
+        type="text"
+        placeholder="Folder name"
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-slate-500"
+        value={newFolderName}
+        onChange={(e) => setNewFolderName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
+          }
+        }}
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+          onClick={() => setOpenNewFolder(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => {
+            if (!newFolderName.trim()) return;
+            handleAddFolder(targetProjectId, newFolderName);
+            setNewFolderName("");
+            setOpenNewFolder(false);
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Main Content */}
       <div className={`pt-8 flex-1 transition-all duration-300`}>
@@ -2623,22 +2738,18 @@ const DashboardPage = () => {
               <div className="rounded-md border border-solid border-slate-300">
                 <Table>
                   <TableHeader>
-                    <TableRow
-                      className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
+                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
                       <TableHead className="w-[119.2px] h-10 px-1 py-0">
                         <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div
-                            className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
+                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
                             Status Code
                           </div>
                         </div>
                       </TableHead>
                       <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
                         <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div
-                            className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
+                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
                               Name Response
                             </div>
                           </div>
@@ -2685,16 +2796,14 @@ const DashboardPage = () => {
                             {!isStateful && (
                               <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
                             )}
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.code}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
                           <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div
-                              className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
                               {status.name}
                             </div>
                           </div>
@@ -2703,8 +2812,7 @@ const DashboardPage = () => {
                         {!isStateful && (
                           <TableCell className="w-[80px] h-[49px] p-2">
                             {status.isDefault && (
-                              <div
-                                className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
+                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
                                 <span className="text-xs font-medium text-[#0A0A0A]">
                                   Default
                                 </span>
@@ -2872,7 +2980,7 @@ const DashboardPage = () => {
                                     : ""
                                 }`}
                               >
-                                <SelectValue placeholder="Select status code"/>
+                                <SelectValue placeholder="Select status code" />
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
@@ -3078,6 +3186,30 @@ const DashboardPage = () => {
                                 </div>
                               )}
                             </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  (statusCode === "200" || method === "GET")
+                                }
+                              >
+                                <Upload className="mr-2 h-4 w-4" /> Upload
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E5E5E1]"
+                                disabled={
+                                  isStateful &&
+                                  (statusCode === "200" || method === "GET")
+                                }
+                              >
+                                <Code className="mr-2 h-4 w-4" /> Format
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
@@ -3236,8 +3368,7 @@ const DashboardPage = () => {
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
                                 {/* Thay Textarea bằng div chỉ đọc */}
-                                <div
-                                  className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                   <pre className="whitespace-pre-wrap break-words m-0">
                                     {endpointData?.data_current
                                       ? JSON.stringify(
@@ -3412,6 +3543,35 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
+                          </div>
+                          <div className="flex justify-end space-x-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                            >
+                              <Upload className="mr-1 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              onClick={() => {
+                                try {
+                                  const formatted = JSON.stringify(
+                                    JSON.parse(tempDataDefaultString),
+                                    null,
+                                    2
+                                  );
+                                  setTempDataDefaultString(formatted);
+                                  setTempDataDefault(JSON.parse(formatted));
+                                } catch {
+                                  toast.error("Invalid JSON format");
+                                }
+                              }}
+                            >
+                              <Code className="mr-1 h-4 w-4" /> Format
+                            </Button>
                           </div>
                         </div>
 
