@@ -2752,9 +2752,8 @@ const DashboardPage = () => {
                     {statusData.map((status, index) => (
                       <TableRow
                         key={status.id || status.code}
-                        className={`${
-                          status.isDefault ? "bg-slate-100" : ""
-                        } border-b [border-bottom-style:solid] border-neutral-200 ${
+                        className={`
+                          border-b [border-bottom-style:solid] border-neutral-200 ${
                           index === statusData.length - 1 ? "border-b-0" : ""
                         } ${draggedItem === index ? "opacity-50" : ""} ${
                           selectedResponse?.id === status.id
