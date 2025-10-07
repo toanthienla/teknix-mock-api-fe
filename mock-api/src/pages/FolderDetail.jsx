@@ -110,12 +110,14 @@ export default function Dashboard() {
   const [newEMethod, setNewEMethod] = useState("");
   const [newEFolderId, setNewEFolderId] = useState(folderId || "");
   const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
-  const [newEActive, setNewEActive] = useState(true); // false = inactive, true = active
   const [statusFilter, setStatusFilter] = useState("All");
 
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
+  const [editEPath, setEditEPath] = useState("");
+  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
+  const [editEMethod, setEditEMethod] = useState("");
 
   // dialogs
   const [openNew, setOpenNew] = useState(false);
@@ -689,67 +691,26 @@ export default function Dashboard() {
 
   // Create endpoint
   const handleCreateEndpoint = async () => {
-    if (!validateCreateEndpoint(newEName, newEPath, newEMethod, newEType)) return;
+    if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) return;
     try {
       const newEndpoint = {
         name: newEName.trim(),
         path: newEPath.trim(),
         method: newEMethod,
         folder_id: Number(newEFolderId),
-        is_stateful: newEType,
-        is_active: newEActive,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(newEndpoint),
       });
-
       if (!res.ok) throw new Error();
       const created = await res.json();
-
-      // Cập nhật danh sách endpoint hiển thị
-      setEndpoints((prev) => [...prev, created]);
+      setEndpoints(prev => [...prev, created]);
       setOpenNew(false);
       toast.success("Endpoint created!");
-
-      // Nếu endpoint mới là stateful, tự động gọi API chuyển đổi
-      if (newEType === true) {
-        try {
-          const convertRes = await fetch(
-            `${API_ROOT}/endpoints/${created.id}/convert-to-stateful`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-
-          if (!convertRes.ok) throw new Error("Failed to convert endpoint to stateful");
-
-          const updatedEndpoint = await convertRes.json();
-
-          // Cập nhật lại endpoint vừa tạo
-          setEndpoints((prev) =>
-            prev.map((ep) =>
-              String(ep.id) === String(created.id) ? updatedEndpoint : ep
-            )
-          );
-
-          // // Fetch dữ liệu nếu cần
-          // if (updatedEndpoint.path) {
-          //   fetchEndpointDataByPath(updatedEndpoint.path);
-          // }
-          // fetchEndpointResponses(true);
-
-          toast.success("Endpoint automatically set to stateful!");
-        } catch (error) {
-          console.error(error);
-          toast.error(error.message);
-        }
-      }
     } catch {
       toast.error("Failed to create endpoint");
     }
@@ -760,6 +721,10 @@ export default function Dashboard() {
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
+    setEditEPath(e.path);
+    setEditEFolderId(e.folder_id);
+    setEditEMethod(e.method);
+
     setCurrentEndpoint(e);
     setOpenEdit(true);
   };
@@ -767,15 +732,21 @@ export default function Dashboard() {
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
     return (
-      editEName !== currentEndpoint.name
+      editEName !== currentEndpoint.name ||
+      editEFolderId !== currentEndpoint.folder_id ||
+      editEPath !== currentEndpoint.path ||
+      editEMethod !== currentEndpoint.method
     );
-  }, [editEName]);
+  }, [editEName, editEFolderId, editEPath, editEMethod, currentEndpoint]);
 
   const handleUpdateEndpoint = () => {
-    if (!validateEditEndpoint(editId, editEName)) return;
+    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
     const updated = {
       id: editId,
       name: editEName,
+      path: editEPath,
+      method: editEMethod,
+      folder_id: Number(editEFolderId),
       updated_at: new Date().toISOString(),
     };
 
@@ -1145,7 +1116,6 @@ export default function Dashboard() {
               <Select
                 value={newEMethod}
                 onValueChange={(v) => setNewEMethod(v)}
-                // disabled when stateful selected
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select a method"/>
@@ -1160,51 +1130,6 @@ export default function Dashboard() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              {newEType === "stateful" && (
-                <p className="text-xs text-slate-400 mt-1 ml-2">Method is locked for stateful endpoints.</p>
-              )}
-            </div>
-
-            {/* Type */}
-            <div className="flex gap-4 pt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Type:</h3>
-              <RadioGroup
-                value={String(newEType)}
-                onValueChange={(val) => {
-                  const boolVal = val === "true";
-                  setNewEType(boolVal);
-                  if (boolVal) setNewEMethod(""); // reset method if stateful
-                }}
-                className="flex items-center gap-6"
-              >
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="false" />
-                  <span className="text-sm">Stateless</span>
-                </label>
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="true" />
-                  <span className="text-sm">Stateful</span>
-                </label>
-              </RadioGroup>
-            </div>
-
-            {/* Status */}
-            <div className="flex gap-4 pt-2">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Status:</h3>
-              <RadioGroup
-                value={newEActive ? "active" : "inactive"}
-                onValueChange={(val) => setNewEActive(val === "active")}
-                className="flex items-center gap-6"
-              >
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="active" />
-                  <span className="text-sm">Active</span>
-                </label>
-                <label className="flex items-center cursor-pointer space-x-2">
-                  <RadioGroupItem value="inactive" />
-                  <span className="text-sm">Inactive</span>
-                </label>
-              </RadioGroup>
             </div>
           </div>
 
