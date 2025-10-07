@@ -835,7 +835,7 @@ export default function Dashboard() {
                           />
                           Export
                         </Button>
-                        <Button variant="outline" onClick={fetchLogs}>
+                        <Button variant="outline" onClick={() => fetchLogs(projectId)}>
                           <img
                             src={refreshIcon}
                             alt="Refresh Icon"
