@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -933,6 +933,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 };
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
@@ -1009,6 +1010,31 @@ const DashboardPage = () => {
 
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
+
+  const currentEndpoint = endpoints.find(
+    (ep) => String(ep.id) === String(currentEndpointId)
+  );
+
+  const currentFolder = currentEndpoint
+    ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
+    : null;
+
+  const handleCopyPath = () => {
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+    if (path) {
+      navigator.clipboard
+        .writeText(path)
+        .then(() => {
+          toast.success("Path copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy: ", err);
+          toast.error("Failed to copy path");
+        });
+    }
+  };
 
   // Hàm xử lý reset current values
   const handleResetCurrentValues = () => {
@@ -1944,7 +1970,7 @@ const DashboardPage = () => {
       toast.dismiss();
       toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
 
-      if (folderId === deleteFolderId) {
+      if (currentFolder.id === deleteFolderId) {
         navigate(`/projects/${projectId}`);
       }
 
@@ -2452,14 +2478,6 @@ const DashboardPage = () => {
     }
   };
 
-  const currentEndpoint = endpoints.find(
-    (ep) => String(ep.id) === String(currentEndpointId)
-  );
-
-  const currentFolder = currentEndpoint
-    ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
-    : null;
-
   // Cập nhật state string khi tempDataDefault thay đổi
   useEffect(() => {
     setTempDataDefaultString(JSON.stringify(tempDataDefault, null, 2));
@@ -2651,11 +2669,19 @@ const DashboardPage = () => {
                   )?.path || "-"}
                 </div>
                 {/* Icon chain */}
-                <img
-                  src={chain_icon}
-                  alt="Chain Icon"
-                  className="w-6 h-6 object-contain flex-shrink-0"
-                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6 flex-shrink-0"
+                  onClick={handleCopyPath}
+                  title="Copy path"
+                >
+                  <img
+                    src={chain_icon}
+                    alt="Copy path"
+                    className="w-6 h-6 object-contain"
+                  />
+                </Button>
 
                 {/* Hiển thị trạng thái Active/Inactive (chỉ đọc) */}
                 <div className="flex flex-row items-center w-[20px] h-[10px] flex-shrink-0">
@@ -2870,7 +2896,6 @@ const DashboardPage = () => {
                   )}
                 </TabsList>
 
-                {/* TabsContent */}
                 <TabsContent value="Header&Body" className="mt-0">
                   <div></div>
                   <div className="mt-2">
@@ -2933,9 +2958,10 @@ const DashboardPage = () => {
                           <Input
                             id="response-name"
                             value={responseName}
-                            onChange={(e) => setResponseName(e.target.value)}
+                            onChange={(e) => !isStateful && setResponseName(e.target.value)}
                             className="col-span-3 border-[#CBD5E1] rounded-md"
                             placeholder="Enter response name"
+                            disabled={isStateful}
                           />
                         </div>
 
@@ -2950,27 +2976,20 @@ const DashboardPage = () => {
                           <div className="col-span-3">
                             <Select
                               value={statusCode}
-                              onValueChange={(value) =>
-                                !isStateful && setStatusCode(value)
-                              }
+                              onValueChange={(value) => !isStateful && setStatusCode(value)}
                               disabled={isStateful}
                             >
                               <SelectTrigger
                                 id="status-code"
                                 className={`border-[#CBD5E1] rounded-md ${
-                                  isStateful
-                                    ? "bg-gray-100 cursor-not-allowed"
-                                    : ""
+                                  isStateful ? "bg-gray-100 cursor-not-allowed" : ""
                                 }`}
                               >
                                 <SelectValue placeholder="Select status code" />
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
-                                  <SelectItem
-                                    key={status.code}
-                                    value={status.code}
-                                  >
+                                  <SelectItem key={status.code} value={status.code}>
                                     {status.code} -{" "}
                                     {status.description.split("–")[0]}
                                   </SelectItem>
@@ -3008,34 +3027,12 @@ const DashboardPage = () => {
                               <Textarea
                                 id="response-body"
                                 value={responseBody}
-                                onChange={(e) => {
-                                  const canEdit =
-                                    !isStateful ||
-                                    statusCode !== "200" ||
-                                    method !== "GET";
-                                  if (canEdit) {
-                                    setResponseBody(e.target.value);
-                                  }
-                                }}
-                                disabled={
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                }
+                                onChange={(e) => !isStateful && setResponseBody(e.target.value)}
+                                disabled={isStateful}
                                 className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "bg-gray-100 cursor-not-allowed"
-                                    : ""
+                                  isStateful ? "bg-gray-100 cursor-not-allowed" : ""
                                 }`}
-                                placeholder={
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "Read-only for 200 OK responses with GET method"
-                                    : ""
-                                }
+                                placeholder={isStateful ? "Read-only in stateful mode" : ""}
                               />
                               {/* Nhóm nút trên cùng bên phải */}
                               <div className="absolute top-2 right-2 flex space-x-2">
@@ -3043,6 +3040,7 @@ const DashboardPage = () => {
                                   variant="outline"
                                   size="sm"
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                  disabled={isStateful}
                                 >
                                   <Upload className="mr-1 h-4 w-4" /> Upload
                                 </Button>
@@ -3050,23 +3048,19 @@ const DashboardPage = () => {
                                   variant="outline"
                                   size="sm"
                                   className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                  disabled={isStateful}
                                   onClick={(e) => {
+                                    if (isStateful) return;
                                     e.stopPropagation();
-                                    const canEdit =
-                                      !isStateful ||
-                                      statusCode !== "200" ||
-                                      method !== "GET";
-                                    if (canEdit) {
-                                      try {
-                                        const formatted = JSON.stringify(
-                                          JSON.parse(responseBody),
-                                          null,
-                                          2
-                                        );
-                                        setResponseBody(formatted);
-                                      } catch {
-                                        toast.error("Invalid JSON format");
-                                      }
+                                    try {
+                                      const formatted = JSON.stringify(
+                                        JSON.parse(responseBody),
+                                        null,
+                                        2
+                                      );
+                                      setResponseBody(formatted);
+                                    } catch {
+                                      toast.error("Invalid JSON format");
                                     }
                                   }}
                                 >
@@ -3077,41 +3071,20 @@ const DashboardPage = () => {
                               {/* Nhóm nút dưới cùng bên phải */}
                               <div className="absolute bottom-2 right-2 flex space-x-2">
                                 <FileCode
-                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                  className={`text-gray-400 cursor-pointer hover:text-gray-600 ${
+                                    isStateful ? "opacity-50 cursor-not-allowed" : ""
+                                  }`}
                                   size={26}
                                   onClick={(e) => {
+                                    if (isStateful) return;
                                     e.stopPropagation();
-                                    const canEdit =
-                                      !isStateful ||
-                                      statusCode !== "200" ||
-                                      method !== "GET";
-                                    if (canEdit) {
-                                      setIsPopoverOpen(!isPopoverOpen);
-                                    }
-                                  }}
-                                />
-                              </div>
-
-                              {/* Nhóm nút dưới cùng bên phải */}
-                              <div className="absolute bottom-2 right-2 flex space-x-2">
-                                <FileCode
-                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                  size={26}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const canEdit =
-                                      !isStateful ||
-                                      (statusCode !== "200" &&
-                                        method !== "GET");
-                                    if (canEdit) {
-                                      setIsPopoverOpen(!isPopoverOpen);
-                                    }
+                                    setIsPopoverOpen(!isPopoverOpen);
                                   }}
                                 />
                               </div>
 
                               {/* Popover */}
-                              {isPopoverOpen && (
+                              {isPopoverOpen && !isStateful && (
                                 <div
                                   ref={popoverRef}
                                   className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
@@ -3205,19 +3178,22 @@ const DashboardPage = () => {
                           <Input
                             id="delay"
                             value={delay}
-                            onChange={(e) => setDelay(e.target.value)}
+                            onChange={(e) => !isStateful && setDelay(e.target.value)}
                             className="col-span-3 border-[#CBD5E1] rounded-md"
+                            disabled={isStateful}
                           />
                         </div>
 
-                        <div className="flex justify-end">
-                          <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                            onClick={handleSaveResponse}
-                          >
-                            Save Changes
-                          </Button>
-                        </div>
+                        {!isStateful && (
+                          <div className="flex justify-end">
+                            <Button
+                              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                              onClick={handleSaveResponse}
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </Card>
                   </div>
