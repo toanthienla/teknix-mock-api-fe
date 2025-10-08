@@ -10,14 +10,55 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {useNavigate} from "react-router-dom";
+import {toast} from "react-toastify";
+import {useState} from "react";
+import {signup} from "@/services/api.js";
 
 export function SignupForm({className, ...props}) {
   const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  function handleSubmit(e) {
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*$/;
+
+  // --- Validation ---
+  const validateInputs = (username, password, confirmPassword) => {
+    if (!username.trim()) return "Name is required";
+    if (username.trim().length > 20)
+      return "Name must be less than 20 characters";
+    if (!validName.test(username))
+      return "Name must start with a letter and contain only letters, numbers, underscores, and dashes";
+    if (!password.trim()) return "Password is required";
+    if (password.trim().length < 8)
+      return "Password must be at least 8 characters";
+    if (password.trim() !== confirmPassword.trim())
+      return "Passwords do not match";
+    return null;
+  };
+
+  // --- Handle Submit ---
+  const handleSignup = async (e) => {
     e.preventDefault();
-    navigate("/verify");
-  }
+
+    const errorMessage = validateInputs(username, password, confirmPassword);
+    if (errorMessage) {
+      toast.error(errorMessage);
+      return;
+    }
+
+    try {
+      await signup({ username, password });
+      toast.success("Signup successful!");
+      setTimeout(() => navigate("/login"), 3000);
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        toast.error("Username already exists");
+      } else {
+        toast.error("An error occurred during signup");
+      }
+    }
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -29,34 +70,20 @@ export function SignupForm({className, ...props}) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSignup}>
             <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Sign up with Google
-                </Button>
-              </div>
-              <div
-                className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="username">Account</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
+                    id="username"
+                    type="username"
+                    placeholder="youraccount"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
+
                 <div className="grid gap-3">
                   <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
@@ -65,10 +92,24 @@ export function SignupForm({className, ...props}) {
                     id="password"
                     type="password"
                     placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
+                <div className="grid gap-3">
+                  <div className="flex items-center">
+                    <Label htmlFor="confirm_password">Confirm Password</Label>
+                  </div>
+                  <Input
+                    id="confirm_password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                   Sign up
                 </Button>
               </div>

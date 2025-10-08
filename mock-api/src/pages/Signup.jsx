@@ -19,13 +19,13 @@ export default function SignupPage() {
           />
         </div>
         <div className="relative z-10 p-6">
-          <h1 className="text-lg font-semibold">MockAPI</h1>
+          <h1 className="text-lg font-semibold text-white">MockAPI</h1>
         </div>
         <div className="relative z-10 mt-auto text-left text-black p-6">
-          <h2 className="mt-4 text-xl font-bold">
+          <h2 className="mt-4 text-xl font-semibold">
             The easiest way to mock REST APIs
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          <p className="mt-2 text-sm max-w font-semibold">
             Quickly setup endpoints, generate custom data, and perform operations on it using RESTful interface
           </p>
         </div>
