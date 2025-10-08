@@ -1014,7 +1014,7 @@ const DashboardPage = () => {
     )?.path;
     if (path) {
       navigator.clipboard
-        .writeText(path)
+        .writeText(`http://localhost:3000${path}`)
         .then(() => {
           toast.success("Path copied to clipboard!");
         })
@@ -1035,23 +1035,6 @@ const DashboardPage = () => {
   const currentFolder = currentEndpoint
     ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
     : null;
-
-  const handleCopyPath = () => {
-    const path = endpoints.find(
-      (ep) => String(ep.id) === String(currentEndpointId)
-    )?.path;
-    if (path) {
-      navigator.clipboard
-        .writeText(path)
-        .then(() => {
-          toast.success("Path copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy: ", err);
-          toast.error("Failed to copy path");
-        });
-    }
-  };
 
   // Hàm xử lý reset current values
   const handleResetCurrentValues = () => {
