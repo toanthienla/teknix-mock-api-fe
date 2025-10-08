@@ -1008,6 +1008,23 @@ const DashboardPage = () => {
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
 
+  const handleCopyPath = () => {
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+    if (path) {
+      navigator.clipboard
+        .writeText(path)
+        .then(() => {
+          toast.success("Path copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy: ", err);
+          toast.error("Failed to copy path");
+        });
+    }
+  };
+
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
@@ -1805,11 +1822,11 @@ const DashboardPage = () => {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -1836,11 +1853,13 @@ const DashboardPage = () => {
       return "Folder name max 20 chars";
     }
 
-    const projectFolders = folders.filter(f =>
-      String(f.project_id) === String(projectId) &&
-      f.id !== editingFolderId
+    const projectFolders = folders.filter(
+      (f) =>
+        String(f.project_id) === String(projectId) && f.id !== editingFolderId
     );
-    if (projectFolders.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      projectFolders.some((f) => f.name.toLowerCase() === trimmed.toLowerCase())
+    ) {
       return "Folder name already exists in this project";
     }
 
@@ -1851,8 +1870,12 @@ const DashboardPage = () => {
     toast.dismiss();
 
     if (editingFolderId) {
-      const originalFolder = folders.find(f => f.id === editingFolderId);
-      if (originalFolder && newFolderName.trim() === originalFolder.name && newFolderDesc.trim() === (originalFolder.description || "")) {
+      const originalFolder = folders.find((f) => f.id === editingFolderId);
+      if (
+        originalFolder &&
+        newFolderName.trim() === originalFolder.name &&
+        newFolderDesc.trim() === (originalFolder.description || "")
+      ) {
         setOpenNewFolder(false);
         setNewFolderName("");
         setNewFolderDesc("");
@@ -1886,25 +1909,27 @@ const DashboardPage = () => {
       if (editingFolderId) {
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({id: editingFolderId, ...folderData}),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingFolderId, ...folderData }),
         });
       } else {
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(folderData),
         });
       }
 
       if (!response.ok) {
-        throw new Error('Failed to save folder');
+        throw new Error("Failed to save folder");
       }
 
       const savedFolder = await response.json();
 
       if (editingFolderId) {
-        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
+        setFolders((prev) =>
+          prev.map((f) => (f.id === editingFolderId ? savedFolder : f))
+        );
         toast.success(`Folder "${savedFolder.name}" updated successfully!`);
       } else {
         setFolders((prev) => [...prev, savedFolder]);
@@ -1917,8 +1942,8 @@ const DashboardPage = () => {
       setTargetProjectId(null);
       setOpenNewFolder(false);
     } catch (error) {
-      console.error('Error saving folder:', error);
-      toast.error('Failed to save folder. Please try again.');
+      console.error("Error saving folder:", error);
+      toast.error("Failed to save folder. Please try again.");
     } finally {
       setIsCreatingFolder(false);
     }
@@ -1943,10 +1968,12 @@ const DashboardPage = () => {
 
   const hasChanges = () => {
     if (!editingFolderId) return true;
-    const originalFolder = folders.find(f => f.id === editingFolderId);
+    const originalFolder = folders.find((f) => f.id === editingFolderId);
     if (!originalFolder) return true;
-    return newFolderName.trim() !== originalFolder.name ||
-      newFolderDesc.trim() !== (originalFolder.description || "");
+    return (
+      newFolderName.trim() !== originalFolder.name ||
+      newFolderDesc.trim() !== (originalFolder.description || "")
+    );
   };
 
   const confirmDeleteFolder = async () => {
@@ -1955,20 +1982,26 @@ const DashboardPage = () => {
     try {
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(deleteFolderId));
+      const endpointsToDelete = allEndpoints.filter(
+        (e) => String(e.folder_id) === String(deleteFolderId)
+      );
 
       await Promise.all(
-        endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {
+        method: "DELETE",
+      });
 
-      setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
+      setFolders((prev) => prev.filter((f) => f.id !== deleteFolderId));
 
       toast.dismiss();
-      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+      toast.success(
+        `Folder and its ${endpointsToDelete.length} endpoints deleted successfully`
+      );
 
       if (currentFolder.id === deleteFolderId) {
         navigate(`/projects/${projectId}`);
@@ -1977,7 +2010,7 @@ const DashboardPage = () => {
       setOpenDeleteFolder(false);
       setDeleteFolderId(null);
     } catch (error) {
-      console.error('Delete folder error:', error);
+      console.error("Delete folder error:", error);
       toast.error("Failed to delete folder");
     }
   };
@@ -2325,8 +2358,8 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                r.id === statefulResponse.id ? statefulResponse : r
-              )
+                  r.id === statefulResponse.id ? statefulResponse : r
+                )
               : [...prev, statefulResponse]
           );
 
@@ -2334,22 +2367,22 @@ const DashboardPage = () => {
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                s.id === statefulResponse.id
-                  ? {
-                    ...s,
+                  s.id === statefulResponse.id
+                    ? {
+                        ...s,
+                        code: statefulResponse.status_code.toString(),
+                        name: statefulResponse.name,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: statefulResponse.id,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  }
-                  : s
-              )
-              : [
-                ...prev,
-                {
-                  id: statefulResponse.id,
-                  code: statefulResponse.status_code.toString(),
-                  name: statefulResponse.name,
-                },
-              ]
+                  },
+                ]
           );
 
           if (selectedResponse) {
@@ -2360,32 +2393,32 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                r.id === updatedResponse.id ? updatedResponse : r
-              )
+                  r.id === updatedResponse.id ? updatedResponse : r
+                )
               : [...prev, updatedResponse]
           );
 
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                s.id === updatedResponse.id
-                  ? {
-                    ...s,
+                  s.id === updatedResponse.id
+                    ? {
+                        ...s,
+                        code: updatedResponse.status_code.toString(),
+                        name: updatedResponse.name,
+                        isDefault: updatedResponse.is_default,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: updatedResponse.id,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  }
-                  : s
-              )
-              : [
-                ...prev,
-                {
-                  id: updatedResponse.id,
-                  code: updatedResponse.status_code.toString(),
-                  name: updatedResponse.name,
-                  isDefault: updatedResponse.is_default,
-                },
-              ]
+                  },
+                ]
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
@@ -2544,28 +2577,44 @@ const DashboardPage = () => {
                 ? currentFolder
                   ? currentEndpointId
                     ? [
-                      {
-                        label: currentWorkspace.name,
-                        WORKSPACE_ID: currentWorkspace.id,
-                        href: "/dashboard",
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label: currentFolder.name,
-                        href: `/dashboard/${currentProject.id}/folder/${currentFolder.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) => String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null,
-                      },
-                    ]
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                        {
+                          label: currentFolder.name,
+                          href: `/dashboard/${currentProject.id}/folder/${currentFolder.id}`,
+                        },
+                        {
+                          label:
+                            endpoints.find(
+                              (ep) =>
+                                String(ep.id) === String(currentEndpointId)
+                            )?.name || "Endpoint",
+                          href: null,
+                        },
+                      ]
                     : [
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                        {
+                          label: currentFolder.name,
+                          href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                        },
+                      ]
+                  : [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2575,29 +2624,14 @@ const DashboardPage = () => {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
                       },
-                      {
-                        label: currentFolder.name,
-                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
-                      },
                     ]
-                  : [
+                : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                    },
                   ]
-                : [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -3506,7 +3540,7 @@ const DashboardPage = () => {
                               size="sm"
                               className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                             >
-                              <Upload className="mr-1 h-4 w-4"/> Upload
+                              <Upload className="mr-1 h-4 w-4" /> Upload
                             </Button>
                             <Button
                               variant="outline"
@@ -3526,7 +3560,7 @@ const DashboardPage = () => {
                                 }
                               }}
                             >
-                              <Code className="mr-1 h-4 w-4"/> Format
+                              <Code className="mr-1 h-4 w-4" /> Format
                             </Button>
                           </div>
                         </div>
@@ -3895,9 +3929,7 @@ const DashboardPage = () => {
 
         {/* New Folder Dialog */}
         <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-          <DialogContent
-            className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
-          >
+          <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
             <DialogHeader className="pb-2">
               <DialogTitle className="text-lg font-semibold text-gray-900">
                 {editingFolderId ? "Edit Folder" : "New Folder"}
@@ -3906,7 +3938,10 @@ const DashboardPage = () => {
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="folder-name"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Name
                 </Label>
                 <Input
@@ -3917,7 +3952,11 @@ const DashboardPage = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   autoFocus
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
+                    if (
+                      e.key === "Enter" &&
+                      newFolderName.trim() &&
+                      !isCreatingFolder
+                    ) {
                       e.preventDefault();
                       if (hasChanges()) {
                         handleCreateFolder();
@@ -3928,7 +3967,7 @@ const DashboardPage = () => {
                         setEditingFolderId(null);
                       }
                     }
-                    if (e.key === 'Escape') {
+                    if (e.key === "Escape") {
                       e.preventDefault();
                       setOpenNewFolder(false);
                       setNewFolderName("");
@@ -3955,10 +3994,18 @@ const DashboardPage = () => {
               </Button>
               <Button
                 onClick={handleCreateFolder}
-                disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
+                disabled={
+                  !newFolderName.trim() || !hasChanges() || isCreatingFolder
+                }
                 className="px-4 py-2  text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
               >
-                {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
+                {isCreatingFolder
+                  ? editingFolderId
+                    ? "Updating..."
+                    : "Creating..."
+                  : editingFolderId
+                  ? "Update"
+                  : "Create"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -3968,22 +4015,35 @@ const DashboardPage = () => {
         <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
           <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
             <DialogHeader className="pb-2">
-              <DialogTitle className="text-lg font-semibold text-gray-900">Delete Folder</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Delete Folder
+              </DialogTitle>
             </DialogHeader>
 
             <div className="py-2">
-              <p className="text-sm text-gray-600">Are you sure you want to delete this folder and all its endpoints? This
-                action cannot be undone.</p>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this folder and all its
+                endpoints? This action cannot be undone.
+              </p>
             </div>
 
             <DialogFooter className="pt-4 flex gap-2">
-              <Button variant="ghost" onClick={() => {
-                setOpenDeleteFolder(false);
-                setDeleteFolderId(null);
-              }}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Cancel</Button>
-              <Button onClick={confirmDeleteFolder}
-                      className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium">Delete</Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setOpenDeleteFolder(false);
+                  setDeleteFolderId(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteFolder}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium"
+              >
+                Delete
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
