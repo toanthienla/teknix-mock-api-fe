@@ -46,6 +46,8 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
+import JSONEditor from 'jsoneditor';
+import 'jsoneditor/dist/jsoneditor.css';
 
 const statusCodes = [
   {
@@ -934,6 +936,9 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  // Ref cho JSON Editor
+  const jsonEditorContainerRef = useRef(null);
+  const jsonEditorRef = useRef(null);
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
@@ -3041,30 +3046,21 @@ const DashboardPage = () => {
                           </Label>
                           <div className="col-span-3 space-y-2">
                             <div className="relative">
-                              <Textarea
-                                id="response-body"
-                                value={responseBody}
-                                onChange={(e) => !isStateful && setResponseBody(e.target.value)}
-                                disabled={isStateful}
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
-                                  isStateful ? "bg-gray-100 cursor-not-allowed" : ""
-                                }`}
-                                placeholder={isStateful ? "Read-only in stateful mode" : ""}
-                              />
+                              <div ref={jsonEditorContainerRef} className="h-60 rounded-md border border-[#CBD5E1] bg-[#64748B] text-white" />
                               {/* Nhóm nút trên cùng bên phải */}
                               <div className="absolute top-2 right-2 flex space-x-2">
                                 <Button
-                                  variant="outline"
+                                  variant="ghost"
                                   size="sm"
-                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                  className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold shadow-sm hover:bg-gray-100"
                                   disabled={isStateful}
                                 >
-                                  <Upload className="mr-1 h-4 w-4" /> Upload
+                                  <Upload className="mr-1 h-4 w-4 text-black" /> <span className="text-black">Upload</span>
                                 </Button>
                                 <Button
-                                  variant="outline"
+                                  variant="ghost"
                                   size="sm"
-                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                  className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold shadow-sm hover:bg-gray-100"
                                   disabled={isStateful}
                                   onClick={(e) => {
                                     if (isStateful) return;
@@ -3076,19 +3072,19 @@ const DashboardPage = () => {
                                         2
                                       );
                                       setResponseBody(formatted);
+                                      if (jsonEditorRef.current) jsonEditorRef.current.setText(formatted);
                                     } catch {
                                       toast.error("Invalid JSON format");
                                     }
                                   }}
                                 >
-                                  <Code className="mr-1 h-4 w-4" /> Format
+                                  <Code className="mr-1 h-4 w-4 text-black" /> <span className="text-black">Format</span>
                                 </Button>
                               </div>
-
                               {/* Nhóm nút dưới cùng bên phải */}
                               <div className="absolute bottom-2 right-2 flex space-x-2">
                                 <FileCode
-                                  className={`text-gray-400 cursor-pointer hover:text-gray-600 ${
+                                  className={`text-white cursor-pointer hover:text-gray-200 ${
                                     isStateful ? "opacity-50 cursor-not-allowed" : ""
                                   }`}
                                   size={26}
@@ -3104,15 +3100,15 @@ const DashboardPage = () => {
                               {isPopoverOpen && !isStateful && (
                                 <div
                                   ref={popoverRef}
-                                  className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-[#23272e] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)] text-white"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
-                                      <div className="font-semibold text-sm text-gray-800">
+                                      <div className="font-semibold text-sm text-white">
                                         Variable Picker
                                       </div>
                                       <X
-                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-200"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setIsPopoverOpen(false);
@@ -3124,8 +3120,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "url"
-                                            ? "bg-[#EDEDEC] text-[#374151]"
-                                            : "text-[#374151] hover:bg-gray-100"
+                                            ? "bg-white text-[#23272e]"
+                                            : "text-white hover:bg-gray-700"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3137,8 +3133,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "query"
-                                            ? "bg-[#EDEDEC] text-[#374151]"
-                                            : "text-[#374151] hover:bg-gray-100"
+                                            ? "bg-white text-[#23272e]"
+                                            : "text-white hover:bg-gray-700"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3150,8 +3146,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "state"
-                                            ? "bg-[#EDEDEC] text-[#374151]"
-                                            : "text-[#374151] hover:bg-gray-100"
+                                            ? "bg-white text-[#23272e]"
+                                            : "text-white hover:bg-gray-700"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3163,7 +3159,7 @@ const DashboardPage = () => {
                                     </div>
 
                                     <div
-                                      className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                      className="w-full bg-white text-black p-1 rounded-md mt-2 cursor-pointer hover:bg-gray-200 transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         insertTemplate(
@@ -3171,7 +3167,7 @@ const DashboardPage = () => {
                                         );
                                       }}
                                     >
-                                      <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      <div className="font-mono text-[12px] mb-[-5px]">
                                         {getTemplateText().template}
                                       </div>
                                       <div className="text-[12px] text-gray-500">
@@ -3366,7 +3362,7 @@ const DashboardPage = () => {
                     >
                       <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
                         <DialogHeader className="flex justify-between items-start mb-4">
-                          <DialogTitle className="text-xl font-bold text-slate-800">
+                          <DialogTitle className="text-xl font-bold text-white">
                             Update Initial Value
                           </DialogTitle>
                         </DialogHeader>
@@ -3379,30 +3375,29 @@ const DashboardPage = () => {
                               onChange={(e) => {
                                 setTempDataDefaultString(e.target.value);
                                 try {
-                                  // Chỉ cập nhật state khi JSON hợp lệ
                                   setTempDataDefault(
                                     JSON.parse(e.target.value)
                                   );
                                 } catch {
-                                  // Giữ nguyên state cũ nếu JSON không hợp lệ
+                                  // ignore
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16"
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
                               placeholder="Enter initial value"
                             />
-                            {/* Nhóm nút trên cùng bên phải */}
+                            {/* Top right buttons */}
                             <div className="absolute top-2 right-2 flex space-x-2">
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
                               >
-                                <Upload className="mr-1 h-4 w-4" /> Upload
+                                <Upload className="mr-1 h-4 w-4 text-black" /> Upload
                               </Button>
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
                                 onClick={() => {
                                   try {
                                     const formatted = JSON.stringify(
@@ -3411,43 +3406,38 @@ const DashboardPage = () => {
                                       2
                                     );
                                     setTempDataDefaultString(formatted);
-                                    setTempDataDefault(JSON.parse(formatted));
-                                  } catch {
-                                    toast.error("Invalid JSON format");
-                                  }
+                                  } catch (err) {}
                                 }}
                               >
-                                <Code className="mr-1 h-4 w-4" /> Format
+                                <Code className="mr-1 h-4 w-4 text-black" /> Format
                               </Button>
                             </div>
 
-                            {/* Nhóm nút dưới cùng bên phải */}
+                            {/* Bottom right icon */}
                             <div className="absolute bottom-2 right-2 flex space-x-2">
                               <FileCode
-                                className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                className="text-white cursor-pointer hover:text-gray-200"
                                 size={26}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setIsInitialValuePopoverOpen(
-                                    !isInitialValuePopoverOpen
-                                  );
+                                  setIsInitialValuePopoverOpen(!isInitialValuePopoverOpen);
                                 }}
                               />
                             </div>
 
-                            {/* Popover cho Initial Value */}
+                            {/* Popover */}
                             {isInitialValuePopoverOpen && (
                               <div
                                 ref={initialValuePopoverRef}
-                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-[#23272e] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)] text-white"
                               >
                                 <div className="flex flex-col items-center gap-2 p-3.5">
                                   <div className="w-full flex justify-between items-center">
-                                    <div className="font-semibold text-sm text-gray-800">
+                                    <div className="font-semibold text-sm text-white">
                                       Variable Picker
                                     </div>
                                     <X
-                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-200"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setIsInitialValuePopoverOpen(false);
@@ -3459,8 +3449,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "url"
-                                          ? "bg-[#EDEDEC] text-[#374151]"
-                                          : "text-[#374151] hover:bg-gray-100"
+                                          ? "bg-white text-[#23272e]"
+                                          : "text-white hover:bg-gray-700"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3472,8 +3462,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "query"
-                                          ? "bg-[#EDEDEC] text-[#374151]"
-                                          : "text-[#374151] hover:bg-gray-100"
+                                          ? "bg-white text-[#23272e]"
+                                          : "text-white hover:bg-gray-700"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3485,8 +3475,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "state"
-                                          ? "bg-[#EDEDEC] text-[#374151]"
-                                          : "text-[#374151] hover:bg-gray-100"
+                                          ? "bg-white text-[#23272e]"
+                                          : "text-white hover:bg-gray-700"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3498,15 +3488,13 @@ const DashboardPage = () => {
                                   </div>
 
                                   <div
-                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                    className="w-full bg-white text-black p-1 rounded-md mt-2 cursor-pointer hover:bg-gray-200 transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      insertInitialValueTemplate(
-                                        getTemplateText().template
-                                      );
+                                      insertInitialValueTemplate(getTemplateText().template);
                                     }}
                                   >
-                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                    <div className="font-mono text-[12px] mb-[-5px]">
                                       {getTemplateText().template}
                                     </div>
                                     <div className="text-[12px] text-gray-500">
@@ -3519,16 +3507,16 @@ const DashboardPage = () => {
                           </div>
                           <div className="flex justify-end space-x-2 mt-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
                             >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
+                              <Upload className="mr-1 h-4 w-4 text-black" /> Upload
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                              className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
                               onClick={() => {
                                 try {
                                   const formatted = JSON.stringify(
@@ -3543,7 +3531,7 @@ const DashboardPage = () => {
                                 }
                               }}
                             >
-                              <Code className="mr-1 h-4 w-4" /> Format
+                              <Code className="mr-1 h-4 w-4 text-black" /> Format
                             </Button>
                           </div>
                         </div>
@@ -3552,12 +3540,12 @@ const DashboardPage = () => {
                           <Button
                             variant="outline"
                             onClick={() => setIsInitialValueDialogOpen(false)}
-                            className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                            className=" bg-white hover:bg-[#F3F6FD] w-[90px] h-[40px] rounded-[8px] font-semibold shadow-none"
                           >
                             Cancel
                           </Button>
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white w-[90px] h-[40px] rounded-[8px]"
+                            className="bg-[#2563EB] text-white hover:bg-[#1E40AF] w-[90px] h-[40px] rounded-[8px] font-semibold shadow-none"
                             onClick={handleSaveInitialValue}
                           >
                             Update
