@@ -3046,7 +3046,13 @@ const DashboardPage = () => {
                           </Label>
                           <div className="col-span-3 space-y-2">
                             <div className="relative">
-                              <div ref={jsonEditorContainerRef} className="h-60 rounded-md border border-[#CBD5E1] bg-[#64748B] text-white" />
+                              <pre
+                                ref={jsonEditorContainerRef}
+                                className="h-60 rounded-md border border-white bg-[#233554] text-white overflow-auto p-2 font-mono text-[14px] leading-[20px] whitespace-pre-wrap break-words"
+                                style={{ minHeight: 120 }}
+                              >
+                                {responseBody || '{\n  \n}'}
+                              </pre>
                               {/* Nhóm nút trên cùng bên phải */}
                               <div className="absolute top-2 right-2 flex space-x-2">
                                 <Button
