@@ -50,7 +50,9 @@ import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
 
 import birdIcon from "@/assets/Bird.svg";
-
+import editIcon from "@/assets/Edit Icon.svg";
+import Group from "@/assets/Group.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
 export default function Dashboard() {
   const navigate = useNavigate();
   const {projectId, folderId} = useParams();
@@ -103,6 +105,7 @@ export default function Dashboard() {
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
+const [folderMode, setFolderMode] = useState("public"); // mặc định public
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -820,7 +823,8 @@ useEffect(() => {
                     setEditDialogOpen(true);
                   }}
                 >
-                  <Pencil className="w-4 h-4 mr-2" /> Edit
+                   <img src={editIcon} alt="edit" className="w-4 h-4" />
+                                Edit
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -829,7 +833,7 @@ useEffect(() => {
                     setShowPermission(true);
                   }}
                 >
-                  <Users className="w-4 h-4 mr-2" /> Folder Permission
+                 <img src={Group} className="w-4 h-4" /> Folder Permission
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
@@ -838,7 +842,8 @@ useEffect(() => {
                     setDeleteDialogOpen(true);
                   }}
                 >
-                  <Trash2 className="w-4 h-4 mr-2 text-red-600" /> Delete
+                  <img src={deleteIcon} alt="delete" className="w-4 h-4" />
+                                Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -992,16 +997,27 @@ useEffect(() => {
       <span className="text-gray-700 font-medium">
         Data in this folder is protected
       </span>
-      <div className="flex items-center">
-        <button className="flex flex-col items-center justify-center gap-1 text-sm bg-white border-r-0 border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px]">
-          <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
-          <span className="text-xs font-semibold">Public</span>
-        </button>
-        <button className="flex flex-col items-center justify-center gap-1 text-sm bg-gray-300 text-gray-600 border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px]">
-          <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
-          <span className="text-xs font-semibold">Private</span>
-        </button>
-      </div>
+     <div className="flex items-center">
+  <button
+    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+      folderMode === "public" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
+    }`}
+    onClick={() => setFolderMode("public")}
+  >
+    <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
+    <span className="text-xs font-semibold">Public</span>
+  </button>
+  <button
+    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
+      folderMode === "private" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
+    }`}
+    onClick={() => setFolderMode("private")}
+  >
+    <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
+    <span className="text-xs font-semibold">Private</span>
+  </button>
+</div>
+
     </div>
 
     {/* Permissions Table */}
@@ -1026,15 +1042,28 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-          <span>Sharing Data</span>
-          <div className="flex justify-center">
-            <input type="radio" name="sharing" className="accent-black" />
-          </div>
-          <div className="flex justify-center">
-            <input type="radio" name="sharing" defaultChecked className="accent-black" />
-          </div>
-        </div>
+       <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+  <span>Sharing Data</span>
+  <div className="flex justify-center">
+    <input
+      type="radio"
+      name="sharing"
+      className="accent-black"
+      checked={folderMode === "public"}
+      readOnly
+    />
+  </div>
+  <div className="flex justify-center">
+    <input
+      type="radio"
+      name="sharing"
+      className="accent-black"
+      checked={folderMode === "private"}
+      readOnly
+    />
+  </div>
+</div>
+
       </div>
     </div>
   </div>

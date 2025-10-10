@@ -108,6 +108,7 @@ export default function Topbar({
   const [showPermission, setShowPermission] = useState(false);
   const settingsRef = useRef(null);
   const popupRef = useRef(null);
+const [folderMode, setFolderMode] = useState("public"); // mặc định public
 
   // đóng popup khi click ra ngoài
   useEffect(() => {
@@ -307,26 +308,27 @@ export default function Topbar({
                   <span className="text-gray-700 font-medium">
                     Data in this folder is protected
                   </span>
-                  <div className="flex items-center">
-                    <button
-                      className="flex flex-col items-center justify-center gap-1 text-sm bg-white border-r-0 border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px]">
-                      <img
-                        src={folderPublic}
-                        alt="Public folder"
-                        className="w-4 h-4"
-                      />
-                      <span className="text-xs font-semibold">Public</span>
-                    </button>
-                    <button
-                      className="flex flex-col items-center justify-center gap-1 text-sm bg-gray-300 text-gray-600 border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px]">
-                      <img
-                        src={folderPrivate}
-                        alt="Private folder"
-                        className="w-4 h-4"
-                      />
-                      <span className="text-xs font-semibold">Private</span>
-                    </button>
-                  </div>
+                 <div className="flex items-center">
+  <button
+    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+      folderMode === "public" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
+    }`}
+    onClick={() => setFolderMode("public")}
+  >
+    <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
+    <span className="text-xs font-semibold">Public</span>
+  </button>
+  <button
+    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
+      folderMode === "private" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
+    }`}
+    onClick={() => setFolderMode("private")}
+  >
+    <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
+    <span className="text-xs font-semibold">Private</span>
+  </button>
+</div>
+
                 </div>
 
                 {/* Permissions Table */}
@@ -361,24 +363,28 @@ export default function Topbar({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                      <span>Sharing Data</span>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="sharing"
-                          className="accent-black"
-                        />
-                      </div>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="sharing"
-                          defaultChecked
-                          className="accent-black"
-                        />
-                      </div>
-                    </div>
+                   <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+  <span>Sharing Data</span>
+  <div className="flex justify-center">
+    <input
+      type="radio"
+      name="sharing"
+      className="accent-black"
+      checked={folderMode === "public"}
+      readOnly
+    />
+  </div>
+  <div className="flex justify-center">
+    <input
+      type="radio"
+      name="sharing"
+      className="accent-black"
+      checked={folderMode === "private"}
+      readOnly
+    />
+  </div>
+</div>
+
                   </div>
                 </div>
               </div>
