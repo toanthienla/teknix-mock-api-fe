@@ -22,6 +22,8 @@ import {
 import userCogIcon from "@/assets/fa-solid_user-cog.svg";
 import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
+import frameIcon from "@/assets/Frame.svg";
+import birdIcon from "@/assets/Bird.svg";
 
 const StateModeToggle = ({ isStateful, onToggle }) => {
   return (
@@ -97,6 +99,8 @@ export default function Topbar({
   showNewFolderButton,
   showNewResponseButton,
   showStateModeToggle,
+  showSettingsButton, // ✅ thêm prop
+  onOpenSettings,
   isStateful,
   onStateModeChange,
 }) {
@@ -127,7 +131,8 @@ export default function Topbar({
   };
 
   return (
-    <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
+   <div className="relative flex items-center justify-between bg-white px-8 py-2 border-b border-slate-200 h-16">
+
       {/* Breadcrumb bên trái */}
       {breadcrumb.length > 0 && (
         <div className="px-4 py-2 rounded-md inline-flex overflow-hidden">
@@ -242,103 +247,142 @@ export default function Topbar({
         )}
 
         {/* ⚙️ Settings + Popover */}
-        <div className="relative">
+        {showSettingsButton && ( // ✅ chỉ hiển thị nếu được bật
+          <div className="relative">
           <Button
-            ref={settingsRef}
-            variant="outline"
-            size="icon"
-            onClick={() => setShowPermission((v) => !v)}
-            className="rounded-md border-slate-300"
-          >
-            <Settings size={18} />
-          </Button>
-{showPermission && (
-  <div
-    ref={popupRef}
-    className="absolute right-[120px] top-12 w-[540px] bg-gray-100 rounded-2xl shadow-2xl border border-gray-200 p-6 z-50"
-  >
-    {/* Header */}
-    <div className="flex items-center gap-2 mb-5">
-      <img
-  src={userCogIcon}
-  alt="User cog icon"
-  className="w-6 h-6 text-gray-700"
-/>
-
-      <h3 className="text-xl font-bold text-gray-900">
-        Users Permission
-      </h3>
-    </div>
-
-    {/* User Info */}
-    <div className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center mb-4">
-      <div>
-        <div className="font-semibold text-[16px]">adminteknix</div>
-        <div className="text-sm text-gray-500">
-          teknixcorp@gmail.com
-        </div>
-      </div>
-      <div className="text-sm font-semibold text-gray-700 underline">
-        Owner
-      </div>
-    </div>
-
-    {/* Folder Protection */}
-    <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mb-4">
-      <span className="text-gray-700 font-medium">
-        Data in this folder is protected
-      </span>
-     <div className="flex items-center">
-  <button className="flex flex-col items-center justify-center gap-1 text-sm bg-white border border-gray-300 rounded-l-lg px-4 py-2 w-[90px] h-[80px]">
-    <img src={folderPublic} alt="Public folder" className="w-7 h-7" />
-    <span>Public</span>
-  </button>
-  <button className="flex flex-col items-center justify-center gap-1 text-sm bg-gray-300 text-gray-600 border border-gray-300 rounded-r-lg px-4 py-2 w-[90px] h-[80px]">
-    <img src={folderPrivate} alt="Private folder" className="w-7 h-7" />
-    <span>Private</span>
-  </button>
-</div>
+  ref={settingsRef}
+  variant="ghost"
+  size="lg"
+  onClick={() => setShowPermission((v) => !v)}
+  className="p-0 hover:bg-transparent focus-visible:ring-0"
+>
+  <img
+    src={frameIcon}
+    alt="Settings"
+    className="w-7 h-7 object-contain"
+  />
+</Button>
 
 
-    </div>
+            {showPermission && (
+              <div
+                ref={popupRef}
+                className="absolute right-[120px] top-12 w-[540px] bg-gray-100 rounded-2xl shadow-2xl border border-gray-200 p-6 z-50"
+              >
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-5">
+                  <img
+                    src={userCogIcon}
+                    alt="User cog icon"
+                    className="w-6 h-6 text-gray-700"
+                  />
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Users Permission
+                  </h3>
+                </div>
 
-    {/* Permissions Table */}
-    <div className="border-t border-gray-300 pt-4">
-      <div className="font-semibold text-gray-900 text-[16px] mb-3">
-        Your Permissions
-      </div>
-      <div className="border border-gray-300 bg-gray-50 rounded-xl">
-        <div className="grid grid-cols-3 bg-white text-[15px] font-semibold px-4 py-2">
-          <span>Permissions</span>
-          <span className="text-center">Allowed</span>
-          <span className="text-center">No Allowed</span>
-        </div>
-
-        <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-          <span>Set folder mode</span>
-          <div className="flex justify-center">
-           <input type="radio" name="setMode" defaultChecked className="accent-black" />
-          </div>
-          <div className="flex justify-center">
-           <input type="radio" name="setMode" className="accent-black" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-          <span>Sharing Data</span>
-          <div className="flex justify-center">
-           <input type="radio" name="sharing" className="accent-black" />
-          </div>
-          <div className="flex justify-center">
-            <input type="radio" name="sharing" defaultChecked className="accent-black" />
-          </div>
-        </div>
-      </div>
+                {/* User Info */}
+                <div className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-3">
+  <img
+    src={birdIcon}
+    alt="User avatar"
+    className="w-7 h-7 object-contain"
+  />
+  <div>
+    <div className="font-semibold text-[16px]">adminteknix</div>
+    <div className="text-sm text-gray-500">
+      teknixcorp@gmail.com
     </div>
   </div>
-)}
+</div>
 
-        </div>
+                  <div className="text-sm font-semibold text-gray-700 underline">
+                    Owner
+                  </div>
+                </div>
+
+                {/* Folder Protection */}
+                <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mb-4">
+                  <span className="text-gray-700 font-medium">
+                    Data in this folder is protected
+                  </span>
+                  <div className="flex items-center">
+                    <button className="flex flex-col items-center justify-center gap-1 text-sm bg-white border border-gray-300 rounded-l-lg px-4 py-2 w-[90px] h-[80px]">
+                      <img
+                        src={folderPublic}
+                        alt="Public folder"
+                        className="w-7 h-7"
+                      />
+                      <span>Public</span>
+                    </button>
+                    <button className="flex flex-col items-center justify-center gap-1 text-sm bg-gray-300 text-gray-600 border border-gray-300 rounded-r-lg px-4 py-2 w-[90px] h-[80px]">
+                      <img
+                        src={folderPrivate}
+                        alt="Private folder"
+                        className="w-7 h-7"
+                      />
+                      <span>Private</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Permissions Table */}
+                <div className="border-t border-gray-300 pt-4">
+                  <div className="font-semibold text-gray-900 text-[16px] mb-3">
+                    Your Permissions
+                  </div>
+                  <div className="border border-gray-300 bg-gray-50 rounded-xl">
+                   <div className="grid grid-cols-3 bg-white text-[15px] font-semibold px-4 py-2 rounded-t-xl">
+
+                      <span>Permissions</span>
+                      <span className="text-center">Allowed</span>
+                      <span className="text-center">No Allowed</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+                      <span>Set folder mode</span>
+                      <div className="flex justify-center">
+                        <input
+                          type="radio"
+                          name="setMode"
+                          defaultChecked
+                          className="accent-black"
+                        />
+                      </div>
+                      <div className="flex justify-center">
+                        <input
+                          type="radio"
+                          name="setMode"
+                          className="accent-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+                      <span>Sharing Data</span>
+                      <div className="flex justify-center">
+                        <input
+                          type="radio"
+                          name="sharing"
+                          className="accent-black"
+                        />
+                      </div>
+                      <div className="flex justify-center">
+                        <input
+                          type="radio"
+                          name="sharing"
+                          defaultChecked
+                          className="accent-black"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
