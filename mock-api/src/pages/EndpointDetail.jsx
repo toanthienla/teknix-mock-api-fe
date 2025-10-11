@@ -1076,29 +1076,33 @@ const DashboardPage = () => {
 
   // Hàm xử lý reset current values
   const handleResetCurrentValues = () => {
-    if (!endpointData) return;
+    // Lấy path từ currentEndpoint thay vì endpointData
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+
+    if (!path) {
+      toast.error("Endpoint path is not available. Please try again.");
+      return;
+    }
 
     const payload = {
       data_default: endpointData.data_default || [],
-      // Thêm flag để reset current values
       reset_current: true,
     };
 
-    fetch(
-      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    )
+    fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to reset current values");
         return res.json();
       })
       .then(() => {
-        // Fetch lại endpoint data sau khi reset
-        return fetchEndpointDataByPath(endpointData.path);
+        // Fetch lại endpoint data sau khi cập nhật
+        return fetchEndpointDataByPath(path);
       })
       .then((finalData) => {
         if (finalData) {
@@ -2479,33 +2483,35 @@ const DashboardPage = () => {
 
   // Hàm xử lý khi lưu initial value
   const handleSaveInitialValue = () => {
+    // Lấy path từ currentEndpoint thay vì endpointData
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+
+    if (!path) {
+      toast.error("Endpoint path is not available. Please try again.");
+      return;
+    }
+
     try {
       const parsedData = JSON.parse(tempDataDefaultString);
-
       const payload = {
         data_default: parsedData,
-        // Thêm flag để reset current values khi cập nhật
         reset_current: true,
       };
 
-      // Chỉ gọi một lần API để cập nhật và reset
-      fetch(
-        `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
-          endpointData.path
-        )}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      )
+      fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
           return res.json();
         })
         .then(() => {
           // Fetch lại endpoint data sau khi cập nhật
-          return fetchEndpointDataByPath(endpointData.path);
+          return fetchEndpointDataByPath(path);
         })
         .then((finalData) => {
           if (finalData) {
