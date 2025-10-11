@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from "react";
+import React, {useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {
   Table,
@@ -11,15 +11,14 @@ import {
 import Sidebar from "@/components/Sidebar.jsx";
 import {useNavigate, useParams} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
-
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-
+} from "@/components/ui/dialog.jsx";
 import {Input} from "@/components/ui/input.jsx";
 import {Label} from "@/components/ui/label.jsx";
 import {
@@ -29,51 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
-import {MoreVertical} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
 import blueFolder from "@/assets/blue_folder.svg"
-import userCogIcon from "@/assets/fa-solid_user-cog.svg";
-import folderPublic from "@/assets/folder-public.svg";
-import folderPrivate from "@/assets/folder-private.svg";
-
-import birdIcon from "@/assets/Bird.svg";
-import editIcon from "@/assets/Edit Icon.svg";
-import Group from "@/assets/Group.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
-
-// Wrapper fetch để tự động refresh token khi gặp 401
-async function fetchWithRefresh(url, options = {}) {
-  const response = await fetch(url, { ...options, credentials: "include" });
-
-  // Nếu token hết hạn
-  if (response.status === 401) {
-    // Gọi refresh token endpoint
-    const refreshResponse = await fetch('http://localhost:3000/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    // Nếu refresh thành công → thử lại request ban đầu
-    if (refreshResponse.ok) {
-      return fetch(url, { ...options, credentials: "include" });
-    }
-  }
-
-  return response;
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -127,7 +87,6 @@ export default function Dashboard() {
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
-  const [folderMode, setFolderMode] = useState("public"); // mặc định public
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -350,12 +309,12 @@ export default function Dashboard() {
       // Delete all endpoints in the folder first
       await Promise.all(
         endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // Delete the folder
-      await fetchWithRefresh(`${API_ROOT}/folders/${deleteFolderId}`, {method: "DELETE", credentials: "include"});
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE" });
 
       // Update local state
       setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
@@ -456,18 +415,16 @@ export default function Dashboard() {
       let response;
       if (editingFolderId) {
         // Update existing folder
-        response = await fetchWithRefresh(`${API_ROOT}/folders/${editingFolderId}`, {
+        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
-          headers: {"Content-Type": "application/json"},
-          credentials: "include",
-          body: JSON.stringify({id: editingFolderId, ...folderData}),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingFolderId, ...folderData }),
         });
       } else {
         // Create new folder
-        response = await fetchWithRefresh(`${API_ROOT}/folders`, {
+        response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
-          credentials: "include",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(folderData),
         });
       }
@@ -668,30 +625,6 @@ export default function Dashboard() {
   // });
   //
   // console.log('🚀 About to render component...');
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedFolder, setSelectedFolder] = useState(null);
-  const [showPermission, setShowPermission] = useState(false);
-
-  const popupRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        setShowPermission(false);
-      }
-    };
-
-    if (showPermission) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showPermission]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
@@ -739,16 +672,16 @@ export default function Dashboard() {
               currentWorkspace
                 ? currentProject
                   ? [
-                    {
-                      label: currentWorkspace.name,
-                      WORKSPACE_ID: currentWorkspace.id,
-                      href: "/dashboard",
-                    },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                    },
-                  ]
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                    ]
                   : [
                     {
                       label: currentWorkspace.name,
@@ -812,297 +745,26 @@ export default function Dashboard() {
                         .map((folder) => (
                           <div
                             key={folder.id}
-                            className="relative flex flex-col items-center group"
+                            className="flex flex-col items-center cursor-pointer hover:opacity-80"
+                            onClick={() =>
+                              navigate(`/dashboard/${projectId}/folder/${folder.id}`)
+                            }
                           >
-                            {/* Folder Image */}
                             <img
                               src={blueFolder}
                               alt="Folder"
-                              className="w-32 h-18 cursor-pointer hover:opacity-80"
-                              onClick={() =>
-                                navigate(`/dashboard/${projectId}/folder/${folder.id}`)
-                              }
+                              className="w-32 h-18"
                             />
                             <span className="mt-1 text-sm font-medium text-gray-800 text-center">
                               {folder.name}
                             </span>
-
-                            {/* === Dropdown Menu (Actions) === */}
-                            <div
-                              className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 rounded-full hover:bg-gray-100">
-                                    <MoreVertical className="w-5 h-5 text-gray-600"/>
-                                  </button>
-                                </DropdownMenuTrigger>
-
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator/>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setNewFolderName(folder.name);
-                                      setEditDialogOpen(true);
-                                    }}
-                                  >
-                                    <img src={editIcon} alt="edit" className="w-4 h-4"/>
-                                    Edit
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setShowPermission(true);
-                                    }}
-                                  >
-                                    <img src={Group} className="w-4 h-4"/> Folder Permission
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
                           </div>
                         ))
                     )}
                   </div>
-
-                  {/* === Edit Folder Dialog === */}
-                  <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Edit Folder</DialogTitle>
-                      </DialogHeader>
-
-                      <div className="mt-4 space-y-2">
-                        <Label htmlFor="folderName">Name</Label>
-                        <Input
-                          id="folderName"
-                          value={newFolderName}
-                          onChange={(e) => setNewFolderName(e.target.value)}
-                          placeholder="Enter folder name..."
-                        />
-                      </div>
-
-                      <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={async () => {
-                            try {
-                              const res = await fetchWithRefresh(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                                method: "PUT",
-                                headers: {"Content-Type": "application/json"},
-                                credentials: "include",
-                                body: JSON.stringify({name: newFolderName}),
-                              });
-
-                              if (!res.ok) throw new Error("Failed to update folder");
-
-                              setFolders((prev) =>
-                                prev.map((f) =>
-                                  f.id === selectedFolder.id ? {...f, name: newFolderName} : f
-                                )
-                              );
-
-                              toast.success("Folder updated successfully!");
-                              setEditDialogOpen(false);
-                            } catch (err) {
-                              toast.error("Failed to update folder!");
-                            }
-                          }}
-                        >
-                          Update
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* === Delete Confirmation Dialog === */}
-                  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Delete Folder</DialogTitle>
-                      </DialogHeader>
-
-                      <p className="mt-2 text-gray-600">
-                        Are you sure you want to delete{" "}
-                        <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
-                        <span className="text-red-500 text-sm">
-                          This action cannot be undone.
-                        </span>
-                      </p>
-
-                      <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                          onClick={async () => {
-                            try {
-                              if (!selectedFolder?.id) throw new Error("No folder selected");
-
-                              const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                                method: "DELETE",
-                                credentials: "include",
-                              });
-
-                              if (!res.ok) throw new Error("Failed to delete folder");
-
-                              setFolders((prev) =>
-                                prev.filter((f) => f.id !== selectedFolder.id)
-                              );
-
-                              toast.success("Folder deleted successfully!");
-                              setDeleteDialogOpen(false);
-                            } catch (err) {
-                              toast.error("Failed to delete folder!");
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* === Folder Permission Popup === */}
-                  {showPermission && (
-                    <div
-                      ref={popupRef}
-                      className="absolute right-[0px] top-12 w-[540px] bg-neutral-100 rounded-2xl shadow-2xl border border-gray-300 p-6 z-50"
-                    >
-                      {/* Header */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <img
-                          src={userCogIcon}
-                          alt="User cog icon"
-                          className="w-6 h-6 text-gray-700"
-                        />
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Users Permission
-                        </h3>
-                      </div>
-
-                      {/* User Info */}
-                      <div
-                        className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={birdIcon}
-                            alt="User avatar"
-                            className="w-7 h-7 object-contain"
-                          />
-                          <div>
-                            <div className="font-semibold text-[16px]">adminteknix</div>
-                            <div className="text-sm text-gray-500">
-                              teknixcorp@gmail.com
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-sm font-semibold text-gray-700 underline">
-                          Owner
-                        </div>
-                      </div>
-
-                      {/* Folder Protection */}
-                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
-                        <span className="text-gray-700 font-medium">
-                          Data in this folder is protected
-                        </span>
-                        <div className="flex items-center">
-                          <button
-                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
-                              folderMode === "public" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
-                            }`}
-                            onClick={() => setFolderMode("public")}
-                          >
-                            <img src={folderPublic} alt="Public folder" className="w-4 h-4"/>
-                            <span className="text-xs font-semibold">Public</span>
-                          </button>
-                          <button
-                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
-                              folderMode === "private" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
-                            }`}
-                            onClick={() => setFolderMode("private")}
-                          >
-                            <img src={folderPrivate} alt="Private folder" className="w-4 h-4"/>
-                            <span className="text-xs font-semibold">Private</span>
-                          </button>
-                        </div>
-
-                      </div>
-
-                      {/* Permissions Table */}
-                      <div className="border-t border-gray-300 pt-4 mt-4">
-                        <div className="font-semibold text-gray-900 text-[16px] mb-3">
-                          Your Permissions
-                        </div>
-                        <div className="border bg-white border-gray-300 rounded-xl">
-                          <div
-                            className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
-                            <span>Permissions</span>
-                            <span className="text-center">Allowed</span>
-                            <span className="text-center">No Allowed</span>
-                          </div>
-
-                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                            <span>Set folder mode</span>
-                            <div className="flex justify-center">
-                              <input type="radio" name="setMode" defaultChecked className="accent-black"/>
-                            </div>
-                            <div className="flex justify-center">
-                              <input type="radio" name="setMode" className="accent-black"/>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                            <span>Sharing Data</span>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="sharing"
-                                className="accent-black"
-                                checked={folderMode === "public"}
-                                readOnly
-                              />
-                            </div>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="sharing"
-                                className="accent-black"
-                                checked={folderMode === "private"}
-                                readOnly
-                              />
-                            </div>
-                          </div>
-
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-
                 </>
               ) : activeTab === "logs" ? (
                 <>
-
                   {/* Logs */}
                   <div className="w-full overflow-x-auto">
                     <div className="flex items-center justify-between mb-4">

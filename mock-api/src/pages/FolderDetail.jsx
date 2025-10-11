@@ -852,56 +852,56 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main className="pt-8 flex-1 transition-all duration-300 ">
-          
-         <Topbar
-  breadcrumb={
-    currentWorkspace
-      ? currentProject
-        ? currentFolder
-          ? [
-              {
-                label: currentWorkspace.name,
-                WORKSPACE_ID: currentWorkspace.id,
-                href: "/dashboard",
-              },
-              {
-                label: currentProject.name,
-                href: `/dashboard/${currentProject.id}`,
-              },
-              {
-                label: currentFolder.name,
-                href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
-              },
-            ]
-          : [
-              {
-                label: currentWorkspace.name,
-                WORKSPACE_ID: currentWorkspace.id,
-                href: "/dashboard",
-              },
-              {
-                label: currentProject.name,
-                href: `/dashboard/${currentProject.id}`,
-              },
-            ]
-        : [
-            {
-              label: currentWorkspace.name,
-              WORKSPACE_ID: currentWorkspace.id,
-              href: "/dashboard",
-            },
-          ]
-      : []
-  }
-  onSearch={setSearchTerm}
-  onNewFolder={() => setOpenNewFolder(true)}
-  showNewProjectButton={false}
-  showNewFolderButton={true}
-  showNewResponseButton={false}
-  showActiveEndpoint={true}
-  showSettingsButton={true}        // ✅ thêm dòng này
-  activeEndpointCount={filtered.filter(e => e.is_active).length}
-/>
+          <Topbar
+            breadcrumb={
+              currentWorkspace
+                ? currentProject
+                  ? currentFolder
+                    ? [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                      },
+                    ]
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                    ]
+                  : [
+                    {
+                      label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
+                      href: "/dashboard",
+                    },
+                  ]
+                : []
+            }
+            onSearch={setSearchTerm}
+            onNewFolder={() => setOpenNewFolder(true)}
+            showNewProjectButton={false}
+            showNewFolderButton={true}
+            showNewResponseButton={false}
+            showActiveEndpoint={true}
+            activeEndpointCount={
+              filtered.filter(e => e.is_active).length
+            }
+          />
 
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
