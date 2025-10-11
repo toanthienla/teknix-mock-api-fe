@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import {Button} from "@/components/ui/button";
+import React, { useEffect, useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableHeader,
@@ -9,18 +9,19 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import Sidebar from "@/components/Sidebar.jsx";
-import {useNavigate, useParams} from "react-router-dom";
-import {API_ROOT} from "@/utils/constants.js";
+import { useNavigate, useParams } from "react-router-dom";
+import { API_ROOT } from "@/utils/constants.js";
+
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog.jsx";
-import {Input} from "@/components/ui/input.jsx";
-import {Label} from "@/components/ui/label.jsx";
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+import { Input } from "@/components/ui/input.jsx";
+import { Label } from "@/components/ui/label.jsx";
 import {
   Select,
   SelectContent,
@@ -28,16 +29,55 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
+import { MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import Topbar from "@/components/Topbar.jsx";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
-import blueFolder from "@/assets/blue_folder.svg"
+import blueFolder from "@/assets/blue_folder.svg";
+import userCogIcon from "@/assets/fa-solid_user-cog.svg";
+import folderPublic from "@/assets/folder-public.svg";
+import folderPrivate from "@/assets/folder-private.svg";
+
+import birdIcon from "@/assets/Bird.svg";
+import editIcon from "@/assets/Edit Icon.svg";
+import Group from "@/assets/Group.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
+
+// Wrapper fetch để tự động refresh token khi gặp 401
+async function fetchWithRefresh(url, options = {}) {
+  const response = await fetch(url, { ...options, credentials: "include" });
+
+  // Nếu token hết hạn
+  if (response.status === 401) {
+    // Gọi refresh token endpoint
+    const refreshResponse = await fetch("http://localhost:3000/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    // Nếu refresh thành công → thử lại request ban đầu
+    if (refreshResponse.ok) {
+      return fetch(url, { ...options, credentials: "include" });
+    }
+  }
+
+  return response;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const {projectId, folderId} = useParams();
+  const { projectId, folderId } = useParams();
   // const location = useLocation();
   const [activeTab, setActiveTab] = useState("folders");
 
@@ -87,6 +127,7 @@ export default function Dashboard() {
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
+  const [folderMode, setFolderMode] = useState("public"); // mặc định public
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -109,7 +150,7 @@ export default function Dashboard() {
         // Wait a bit for all to complete
         setTimeout(() => setIsLoading(false), 1000);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
         setIsLoading(false);
       }
     };
@@ -137,7 +178,10 @@ export default function Dashboard() {
   }, [openFoldersMap]);
 
   useEffect(() => {
-    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
+    localStorage.setItem(
+      "isSidebarCollapsed",
+      JSON.stringify(isSidebarCollapsed)
+    );
   }, [isSidebarCollapsed]);
 
   // Keep sidebar expanded for selected project when navigating into project view
@@ -149,8 +193,8 @@ export default function Dashboard() {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
-    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
   }, [projectId, projects, currentWsId]);
 
   const fetchWorkspaces = () => {
@@ -179,8 +223,8 @@ export default function Dashboard() {
     if (!wsId) return;
 
     fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
-      .then(r => r.json())
-      .then(rData => {
+      .then((r) => r.json())
+      .then((rData) => {
         const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
         setProjects(projectsArr);
 
@@ -191,13 +235,13 @@ export default function Dashboard() {
         projectsArr.forEach((p) => {
           // fetch folders của từng project
           fetch(`${API_ROOT}/folders?project_id=${p.id}`)
-            .then(r => r.json())
-            .then(fData => {
+            .then((r) => r.json())
+            .then((fData) => {
               const fArr = Array.isArray(fData) ? fData : fData.data || [];
-              setFolders(prev => {
+              setFolders((prev) => {
                 const merged = [...prev];
-                fArr.forEach(f => {
-                  if (!merged.some(ff => ff.id === f.id)) {
+                fArr.forEach((f) => {
+                  if (!merged.some((ff) => ff.id === f.id)) {
                     merged.push(f);
                   }
                 });
@@ -207,38 +251,50 @@ export default function Dashboard() {
               // fetch endpoints cho từng folder
               fArr.forEach((f) => {
                 fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
-                  .then(r2 => r2.json())
-                  .then(eData => {
-                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
+                  .then((r2) => r2.json())
+                  .then((eData) => {
+                    const eArr = Array.isArray(eData)
+                      ? eData
+                      : eData.data || [];
 
-                    const withProjectId = eArr.map(e => ({
+                    const withProjectId = eArr.map((e) => ({
                       ...e,
-                      project_id: f.project_id
+                      project_id: f.project_id,
                     }));
 
-                    setEndpoints(prev => {
+                    setEndpoints((prev) => {
                       const merged = [...prev];
-                      withProjectId.forEach(e => {
-                        if (!merged.some(ee => ee.id === e.id)) {
+                      withProjectId.forEach((e) => {
+                        if (!merged.some((ee) => ee.id === e.id)) {
                           merged.push(e);
                         }
                       });
                       return merged;
                     });
                   })
-                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
+                  .catch(() =>
+                    console.error(
+                      `Failed to fetch endpoints for folder ${f.id}`
+                    )
+                  );
               });
             })
-            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
+            .catch(() =>
+              console.error(`Failed to fetch folders for project ${p.id}`)
+            );
         });
       })
-      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
+      .catch(() =>
+        console.error(`Failed to fetch projects for workspace ${wsId}`)
+      );
   };
 
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
-      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
+      const res = await fetch(
+        `${API_ROOT}/project_request_logs?project_id=${pid}`
+      );
       const data = await res.json();
 
       // enrich logs với endpoint + project_id
@@ -246,19 +302,27 @@ export default function Dashboard() {
         data.map(async (log) => {
           if (!log.endpoint_id) return log;
 
-          const endpoint = endpoints.find((ep) => String(ep.id) === String(log.endpoint_id));
+          const endpoint = endpoints.find(
+            (ep) => String(ep.id) === String(log.endpoint_id)
+          );
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
 
           try {
-            const res = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
+            const res = await fetch(
+              `${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`
+            );
             const responses = await res.json();
 
-            const matched = responses.find(r => String(r.id) === String(log.response_id)) || responses[0];
+            const matched =
+              responses.find((r) => String(r.id) === String(log.response_id)) ||
+              responses[0];
 
             return {
               ...log,
               project_id: endpoint ? endpoint.project_id : null, // ✅ bổ sung project_id
-              endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
+              endpointResponseName: matched
+                ? `${endpointName} - ${matched.name}`
+                : endpointName,
             };
           } catch (err) {
             console.error("Error fetching endpoint_responses:", err);
@@ -304,23 +368,30 @@ export default function Dashboard() {
       // Get all endpoints in this folder
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(deleteFolderId));
+      const endpointsToDelete = allEndpoints.filter(
+        (e) => String(e.folder_id) === String(deleteFolderId)
+      );
 
       // Delete all endpoints in the folder first
       await Promise.all(
-        endpointsToDelete.map(e =>
+        endpointsToDelete.map((e) =>
           fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // Delete the folder
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE" });
+      await fetchWithRefresh(`${API_ROOT}/folders/${deleteFolderId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       // Update local state
-      setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
+      setFolders((prev) => prev.filter((f) => f.id !== deleteFolderId));
 
       toast.dismiss();
-      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+      toast.success(
+        `Folder and its ${endpointsToDelete.length} endpoints deleted successfully`
+      );
 
       // If currently viewing the deleted folder, navigate back to project view
       if (folderId === deleteFolderId) {
@@ -330,7 +401,7 @@ export default function Dashboard() {
       setOpenDeleteFolder(false);
       setDeleteFolderId(null);
     } catch (error) {
-      console.error('Delete folder error:', error);
+      console.error("Delete folder error:", error);
       toast.error("Failed to delete folder");
     }
   };
@@ -351,11 +422,13 @@ export default function Dashboard() {
     }
 
     // Check for duplicate folder names in the current project (exclude current folder when editing)
-    const projectFolders = folders.filter(f =>
-      String(f.project_id) === String(projectId) &&
-      f.id !== editingFolderId
+    const projectFolders = folders.filter(
+      (f) =>
+        String(f.project_id) === String(projectId) && f.id !== editingFolderId
     );
-    if (projectFolders.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      projectFolders.some((f) => f.name.toLowerCase() === trimmed.toLowerCase())
+    ) {
       return "Folder name already exists in this project";
     }
 
@@ -365,11 +438,13 @@ export default function Dashboard() {
   const hasChanges = () => {
     if (!editingFolderId) return true; // Always allow create
 
-    const originalFolder = folders.find(f => f.id === editingFolderId);
+    const originalFolder = folders.find((f) => f.id === editingFolderId);
     if (!originalFolder) return true;
 
-    return newFolderName.trim() !== originalFolder.name ||
-      newFolderDesc.trim() !== (originalFolder.description || "");
+    return (
+      newFolderName.trim() !== originalFolder.name ||
+      newFolderDesc.trim() !== (originalFolder.description || "")
+    );
   };
 
   const handleCreateFolder = async () => {
@@ -378,10 +453,12 @@ export default function Dashboard() {
 
     // Check if no changes when editing
     if (editingFolderId) {
-      const originalFolder = folders.find(f => f.id === editingFolderId);
-      if (originalFolder &&
+      const originalFolder = folders.find((f) => f.id === editingFolderId);
+      if (
+        originalFolder &&
         newFolderName.trim() === originalFolder.name &&
-        newFolderDesc.trim() === (originalFolder.description || "")) {
+        newFolderDesc.trim() === (originalFolder.description || "")
+      ) {
         // No changes, just close dialog
         setOpenNewFolder(false);
         setNewFolderName("");
@@ -415,28 +492,35 @@ export default function Dashboard() {
       let response;
       if (editingFolderId) {
         // Update existing folder
-        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingFolderId, ...folderData }),
-        });
+        response = await fetchWithRefresh(
+          `${API_ROOT}/folders/${editingFolderId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ id: editingFolderId, ...folderData }),
+          }
+        );
       } else {
         // Create new folder
-        response = await fetch(`${API_ROOT}/folders`, {
+        response = await fetchWithRefresh(`${API_ROOT}/folders`, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(folderData),
         });
       }
 
       if (!response.ok) {
-        throw new Error('Failed to save folder');
+        throw new Error("Failed to save folder");
       }
 
       const savedFolder = await response.json();
 
       if (editingFolderId) {
-        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
+        setFolders((prev) =>
+          prev.map((f) => (f.id === editingFolderId ? savedFolder : f))
+        );
         toast.success(`Folder "${savedFolder.name}" updated successfully!`);
       } else {
         setFolders((prev) => [...prev, savedFolder]);
@@ -450,8 +534,8 @@ export default function Dashboard() {
       setTargetProjectId(null);
       setOpenNewFolder(false);
     } catch (error) {
-      console.error('Error saving folder:', error);
-      toast.error('Failed to save folder. Please try again.');
+      console.error("Error saving folder:", error);
+      toast.error("Failed to save folder. Please try again.");
     } finally {
       setIsCreatingFolder(false);
     }
@@ -482,7 +566,7 @@ export default function Dashboard() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -493,7 +577,7 @@ export default function Dashboard() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Create workspace successfully!");
         fetchWorkspaces();
       })
@@ -508,7 +592,7 @@ export default function Dashboard() {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -517,7 +601,7 @@ export default function Dashboard() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -536,11 +620,11 @@ export default function Dashboard() {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -605,9 +689,13 @@ export default function Dashboard() {
   let sortedEndpoints = [...filteredEndpoints];
 
   if (sortOption === "Recently created") {
-    sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    sortedEndpoints.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
   } else if (sortOption === "Oldest first") {
-    sortedEndpoints.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    sortedEndpoints.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
   } else if (sortOption === "Alphabetical (A-Z)") {
     sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sortOption === "Alphabetical (Z-A)") {
@@ -625,13 +713,39 @@ export default function Dashboard() {
   // });
   //
   // console.log('🚀 About to render component...');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [showPermission, setShowPermission] = useState(false);
+
+  const popupRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setShowPermission(false);
+      }
+    };
+
+    if (showPermission) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showPermission]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
+          className={`border-slate-100 bg-white transition-all duration-300 ${
+            !isSidebarCollapsed ? "border-r" : "border-none"
+          }`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -658,14 +772,11 @@ export default function Dashboard() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
-
           />
         </aside>
 
         {/* Main Content */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300 "
-        >
+        <main className="pt-8 flex-1 transition-all duration-300 ">
           {/* Top Navbar */}
           <Topbar
             breadcrumb={
@@ -683,12 +794,12 @@ export default function Dashboard() {
                       },
                     ]
                   : [
-                    {
-                      label: currentWorkspace.name,
-                      WORKSPACE_ID: currentWorkspace.id,
-                      href: "/dashboard",
-                    },
-                  ]
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                    ]
                 : []
             }
             onSearch={setSearchTerm}
@@ -701,7 +812,10 @@ export default function Dashboard() {
           {/* Content Area */}
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
-            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
+            ${
+              isSidebarCollapsed
+                ? "w-[calc(100%+16rem)] -translate-x-64"
+                : "w-full"
             }`}
           >
             <div className="flex flex-col">
@@ -709,9 +823,10 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   onClick={() => setActiveTab("folders")}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "folders"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
+                  className={`rounded-none px-6 py-4 -mb-px ${
+                    activeTab === "folders"
+                      ? "border-b-2 border-stone-900 text-stone-900"
+                      : ""
                   }`}
                 >
                   <span className="text-lg">Folders</span>
@@ -722,9 +837,10 @@ export default function Dashboard() {
                     setActiveTab("logs");
                     fetchLogs(projectId);
                   }}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "logs"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
+                  className={`rounded-none px-6 py-4 -mb-px ${
+                    activeTab === "logs"
+                      ? "border-b-2 border-stone-900 text-stone-900"
+                      : ""
                   }`}
                 >
                   <span className="text-lg">Logs</span>
@@ -735,33 +851,369 @@ export default function Dashboard() {
                 <>
                   {/* Folder List */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 px-8">
-                    {folders.filter(f => String(f.project_id) === String(projectId)).length === 0 ? (
+                    {folders.filter(
+                      (f) => String(f.project_id) === String(projectId)
+                    ).length === 0 ? (
                       <div className="col-span-full text-center text-slate-500 py-8">
                         No folders found in this project.
                       </div>
                     ) : (
                       folders
-                        .filter(f => String(f.project_id) === String(projectId))
+                        .filter(
+                          (f) => String(f.project_id) === String(projectId)
+                        )
                         .map((folder) => (
                           <div
                             key={folder.id}
-                            className="flex flex-col items-center cursor-pointer hover:opacity-80"
-                            onClick={() =>
-                              navigate(`/dashboard/${projectId}/folder/${folder.id}`)
-                            }
+                            className="relative flex flex-col items-center group"
                           >
+                            {/* Folder Image */}
                             <img
                               src={blueFolder}
                               alt="Folder"
-                              className="w-32 h-18"
+                              className="w-32 h-18 cursor-pointer hover:opacity-80"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/${projectId}/folder/${folder.id}`
+                                )
+                              }
                             />
                             <span className="mt-1 text-sm font-medium text-gray-800 text-center">
                               {folder.name}
                             </span>
+
+                            {/* === Dropdown Menu (Actions) === */}
+                            <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 rounded-full hover:bg-gray-100">
+                                    <MoreVertical className="w-5 h-5 text-gray-600" />
+                                  </button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-44"
+                                >
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFolder(folder);
+                                      setNewFolderName(folder.name);
+                                      setEditDialogOpen(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={editIcon}
+                                      alt="edit"
+                                      className="w-4 h-4"
+                                    />
+                                    Edit
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFolder(folder);
+                                      setShowPermission(true);
+                                    }}
+                                  >
+                                    <img src={Group} className="w-4 h-4" />{" "}
+                                    Folder Permission
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFolder(folder);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={deleteIcon}
+                                      alt="delete"
+                                      className="w-4 h-4"
+                                    />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         ))
                     )}
                   </div>
+
+                  {/* === Edit Folder Dialog === */}
+                  <Dialog
+                    open={editDialogOpen}
+                    onOpenChange={setEditDialogOpen}
+                  >
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Edit Folder</DialogTitle>
+                      </DialogHeader>
+
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor="folderName">Name</Label>
+                        <Input
+                          id="folderName"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          placeholder="Enter folder name..."
+                        />
+                      </div>
+
+                      <DialogFooter className="mt-4 flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setEditDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={async () => {
+                            try {
+                              const res = await fetchWithRefresh(
+                                `${API_ROOT}/folders/${selectedFolder.id}`,
+                                {
+                                  method: "PUT",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  credentials: "include",
+                                  body: JSON.stringify({ name: newFolderName }),
+                                }
+                              );
+
+                              if (!res.ok)
+                                throw new Error("Failed to update folder");
+
+                              setFolders((prev) =>
+                                prev.map((f) =>
+                                  f.id === selectedFolder.id
+                                    ? { ...f, name: newFolderName }
+                                    : f
+                                )
+                              );
+
+                              toast.success("Folder updated successfully!");
+                              setEditDialogOpen(false);
+                            } catch (err) {
+                              toast.error("Failed to update folder!");
+                            }
+                          }}
+                        >
+                          Update
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* === Delete Confirmation Dialog === */}
+                  <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                  >
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Delete Folder</DialogTitle>
+                      </DialogHeader>
+
+                      <p className="mt-2 text-gray-600">
+                        Are you sure you want to delete{" "}
+                        <span className="font-semibold">
+                          {selectedFolder?.name}
+                        </span>
+                        ?<br />
+                        <span className="text-red-500 text-sm">
+                          This action cannot be undone.
+                        </span>
+                      </p>
+
+                      <DialogFooter className="mt-4 flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setDeleteDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={async () => {
+                            try {
+                              if (!selectedFolder?.id)
+                                throw new Error("No folder selected");
+
+                              const res = await fetch(
+                                `${API_ROOT}/folders/${selectedFolder.id}`,
+                                {
+                                  method: "DELETE",
+                                  credentials: "include",
+                                }
+                              );
+
+                              if (!res.ok)
+                                throw new Error("Failed to delete folder");
+
+                              setFolders((prev) =>
+                                prev.filter((f) => f.id !== selectedFolder.id)
+                              );
+
+                              toast.success("Folder deleted successfully!");
+                              setDeleteDialogOpen(false);
+                            } catch (err) {
+                              toast.error("Failed to delete folder!");
+                              console.error(err);
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* === Folder Permission Popup === */}
+                  {showPermission && (
+                    <div
+                      ref={popupRef}
+                      className="absolute right-[0px] top-12 w-[540px] bg-neutral-100 rounded-2xl shadow-2xl border border-gray-300 p-6 z-50"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <img
+                          src={userCogIcon}
+                          alt="User cog icon"
+                          className="w-6 h-6 text-gray-700"
+                        />
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Users Permission
+                        </h3>
+                      </div>
+
+                      {/* User Info */}
+                      <div className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={birdIcon}
+                            alt="User avatar"
+                            className="w-7 h-7 object-contain"
+                          />
+                          <div>
+                            <div className="font-semibold text-[16px]">
+                              adminteknix
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              teknixcorp@gmail.com
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-700 underline">
+                          Owner
+                        </div>
+                      </div>
+
+                      {/* Folder Protection */}
+                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
+                        <span className="text-gray-700 font-medium">
+                          Data in this folder is protected
+                        </span>
+                        <div className="flex items-center">
+                          <button
+                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+                              folderMode === "public"
+                                ? "bg-white text-black"
+                                : "bg-gray-300 text-gray-500"
+                            }`}
+                            onClick={() => setFolderMode("public")}
+                          >
+                            <img
+                              src={folderPublic}
+                              alt="Public folder"
+                              className="w-4 h-4"
+                            />
+                            <span className="text-xs font-semibold">
+                              Public
+                            </span>
+                          </button>
+                          <button
+                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
+                              folderMode === "private"
+                                ? "bg-white text-black"
+                                : "bg-gray-300 text-gray-500"
+                            }`}
+                            onClick={() => setFolderMode("private")}
+                          >
+                            <img
+                              src={folderPrivate}
+                              alt="Private folder"
+                              className="w-4 h-4"
+                            />
+                            <span className="text-xs font-semibold">
+                              Private
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Permissions Table */}
+                      <div className="border-t border-gray-300 pt-4 mt-4">
+                        <div className="font-semibold text-gray-900 text-[16px] mb-3">
+                          Your Permissions
+                        </div>
+                        <div className="border bg-white border-gray-300 rounded-xl">
+                          <div className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
+                            <span>Permissions</span>
+                            <span className="text-center">Allowed</span>
+                            <span className="text-center">No Allowed</span>
+                          </div>
+
+                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+                            <span>Set folder mode</span>
+                            <div className="flex justify-center">
+                              <input
+                                type="radio"
+                                name="setMode"
+                                defaultChecked
+                                className="accent-black"
+                              />
+                            </div>
+                            <div className="flex justify-center">
+                              <input
+                                type="radio"
+                                name="setMode"
+                                className="accent-black"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+                            <span>Sharing Data</span>
+                            <div className="flex justify-center">
+                              <input
+                                type="radio"
+                                name="sharing"
+                                className="accent-black"
+                                checked={folderMode === "public"}
+                                readOnly
+                              />
+                            </div>
+                            <div className="flex justify-center">
+                              <input
+                                type="radio"
+                                name="sharing"
+                                className="accent-black"
+                                checked={folderMode === "private"}
+                                readOnly
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : activeTab === "logs" ? (
                 <>
@@ -775,10 +1227,12 @@ export default function Dashboard() {
                           onValueChange={setMethodFilter}
                         >
                           <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Methods"/>
+                            <SelectValue placeholder="All Methods" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="All Methods">All Methods</SelectItem>
+                            <SelectItem value="All Methods">
+                              All Methods
+                            </SelectItem>
                             <SelectItem value="GET">GET</SelectItem>
                             <SelectItem value="POST">POST</SelectItem>
                             <SelectItem value="PUT">PUT</SelectItem>
@@ -792,10 +1246,12 @@ export default function Dashboard() {
                           onValueChange={setStatusFilter}
                         >
                           <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Status"/>
+                            <SelectValue placeholder="All Status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="All Status">All Status</SelectItem>
+                            <SelectItem value="All Status">
+                              All Status
+                            </SelectItem>
                             <SelectItem value="200">200</SelectItem>
                             <SelectItem value="400">400</SelectItem>
                             <SelectItem value="404">404</SelectItem>
@@ -809,7 +1265,7 @@ export default function Dashboard() {
                           onValueChange={setTimeFilter}
                         >
                           <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="All time"/>
+                            <SelectValue placeholder="All time" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="All time">All time</SelectItem>
@@ -835,7 +1291,10 @@ export default function Dashboard() {
                           />
                           Export
                         </Button>
-                        <Button variant="outline" onClick={() => fetchLogs(projectId)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => fetchLogs(projectId)}
+                        >
                           <img
                             src={refreshIcon}
                             alt="Refresh Icon"
@@ -849,7 +1308,9 @@ export default function Dashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="col-span-3">Timestamp</TableHead>
+                          <TableHead className="col-span-3">
+                            Timestamp
+                          </TableHead>
                           <TableHead className="col-span-1">Method</TableHead>
                           <TableHead className="col-span-2">Path</TableHead>
                           <TableHead className="col-span-2">Latency</TableHead>
@@ -880,7 +1341,9 @@ export default function Dashboard() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
+                          paginatedLogs.map((log, i) => (
+                            <LogCard key={i} log={log} />
+                          ))
                         )}
                       </TableBody>
                     </Table>
@@ -896,7 +1359,7 @@ export default function Dashboard() {
                           }}
                         >
                           <SelectTrigger className="w-[80px]">
-                            <SelectValue/>
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {[5, 10, 20, 50].map((size) => (
@@ -987,9 +1450,7 @@ export default function Dashboard() {
 
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent
-          className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
-        >
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
           <DialogHeader className="pb-2">
             <DialogTitle className="text-lg font-semibold text-gray-900">
               {editingFolderId ? "Edit Folder" : "New Folder"}
@@ -998,7 +1459,10 @@ export default function Dashboard() {
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
+              <Label
+                htmlFor="folder-name"
+                className="text-sm font-medium text-gray-700"
+              >
                 Name
               </Label>
               <Input
@@ -1009,7 +1473,11 @@ export default function Dashboard() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
+                  if (
+                    e.key === "Enter" &&
+                    newFolderName.trim() &&
+                    !isCreatingFolder
+                  ) {
                     e.preventDefault();
                     if (hasChanges()) {
                       handleCreateFolder();
@@ -1021,7 +1489,7 @@ export default function Dashboard() {
                       setEditingFolderId(null);
                     }
                   }
-                  if (e.key === 'Escape') {
+                  if (e.key === "Escape") {
                     e.preventDefault();
                     setOpenNewFolder(false);
                     setNewFolderName("");
@@ -1048,10 +1516,18 @@ export default function Dashboard() {
             </Button>
             <Button
               onClick={handleCreateFolder}
-              disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
+              disabled={
+                !newFolderName.trim() || !hasChanges() || isCreatingFolder
+              }
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
             >
-              {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
+              {isCreatingFolder
+                ? editingFolderId
+                  ? "Updating..."
+                  : "Creating..."
+                : editingFolderId
+                ? "Update"
+                : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1070,10 +1546,7 @@ export default function Dashboard() {
             Are you sure you want to delete this workspace and all its projects?
           </p>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteWs(null)}
-            >
+            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
             </Button>
             <Button
@@ -1100,7 +1573,8 @@ export default function Dashboard() {
 
           <div className="py-2">
             <p className="text-sm text-gray-600">
-              Are you sure you want to delete this folder and all its endpoints? This action cannot be undone.
+              Are you sure you want to delete this folder and all its endpoints?
+              This action cannot be undone.
             </p>
           </div>
 

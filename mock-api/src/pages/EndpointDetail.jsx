@@ -148,39 +148,70 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
-      // Đảm bảo luôn có field "id"
-      const schemaWithId = {
-        id: { type: "number", required: false },
-        ...endpointData.schema,
-      };
+      if (method === "GET") {
+        // For GET, schema is { fields: [...] }
+        const fields = endpointData.schema.fields || [];
 
-      const fields = Object.entries(schemaWithId).map(
-        ([name, config], index) => ({
+        // Ensure "id" is always included
+        const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
+
+        const fieldsConfig = schemaWithId.map((name, index) => ({
           id: `field-${index}`,
           name,
-          type: config.type || "string",
-          required: config.required !== undefined ? config.required : false,
-          isDefault: name === "id", // Đánh dấu field id là mặc định
-        })
-      );
-      setSchemaFields(fields);
+          type: "string", // Type doesn't matter for GET
+          required: false, // Required doesn't matter for GET
+          isDefault: name === "id",
+        }));
+
+        setSchemaFields(fieldsConfig);
+      } else {
+        // For POST/PUT, schema is { field: { type, required }, ... }
+        // Đảm bảo luôn có field "id"
+        const schemaWithId = {
+          id: { type: "number", required: false },
+          ...endpointData.schema,
+        };
+
+        const fields = Object.entries(schemaWithId).map(
+          ([name, config], index) => ({
+            id: `field-${index}`,
+            name,
+            type: config.type || "string",
+            required: config.required !== undefined ? config.required : false,
+            isDefault: name === "id",
+          })
+        );
+        setSchemaFields(fields);
+      }
     } else {
-      // Nếu không có schema, khởi tạo với field id mặc định
-      const defaultSchema = {
-        id: { type: "number", required: false },
-      };
-      const fields = Object.entries(defaultSchema).map(
-        ([name, config], index) => ({
+      // Initialize with default schema
+      if (method === "GET") {
+        const defaultSchema = { fields: ["id"] };
+        const fieldsConfig = defaultSchema.fields.map((name, index) => ({
           id: `field-${index}`,
           name,
-          type: config.type || "string",
-          required: config.required !== undefined ? config.required : false,
-          isDefault: true,
-        })
-      );
-      setSchemaFields(fields);
+          type: "string",
+          required: false,
+          isDefault: name === "id",
+        }));
+        setSchemaFields(fieldsConfig);
+      } else {
+        const defaultSchema = {
+          id: { type: "number", required: false },
+        };
+        const fields = Object.entries(defaultSchema).map(
+          ([name, config], index) => ({
+            id: `field-${index}`,
+            name,
+            type: config.type || "string",
+            required: config.required !== undefined ? config.required : false,
+            isDefault: true,
+          })
+        );
+        setSchemaFields(fields);
+      }
     }
-  }, [endpointData]);
+  }, [endpointData, method]);
 
   const validateField = (field) => {
     // Không validate field mặc định hoặc khi method là GET
@@ -315,18 +346,29 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    const schema = {};
+    if (method === "GET") {
+      // For GET, return { fields: [...] } format
+      const fields = schemaFields
+        .filter((field) => field.name.trim() && !field.isDefault)
+        .map((field) => field.name);
 
-    schemaFields.forEach((field) => {
-      if (field.name.trim()) {
-        schema[field.name] = {
-          type: field.type,
-          required: method === "GET" ? false : field.required,
-        };
-      }
-    });
+      // Always include "id" for GET
+      return { fields: ["id", ...fields] };
+    } else {
+      // For POST/PUT, return { field: { type, required }, ... } format
+      const schema = {};
 
-    return schema;
+      schemaFields.forEach((field) => {
+        if (field.name.trim()) {
+          schema[field.name] = {
+            type: field.type,
+            required: field.required,
+          };
+        }
+      });
+
+      return schema;
+    }
   };
 
   const handleSave = () => {
@@ -357,25 +399,27 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
           </h1>
         </div>
         {/* Thêm thanh header cho Schema Definition */}
-        <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
-          <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
-            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-              Field Name
-            </span>
-          </div>
-          <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
-            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-              Type
-            </span>
-          </div>
-          {method !== "GET" && (
-            <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
+        {method !== "GET" && (
+          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
               <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Required
+                Field Name
               </span>
             </div>
-          )}
-        </div>
+            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Type
+              </span>
+            </div>
+            {method !== "GET" && (
+              <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
+                <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                  Required
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="space-y-4">
           {schemaFields.map((field) => (
             <div
@@ -387,70 +431,106 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
                   : "border-slate-300"
               } ${field.isDefault ? "bg-gray-50" : ""}`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-[220px]">
-                  <Input
-                    value={field.name}
-                    onChange={(e) =>
-                      !field.isDefault &&
-                      method !== "GET" &&
-                      handleNameChange(field.id, e.target.value)
-                    }
-                    className={`w-full ${
-                      field.isDefault || method === "GET"
-                        ? "bg-gray-100 cursor-not-allowed"
-                        : ""
-                    } ${errors[field.id]?.name ? "border-red-500" : ""}`}
-                    placeholder="Field name"
-                    disabled={field.isDefault || method === "GET"}
-                  />
-                </div>
+              {method !== "GET" ? (
+                // POST/PUT method UI
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-[220px]">
+                    <Input
+                      value={field.name}
+                      onChange={(e) =>
+                        !field.isDefault &&
+                        method !== "GET" &&
+                        handleNameChange(field.id, e.target.value)
+                      }
+                      className={`w-full ${
+                        field.isDefault || method === "GET"
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : ""
+                      } ${errors[field.id]?.name ? "border-red-500" : ""}`}
+                      placeholder="Field name"
+                      disabled={field.isDefault || method === "GET"}
+                    />
+                  </div>
 
-                <div className="w-[220px]">
-                  <Select
-                    value={field.type}
-                    onValueChange={(value) =>
-                      !field.isDefault &&
-                      method !== "GET" &&
-                      handleTypeChange(field.id, value)
-                    }
-                    disabled={field.isDefault || method === "GET"}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="string">string</SelectItem>
-                      <SelectItem value="number">number</SelectItem>
-                      <SelectItem value="boolean">boolean</SelectItem>
-                      <SelectItem value="array">array</SelectItem>
-                      <SelectItem value="object">object</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {method !== "GET" && (
-                  <div className="w-[170px]">
+                  <div className="w-[220px]">
                     <Select
-                      value={field.required.toString()}
+                      value={field.type}
                       onValueChange={(value) =>
                         !field.isDefault &&
-                        handleRequiredChange(field.id, value)
+                        method !== "GET" &&
+                        handleTypeChange(field.id, value)
                       }
-                      disabled={field.isDefault}
+                      disabled={field.isDefault || method === "GET"}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Required" />
+                        <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="true">true</SelectItem>
-                        <SelectItem value="false">false</SelectItem>
+                        <SelectItem value="string">string</SelectItem>
+                        <SelectItem value="number">number</SelectItem>
+                        <SelectItem value="boolean">boolean</SelectItem>
+                        <SelectItem value="array">array</SelectItem>
+                        <SelectItem value="object">object</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                {method !== "GET" && (
+                  {method !== "GET" && (
+                    <div className="w-[170px]">
+                      <Select
+                        value={field.required.toString()}
+                        onValueChange={(value) =>
+                          !field.isDefault &&
+                          handleRequiredChange(field.id, value)
+                        }
+                        disabled={field.isDefault}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Required" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">true</SelectItem>
+                          <SelectItem value="false">false</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {method !== "GET" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteField(field.id);
+                      }}
+                      disabled={field.isDefault}
+                    >
+                      <Trash2
+                        className={`w-4 h-4 ${
+                          field.isDefault ? "text-gray-400" : ""
+                        }`}
+                      />
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                // GET method UI
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-[220px]">
+                    <Input
+                      value={field.name}
+                      onChange={(e) =>
+                        !field.isDefault &&
+                        handleNameChange(field.id, e.target.value)
+                      }
+                      className={`w-full ${
+                        field.isDefault ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
+                      placeholder="Field name"
+                      disabled={field.isDefault}
+                    />
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -466,8 +546,8 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
                       }`}
                     />
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Hiển thị lỗi */}
               {errors[field.id]?.name && (
@@ -497,7 +577,8 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
             <div className="relative w-full h-[65px]">
               <div className="absolute w-full h-[35px] border border-[#CBD5E1] rounded-[6px]">
                 <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
-                  3 fields selected
+                  {schemaFields.filter((f) => !f.isDefault).length} fields
+                  selected
                 </span>
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-2.5 border-t border-r border-[#CBD5E1] rotate-45"></div>
               </div>
@@ -1125,17 +1206,12 @@ const DashboardPage = () => {
       schema: newSchema,
     };
 
-    // Sử dụng endpoint mới cho schema operations
-    fetch(
-      `${API_ROOT}/endpoint_schema?path=${encodeURIComponent(
-        endpointData.path
-      )}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    )
+    // Sử dụng endpoint đúng theo yêu cầu
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
