@@ -107,6 +107,43 @@ export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("All time");
 const [folderMode, setFolderMode] = useState("public"); // mặc định public
 const [newFolderMode, setNewFolderMode] = useState("");
+const [selectedFolder, setSelectedFolder] = useState(null);
+const [folderOwner, setFolderOwner] = useState(""); // username của owner
+const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
+useEffect(() => {
+  if (!selectedFolder?.id) return; // nếu chưa có folder thì thôi
+
+  // --- Lấy owner ---
+  const fetchOwner = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/folders/getOwner/${selectedFolder.id}`, {
+        credentials: "include", // nếu cần gửi cookie
+      });
+      const data = await res.json();
+      setFolderOwner(data.username || "Unknown");
+    } catch (err) {
+      console.error("Error fetching folder owner:", err);
+      setFolderOwner("Unknown");
+    }
+  };
+
+  // --- Kiểm tra user hiện tại có phải owner ---
+  const checkOwner = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/folders/checkOwner/${selectedFolder.id}`, {
+        credentials: "include", // gửi cookie JWT
+      });
+      const data = await res.json();
+      setIsOwner(data.success); // success = true → là owner
+    } catch (err) {
+      console.error("Error checking folder owner:", err);
+      setIsOwner(false);
+    }
+  };
+
+  fetchOwner();
+  checkOwner();
+}, [selectedFolder]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -649,8 +686,9 @@ const [newFolderMode, setNewFolderMode] = useState("");
   // console.log('🚀 About to render component...');
 const [editDialogOpen, setEditDialogOpen] = useState(false);
 const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-const [selectedFolder, setSelectedFolder] = useState(null);
+
 const [showPermission, setShowPermission] = useState(false);
+
 
 const popupRef = useRef(null);
 
@@ -987,13 +1025,15 @@ useEffect(() => {
           className="w-7 h-7 object-contain"
         />
         <div>
-          <div className="font-semibold text-[16px]">adminteknix</div>
+          <div className="font-semibold text-[16px]">
+  {folderOwner || "Unknown"}
+</div>
           
         </div>
       </div>
       <div className="text-sm font-semibold text-gray-700 underline">
-        Owner
-      </div>
+  {isOwner ? "Owner" : "Viewer"}
+</div>
     </div>
 
     {/* Folder Protection */}
