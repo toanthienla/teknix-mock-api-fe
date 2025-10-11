@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
-import { MoreVertical, Pencil, Trash2, Users } from "lucide-react";
+import { MoreVertical} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,6 +106,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
 const [folderMode, setFolderMode] = useState("public"); // mặc định public
+const [newFolderMode, setNewFolderMode] = useState("");
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -333,7 +334,7 @@ const [folderMode, setFolderMode] = useState("public"); // mặc định public
       );
 
       // Delete the folder
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, { method: "DELETE",credentials: "include", });
 
       // Update local state
       setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
@@ -436,6 +437,7 @@ const [folderMode, setFolderMode] = useState("public"); // mặc định public
         // Update existing folder
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editingFolderId, ...folderData }),
         });
@@ -443,6 +445,7 @@ const [folderMode, setFolderMode] = useState("public"); // mặc định public
         // Create new folder
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(folderData),
         });
@@ -669,6 +672,7 @@ useEffect(() => {
   };
 }, [showPermission]);
 
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -880,6 +884,7 @@ useEffect(() => {
           try {
             const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
               method: "PUT",
+              credentials: "include",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name: newFolderName }),
             });
@@ -932,6 +937,7 @@ useEffect(() => {
 
             const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
               method: "DELETE",
+              credentials: "include",
             });
 
             if (!res.ok) throw new Error("Failed to delete folder");
@@ -982,9 +988,7 @@ useEffect(() => {
         />
         <div>
           <div className="font-semibold text-[16px]">adminteknix</div>
-          <div className="text-sm text-gray-500">
-            teknixcorp@gmail.com
-          </div>
+          
         </div>
       </div>
       <div className="text-sm font-semibold text-gray-700 underline">
@@ -994,30 +998,41 @@ useEffect(() => {
 
     {/* Folder Protection */}
     <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
-      <span className="text-gray-700 font-medium">
-        Data in this folder is protected
-      </span>
-     <div className="flex items-center">
-  <button
-    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
-      folderMode === "public" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
-    }`}
-    onClick={() => setFolderMode("public")}
-  >
-    <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
-    <span className="text-xs font-semibold">Public</span>
-  </button>
-  <button
-    className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
-      folderMode === "private" ? "bg-white text-black" : "bg-gray-300 text-gray-500"
-    }`}
-    onClick={() => setFolderMode("private")}
-  >
-    <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
-    <span className="text-xs font-semibold">Private</span>
-  </button>
-</div>
+      <div className="flex items-center gap-2 text-gray-700 font-medium">
+       
+        <span>
+          Data in folder{" "}
+          <span className="font-semibold text-black-700">
+            {selectedFolder?.name || "this folder"}
+          </span>{" "}
+          is protected
+        </span>
+      </div>
 
+      <div className="flex items-center">
+        <button
+          className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+            folderMode === "public"
+              ? "bg-white text-black"
+              : "bg-gray-300 text-gray-500"
+          }`}
+          onClick={() => setFolderMode("public")}
+        >
+          <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
+          <span className="text-xs font-semibold">Public</span>
+        </button>
+        <button
+          className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
+            folderMode === "private"
+              ? "bg-white text-black"
+              : "bg-gray-300 text-gray-500"
+          }`}
+          onClick={() => setFolderMode("private")}
+        >
+          <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
+          <span className="text-xs font-semibold">Private</span>
+        </button>
+      </div>
     </div>
 
     {/* Permissions Table */}
@@ -1042,28 +1057,27 @@ useEffect(() => {
           </div>
         </div>
 
-       <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-  <span>Sharing Data</span>
-  <div className="flex justify-center">
-    <input
-      type="radio"
-      name="sharing"
-      className="accent-black"
-      checked={folderMode === "public"}
-      readOnly
-    />
-  </div>
-  <div className="flex justify-center">
-    <input
-      type="radio"
-      name="sharing"
-      className="accent-black"
-      checked={folderMode === "private"}
-      readOnly
-    />
-  </div>
-</div>
-
+        <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
+          <span>Sharing Data</span>
+          <div className="flex justify-center">
+            <input
+              type="radio"
+              name="sharing"
+              className="accent-black"
+              checked={folderMode === "public"}
+              readOnly
+            />
+          </div>
+          <div className="flex justify-center">
+            <input
+              type="radio"
+              name="sharing"
+              className="accent-black"
+              checked={folderMode === "private"}
+              readOnly
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1294,77 +1308,112 @@ useEffect(() => {
         </DialogContent>
       </Dialog>
 
-      {/* New Folder Dialog */}
-      <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent
-          className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
-        >
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              {editingFolderId ? "Edit Folder" : "New Folder"}
-            </DialogTitle>
-          </DialogHeader>
+     {/* New Folder Dialog */}
+<Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
+  <DialogContent
+    className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
+  >
+    <DialogHeader className="pb-2">
+      <DialogTitle className="text-lg font-semibold text-gray-900">
+        {editingFolderId ? "Edit Folder" : "New Folder"}
+      </DialogTitle>
+    </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
-                Name
-              </Label>
-              <Input
-                id="folder-name"
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
-                    e.preventDefault();
-                    if (hasChanges()) {
-                      handleCreateFolder();
-                    } else {
-                      // No changes, just close dialog
-                      setOpenNewFolder(false);
-                      setNewFolderName("");
-                      setNewFolderDesc("");
-                      setEditingFolderId(null);
-                    }
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setOpenNewFolder(false);
-                    setNewFolderName("");
-                    setNewFolderDesc("");
-                    setEditingFolderId(null);
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="pt-4 flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => {
+    <div className="space-y-4 py-2">
+      {/* Folder Name */}
+      <div className="space-y-2">
+        <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
+          Name
+        </Label>
+        <Input
+          id="folder-name"
+          placeholder="Enter folder name"
+          value={newFolderName}
+          onChange={(e) => setNewFolderName(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
+              e.preventDefault();
+              if (hasChanges()) {
+                handleCreateFolder();
+              } else {
+                // No changes, just close dialog
                 setOpenNewFolder(false);
                 setNewFolderName("");
                 setNewFolderDesc("");
                 setEditingFolderId(null);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateFolder}
-              disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
-            >
-              {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              }
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setOpenNewFolder(false);
+              setNewFolderName("");
+              setNewFolderDesc("");
+              setEditingFolderId(null);
+            }
+          }}
+        />
+      </div>
+
+      {/* 🔥 Folder Mode */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-700">Folder Mode</Label>
+        <div className="flex items-center gap-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="folderMode"
+              value="public"
+              checked={newFolderMode === "public"}
+              onChange={() => setNewFolderMode("public")}
+              className="accent-blue-600"
+            />
+            <span>Public</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="folderMode"
+              value="private"
+              checked={newFolderMode === "private"}
+              onChange={() => setNewFolderMode("private")}
+              className="accent-blue-600"
+            />
+            <span>Private</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter className="pt-4 flex gap-2">
+      <Button
+        variant="ghost"
+        onClick={() => {
+          setOpenNewFolder(false);
+          setNewFolderName("");
+          setNewFolderDesc("");
+          setNewFolderMode(""); // ✅ reset mode
+          setEditingFolderId(null);
+        }}
+        className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        Cancel
+      </Button>
+
+      <Button
+        onClick={handleCreateFolder}
+        disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
+        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+      >
+        {isCreatingFolder
+          ? (editingFolderId ? "Updating..." : "Creating...")
+          : (editingFolderId ? "Update" : "Create")}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
 
       {/* Confirm Delete Workspace */}
       <Dialog
