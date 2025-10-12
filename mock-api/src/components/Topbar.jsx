@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
-import { API_ROOT } from "@/utils/constants";
+import React, {useState, useRef, useEffect} from "react";
+import {API_ROOT} from "@/utils/constants";
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {Search} from "lucide-react";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import addIcon from "@/assets/Add.svg";
-import { Badge } from "@/components/ui/badge.jsx";
 import {
   Select,
   SelectContent,
@@ -26,36 +25,37 @@ import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
 import frameIcon from "@/assets/Frame.svg";
 import birdIcon from "@/assets/Bird.svg";
+import {toast} from "react-toastify";
 
-const StateModeToggle = ({ isStateful, onToggle }) => {
-  return (
-    <div
-      className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
-      onClick={onToggle}
-    >
-      <div className="flex flex-row items-center w-[60px] h-[30px]">
-        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
-          {isStateful ? "Stateful" : "Stateless"}
-        </span>
-      </div>
-      <div className="relative w-[60px] h-[30px]">
-        <div
-          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-            isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-          }`}
-        >
-          <div
-            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-              isStateful ? "left-[32px]" : "left-[3px]"
-            }`}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
+// const StateModeToggle = ({isStateful, onToggle}) => {
+//   return (
+//     <div
+//       className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+//       onClick={onToggle}
+//     >
+//       <div className="flex flex-row items-center w-[60px] h-[30px]">
+//         <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+//           {isStateful ? "Stateful" : "Stateless"}
+//         </span>
+//       </div>
+//       <div className="relative w-[60px] h-[30px]">
+//         <div
+//           className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+//             isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+//           }`}
+//         >
+//           <div
+//             className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+//               isStateful ? "left-[32px]" : "left-[3px]"
+//             }`}
+//           />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
-const StateModeDropdown = ({ isStateful, onStateModeChange }) => {
+const StateModeDropdown = ({isStateful, onStateModeChange}) => {
   return (
     <Select
       value={isStateful ? "stateful" : "stateless"}
@@ -69,7 +69,7 @@ const StateModeDropdown = ({ isStateful, onStateModeChange }) => {
       }}
     >
       <SelectTrigger className="w-[140px] h-10 border-[#CBD5E1]">
-        <SelectValue placeholder="Mode" />
+        <SelectValue placeholder="Mode"/>
       </SelectTrigger>
       <SelectContent>
         <SelectItem
@@ -92,21 +92,21 @@ const StateModeDropdown = ({ isStateful, onStateModeChange }) => {
 };
 
 export default function Topbar({
-  breadcrumb = [],
-  onSearch,
-  onNewProject,
-  onNewFolder,
-  onNewResponse,
-  showNewProjectButton,
-  showNewFolderButton,
-  showNewResponseButton,
-  showStateModeToggle,
-  showSettingsButton,
-  onOpenSettings,
-  isStateful,
-  onStateModeChange,
-   currentFolder, // 👈 thêm prop này
-}) {
+                                 breadcrumb = [],
+                                 onSearch,
+                                 onNewProject,
+                                 onNewFolder,
+                                 onNewResponse,
+                                 showNewProjectButton,
+                                 showNewFolderButton,
+                                 showNewResponseButton,
+                                 showStateModeToggle,
+                                 showSettingsButton,
+                                 onOpenSettings,
+                                 isStateful,
+                                 onStateModeChange,
+                                 currentFolder,
+                               }) {
   const [query, setQuery] = useState("");
   const [showPermission, setShowPermission] = useState(false);
   const settingsRef = useRef(null);
@@ -114,47 +114,61 @@ export default function Topbar({
 
   const [folderMode, setFolderMode] = useState("public");
   const [selectedFolder, setSelectedFolder] = useState(null);
-const [folderOwner, setFolderOwner] = useState(""); // username của owner
-const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
-const [isLoadingOwner, setIsLoadingOwner] = useState(false);
+  const [folderOwner, setFolderOwner] = useState(""); // username của owner
+  const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
 
-
-useEffect(() => {
-  if (currentFolder?.id) {
-    setSelectedFolder(currentFolder);
-    fetchFolderOwner(currentFolder.id); // ✅ gọi API lấy owner
-  }
-}, [currentFolder]);
-
-
-
-const fetchFolderOwner = async (folderId) => {
-  try {
-    const res = await fetch(`${API_ROOT}/folders/getOwner/${folderId}`, {
-  method: "GET",
-  credentials: "include", // ✅ gửi cookie JWT theo request
-});
-
-
-    if (!res.ok) throw new Error("Failed to fetch folder owner");
-    const data = await res.json();
-
-    if (data?.username) {
-      setFolderOwner(data.username);
-    } else {
-      setFolderOwner("Unknown");
+  useEffect(() => {
+    if (currentFolder?.id) {
+      setSelectedFolder(currentFolder);
     }
-  } catch (err) {
-    console.error("Error fetching folder owner:", err);
-    setFolderOwner("Unknown");
-  }
-};
+  }, [currentFolder]);
 
+  // 🔹 Khi có selectedFolder → fetch thông tin owner và quyền
+  useEffect(() => {
+    if (!selectedFolder?.id || !showPermission) return;
 
+    const fetchFolderDetail = async () => {
+      try {
+        const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setFolderMode(data.is_public ? "public" : "private");
+      } catch (err) {
+        console.error("Failed to fetch folder detail:", err);
+      }
+    };
 
+    const fetchOwner = async () => {
+      try {
+        const res = await fetch(`${API_ROOT}/folders/getOwner/${selectedFolder.id}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setFolderOwner(data.username || "Unknown");
+      } catch (err) {
+        console.error("Error fetching folder owner:", err);
+        setFolderOwner("Unknown");
+      }
+    };
 
+    const checkOwner = async () => {
+      try {
+        const res = await fetch(`${API_ROOT}/folders/checkOwner/${selectedFolder.id}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setIsOwner(data.success);
+      } catch (err) {
+        console.error("Error checking folder owner:", err);
+        setIsOwner(false);
+      }
+    };
 
-
+    fetchFolderDetail();
+    fetchOwner();
+    checkOwner();
+  }, [selectedFolder, showPermission]);
 
   // 🔹 Đóng popup khi click ra ngoài
   useEffect(() => {
@@ -170,6 +184,25 @@ const fetchFolderOwner = async (folderId) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleChangeFolderMode = async (mode) => {
+    if (!selectedFolder?.id) return;
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({is_public: mode === "public"}),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder mode");
+      setFolderMode(mode);
+      toast.success(`Folder is now ${mode.toUpperCase()}!`);
+    } catch (err) {
+      toast.error("Failed to update folder mode!");
+      console.error(err);
+    }
+  };
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -299,18 +332,18 @@ const fetchFolderOwner = async (folderId) => {
         {/* ⚙️ Settings + Permission Popup */}
         {showSettingsButton && (
           <div className="relative">
-           <Button
-  ref={settingsRef}
-  variant="ghost"
-  size="lg"
-  onClick={() => setShowPermission((v) => !v)}
-  className="p-0 hover:bg-transparent focus-visible:ring-0"
->
-  <img src={frameIcon} alt="Settings" className="w-7 h-7 object-contain" />
-</Button>
+            <Button
+              ref={settingsRef}
+              variant="ghost"
+              size="lg"
+              onClick={() => setShowPermission((v) => !v)}
+              className="p-0 hover:bg-transparent focus-visible:ring-0"
+            >
+              <img src={frameIcon} alt="Settings" className="w-7 h-7 object-contain"/>
+            </Button>
 
 
-
+            {/* === Folder Permission Popup === */}
             {showPermission && (
               <div
                 ref={popupRef}
@@ -318,43 +351,47 @@ const fetchFolderOwner = async (folderId) => {
               >
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-2">
-                  <img src={userCogIcon} alt="User cog icon" className="w-6 h-6 text-gray-700" />
-                  <h3 className="text-xl font-bold text-gray-900">Users Permission</h3>
+                  <img
+                    src={userCogIcon}
+                    alt="User cog icon"
+                    className="w-6 h-6 text-gray-700"
+                  />
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Users Permission
+                  </h3>
                 </div>
 
-              {/* User Info */}
-                  <div className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={birdIcon}
-                        alt="User avatar"
-                        className="w-7 h-7 object-contain"
-                      />
-                      <div>
-                        <div className="font-semibold text-[16px]">
-                {folderOwner || "Unknown"}
-              </div>
-
+                {/* User Info */}
+                <div
+                  className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={birdIcon}
+                      alt="User avatar"
+                      className="w-7 h-7 object-contain"
+                    />
+                    <div>
+                      <div className="font-semibold text-[16px]">
+                        {folderOwner || "Unknown"}
                       </div>
-                    </div>
-                      <div className="text-sm font-semibold text-gray-700 underline">
-                      Owner
+
                     </div>
                   </div>
-
+                  <div className="text-sm font-semibold text-gray-700 underline">
+                    Owner
+                  </div>
+                </div>
 
                 {/* Folder Protection */}
                 <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
                   <div className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span>
-                      Data in folder{" "}
-                      <span className="font-semibold text-black-700">
-                        {breadcrumb.length > 0
-                          ? breadcrumb[breadcrumb.length - 1]?.label
-                          : "this folder"}
-                      </span>{" "}
-                      is protected
-                    </span>
+                          <span>
+                            Data in folder{" "}
+                            <span className="font-semibold text-black-700">
+                              {selectedFolder?.name || "this folder"}
+                            </span>{" "}
+                            is protected
+                          </span>
                   </div>
 
                   <div className="flex items-center">
@@ -364,9 +401,9 @@ const fetchFolderOwner = async (folderId) => {
                           ? "bg-white text-black"
                           : "bg-gray-300 text-gray-500"
                       }`}
-                      onClick={() => setFolderMode("public")}
+                      onClick={() => handleChangeFolderMode("public")}
                     >
-                      <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
+                      <img src={folderPublic} alt="Public folder" className="w-4 h-4"/>
                       <span className="text-xs font-semibold">Public</span>
                     </button>
                     <button
@@ -375,9 +412,9 @@ const fetchFolderOwner = async (folderId) => {
                           ? "bg-white text-black"
                           : "bg-gray-300 text-gray-500"
                       }`}
-                      onClick={() => setFolderMode("private")}
+                      onClick={() => handleChangeFolderMode("private")}
                     >
-                      <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
+                      <img src={folderPrivate} alt="Private folder" className="w-4 h-4"/>
                       <span className="text-xs font-semibold">Private</span>
                     </button>
                   </div>
@@ -389,10 +426,11 @@ const fetchFolderOwner = async (folderId) => {
                     Your Permissions
                   </div>
                   <div className="border bg-white border-gray-300 rounded-xl">
-                    <div className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
+                    <div
+                      className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
                       <span>Permissions</span>
                       <span className="text-center">Allowed</span>
-                      <span className="text-center">No Allowed</span>
+                      <span className="text-center">Not Allowed</span>
                     </div>
 
                     <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
@@ -401,12 +439,19 @@ const fetchFolderOwner = async (folderId) => {
                         <input
                           type="radio"
                           name="setMode"
-                          defaultChecked
                           className="accent-black"
+                          checked={isOwner === true}
+                          readOnly
                         />
                       </div>
                       <div className="flex justify-center">
-                        <input type="radio" name="setMode" className="accent-black" />
+                        <input
+                          type="radio"
+                          name="setMode"
+                          className="accent-black"
+                          checked={isOwner === false}
+                          readOnly
+                        />
                       </div>
                     </div>
 

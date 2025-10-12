@@ -91,6 +91,7 @@ export default function Dashboard() {
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [newFolderMode, setNewFolderMode] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [deleteFolderId, setDeleteFolderId] = useState(null);
@@ -436,11 +437,16 @@ export default function Dashboard() {
   };
 
   const handleCreateFolder = async () => {
+    // Clear any existing toasts first
     toast.dismiss();
 
+    // Check if no changes when editing
     if (editingFolderId) {
       const originalFolder = folders.find(f => f.id === editingFolderId);
-      if (originalFolder && newFolderName.trim() === originalFolder.name && newFolderDesc.trim() === (originalFolder.description || "")) {
+      if (originalFolder &&
+        newFolderName.trim() === originalFolder.name &&
+        newFolderDesc.trim() === (originalFolder.description || "")) {
+        // No changes, just close dialog
         setOpenNewFolder(false);
         setNewFolderName("");
         setNewFolderDesc("");
@@ -456,7 +462,7 @@ export default function Dashboard() {
     }
 
     if (isCreatingFolder) {
-      return;
+      return; // Prevent double submission
     }
 
     setIsCreatingFolder(true);
@@ -466,20 +472,25 @@ export default function Dashboard() {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
+        is_public: newFolderMode === "public",
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
       let response;
       if (editingFolderId) {
+        // Update existing folder
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
+          credentials: "include",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({id: editingFolderId, ...folderData}),
         });
       } else {
+        // Create new folder
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
+          credentials: "include",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(folderData),
         });
@@ -497,6 +508,7 @@ export default function Dashboard() {
       } else {
         setFolders((prev) => [...prev, savedFolder]);
         toast.success(`Folder "${savedFolder.name}" created successfully!`);
+        // Không auto navigate, để user ở project page
       }
 
       setNewFolderName("");
@@ -1335,6 +1347,35 @@ export default function Dashboard() {
                   }
                 }}
               />
+            </div>
+
+            {/* Folder Mode */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Folder Mode</Label>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="public"
+                    checked={newFolderMode === "public"}
+                    onChange={() => setNewFolderMode("public")}
+                    className="accent-blue-600"
+                  />
+                  <span>Public</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="private"
+                    checked={newFolderMode === "private"}
+                    onChange={() => setNewFolderMode("private")}
+                    className="accent-blue-600"
+                  />
+                  <span>Private</span>
+                </label>
+              </div>
             </div>
           </div>
 
