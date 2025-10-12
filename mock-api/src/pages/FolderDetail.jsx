@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {Textarea} from "@/components/ui/textarea";
 import EndpointCard from "@/components/EndpointCard.jsx";
 import Topbar from "@/components/Topbar.jsx";
@@ -46,6 +45,7 @@ import methodIcon from "@/assets/method.svg";
 import timeIcon from "@/assets/time&date.svg";
 import statusIcon from "@/assets/status.svg";
 import actionsIcon from "@/assets/actions.svg";
+import {getCurrentUser} from "@/services/api.js";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -123,6 +123,30 @@ export default function Dashboard() {
   // dialogs
   const [openNew, setOpenNew] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+
+  const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  useEffect(() => {
+    const checkUserLogin = async () => {
+      try {
+        const res = await getCurrentUser();
+
+        if (res?.data?.username) {
+          setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
+          console.log("Logged in user:", res.data.username);
+        } else {
+          toast.error("Please log in to continue.");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("User not logged in:", err);
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+      }
+    };
+
+    checkUserLogin();
+  }, []);
 
   // Regex
   const validPath =
@@ -859,6 +883,7 @@ export default function Dashboard() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
+            username={currentUsername}
           />
         </aside>
 

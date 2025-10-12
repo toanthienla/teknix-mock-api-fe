@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useRef} from "react";
+import { getCurrentUser } from "@/services/api.js";
 import {Button} from "@/components/ui/button";
 import {
   Table,
@@ -19,7 +20,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
 import {Input} from "@/components/ui/input.jsx";
 import {Label} from "@/components/ui/label.jsx";
 import {
@@ -42,13 +42,13 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
+
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
 import blueFolder from "@/assets/blue_folder.svg"
 import userCogIcon from "@/assets/fa-solid_user-cog.svg";
 import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
-
 import birdIcon from "@/assets/Bird.svg";
 import editIcon from "@/assets/Edit Icon.svg";
 import Group from "@/assets/Group.svg";
@@ -117,6 +117,29 @@ export default function Dashboard() {
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [folderOwner, setFolderOwner] = useState(""); // username của owner
   const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
+  const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  useEffect(() => {
+    const checkUserLogin = async () => {
+      try {
+        const res = await getCurrentUser();
+
+        if (res?.data?.username) {
+          setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
+          console.log("Logged in user:", res.data.username);
+        } else {
+          toast.error("Please log in to continue.");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("User not logged in:", err);
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+      }
+    };
+
+    checkUserLogin();
+  }, []);
 
   useEffect(() => {
     if (!selectedFolder?.id || !showPermission) return;
@@ -554,10 +577,15 @@ export default function Dashboard() {
         body: JSON.stringify({ is_public: mode === "public" }),
       });
 
+      if (res.status === 403) {
+        toast.error("Unauthorized: You do not have permission to change this folder mode!");
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to update folder mode");
 
       setFolderMode(mode);
-      toast.success(`Folder is now ${mode.toUpperCase()}!`);
+      toast.success(`Folder is now ${mode}!`);
       // Cập nhật luôn state folders để UI đồng bộ
       setFolders((prev) =>
         prev.map((f) =>
@@ -777,7 +805,7 @@ export default function Dashboard() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
-
+            username={currentUsername}
           />
         </aside>
 
@@ -1086,7 +1114,7 @@ export default function Dashboard() {
 
                         <div className="flex items-center">
                           <button
-                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
                               folderMode === "public"
                                 ? "bg-white text-black"
                                 : "bg-gray-300 text-gray-500"

@@ -48,6 +48,7 @@ import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
 import JSONEditor from 'jsoneditor';
 import 'jsoneditor/dist/jsoneditor.css';
+import {getCurrentUser} from "@/services/api.js";
 
 const statusCodes = [
   {
@@ -1012,6 +1013,30 @@ const DashboardPage = () => {
 
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
+
+  const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  useEffect(() => {
+    const checkUserLogin = async () => {
+      try {
+        const res = await getCurrentUser();
+
+        if (res?.data?.username) {
+          setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
+          console.log("Logged in user:", res.data.username);
+        } else {
+          toast.error("Please log in to continue.");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("User not logged in:", err);
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+      }
+    };
+
+    checkUserLogin();
+  }, []);
 
   const handleCopyPath = () => {
     const path = endpoints.find(
@@ -2551,6 +2576,7 @@ const DashboardPage = () => {
           setOpenNewWs={setOpenNewWs}
           onEditFolder={handleEditFolder}
           onDeleteFolder={handleDeleteFolder}
+          username={currentUsername}
         />
       </aside>
 

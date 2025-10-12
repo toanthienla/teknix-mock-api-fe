@@ -19,6 +19,7 @@ export function LoginForm({className, ...props}) {
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
@@ -45,9 +46,10 @@ export function LoginForm({className, ...props}) {
       }
 
     try {
+      setIsSubmitting(true);
       await login({ username, password });
-      toast.success("Login successful!");
-      setTimeout(() => navigate("/dashboard"), 3000);
+      toast.success("Login successful! Redirecting...");
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Invalid credentials. Please try again.");
@@ -76,6 +78,7 @@ export function LoginForm({className, ...props}) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="youraccount"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="grid gap-3">
@@ -86,14 +89,16 @@ export function LoginForm({className, ...props}) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isSubmitting}
                 >
-                  Login
+                  {isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               </div>
             </div>

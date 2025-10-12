@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { toast } from "react-toastify";
+import {getCurrentUser} from "@/services/api.js";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -75,6 +76,30 @@ export default function DashboardPage() {
   const [editId, setEditId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+
+  const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  useEffect(() => {
+    const checkUserLogin = async () => {
+      try {
+        const res = await getCurrentUser();
+
+        if (res?.data?.username) {
+          setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
+          console.log("Logged in user:", res.data.username);
+        } else {
+          toast.error("Please log in to continue.");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("User not logged in:", err);
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+      }
+    };
+
+    checkUserLogin();
+  }, []);
 
   useEffect(() => {
     fetchWorkspaces();
@@ -627,6 +652,7 @@ export default function DashboardPage() {
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
             setOpenNewWs={setOpenNewWs}
+            username={currentUsername}
           />
 
         </aside>

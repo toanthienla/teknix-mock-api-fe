@@ -27,33 +27,33 @@ import frameIcon from "@/assets/Frame.svg";
 import birdIcon from "@/assets/Bird.svg";
 import {toast} from "react-toastify";
 
-// const StateModeToggle = ({isStateful, onToggle}) => {
-//   return (
-//     <div
-//       className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
-//       onClick={onToggle}
-//     >
-//       <div className="flex flex-row items-center w-[60px] h-[30px]">
-//         <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
-//           {isStateful ? "Stateful" : "Stateless"}
-//         </span>
-//       </div>
-//       <div className="relative w-[60px] h-[30px]">
-//         <div
-//           className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-//             isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-//           }`}
-//         >
-//           <div
-//             className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-//               isStateful ? "left-[32px]" : "left-[3px]"
-//             }`}
-//           />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
+const StateModeToggle = ({isStateful, onToggle}) => {
+  return (
+    <div
+      className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+      onClick={onToggle}
+    >
+      <div className="flex flex-row items-center w-[60px] h-[30px]">
+        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+          {isStateful ? "Stateful" : "Stateless"}
+        </span>
+      </div>
+      <div className="relative w-[60px] h-[30px]">
+        <div
+          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+            isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+          }`}
+        >
+          <div
+            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+              isStateful ? "left-[32px]" : "left-[3px]"
+            }`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StateModeDropdown = ({isStateful, onStateModeChange}) => {
   return (
@@ -396,7 +396,7 @@ export default function Topbar({
 
                   <div className="flex items-center">
                     <button
-                      className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
+                      className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
                         folderMode === "public"
                           ? "bg-white text-black"
                           : "bg-gray-300 text-gray-500"
