@@ -46,9 +46,9 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-import JSONEditor from 'jsoneditor';
-import 'jsoneditor/dist/jsoneditor.css';
-import {getCurrentUser} from "@/services/api.js";
+import JSONEditor from "jsoneditor";
+import "jsoneditor/dist/jsoneditor.css";
+import { getCurrentUser } from "@/services/api.js";
 
 const statusCodes = [
   {
@@ -444,7 +444,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
       const schema = {};
 
       schemaFields.forEach((field) => {
-        if (field.name.trim() && !field.isDefault) {
+        if (field.name.trim()) {
           schema[field.name] = {
             type: field.type,
             required: field.required,
@@ -3266,7 +3266,7 @@ const DashboardPage = () => {
                     </TabsTrigger>
                   )}
                   {/* Thêm tab Schema Body chỉ khi ở chế độ stateful */}
-                  {isStateful && (
+                  {isStateful && method !== "DELETE" && (
                     <TabsTrigger
                       value="schemaBody"
                       className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
@@ -3697,7 +3697,7 @@ const DashboardPage = () => {
                   </TabsContent>
                 )}
 
-                {isStateful && (
+                {isStateful && method !== "DELETE" && (
                   <TabsContent value="schemaBody" className="mt-0">
                     <div className="mt-2">
                       <SchemaBodyEditor
