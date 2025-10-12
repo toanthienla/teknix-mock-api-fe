@@ -46,9 +46,9 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-import JSONEditor from "jsoneditor";
-import "jsoneditor/dist/jsoneditor.css";
-import { getCurrentUser } from "@/services/api.js";
+import JSONEditor from 'jsoneditor';
+import 'jsoneditor/dist/jsoneditor.css';
+import {getCurrentUser} from "@/services/api.js";
 
 const statusCodes = [
   {
