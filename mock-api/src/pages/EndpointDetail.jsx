@@ -46,7 +46,7 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-import JSONEditor from 'jsoneditor';
+// import JSONEditor from 'jsoneditor';
 import 'jsoneditor/dist/jsoneditor.css';
 import {getCurrentUser} from "@/services/api.js";
 
@@ -1246,8 +1246,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 const DashboardPage = () => {
   const navigate = useNavigate();
   // Ref cho JSON Editor
-  const jsonEditorContainerRef = useRef(null);
-  const jsonEditorRef = useRef(null);
+  // const jsonEditorContainerRef = useRef(null);
+  // const jsonEditorRef = useRef(null);
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
@@ -3428,11 +3428,11 @@ const DashboardPage = () => {
                                   statusCode === "200" &&
                                   method === "GET"
                                 }
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
+                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 bg-[#233554] text-white ${
                                   isStateful &&
                                   statusCode === "200" &&
                                   method === "GET"
-                                    ? "bg-gray-100 cursor-not-allowed"
+                                    ? "opacity-70 cursor-not-allowed"
                                     : ""
                                 }`}
                                 placeholder={
@@ -3726,17 +3726,12 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                <div className="w-full min-h-[49px] bg-[#F2F2F2] border border-[#CBD5E1] rounded-[6px] p-2">
-                                  <span className="font-['Fira_Code'] text-[14px] leading-[20px] text-black break-words">
+                              <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                  <pre className="whitespace-pre-wrap break-words m-0">
                                     {dataDefault && dataDefault.length > 0
-                                      ? JSON.stringify(dataDefault).length > 50
-                                        ? `${JSON.stringify(dataDefault).slice(
-                                            0,
-                                            50
-                                          )}...`
-                                        : JSON.stringify(dataDefault)
+                                      ? JSON.stringify(dataDefault, null, 2)
                                       : "[]"}
-                                  </span>
+                                  </pre>
                                 </div>
                                 <div
                                   className="w-full h-[20px] text-right text-[14px] leading-[20px] text-[#2563EB] underline cursor-pointer mt-1"
@@ -3802,7 +3797,8 @@ const DashboardPage = () => {
                                   // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16"
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
+
                               placeholder="Enter initial value"
                             />
                             {/* Top right buttons */}
@@ -3931,35 +3927,6 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
-                          </div>
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                            >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                              onClick={() => {
-                                try {
-                                  const formatted = JSON.stringify(
-                                    JSON.parse(tempDataDefaultString),
-                                    null,
-                                    2
-                                  );
-                                  setTempDataDefaultString(formatted);
-                                  setTempDataDefault(JSON.parse(formatted));
-                                } catch {
-                                  toast.error("Invalid JSON format");
-                                }
-                              }}
-                            >
-                              <Code className="mr-1 h-4 w-4" /> Format
-                            </Button>
                           </div>
                         </div>
 
