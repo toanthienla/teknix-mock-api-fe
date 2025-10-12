@@ -14,11 +14,14 @@ import {
   ContextMenuItem,
 } from "@/components/ui/context-menu";
 import { Badge } from "@/components/ui/badge";
+import avatar from "@/assets/user-avatar.svg";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
 import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
+import {logout} from "@/services/api.js";
+import {toast} from "react-toastify";
 
 export default function Sidebar({
   workspaces = [],
@@ -42,10 +45,12 @@ export default function Sidebar({
   isCollapsed,
   setIsCollapsed,
   setOpenNewWs,
+  username,
 }) {
   const navigate = useNavigate();
   const { projectId, endpointId, folderId } = useParams();
   const [projectColorMap, setProjectColorMap] = useState({});
+  const userName = username;
 
   useEffect(() => {
     if (workspaces.length > 0 && !current) {
@@ -151,8 +156,23 @@ export default function Sidebar({
     return hasFolder || endpointsInProjectFolders;
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully.");
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed. Please try again.");
+    }
+  };
+
   return (
-    <div className="flex flex-col bg-white transition-all duration-300 w-64">
+    <div className="flex flex-col bg-white transition-all duration-300 w-64 h-screen">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
         <span
@@ -188,8 +208,8 @@ export default function Sidebar({
       </div>
 
       {/* Content */}
-      <div className={`${isCollapsed ? "hidden" : "flex-1 overflow-hidden"}`}>
-        <div className="h-full overflow-y-auto max-h-[calc(100vh-64px)] p-2">
+      <div className={`${isCollapsed ? "hidden" : "flex flex-col flex-1 overflow-hidden"}`}>
+        <div className="flex-1 overflow-y-auto p-2">
           {/* Workspace Selector */}
           <div className="px-1 mb-3">
             <DropdownMenu>
@@ -478,6 +498,31 @@ export default function Sidebar({
             </ul>
           )}
         </div>
+
+        {/* User Section */}
+        {!isCollapsed && (
+          <div className="mt-auto px-5 py-2.5 bg-white">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm focus:outline-none">
+                  <img src={avatar} className="w-10 h-10 rounded-full border-2 border-white object-cover" alt="user avatar" />
+                  <div className="flex flex-col items-start flex-1 min-w-0 text-left">
+                    <span className="font-semibold text-base text-slate-900 truncate">{userName}</span>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-slate-500 ml-2" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem
+                  onSelect={handleLogout}
+                  className="text-red-600 font-semibold cursor-pointer"
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
     </div>
   );

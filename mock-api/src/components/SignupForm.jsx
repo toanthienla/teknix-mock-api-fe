@@ -11,7 +11,7 @@ import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {useNavigate} from "react-router-dom";
 import {toast} from "react-toastify";
-import {useState} from "react";
+import React, {useState} from "react";
 import {signup} from "@/services/api.js";
 
 export function SignupForm({className, ...props}) {
@@ -19,6 +19,7 @@ export function SignupForm({className, ...props}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
@@ -48,9 +49,10 @@ export function SignupForm({className, ...props}) {
     }
 
     try {
+      setIsSubmitting(true);
       await signup({ username, password });
-      toast.success("Signup successful!");
-      setTimeout(() => navigate("/login"), 3000);
+      toast.success("Signup successful! Redirecting...");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Username already exists");
@@ -81,6 +83,7 @@ export function SignupForm({className, ...props}) {
                     placeholder="youraccount"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -94,6 +97,7 @@ export function SignupForm({className, ...props}) {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -107,10 +111,15 @@ export function SignupForm({className, ...props}) {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isSubmitting}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                  Sign up
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Signing up..." : "Sign up"}
                 </Button>
               </div>
             </div>
