@@ -140,28 +140,43 @@ const statusCodes = [
   },
 ];
 
-const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
+const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
+  // Thêm state cho dropdown của GET method
+  const [availableFields, setAvailableFields] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
       if (method === "GET") {
-        // For GET, schema is { fields: [...] }
+        // Lấy schema từ endpointData.schema.fields (định dạng đúng từ API)
         const fields = endpointData.schema.fields || [];
 
-        // Ensure "id" is always included
+        // Đảm bảo "id" luôn được bao gồm
         const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
 
-        const fieldsConfig = schemaWithId.map((name, index) => ({
-          id: `field-${index}`,
-          name,
-          type: "string", // Type doesn't matter for GET
-          required: false, // Required doesn't matter for GET
-          isDefault: name === "id",
-        }));
+        // Lấy type từ base_schema nếu có
+        const fieldsConfig = schemaWithId.map((name, index) => {
+          // Tìm type từ availableFields (đã được fetch từ /base_schema/{id})
+          const fieldConfig = availableFields.find((f) =>
+            typeof f === "string" ? f === name : f.name === name
+          );
+
+          return {
+            id: `field-${index}`,
+            name,
+            type: fieldConfig
+              ? typeof fieldConfig === "string"
+                ? "string"
+                : fieldConfig.type
+              : "string",
+            required: false,
+            isDefault: name === "id",
+          };
+        });
 
         setSchemaFields(fieldsConfig);
       } else {
@@ -211,7 +226,29 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
         setSchemaFields(fields);
       }
     }
-  }, [endpointData, method]);
+  }, [endpointData, method, availableFields]);
+
+  // Fetch available fields for GET method
+  useEffect(() => {
+    if (method === "GET" && endpointId) {
+      fetch(`${API_ROOT}/base_schema/${endpointId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch base schema");
+          return res.json();
+        })
+        .then((data) => {
+          // Đảm bảo data.fields tồn tại và là mảng
+          const fields = Array.isArray(data.fields) ? data.fields : [];
+          setAvailableFields(fields);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch base schema:", error);
+          toast.error("Failed to fetch available fields");
+          // Đặt availableFields thành mảng rỗng khi có lỗi
+          setAvailableFields([]);
+        });
+    }
+  }, [method, endpointId]);
 
   const validateField = (field) => {
     // Không validate field mặc định hoặc khi method là GET
@@ -345,21 +382,66 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
     );
   };
 
+  // Hàm xử lý toggle field cho GET method
+  const handleFieldToggle = (fieldName) => {
+    setSchemaFields((prev) => {
+      const idField = prev.find((f) => f.name === "id");
+      const otherFields = prev.filter((f) => f.name !== "id" && !f.isDefault);
+
+      if (fieldName === "id") return prev;
+
+      const isFieldSelected = otherFields.some((f) => f.name === fieldName);
+
+      // Xác định type dựa trên cấu trúc availableFields
+      let fieldType = "string";
+      if (Array.isArray(availableFields) && availableFields.length > 0) {
+        // Nếu availableFields là mảng object
+        if (
+          typeof availableFields[0] === "object" &&
+          availableFields[0] !== null
+        ) {
+          const fieldObj = availableFields.find((f) => f.name === fieldName);
+          fieldType = fieldObj?.type || "string";
+        }
+        // Nếu availableFields là mảng string
+        else {
+          fieldType = "string"; // Hoặc có thể xác định type mặc định khác
+        }
+      }
+
+      if (isFieldSelected) {
+        return [idField, ...otherFields.filter((f) => f.name !== fieldName)];
+      } else {
+        return [
+          idField,
+          ...otherFields,
+          {
+            id: `field-${Date.now()}`,
+            name: fieldName,
+            type: fieldType,
+            required: false,
+            isDefault: false,
+          },
+        ];
+      }
+    });
+  };
+
   const prepareSchema = () => {
     if (method === "GET") {
       // For GET, return { fields: [...] } format
       const fields = schemaFields
-        .filter((field) => field.name.trim() && !field.isDefault)
+        .filter((field) => !field.isDefault)
         .map((field) => field.name);
 
       // Always include "id" for GET
-      return { fields: ["id", ...fields] };
+      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
     } else {
       // For POST/PUT, return { field: { type, required }, ... } format
       const schema = {};
 
       schemaFields.forEach((field) => {
-        if (field.name.trim()) {
+        if (field.name.trim() && !field.isDefault) {
           schema[field.name] = {
             type: field.type,
             required: field.required,
@@ -377,6 +459,7 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
       const newSchema = prepareSchema();
       onSave(newSchema);
       toast.success("Response Body updated successfully!");
+      setIsDropdownOpen(false);
       return;
     }
 
@@ -418,6 +501,21 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
                 </span>
               </div>
             )}
+          </div>
+        )}
+        {/* Thêm thanh header cho Response Body (GET method) */}
+        {method === "GET" && (
+          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Field Name
+              </span>
+            </div>
+            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Type
+              </span>
+            </div>
           </div>
         )}
         <div className="space-y-4">
@@ -515,37 +613,19 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
                   )}
                 </div>
               ) : (
-                // GET method UI
+                // GET method UI - chỉ hiển thị, không cho chỉnh sửa
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-[220px]">
-                    <Input
-                      value={field.name}
-                      onChange={(e) =>
-                        !field.isDefault &&
-                        handleNameChange(field.id, e.target.value)
-                      }
-                      className={`w-full ${
-                        field.isDefault ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
-                      placeholder="Field name"
-                      disabled={field.isDefault}
-                    />
+                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
+                      {field.name}
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteField(field.id);
-                    }}
-                    disabled={field.isDefault}
-                  >
-                    <Trash2
-                      className={`w-4 h-4 ${
-                        field.isDefault ? "text-gray-400" : ""
-                      }`}
-                    />
-                  </Button>
+
+                  <div className="w-[220px]">
+                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
+                      {field.type}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -572,27 +652,136 @@ const SchemaBodyEditor = ({ endpointData, onSave, method }) => {
             </div>
           )}
 
-          {/* Thêm nút dropdown cho GET method */}
+          {/* Thêm tiêu đề Fields Input */}
           {method === "GET" && (
-            <div className="relative w-full h-[65px]">
-              <div className="absolute w-full h-[35px] border border-[#CBD5E1] rounded-[6px]">
-                <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
-                  {schemaFields.filter((f) => !f.isDefault).length} fields
-                  selected
-                </span>
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-2.5 border-t border-r border-[#CBD5E1] rotate-45"></div>
-              </div>
+            <div className="mb-2">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+                Fields Input
+              </span>
             </div>
           )}
 
-          {/* Nút thêm trường và lưu */}
-          <div className="flex justify-between items-center mt-4">
-            {method !== "GET" && (
-              <Button variant="outline" onClick={handleAddField}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add field
-              </Button>
+          {/* Thêm nút dropdown cho GET method */}
+          {method === "GET" && (
+            <div className="relative w-full h-[65px]">
+              <div
+                className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
+                  {
+                    schemaFields.filter((f) => f.name === "id" || !f.isDefault)
+                      .length
+                  }{" "}
+                  fields selected
+                </span>
+                <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
+              </div>
+
+              {isDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {availableFields.map((field) => {
+                    const fieldName =
+                      typeof field === "string" ? field : field.name;
+                    const fieldType =
+                      typeof field === "object" ? field.type : "string";
+
+                    // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
+                    const isChecked =
+                      schemaFields.some(
+                        (f) => f.name === fieldName && !f.isDefault
+                      ) ||
+                      (fieldName === "id" &&
+                        schemaFields.some((f) => f.name === "id"));
+
+                    return (
+                      <div
+                        key={fieldName}
+                        className="flex items-center px-3 py-2 hover:bg-gray-100"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
+                          className={`mr-2 cursor-pointer ${
+                            fieldName === "id" ? "opacity-50" : ""
+                          }`}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            if (fieldName !== "id") {
+                              handleFieldToggle(fieldName);
+                            }
+                          }}
+                        />
+                        <span
+                          className={`cursor-pointer flex-1 ${
+                            fieldName === "id" ? "text-gray-500" : ""
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (fieldName !== "id") {
+                              handleFieldToggle(fieldName);
+                            }
+                          }}
+                        >
+                          {fieldName}{" "}
+                          <span className="text-gray-500 text-xs">
+                            ({fieldType})
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {method === "GET" && (
+            <div className="mb-2">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+                Selected Fields
+              </span>
+            </div>
+          )}
+          {/* Hiển thị các trường đã chọn dưới dạng tag */}
+          {method === "GET" &&
+            schemaFields.filter((f) => !f.isDefault).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {schemaFields
+                  .filter((f) => !f.isDefault)
+                  .map((field) => (
+                    <div
+                      key={field.id}
+                      className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
+                    >
+                      <span className="text-[#2563EB] text-[10.0034px] leading-[17px] mr-2">
+                        {field.name}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFieldToggle(field.name);
+                        }}
+                        className="w-5 h-5 ml-1 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
             )}
+
+          {/* Nút thêm trường và lưu */}
+          <div className="flex justify-between items-center mt-4 gap-4">
+            <div>
+              {method !== "GET" && (
+                <Button variant="outline" onClick={handleAddField}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add field
+                </Button>
+              )}
+            </div>
 
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
@@ -1056,6 +1245,7 @@ const DashboardPage = () => {
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
+  const [endpointDefinition, setEndpointDefinition] = useState(null);
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
@@ -1126,6 +1316,28 @@ const DashboardPage = () => {
 
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (
+      currentEndpointId &&
+      isStateful &&
+      isEndpointsLoaded &&
+      !isSwitchingMode
+    ) {
+      // Fetch endpoint definition including schema
+      fetch(`${API_ROOT}/endpoints/${currentEndpointId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setEndpointDefinition(data);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch endpoint definition:", error);
+          toast.error("Failed to fetch endpoint definition");
+        });
+    } else {
+      setEndpointDefinition(null);
+    }
+  }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
 
   const handleCopyPath = () => {
     const path = endpoints.find(
@@ -1200,7 +1412,7 @@ const DashboardPage = () => {
   };
 
   const handleSaveSchema = (newSchema) => {
-    if (!endpointData) return;
+    if (!endpointDefinition) return;
 
     const payload = {
       schema: newSchema,
@@ -3022,7 +3234,7 @@ const DashboardPage = () => {
                       value="schemaBody"
                       className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
-                      {method === "GET" ? "Response Body" : "Schema Body"}
+                      {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -3452,7 +3664,8 @@ const DashboardPage = () => {
                   <TabsContent value="schemaBody" className="mt-0">
                     <div className="mt-2">
                       <SchemaBodyEditor
-                        endpointData={endpointData}
+                        endpointData={endpointDefinition}
+                        endpointId={currentEndpointId}
                         onSave={handleSaveSchema}
                         method={method}
                       />
