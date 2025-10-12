@@ -99,18 +99,15 @@ useEffect(() => {
 
 const fetchFolderOwner = async (folderId) => {
   try {
-    const token = localStorage.getItem("token"); // 🔑 lấy token
-
     const res = await fetch(`${API_ROOT}/folders/getOwner/${folderId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // ✅ thêm header
-      },
-    });
+  method: "GET",
+  credentials: "include", // ✅ gửi cookie JWT theo request
+});
+
 
     if (!res.ok) throw new Error("Failed to fetch folder owner");
     const data = await res.json();
 
-    // Giả sử API trả về { username: "ngankim" }
     if (data?.username) {
       setFolderOwner(data.username);
     } else {
