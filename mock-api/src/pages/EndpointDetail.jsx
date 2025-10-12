@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import {useNavigate, useParams} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -143,51 +143,119 @@ const statusCodes = [
   },
 ];
 
-const SchemaBodyEditor = ({ endpointData, onSave }) => {
+const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedFieldId, setSelectedFieldId] = useState(null);
+  // Thêm state cho dropdown của GET method
+  const [availableFields, setAvailableFields] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
-      // Đảm bảo luôn có field "id"
-      const schemaWithId = {
-        id: { type: "number", required: false },
-        ...endpointData.schema,
-      };
+      if (method === "GET") {
+        // Lấy schema từ endpointData.schema.fields (định dạng đúng từ API)
+        const fields = endpointData.schema.fields || [];
 
-      const fields = Object.entries(schemaWithId).map(
-        ([name, config], index) => ({
-          id: `field-${index}`,
-          name,
-          type: config.type || "string",
-          required: config.required !== undefined ? config.required : false,
-          isDefault: name === "id", // Đánh dấu field id là mặc định
-        })
-      );
-      setSchemaFields(fields);
+        // Đảm bảo "id" luôn được bao gồm
+        const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
+
+        // Lấy type từ base_schema nếu có
+        const fieldsConfig = schemaWithId.map((name, index) => {
+          // Tìm type từ availableFields (đã được fetch từ /base_schema/{id})
+          const fieldConfig = availableFields.find((f) =>
+            typeof f === "string" ? f === name : f.name === name
+          );
+
+          return {
+            id: `field-${index}`,
+            name,
+            type: fieldConfig
+              ? typeof fieldConfig === "string"
+                ? "string"
+                : fieldConfig.type
+              : "string",
+            required: false,
+            isDefault: name === "id",
+          };
+        });
+
+        setSchemaFields(fieldsConfig);
+      } else {
+        // For POST/PUT, schema is { field: { type, required }, ... }
+        // Đảm bảo luôn có field "id"
+        const schemaWithId = {
+          id: { type: "number", required: false },
+          ...endpointData.schema,
+        };
+
+        const fields = Object.entries(schemaWithId).map(
+          ([name, config], index) => ({
+            id: `field-${index}`,
+            name,
+            type: config.type || "string",
+            required: config.required !== undefined ? config.required : false,
+            isDefault: name === "id",
+          })
+        );
+        setSchemaFields(fields);
+      }
     } else {
-      // Nếu không có schema, khởi tạo với field id mặc định
-      const defaultSchema = {
-        id: { type: "number", required: false },
-      };
-      const fields = Object.entries(defaultSchema).map(
-        ([name, config], index) => ({
+      // Initialize with default schema
+      if (method === "GET") {
+        const defaultSchema = { fields: ["id"] };
+        const fieldsConfig = defaultSchema.fields.map((name, index) => ({
           id: `field-${index}`,
           name,
-          type: config.type || "string",
-          required: config.required !== undefined ? config.required : false,
-          isDefault: true,
-        })
-      );
-      setSchemaFields(fields);
+          type: "string",
+          required: false,
+          isDefault: name === "id",
+        }));
+        setSchemaFields(fieldsConfig);
+      } else {
+        const defaultSchema = {
+          id: { type: "number", required: false },
+        };
+        const fields = Object.entries(defaultSchema).map(
+          ([name, config], index) => ({
+            id: `field-${index}`,
+            name,
+            type: config.type || "string",
+            required: config.required !== undefined ? config.required : false,
+            isDefault: true,
+          })
+        );
+        setSchemaFields(fields);
+      }
     }
-  }, [endpointData]);
+  }, [endpointData, method, availableFields]);
+
+  // Fetch available fields for GET method
+  useEffect(() => {
+    if (method === "GET" && endpointId) {
+      fetch(`${API_ROOT}/base_schema/${endpointId}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch base schema");
+          return res.json();
+        })
+        .then((data) => {
+          // Đảm bảo data.fields tồn tại và là mảng
+          const fields = Array.isArray(data.fields) ? data.fields : [];
+          setAvailableFields(fields);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch base schema:", error);
+          toast.error("Failed to fetch available fields");
+          // Đặt availableFields thành mảng rỗng khi có lỗi
+          setAvailableFields([]);
+        });
+    }
+  }, [method, endpointId]);
 
   const validateField = (field) => {
-    // Không validate field mặc định
-    if (field.isDefault) return {};
+    // Không validate field mặc định hoặc khi method là GET
+    if (field.isDefault || method === "GET") return {};
 
     const newErrors = {};
 
@@ -205,8 +273,8 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     let isValid = true;
 
     schemaFields.forEach((field) => {
-      // Bỏ qua field mặc định khi validate
-      if (field.isDefault) return;
+      // Bỏ qua field mặc định và khi method là GET khi validate
+      if (field.isDefault || method === "GET") return;
 
       const fieldErrors = validateField(field);
       if (Object.keys(fieldErrors).length > 0) {
@@ -220,6 +288,8 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleAddField = () => {
+    if (method === "GET") return;
+
     if (!validateAllFields()) {
       toast.error("Please fix errors before adding new field");
       return;
@@ -238,6 +308,8 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
   };
 
   const handleDeleteField = (id) => {
+    if (method === "GET") return;
+
     const field = schemaFields.find((f) => f.id === id);
     if (field?.isDefault) {
       toast.error("Default field cannot be deleted");
@@ -264,7 +336,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleFieldClick = (id, event) => {
     const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault) return;
+    if (field?.isDefault || method === "GET") return;
 
     if (event.target.closest("button")) {
       return;
@@ -274,7 +346,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleNameChange = (id, value) => {
     const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault) return;
+    if (field?.isDefault || method === "GET") return;
 
     setSchemaFields((prev) =>
       prev.map((field) => (field.id === id ? { ...field, name: value } : field))
@@ -283,7 +355,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     // Validate sau khi thay đổi
     setTimeout(() => {
       const field = schemaFields.find((f) => f.id === id);
-      if (field && !field.isDefault) {
+      if (field && !field.isDefault && method !== "GET") {
         const fieldErrors = validateField({ ...field, name: value });
         setErrors((prev) => ({
           ...prev,
@@ -295,7 +367,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleTypeChange = (id, value) => {
     const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault) return;
+    if (field?.isDefault || method === "GET") return;
 
     setSchemaFields((prev) =>
       prev.map((field) => (field.id === id ? { ...field, type: value } : field))
@@ -304,7 +376,7 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
 
   const handleRequiredChange = (id, value) => {
     const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault) return;
+    if (field?.isDefault || method === "GET") return;
 
     setSchemaFields((prev) =>
       prev.map((field) =>
@@ -313,22 +385,87 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
     );
   };
 
-  const prepareSchema = () => {
-    const schema = {};
+  // Hàm xử lý toggle field cho GET method
+  const handleFieldToggle = (fieldName) => {
+    setSchemaFields((prev) => {
+      const idField = prev.find((f) => f.name === "id");
+      const otherFields = prev.filter((f) => f.name !== "id" && !f.isDefault);
 
-    schemaFields.forEach((field) => {
-      if (field.name.trim()) {
-        schema[field.name] = {
-          type: field.type,
-          required: field.required,
-        };
+      if (fieldName === "id") return prev;
+
+      const isFieldSelected = otherFields.some((f) => f.name === fieldName);
+
+      // Xác định type dựa trên cấu trúc availableFields
+      let fieldType = "string";
+      if (Array.isArray(availableFields) && availableFields.length > 0) {
+        // Nếu availableFields là mảng object
+        if (
+          typeof availableFields[0] === "object" &&
+          availableFields[0] !== null
+        ) {
+          const fieldObj = availableFields.find((f) => f.name === fieldName);
+          fieldType = fieldObj?.type || "string";
+        }
+        // Nếu availableFields là mảng string
+        else {
+          fieldType = "string"; // Hoặc có thể xác định type mặc định khác
+        }
+      }
+
+      if (isFieldSelected) {
+        return [idField, ...otherFields.filter((f) => f.name !== fieldName)];
+      } else {
+        return [
+          idField,
+          ...otherFields,
+          {
+            id: `field-${Date.now()}`,
+            name: fieldName,
+            type: fieldType,
+            required: false,
+            isDefault: false,
+          },
+        ];
       }
     });
+  };
 
-    return schema;
+  const prepareSchema = () => {
+    if (method === "GET") {
+      // For GET, return { fields: [...] } format
+      const fields = schemaFields
+        .filter((field) => !field.isDefault)
+        .map((field) => field.name);
+
+      // Always include "id" for GET
+      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
+    } else {
+      // For POST/PUT, return { field: { type, required }, ... } format
+      const schema = {};
+
+      schemaFields.forEach((field) => {
+        if (field.name.trim()) {
+          schema[field.name] = {
+            type: field.type,
+            required: field.required,
+          };
+        }
+      });
+
+      return schema;
+    }
   };
 
   const handleSave = () => {
+    if (method === "GET") {
+      // Khi method là GET, chỉ lưu schema mà không validate
+      const newSchema = prepareSchema();
+      onSave(newSchema);
+      toast.success("Response Body updated successfully!");
+      setIsDropdownOpen(false);
+      return;
+    }
+
     if (!validateAllFields()) {
       toast.error("Please fix all errors before saving");
       return;
@@ -344,27 +481,46 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
-            Schema Definition
+            {method === "GET" ? "Response Body" : "Schema Definition"}
           </h1>
         </div>
         {/* Thêm thanh header cho Schema Definition */}
-        <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
-          <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
-            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-              Field Name
-            </span>
+        {method !== "GET" && (
+          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Field Name
+              </span>
+            </div>
+            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Type
+              </span>
+            </div>
+            {method !== "GET" && (
+              <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
+                <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                  Required
+                </span>
+              </div>
+            )}
           </div>
-          <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
-            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-              Type
-            </span>
+        )}
+        {/* Thêm thanh header cho Response Body (GET method) */}
+        {method === "GET" && (
+          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
+            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Field Name
+              </span>
+            </div>
+            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
+                Type
+              </span>
+            </div>
           </div>
-          <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
-            <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-              Required
-            </span>
-          </div>
-        </div>
+        )}
         <div className="space-y-4">
           {schemaFields.map((field) => (
             <div
@@ -376,77 +532,105 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
                   : "border-slate-300"
               } ${field.isDefault ? "bg-gray-50" : ""}`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-[220px]">
-                  <Input
-                    value={field.name}
-                    onChange={(e) =>
-                      !field.isDefault &&
-                      handleNameChange(field.id, e.target.value)
-                    }
-                    className={`w-full ${
-                      field.isDefault ? "bg-gray-100 cursor-not-allowed" : ""
-                    } ${errors[field.id]?.name ? "border-red-500" : ""}`}
-                    placeholder="Field name"
-                    disabled={field.isDefault}
-                  />
-                </div>
+              {method !== "GET" ? (
+                // POST/PUT method UI
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-[220px]">
+                    <Input
+                      value={field.name}
+                      onChange={(e) =>
+                        !field.isDefault &&
+                        method !== "GET" &&
+                        handleNameChange(field.id, e.target.value)
+                      }
+                      className={`w-full ${
+                        field.isDefault || method === "GET"
+                          ? "bg-gray-100 cursor-not-allowed"
+                          : ""
+                      } ${errors[field.id]?.name ? "border-red-500" : ""}`}
+                      placeholder="Field name"
+                      disabled={field.isDefault || method === "GET"}
+                    />
+                  </div>
 
-                <div className="w-[220px]">
-                  <Select
-                    value={field.type}
-                    onValueChange={(value) =>
-                      !field.isDefault && handleTypeChange(field.id, value)
-                    }
-                    disabled={field.isDefault}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="string">string</SelectItem>
-                      <SelectItem value="number">number</SelectItem>
-                      <SelectItem value="boolean">boolean</SelectItem>
-                      <SelectItem value="array">array</SelectItem>
-                      <SelectItem value="object">object</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="w-[220px]">
+                    <Select
+                      value={field.type}
+                      onValueChange={(value) =>
+                        !field.isDefault &&
+                        method !== "GET" &&
+                        handleTypeChange(field.id, value)
+                      }
+                      disabled={field.isDefault || method === "GET"}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">string</SelectItem>
+                        <SelectItem value="number">number</SelectItem>
+                        <SelectItem value="boolean">boolean</SelectItem>
+                        <SelectItem value="array">array</SelectItem>
+                        <SelectItem value="object">object</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="w-[170px]">
-                  <Select
-                    value={field.required.toString()}
-                    onValueChange={(value) =>
-                      !field.isDefault && handleRequiredChange(field.id, value)
-                    }
-                    disabled={field.isDefault}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Required" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">true</SelectItem>
-                      <SelectItem value="false">false</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {method !== "GET" && (
+                    <div className="w-[170px]">
+                      <Select
+                        value={field.required.toString()}
+                        onValueChange={(value) =>
+                          !field.isDefault &&
+                          handleRequiredChange(field.id, value)
+                        }
+                        disabled={field.isDefault}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Required" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">true</SelectItem>
+                          <SelectItem value="false">false</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteField(field.id);
-                  }}
-                  disabled={field.isDefault}
-                >
-                  <Trash2
-                    className={`w-4 h-4 ${
-                      field.isDefault ? "text-gray-400" : ""
-                    }`}
-                  />
-                </Button>
-              </div>
+                  {method !== "GET" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteField(field.id);
+                      }}
+                      disabled={field.isDefault}
+                    >
+                      <Trash2
+                        className={`w-4 h-4 ${
+                          field.isDefault ? "text-gray-400" : ""
+                        }`}
+                      />
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                // GET method UI - chỉ hiển thị, không cho chỉnh sửa
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-[220px]">
+                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
+                      {field.name}
+                    </div>
+                  </div>
+
+                  <div className="w-[220px]">
+                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
+                      {field.type}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Hiển thị lỗi */}
               {errors[field.id]?.name && (
@@ -471,12 +655,136 @@ const SchemaBodyEditor = ({ endpointData, onSave }) => {
             </div>
           )}
 
+          {/* Thêm tiêu đề Fields Input */}
+          {method === "GET" && (
+            <div className="mb-2">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+                Fields Input
+              </span>
+            </div>
+          )}
+
+          {/* Thêm nút dropdown cho GET method */}
+          {method === "GET" && (
+            <div className="relative w-full h-[65px]">
+              <div
+                className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
+                  {
+                    schemaFields.filter((f) => f.name === "id" || !f.isDefault)
+                      .length
+                  }{" "}
+                  fields selected
+                </span>
+                <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
+              </div>
+
+              {isDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {availableFields.map((field) => {
+                    const fieldName =
+                      typeof field === "string" ? field : field.name;
+                    const fieldType =
+                      typeof field === "object" ? field.type : "string";
+
+                    // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
+                    const isChecked =
+                      schemaFields.some(
+                        (f) => f.name === fieldName && !f.isDefault
+                      ) ||
+                      (fieldName === "id" &&
+                        schemaFields.some((f) => f.name === "id"));
+
+                    return (
+                      <div
+                        key={fieldName}
+                        className="flex items-center px-3 py-2 hover:bg-gray-100"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
+                          className={`mr-2 cursor-pointer ${
+                            fieldName === "id" ? "opacity-50" : ""
+                          }`}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            if (fieldName !== "id") {
+                              handleFieldToggle(fieldName);
+                            }
+                          }}
+                        />
+                        <span
+                          className={`cursor-pointer flex-1 ${
+                            fieldName === "id" ? "text-gray-500" : ""
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (fieldName !== "id") {
+                              handleFieldToggle(fieldName);
+                            }
+                          }}
+                        >
+                          {fieldName}{" "}
+                          <span className="text-gray-500 text-xs">
+                            ({fieldType})
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {method === "GET" && (
+            <div className="mb-2">
+              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+                Selected Fields
+              </span>
+            </div>
+          )}
+          {/* Hiển thị các trường đã chọn dưới dạng tag */}
+          {method === "GET" &&
+            schemaFields.filter((f) => !f.isDefault).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {schemaFields
+                  .filter((f) => !f.isDefault)
+                  .map((field) => (
+                    <div
+                      key={field.id}
+                      className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
+                    >
+                      <span className="text-[#2563EB] text-[10.0034px] leading-[17px] mr-2">
+                        {field.name}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFieldToggle(field.name);
+                        }}
+                        className="w-5 h-5 ml-1 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+
           {/* Nút thêm trường và lưu */}
-          <div className="flex justify-between items-center mt-4">
-            <Button variant="outline" onClick={handleAddField}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add field
-            </Button>
+          <div className="flex justify-between items-center mt-4 gap-4">
+            <div>
+              {method !== "GET" && (
+                <Button variant="outline" onClick={handleAddField}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add field
+                </Button>
+              )}
+            </div>
 
             <Button
               className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
@@ -943,6 +1251,7 @@ const DashboardPage = () => {
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
+  const [endpointDefinition, setEndpointDefinition] = useState(null);
   // Thêm state để quản lý loading
   const [isLoading, setIsLoading] = useState(true);
   // Thêm state để lưu lỗi response name
@@ -1006,6 +1315,7 @@ const DashboardPage = () => {
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [newFolderMode, setNewFolderMode] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [deleteFolderId, setDeleteFolderId] = useState(null);
@@ -1038,6 +1348,28 @@ const DashboardPage = () => {
     checkUserLogin();
   }, []);
 
+  useEffect(() => {
+    if (
+      currentEndpointId &&
+      isStateful &&
+      isEndpointsLoaded &&
+      !isSwitchingMode
+    ) {
+      // Fetch endpoint definition including schema
+      fetch(`${API_ROOT}/endpoints/${currentEndpointId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setEndpointDefinition(data);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch endpoint definition:", error);
+          toast.error("Failed to fetch endpoint definition");
+        });
+    } else {
+      setEndpointDefinition(null);
+    }
+  }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
+
   const handleCopyPath = () => {
     const path = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
@@ -1068,30 +1400,33 @@ const DashboardPage = () => {
 
   // Hàm xử lý reset current values
   const handleResetCurrentValues = () => {
-    if (!endpointData) return;
+    // Lấy path từ currentEndpoint thay vì endpointData
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+
+    if (!path) {
+      toast.error("Endpoint path is not available. Please try again.");
+      return;
+    }
 
     const payload = {
-      schema: endpointData.schema || {},
       data_default: endpointData.data_default || [],
-      // Thêm flag để reset current values
       reset_current: true,
     };
 
-    fetch(
-      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    )
+    fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to reset current values");
         return res.json();
       })
       .then(() => {
-        // Fetch lại endpoint data sau khi reset
-        return fetchEndpointDataByPath(endpointData.path);
+        // Fetch lại endpoint data sau khi cập nhật
+        return fetchEndpointDataByPath(path);
       })
       .then((finalData) => {
         if (finalData) {
@@ -1108,35 +1443,24 @@ const DashboardPage = () => {
   };
 
   const handleSaveSchema = (newSchema) => {
-    if (!endpointData) return;
+    if (!endpointDefinition) return;
 
     const payload = {
       schema: newSchema,
     };
 
-    fetch(
-      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(endpointData.path)}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    )
+    // Sử dụng endpoint đúng theo yêu cầu
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
       })
       .then(() => {
-        // Fetch lại endpoint data sau khi cập nhật thành công
-        return fetchEndpointDataByPath(endpointData.path);
-      })
-      .then((finalData) => {
-        if (finalData) {
-          // Hàm fetchEndpointDataByPath đã cập nhật state rồi,
-          // nhưng vẫn cần cập nhật dataDefault để đảm bảo UI đồng bộ
-          setDataDefault(finalData.data_default || []);
-          toast.success("Schema updated successfully!");
-        }
+        toast.success("Schema updated successfully!");
       })
       .catch((error) => {
         console.error(error);
@@ -1633,7 +1957,6 @@ const DashboardPage = () => {
           setDataDefault([]);
           setEndpointData({
             path: path,
-            schema: {},
             data_default: [],
             data_current: [],
             created_at: new Date().toISOString(),
@@ -1880,15 +2203,16 @@ const DashboardPage = () => {
   };
 
   const handleCreateFolder = async () => {
+    // Clear any existing toasts first
     toast.dismiss();
 
+    // Check if no changes when editing
     if (editingFolderId) {
-      const originalFolder = folders.find((f) => f.id === editingFolderId);
-      if (
-        originalFolder &&
+      const originalFolder = folders.find(f => f.id === editingFolderId);
+      if (originalFolder &&
         newFolderName.trim() === originalFolder.name &&
-        newFolderDesc.trim() === (originalFolder.description || "")
-      ) {
+        newFolderDesc.trim() === (originalFolder.description || "")) {
+        // No changes, just close dialog
         setOpenNewFolder(false);
         setNewFolderName("");
         setNewFolderDesc("");
@@ -1904,7 +2228,7 @@ const DashboardPage = () => {
     }
 
     if (isCreatingFolder) {
-      return;
+      return; // Prevent double submission
     }
 
     setIsCreatingFolder(true);
@@ -1914,39 +2238,43 @@ const DashboardPage = () => {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
+        is_public: newFolderMode === "public",
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
       let response;
       if (editingFolderId) {
+        // Update existing folder
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingFolderId, ...folderData }),
+          credentials: "include",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({id: editingFolderId, ...folderData}),
         });
       } else {
+        // Create new folder
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(folderData),
         });
       }
 
       if (!response.ok) {
-        throw new Error("Failed to save folder");
+        throw new Error('Failed to save folder');
       }
 
       const savedFolder = await response.json();
 
       if (editingFolderId) {
-        setFolders((prev) =>
-          prev.map((f) => (f.id === editingFolderId ? savedFolder : f))
-        );
+        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
         toast.success(`Folder "${savedFolder.name}" updated successfully!`);
       } else {
         setFolders((prev) => [...prev, savedFolder]);
         toast.success(`Folder "${savedFolder.name}" created successfully!`);
+        // Không auto navigate, để user ở project page
       }
 
       setNewFolderName("");
@@ -1955,8 +2283,8 @@ const DashboardPage = () => {
       setTargetProjectId(null);
       setOpenNewFolder(false);
     } catch (error) {
-      console.error("Error saving folder:", error);
-      toast.error("Failed to save folder. Please try again.");
+      console.error('Error saving folder:', error);
+      toast.error('Failed to save folder. Please try again.');
     } finally {
       setIsCreatingFolder(false);
     }
@@ -2330,8 +2658,11 @@ const DashboardPage = () => {
     }
 
     const method = selectedResponse ? "PUT" : "POST";
+    // Sửa URL API cho chế độ stateful
     const url = selectedResponse
-      ? `${API_ROOT}/endpoint_responses/${selectedResponse.id}`
+      ? isStateful
+        ? `${API_ROOT}/endpoint_responses_ful/${selectedResponse.id}`
+        : `${API_ROOT}/endpoint_responses/${selectedResponse.id}`
       : `${API_ROOT}/endpoint_responses`;
 
     fetch(url, {
@@ -2476,34 +2807,35 @@ const DashboardPage = () => {
 
   // Hàm xử lý khi lưu initial value
   const handleSaveInitialValue = () => {
+    // Lấy path từ currentEndpoint thay vì endpointData
+    const path = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    )?.path;
+
+    if (!path) {
+      toast.error("Endpoint path is not available. Please try again.");
+      return;
+    }
+
     try {
       const parsedData = JSON.parse(tempDataDefaultString);
-
       const payload = {
-        schema: endpointData.schema || {},
         data_default: parsedData,
-        // Thêm flag để reset current values khi cập nhật
         reset_current: true,
       };
 
-      // Chỉ gọi một lần API để cập nhật và reset
-      fetch(
-        `${API_ROOT}/endpoint_data?path=${encodeURIComponent(
-          endpointData.path
-        )}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      )
+      fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
         .then((res) => {
           if (!res.ok) throw new Error("Failed to update endpoint data");
           return res.json();
         })
         .then(() => {
           // Fetch lại endpoint data sau khi cập nhật
-          return fetchEndpointDataByPath(endpointData.path);
+          return fetchEndpointDataByPath(path);
         })
         .then((finalData) => {
           if (finalData) {
@@ -2828,8 +3160,8 @@ const DashboardPage = () => {
                         key={status.id || status.code}
                         className={`
                           border-b [border-bottom-style:solid] border-neutral-200 ${
-                          index === statusData.length - 1 ? "border-b-0" : ""
-                        } ${draggedItem === index ? "opacity-50" : ""} ${
+                            index === statusData.length - 1 ? "border-b-0" : ""
+                          } ${draggedItem === index ? "opacity-50" : ""} ${
                           selectedResponse?.id === status.id
                             ? "bg-gray-100"
                             : ""
@@ -2934,16 +3266,17 @@ const DashboardPage = () => {
                     </TabsTrigger>
                   )}
                   {/* Thêm tab Schema Body chỉ khi ở chế độ stateful */}
-                  {isStateful && (
+                  {isStateful && method !== "DELETE" && (
                     <TabsTrigger
                       value="schemaBody"
                       className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
-                      Schema Body
+                      {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>
                   )}
                 </TabsList>
 
+                {/* TabsContent */}
                 <TabsContent value="Header&Body" className="mt-0">
                   <div></div>
                   <div className="mt-2">
@@ -3006,10 +3339,9 @@ const DashboardPage = () => {
                           <Input
                             id="response-name"
                             value={responseName}
-                            onChange={(e) => !isStateful && setResponseName(e.target.value)}
+                            onChange={(e) => setResponseName(e.target.value)}
                             className="col-span-3 border-[#CBD5E1] rounded-md"
                             placeholder="Enter response name"
-                            disabled={isStateful}
                           />
                         </div>
 
@@ -3024,20 +3356,27 @@ const DashboardPage = () => {
                           <div className="col-span-3">
                             <Select
                               value={statusCode}
-                              onValueChange={(value) => !isStateful && setStatusCode(value)}
+                              onValueChange={(value) =>
+                                !isStateful && setStatusCode(value)
+                              }
                               disabled={isStateful}
                             >
                               <SelectTrigger
                                 id="status-code"
                                 className={`border-[#CBD5E1] rounded-md ${
-                                  isStateful ? "bg-gray-100 cursor-not-allowed" : ""
+                                  isStateful
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
                                 }`}
                               >
                                 <SelectValue placeholder="Select status code" />
                               </SelectTrigger>
                               <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                 {statusCodes.map((status) => (
-                                  <SelectItem key={status.code} value={status.code}>
+                                  <SelectItem
+                                    key={status.code}
+                                    value={status.code}
+                                  >
                                     {status.code} -{" "}
                                     {status.description.split("–")[0]}
                                   </SelectItem>
@@ -3072,75 +3411,124 @@ const DashboardPage = () => {
                           </Label>
                           <div className="col-span-3 space-y-2">
                             <div className="relative">
-                              <pre
-                                ref={jsonEditorContainerRef}
-                                className="h-60 rounded-md border border-white bg-[#233554] text-white overflow-auto p-2 font-mono text-[14px] leading-[20px] whitespace-pre-wrap break-words"
-                                style={{ minHeight: 120 }}
-                              >
-                                {responseBody || '{\n  \n}'}
-                              </pre>
+                              <Textarea
+                                id="response-body"
+                                value={responseBody}
+                                onChange={(e) => {
+                                  const canEdit =
+                                    !isStateful ||
+                                    statusCode !== "200" ||
+                                    method !== "GET";
+                                  if (canEdit) {
+                                    setResponseBody(e.target.value);
+                                  }
+                                }}
+                                disabled={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                }
+                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 ${
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
+                                }`}
+                                placeholder={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
+                                    ? "Read-only for 200 OK responses with GET method"
+                                    : ""
+                                }
+                              />
                               {/* Nhóm nút trên cùng bên phải */}
                               <div className="absolute top-2 right-2 flex space-x-2">
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
-                                  className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold shadow-sm hover:bg-gray-100"
-                                  disabled={isStateful}
+                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                 >
-                                  <Upload className="mr-1 h-4 w-4 text-black" /> <span className="text-black">Upload</span>
+                                  <Upload className="mr-1 h-4 w-4" /> Upload
                                 </Button>
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
-                                  className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold shadow-sm hover:bg-gray-100"
-                                  disabled={isStateful}
+                                  className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                   onClick={(e) => {
-                                    if (isStateful) return;
                                     e.stopPropagation();
-                                    try {
-                                      const formatted = JSON.stringify(
-                                        JSON.parse(responseBody),
-                                        null,
-                                        2
-                                      );
-                                      setResponseBody(formatted);
-                                      if (jsonEditorRef.current) jsonEditorRef.current.setText(formatted);
-                                    } catch {
-                                      toast.error("Invalid JSON format");
+                                    const canEdit =
+                                      !isStateful ||
+                                      statusCode !== "200" ||
+                                      method !== "GET";
+                                    if (canEdit) {
+                                      try {
+                                        const formatted = JSON.stringify(
+                                          JSON.parse(responseBody),
+                                          null,
+                                          2
+                                        );
+                                        setResponseBody(formatted);
+                                      } catch {
+                                        toast.error("Invalid JSON format");
+                                      }
                                     }
                                   }}
                                 >
-                                  <Code className="mr-1 h-4 w-4 text-black" /> <span className="text-black">Format</span>
+                                  <Code className="mr-1 h-4 w-4" /> Format
                                 </Button>
                               </div>
+
                               {/* Nhóm nút dưới cùng bên phải */}
                               <div className="absolute bottom-2 right-2 flex space-x-2">
                                 <FileCode
-                                  className={`text-white cursor-pointer hover:text-gray-200 ${
-                                    isStateful ? "opacity-50 cursor-not-allowed" : ""
-                                  }`}
+                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
                                   size={26}
                                   onClick={(e) => {
-                                    if (isStateful) return;
                                     e.stopPropagation();
-                                    setIsPopoverOpen(!isPopoverOpen);
+                                    const canEdit =
+                                      !isStateful ||
+                                      statusCode !== "200" ||
+                                      method !== "GET";
+                                    if (canEdit) {
+                                      setIsPopoverOpen(!isPopoverOpen);
+                                    }
+                                  }}
+                                />
+                              </div>
+
+                              {/* Nhóm nút dưới cùng bên phải */}
+                              <div className="absolute bottom-2 right-2 flex space-x-2">
+                                <FileCode
+                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                  size={26}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const canEdit =
+                                      !isStateful ||
+                                      (statusCode !== "200" &&
+                                        method !== "GET");
+                                    if (canEdit) {
+                                      setIsPopoverOpen(!isPopoverOpen);
+                                    }
                                   }}
                                 />
                               </div>
 
                               {/* Popover */}
-                              {isPopoverOpen && !isStateful && (
+                              {isPopoverOpen && (
                                 <div
                                   ref={popoverRef}
-                                  className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-[#23272e] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)] text-white"
+                                  className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
-                                      <div className="font-semibold text-sm text-white">
+                                      <div className="font-semibold text-sm text-gray-800">
                                         Variable Picker
                                       </div>
                                       <X
-                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-200"
+                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setIsPopoverOpen(false);
@@ -3152,8 +3540,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "url"
-                                            ? "bg-white text-[#23272e]"
-                                            : "text-white hover:bg-gray-700"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3165,8 +3553,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "query"
-                                            ? "bg-white text-[#23272e]"
-                                            : "text-white hover:bg-gray-700"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3178,8 +3566,8 @@ const DashboardPage = () => {
                                       <div
                                         className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                           selectedSection === "state"
-                                            ? "bg-white text-[#23272e]"
-                                            : "text-white hover:bg-gray-700"
+                                            ? "bg-[#EDEDEC] text-[#374151]"
+                                            : "text-[#374151] hover:bg-gray-100"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3191,7 +3579,7 @@ const DashboardPage = () => {
                                     </div>
 
                                     <div
-                                      className="w-full bg-white text-black p-1 rounded-md mt-2 cursor-pointer hover:bg-gray-200 transition-colors"
+                                      className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         insertTemplate(
@@ -3199,7 +3587,7 @@ const DashboardPage = () => {
                                         );
                                       }}
                                     >
-                                      <div className="font-mono text-[12px] mb-[-5px]">
+                                      <div className="font-mono text-[12px] text-black mb-[-5px]">
                                         {getTemplateText().template}
                                       </div>
                                       <div className="text-[12px] text-gray-500">
@@ -3223,22 +3611,19 @@ const DashboardPage = () => {
                           <Input
                             id="delay"
                             value={delay}
-                            onChange={(e) => !isStateful && setDelay(e.target.value)}
+                            onChange={(e) => setDelay(e.target.value)}
                             className="col-span-3 border-[#CBD5E1] rounded-md"
-                            disabled={isStateful}
                           />
                         </div>
 
-                        {!isStateful && (
-                          <div className="flex justify-end">
-                            <Button
-                              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-                              onClick={handleSaveResponse}
-                            >
-                              Save Changes
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex justify-end">
+                          <Button
+                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            onClick={handleSaveResponse}
+                          >
+                            Save Changes
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   </div>
@@ -3312,12 +3697,14 @@ const DashboardPage = () => {
                   </TabsContent>
                 )}
 
-                {isStateful && (
+                {isStateful && method !== "DELETE" && (
                   <TabsContent value="schemaBody" className="mt-0">
                     <div className="mt-2">
                       <SchemaBodyEditor
-                        endpointData={endpointData}
+                        endpointData={endpointDefinition}
+                        endpointId={currentEndpointId}
                         onSave={handleSaveSchema}
+                        method={method}
                       />
                     </div>
                   </TabsContent>
@@ -3394,7 +3781,7 @@ const DashboardPage = () => {
                     >
                       <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
                         <DialogHeader className="flex justify-between items-start mb-4">
-                          <DialogTitle className="text-xl font-bold text-white">
+                          <DialogTitle className="text-xl font-bold text-slate-800">
                             Update Initial Value
                           </DialogTitle>
                         </DialogHeader>
@@ -3407,29 +3794,30 @@ const DashboardPage = () => {
                               onChange={(e) => {
                                 setTempDataDefaultString(e.target.value);
                                 try {
+                                  // Chỉ cập nhật state khi JSON hợp lệ
                                   setTempDataDefault(
                                     JSON.parse(e.target.value)
                                   );
                                 } catch {
-                                  // ignore
+                                  // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
+                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16"
                               placeholder="Enter initial value"
                             />
                             {/* Top right buttons */}
                             <div className="absolute top-2 right-2 flex space-x-2">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
+                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                               >
-                                <Upload className="mr-1 h-4 w-4 text-black" /> Upload
+                                <Upload className="mr-1 h-4 w-4" /> Upload
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
+                                className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                 onClick={() => {
                                   try {
                                     const formatted = JSON.stringify(
@@ -3438,38 +3826,43 @@ const DashboardPage = () => {
                                       2
                                     );
                                     setTempDataDefaultString(formatted);
-                                  } catch (err) {}
+                                    setTempDataDefault(JSON.parse(formatted));
+                                  } catch {
+                                    toast.error("Invalid JSON format");
+                                  }
                                 }}
                               >
-                                <Code className="mr-1 h-4 w-4 text-black" /> Format
+                                <Code className="mr-1 h-4 w-4" /> Format
                               </Button>
                             </div>
 
                             {/* Bottom right icon */}
                             <div className="absolute bottom-2 right-2 flex space-x-2">
                               <FileCode
-                                className="text-white cursor-pointer hover:text-gray-200"
+                                className="text-gray-400 cursor-pointer hover:text-gray-600"
                                 size={26}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setIsInitialValuePopoverOpen(!isInitialValuePopoverOpen);
+                                  setIsInitialValuePopoverOpen(
+                                    !isInitialValuePopoverOpen
+                                  );
                                 }}
                               />
                             </div>
 
-                            {/* Popover */}
+                            {/* Popover cho Initial Value */}
                             {isInitialValuePopoverOpen && (
                               <div
                                 ref={initialValuePopoverRef}
-                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-[#23272e] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)] text-white"
+                                className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                               >
                                 <div className="flex flex-col items-center gap-2 p-3.5">
                                   <div className="w-full flex justify-between items-center">
-                                    <div className="font-semibold text-sm text-white">
+                                    <div className="font-semibold text-sm text-gray-800">
                                       Variable Picker
                                     </div>
                                     <X
-                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-200"
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setIsInitialValuePopoverOpen(false);
@@ -3481,8 +3874,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "url"
-                                          ? "bg-white text-[#23272e]"
-                                          : "text-white hover:bg-gray-700"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3494,8 +3887,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "query"
-                                          ? "bg-white text-[#23272e]"
-                                          : "text-white hover:bg-gray-700"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3507,8 +3900,8 @@ const DashboardPage = () => {
                                     <div
                                       className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                         selectedSection === "state"
-                                          ? "bg-white text-[#23272e]"
-                                          : "text-white hover:bg-gray-700"
+                                          ? "bg-[#EDEDEC] text-[#374151]"
+                                          : "text-[#374151] hover:bg-gray-100"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -3520,13 +3913,15 @@ const DashboardPage = () => {
                                   </div>
 
                                   <div
-                                    className="w-full bg-white text-black p-1 rounded-md mt-2 cursor-pointer hover:bg-gray-200 transition-colors"
+                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      insertInitialValueTemplate(getTemplateText().template);
+                                      insertInitialValueTemplate(
+                                        getTemplateText().template
+                                      );
                                     }}
                                   >
-                                    <div className="font-mono text-[12px] mb-[-5px]">
+                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
                                       {getTemplateText().template}
                                     </div>
                                     <div className="text-[12px] text-gray-500">
@@ -3539,16 +3934,16 @@ const DashboardPage = () => {
                           </div>
                           <div className="flex justify-end space-x-2 mt-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                             >
-                              <Upload className="mr-1 h-4 w-4 text-black" /> Upload
+                              <Upload className="mr-1 h-4 w-4" /> Upload
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="border border-white w-[77px] h-[29px] rounded-[6px] bg-white text-black font-semibold hover:bg-gray-100"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                               onClick={() => {
                                 try {
                                   const formatted = JSON.stringify(
@@ -3563,7 +3958,7 @@ const DashboardPage = () => {
                                 }
                               }}
                             >
-                              <Code className="mr-1 h-4 w-4 text-black" /> Format
+                              <Code className="mr-1 h-4 w-4" /> Format
                             </Button>
                           </div>
                         </div>
@@ -3572,12 +3967,12 @@ const DashboardPage = () => {
                           <Button
                             variant="outline"
                             onClick={() => setIsInitialValueDialogOpen(false)}
-                            className=" bg-white hover:bg-[#F3F6FD] w-[90px] h-[40px] rounded-[8px] font-semibold shadow-none"
+                            className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
                           >
                             Cancel
                           </Button>
                           <Button
-                            className="bg-[#2563EB] text-white hover:bg-[#1E40AF] w-[90px] h-[40px] rounded-[8px] font-semibold shadow-none"
+                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white w-[90px] h-[40px] rounded-[8px]"
                             onClick={handleSaveInitialValue}
                           >
                             Update
@@ -3979,6 +4374,35 @@ const DashboardPage = () => {
                     }
                   }}
                 />
+              </div>
+
+              {/* Folder Mode */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Folder Mode</Label>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="folderMode"
+                      value="public"
+                      checked={newFolderMode === "public"}
+                      onChange={() => setNewFolderMode("public")}
+                      className="accent-blue-600"
+                    />
+                    <span>Public</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="folderMode"
+                      value="private"
+                      checked={newFolderMode === "private"}
+                      onChange={() => setNewFolderMode("private")}
+                      className="accent-blue-600"
+                    />
+                    <span>Private</span>
+                  </label>
+                </div>
               </div>
             </div>
 
