@@ -46,7 +46,7 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-import JSONEditor from 'jsoneditor';
+// import JSONEditor from 'jsoneditor';
 import 'jsoneditor/dist/jsoneditor.css';
 import {getCurrentUser} from "@/services/api.js";
 
@@ -1246,8 +1246,8 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
 const DashboardPage = () => {
   const navigate = useNavigate();
   // Ref cho JSON Editor
-  const jsonEditorContainerRef = useRef(null);
-  const jsonEditorRef = useRef(null);
+  // const jsonEditorContainerRef = useRef(null);
+  // const jsonEditorRef = useRef(null);
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
@@ -3927,35 +3927,6 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             )}
-                          </div>
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                            >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                              onClick={() => {
-                                try {
-                                  const formatted = JSON.stringify(
-                                    JSON.parse(tempDataDefaultString),
-                                    null,
-                                    2
-                                  );
-                                  setTempDataDefaultString(formatted);
-                                  setTempDataDefault(JSON.parse(formatted));
-                                } catch {
-                                  toast.error("Invalid JSON format");
-                                }
-                              }}
-                            >
-                              <Code className="mr-1 h-4 w-4" /> Format
-                            </Button>
                           </div>
                         </div>
 
