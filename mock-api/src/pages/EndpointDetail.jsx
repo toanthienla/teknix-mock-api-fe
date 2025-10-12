@@ -3928,35 +3928,7 @@ const DashboardPage = () => {
                               </div>
                             )}
                           </div>
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                            >
-                              <Upload className="mr-1 h-4 w-4" /> Upload
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                              onClick={() => {
-                                try {
-                                  const formatted = JSON.stringify(
-                                    JSON.parse(tempDataDefaultString),
-                                    null,
-                                    2
-                                  );
-                                  setTempDataDefaultString(formatted);
-                                  setTempDataDefault(JSON.parse(formatted));
-                                } catch {
-                                  toast.error("Invalid JSON format");
-                                }
-                              }}
-                            >
-                              <Code className="mr-1 h-4 w-4" /> Format
-                            </Button>
-                          </div>
+                         
                         </div>
 
                         <DialogFooter className="flex justify-end gap-3">
