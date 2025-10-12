@@ -74,6 +74,7 @@ export default function Topbar({
   onOpenSettings,
   isStateful,
   onStateModeChange,
+   currentFolder, // 👈 thêm prop này
 }) {
   const [query, setQuery] = useState("");
   const [showPermission, setShowPermission] = useState(false);
@@ -85,39 +86,45 @@ export default function Topbar({
 const [folderOwner, setFolderOwner] = useState(""); // username của owner
 const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
 const [isLoadingOwner, setIsLoadingOwner] = useState(false);
+
+
 useEffect(() => {
-  if (selectedFolder?.id) {
-    fetchFolderOwner(selectedFolder.id);
+  if (currentFolder?.id) {
+    setSelectedFolder(currentFolder);
+    fetchFolderOwner(currentFolder.id); // ✅ gọi API lấy owner
   }
-}, [selectedFolder]);
+}, [currentFolder]);
+
 
 
 const fetchFolderOwner = async (folderId) => {
-  if (!folderId) return;
-  setIsLoadingOwner(true);
-
   try {
-    const [resOwner, resCheck] = await Promise.all([
-      fetch(`${API_ROOT}/folders/getOwner/${folderId}`, { credentials: "include" }),
-      fetch(`${API_ROOT}/folders/checkOwner/${folderId}`, { credentials: "include" }),
-    ]);
+    const token = localStorage.getItem("token"); // 🔑 lấy token
 
-    if (!resOwner.ok) throw new Error("Error fetching owner info");
-    if (!resCheck.ok) throw new Error("Error checking ownership");
+    const res = await fetch(`${API_ROOT}/folders/getOwner/${folderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ thêm header
+      },
+    });
 
-    const dataOwner = await resOwner.json();
-    const dataCheck = await resCheck.json();
+    if (!res.ok) throw new Error("Failed to fetch folder owner");
+    const data = await res.json();
 
-    setFolderOwner(dataOwner.username || "Unknown");
-    setIsOwner(Boolean(dataCheck.success));
+    // Giả sử API trả về { username: "ngankim" }
+    if (data?.username) {
+      setFolderOwner(data.username);
+    } else {
+      setFolderOwner("Unknown");
+    }
   } catch (err) {
-    console.error("Error fetching folder owner/check:", err);
+    console.error("Error fetching folder owner:", err);
     setFolderOwner("Unknown");
-    setIsOwner(false);
-  } finally {
-    setIsLoadingOwner(false);
   }
 };
+
+
+
+
 
 
 

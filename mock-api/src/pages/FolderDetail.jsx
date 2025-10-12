@@ -852,8 +852,7 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main className="pt-8 flex-1 transition-all duration-300 ">
-          
-         <Topbar
+       <Topbar
   breadcrumb={
     currentWorkspace
       ? currentProject
@@ -899,8 +898,9 @@ export default function Dashboard() {
   showNewFolderButton={true}
   showNewResponseButton={false}
   showActiveEndpoint={true}
-  showSettingsButton={true}        // ✅ thêm dòng này
+  showSettingsButton={true}
   activeEndpointCount={filtered.filter(e => e.is_active).length}
+  currentFolder={currentFolder} // 👈 thêm dòng này để Topbar nhận folder hiện tại
 />
 
           <div

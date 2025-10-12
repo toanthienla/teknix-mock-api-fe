@@ -37,25 +37,35 @@ export function LoginForm({className, ...props}) {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    const errorMessage = validateInputs(username, password);
-      if (errorMessage) {
-        toast.error(errorMessage);
-        return;
-      }
+  e.preventDefault();
+  const errorMessage = validateInputs(username, password);
+  if (errorMessage) {
+    toast.error(errorMessage);
+    return;
+  }
 
-    try {
-      await login({ username, password });
-      toast.success("Login successful!");
-      setTimeout(() => navigate("/dashboard"), 3000);
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        toast.error("Invalid credentials. Please try again.");
-      } else {
-        toast.error("An error occurred during login");
-      }
+  try {
+    // Gọi API đăng nhập
+    const res = await login({ username, password });
+
+    // 🟢 Lưu token vào localStorage (nếu backend trả access_token)
+    if (res?.access_token) {
+      localStorage.setItem("token", res.access_token);
+    } else if (res?.token) {
+      localStorage.setItem("token", res.token);
     }
-  };
+
+    toast.success("Login successful!");
+    setTimeout(() => navigate("/dashboard"), 1000);
+  } catch (error) {
+    if (error.response && error.response.status === 400) {
+      toast.error("Invalid credentials. Please try again.");
+    } else {
+      toast.error("An error occurred during login");
+    }
+  }
+};
+
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

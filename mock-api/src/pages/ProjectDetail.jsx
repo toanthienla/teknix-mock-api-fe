@@ -1031,9 +1031,9 @@ useEffect(() => {
           
         </div>
       </div>
-      <div className="text-sm font-semibold text-gray-700 underline">
-  {isOwner ? "Owner" : "Viewer"}
-</div>
+       <div className="text-sm font-semibold text-gray-700 underline">
+                      Owner
+                    </div>
     </div>
 
     {/* Folder Protection */}
