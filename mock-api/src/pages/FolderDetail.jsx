@@ -87,6 +87,9 @@ export default function Dashboard() {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+
   // folder state
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -883,6 +886,7 @@ export default function Dashboard() {
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
+            setOpenNewWs={setOpenNewWs}
             username={currentUsername}
           />
         </aside>
@@ -1289,6 +1293,48 @@ export default function Dashboard() {
             <Button
               className="bg-blue-600 text-white hover:bg-blue-700"
               onClick={handleCreateProject}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Workspace */}
+      <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenNewWs(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => {
+                handleAddWorkspace(newWsName);
+                setNewWsName("");
+                setOpenNewWs(false);
+              }}
             >
               Create
             </Button>
