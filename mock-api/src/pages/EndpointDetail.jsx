@@ -47,8 +47,8 @@ import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
 // import JSONEditor from 'jsoneditor';
-import 'jsoneditor/dist/jsoneditor.css';
-import {getCurrentUser} from "@/services/api.js";
+import "jsoneditor/dist/jsoneditor.css";
+import { getCurrentUser } from "@/services/api.js";
 
 const statusCodes = [
   {
@@ -1323,8 +1323,33 @@ const DashboardPage = () => {
 
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
+  const [delayError, setDelayError] = useState("");
 
   const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  const validateDelay = (value) => {
+    // Cho phép giá trị rỗng (sẽ được xử lý khi lưu)
+    if (value === "") return "";
+
+    // Kiểm tra có phải số không
+    if (isNaN(value)) {
+      return "Delay must be a number";
+    }
+
+    // Kiểm tra số thập phân
+    if (value.includes(".")) {
+      return "Delay must be an integer (no decimals)";
+    }
+
+    const num = parseInt(value);
+
+    // Kiểm tra số âm
+    if (num < 0) {
+      return "Delay must be a positive number";
+    }
+
+    return "";
+  };
 
   useEffect(() => {
     const checkUserLogin = async () => {
@@ -2208,10 +2233,12 @@ const DashboardPage = () => {
 
     // Check if no changes when editing
     if (editingFolderId) {
-      const originalFolder = folders.find(f => f.id === editingFolderId);
-      if (originalFolder &&
+      const originalFolder = folders.find((f) => f.id === editingFolderId);
+      if (
+        originalFolder &&
         newFolderName.trim() === originalFolder.name &&
-        newFolderDesc.trim() === (originalFolder.description || "")) {
+        newFolderDesc.trim() === (originalFolder.description || "")
+      ) {
         // No changes, just close dialog
         setOpenNewFolder(false);
         setNewFolderName("");
@@ -2249,27 +2276,29 @@ const DashboardPage = () => {
         response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
           method: "PUT",
           credentials: "include",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({id: editingFolderId, ...folderData}),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingFolderId, ...folderData }),
         });
       } else {
         // Create new folder
         response = await fetch(`${API_ROOT}/folders`, {
           method: "POST",
           credentials: "include",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(folderData),
         });
       }
 
       if (!response.ok) {
-        throw new Error('Failed to save folder');
+        throw new Error("Failed to save folder");
       }
 
       const savedFolder = await response.json();
 
       if (editingFolderId) {
-        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
+        setFolders((prev) =>
+          prev.map((f) => (f.id === editingFolderId ? savedFolder : f))
+        );
         toast.success(`Folder "${savedFolder.name}" updated successfully!`);
       } else {
         setFolders((prev) => [...prev, savedFolder]);
@@ -2283,8 +2312,8 @@ const DashboardPage = () => {
       setTargetProjectId(null);
       setOpenNewFolder(false);
     } catch (error) {
-      console.error('Error saving folder:', error);
-      toast.error('Failed to save folder. Please try again.');
+      console.error("Error saving folder:", error);
+      toast.error("Failed to save folder. Please try again.");
     } finally {
       setIsCreatingFolder(false);
     }
@@ -2610,6 +2639,13 @@ const DashboardPage = () => {
   };
 
   const handleSaveResponse = () => {
+    const delayValidationError = validateDelay(delay);
+    if (delayValidationError) {
+      setDelayError(delayValidationError);
+      toast.error(delayValidationError);
+      return;
+    }
+
     // Parse response body
     let responseBodyObj = {};
     try {
@@ -3608,12 +3644,30 @@ const DashboardPage = () => {
                           >
                             Delay (ms)
                           </Label>
-                          <Input
-                            id="delay"
-                            value={delay}
-                            onChange={(e) => setDelay(e.target.value)}
-                            className="col-span-3 border-[#CBD5E1] rounded-md"
-                          />
+                          <div className="col-span-3">
+                            <Input
+                              id="delay"
+                              value={delay}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Chỉ cho phép nhập số
+                                if (/^\d*$/.test(value) || value === "") {
+                                  setDelay(value);
+                                  const error = validateDelay(value);
+                                  setDelayError(error);
+                                }
+                              }}
+                              className={`border-[#CBD5E1] rounded-md ${
+                                delayError ? "border-red-500" : ""
+                              }`}
+                              placeholder="0"
+                            />
+                            {delayError && (
+                              <div className="text-red-500 text-xs mt-1 pl-2">
+                                {delayError}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex justify-end">
@@ -3726,7 +3780,7 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                              <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                   <pre className="whitespace-pre-wrap break-words m-0">
                                     {dataDefault && dataDefault.length > 0
                                       ? JSON.stringify(dataDefault, null, 2)
@@ -3798,7 +3852,6 @@ const DashboardPage = () => {
                                 }
                               }}
                               className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
-
                               placeholder="Enter initial value"
                             />
                             {/* Top right buttons */}
@@ -4266,12 +4319,28 @@ const DashboardPage = () => {
 
               <div>
                 <Label htmlFor="new-delay">Delay (ms)</Label>
-                <Input
-                  id="new-delay"
-                  placeholder="0"
-                  value={delay}
-                  onChange={(e) => setDelay(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="new-delay"
+                    placeholder="0"
+                    value={delay}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Chỉ cho phép nhập số
+                      if (/^\d*$/.test(value) || value === "") {
+                        setDelay(value);
+                        const error = validateDelay(value);
+                        setDelayError(error);
+                      }
+                    }}
+                    className={delayError ? "border-red-500" : ""}
+                  />
+                  {delayError && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {delayError}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <DialogFooter className="flex justify-end gap-3">
@@ -4345,7 +4414,9 @@ const DashboardPage = () => {
 
               {/* Folder Mode */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Folder Mode</Label>
+                <Label className="text-sm font-medium text-gray-700">
+                  Folder Mode
+                </Label>
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
