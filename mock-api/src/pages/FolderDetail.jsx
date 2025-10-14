@@ -46,6 +46,10 @@ import timeIcon from "@/assets/time&date.svg";
 import statusIcon from "@/assets/status.svg";
 import actionsIcon from "@/assets/actions.svg";
 import {getCurrentUser} from "@/services/api.js";
+import webBg from "@/assets/dot_web.svg";
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -363,7 +367,7 @@ export default function Dashboard() {
 
           eArr.forEach(e => {
             if (!allEndpoints.some(ee => ee.id === e.id)) {
-              allEndpoints.push({ ...e, project_id: f.project_id });
+              allEndpoints.push({...e, project_id: f.project_id});
             }
           });
         }
@@ -791,18 +795,18 @@ export default function Dashboard() {
 
     fetch(`${API_ROOT}/endpoints/${editId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(updated),
     })
       .then(() => {
         // Cập nhật danh sách endpoints trong bảng
         setEndpoints((prev) =>
-          prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
         );
 
         // Cập nhật danh sách allEndpoints để Sidebar nhận đúng folder mới
         setEndpoints((prev) =>
-          prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
         );
 
         setOpenEdit(false);
@@ -892,57 +896,65 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="pt-8 flex-1 transition-all duration-300 ">
-       <Topbar
-  breadcrumb={
-    currentWorkspace
-      ? currentProject
-        ? currentFolder
-          ? [
-              {
-                label: currentWorkspace.name,
-                WORKSPACE_ID: currentWorkspace.id,
-                href: "/dashboard",
-              },
-              {
-                label: currentProject.name,
-                href: `/dashboard/${currentProject.id}`,
-              },
-              {
-                label: currentFolder.name,
-                href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
-              },
-            ]
-          : [
-              {
-                label: currentWorkspace.name,
-                WORKSPACE_ID: currentWorkspace.id,
-                href: "/dashboard",
-              },
-              {
-                label: currentProject.name,
-                href: `/dashboard/${currentProject.id}`,
-              },
-            ]
-        : [
-            {
-              label: currentWorkspace.name,
-              WORKSPACE_ID: currentWorkspace.id,
-              href: "/dashboard",
-            },
-          ]
-      : []
-  }
-  onSearch={setSearchTerm}
-  onNewFolder={() => setOpenNewFolder(true)}
-  showNewProjectButton={false}
-  showNewFolderButton={true}
-  showNewResponseButton={false}
-  showActiveEndpoint={true}
-  showSettingsButton={true}
-  activeEndpointCount={filtered.filter(e => e.is_active).length}
-  currentFolder={currentFolder} // 👈 thêm dòng này để Topbar nhận folder hiện tại
-/>
+        <main
+          className="pt-8 flex-1 transition-all duration-300 relative"
+          style={{
+            backgroundImage: `url(${webBg})`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        >
+          <Topbar
+            breadcrumb={
+              currentWorkspace
+                ? currentProject
+                  ? currentFolder
+                    ? [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                      {
+                        label: currentFolder.name,
+                        href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                      },
+                    ]
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                    ]
+                  : [
+                    {
+                      label: currentWorkspace.name,
+                      WORKSPACE_ID: currentWorkspace.id,
+                      href: "/dashboard",
+                    },
+                  ]
+                : []
+            }
+            onSearch={setSearchTerm}
+            onNewFolder={() => setOpenNewFolder(true)}
+            showNewProjectButton={false}
+            showNewFolderButton={true}
+            showNewResponseButton={false}
+            showActiveEndpoint={true}
+            showSettingsButton={true}
+            activeEndpointCount={filtered.filter(e => e.is_active).length}
+            currentFolder={currentFolder} // 👈 thêm dòng này để Topbar nhận folder hiện tại
+          />
 
           <div
             className={`transition-all duration-300 px-8 pt-4 pb-8
@@ -1014,9 +1026,9 @@ export default function Dashboard() {
                         setNewEMethod("");
                         setOpenNew(true);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md"
+                      className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-3 py-1 rounded-md"
                     >
-                      <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain"/>
+                      <img src={createIcon} alt="Create Icon" className="w-4 h-4 object-contain brightness-0"/>
                       New Endpoint
                     </Button>
                   </div>
@@ -1191,7 +1203,7 @@ export default function Dashboard() {
             </Button>
 
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleCreateEndpoint}
             >
               Create
@@ -1236,7 +1248,7 @@ export default function Dashboard() {
             </Button>
             <Button
               onClick={handleUpdateEndpoint}
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               disabled={!hasEdited}
             >
               Update
@@ -1291,7 +1303,7 @@ export default function Dashboard() {
           <DialogFooter className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => setOpenNewProject(false)}>Cancel</Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleCreateProject}
             >
               Create
@@ -1329,7 +1341,7 @@ export default function Dashboard() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -1368,7 +1380,7 @@ export default function Dashboard() {
           </div>
           <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => setOpenEditWs(false)}>Cancel</Button>
-            <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700"
+            <Button type="button" className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                     onClick={handleEditWorkspace}>Update</Button>
           </DialogFooter>
         </DialogContent>
@@ -1466,7 +1478,7 @@ export default function Dashboard() {
             <Button
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2  text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+              className="px-4 py-2  bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
             >
               {isCreatingFolder ? (editingFolderId ? "Updating..." : "Creating...") : (editingFolderId ? "Update" : "Create")}
             </Button>
@@ -1517,6 +1529,20 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* footer */}
+      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
+        © Teknik Corp. All rights reserved.
+      </div>
+
+      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
+        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+        <a className="hover:underline font-semibold" href="">About</a>
+        <span>·</span>
+        <a className="hover:underline font-semibold" href="">Support</a>
+      </div>
     </div>
   );
 }

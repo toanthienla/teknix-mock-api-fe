@@ -56,6 +56,10 @@ import editIcon from "@/assets/Edit Icon.svg";
 import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import schemaIcon from "@/assets/schema.svg"
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
+import webBg from "@/assets/dot_web.svg";
 
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -247,7 +251,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
             <Plus className="w-4 h-4 mr-2" /> Add Field
           </Button>
           <Button
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
             onClick={handleSave}
           >
             Save Changes
@@ -1086,7 +1090,13 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main
-          className="pt-8 flex-1 transition-all duration-300 "
+          className="pt-8 flex-1 transition-all duration-300 relative"
+          style={{
+            backgroundImage: `url(${webBg})`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
         >
           {/* Top Navbar */}
           <Topbar
@@ -1265,7 +1275,7 @@ export default function Dashboard() {
                           Cancel
                         </Button>
                         <Button
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                           onClick={async () => {
                             try {
                               const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
@@ -1713,7 +1723,7 @@ export default function Dashboard() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -1764,7 +1774,7 @@ export default function Dashboard() {
             </Button>
             <Button
               type="button"
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleEditWorkspace}
             >
               Update
@@ -1869,7 +1879,7 @@ export default function Dashboard() {
             <Button
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
             >
               {isCreatingFolder
                 ? (editingFolderId ? "Updating..." : "Creating...")
@@ -1946,6 +1956,20 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* footer */}
+      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
+        © Teknik Corp. All rights reserved.
+      </div>
+
+      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
+        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+        <a className="hover:underline font-semibold" href="">About</a>
+        <span>·</span>
+        <a className="hover:underline font-semibold" href="">Support</a>
+      </div>
     </div>
   );
 }

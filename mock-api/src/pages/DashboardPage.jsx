@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -27,6 +25,10 @@ import {
 
 import { toast } from "react-toastify";
 import {getCurrentUser} from "@/services/api.js";
+import webBg from "@/assets/dot_web.svg"
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -658,8 +660,16 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main */}
-        <main className="pt-8 flex-1 transition-all duration-300">
-          <Topbar
+        <main
+          className="pt-8 flex-1 transition-all duration-300 relative"
+          style={{
+            backgroundImage: `url(${webBg})`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        >
+        <Topbar
             breadcrumb={
               currentWorkspace
                 ? [
@@ -826,7 +836,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleCreateProject}
             >
               Create
@@ -904,7 +914,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleUpdateProject}
               disabled={
                 editTitle.trim() === (projects.find((p) => p.id === editId)?.name || "") &&
@@ -967,7 +977,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -1001,7 +1011,7 @@ export default function DashboardPage() {
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleEditWorkspace}
               disabled={
                 editWsName.trim() === (workspaces.find((w) => w.id === editWsId)?.name || "")
@@ -1036,6 +1046,20 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* footer */}
+      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
+        © Teknik Corp. All rights reserved.
+      </div>
+
+      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
+        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+        <a className="hover:underline font-semibold" href="">About</a>
+        <span>·</span>
+        <a className="hover:underline font-semibold" href="">Support</a>
+      </div>
     </div>
   );
 }

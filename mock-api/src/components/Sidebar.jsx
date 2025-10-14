@@ -20,6 +20,7 @@ import deleteIcon from "@/assets/Trash Icon.svg";
 import randomColor from "randomcolor";
 import OpenIcon from "@/assets/opensidebar.svg";
 import statefulIcon from "@/assets/stateful.svg";
+import logoIcon from "@/assets/logo.svg"
 import {logout} from "@/services/api.js";
 import {toast} from "react-toastify";
 
@@ -175,6 +176,7 @@ export default function Sidebar({
     <div className="flex flex-col bg-white transition-all duration-300 w-64 h-screen">
       {/* Header */}
       <div className="flex items-center justify-between px-4 border-b border-slate-200 h-16">
+        <img src={logoIcon} className="w-10 h-10" alt="Logo Icon"/>
         <span
           className="cursor-pointer text-2xl font-bold text-slate-900"
           onClick={() => {

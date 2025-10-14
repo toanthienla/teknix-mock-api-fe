@@ -46,7 +46,10 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-// import JSONEditor from 'jsoneditor';
+import webBg from "@/assets/dot_web.svg";
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
@@ -405,7 +408,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
         {/* Nút lưu */}
         <div className="flex justify-end mt-4">
           <Button
-            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
             onClick={handleSave}
           >
             Save Changes
@@ -591,7 +594,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
             <Plus className="w-4 h-4 mr-2" /> Add Field
           </Button>
           <Button
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
             onClick={handleSave}
           >
             Save Changes
@@ -1032,7 +1035,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
             {selectedResponse && (
               <div className="flex justify-end">
                 <Button
-                  className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={handleSave}
                 >
                   Save Changes
@@ -2809,7 +2812,15 @@ const DashboardPage = () => {
       </aside>
 
       {/* Main Content */}
-      <div className={`pt-8 flex-1 transition-all duration-300`}>
+      <div
+        className="pt-8 flex-1 transition-all duration-300 relative"
+        style={{
+          backgroundImage: `url(${webBg})`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
         {/* Header */}
         <Topbar
           className="mt-0 mb-4"
@@ -2938,7 +2949,7 @@ const DashboardPage = () => {
                   />
                 </Button>
               )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] bg-white border border-[#D1D5DB] rounded-md flex-1 min-w-0">
                 <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
@@ -3535,7 +3546,7 @@ const DashboardPage = () => {
 
                         <div className="flex justify-end">
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                             onClick={handleSaveResponse}
                           >
                             Save Changes
@@ -3603,7 +3614,7 @@ const DashboardPage = () => {
                         </div>
                         <div className="flex justify-end">
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                             onClick={handleSaveResponse}
                           >
                             Save Changes
@@ -3868,7 +3879,7 @@ const DashboardPage = () => {
                             Cancel
                           </Button>
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white w-[90px] h-[40px] rounded-[8px]"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
                             onClick={handleSaveInitialValue}
                           >
                             Update
@@ -4019,7 +4030,7 @@ const DashboardPage = () => {
               </Button>
               <Button
                 type="button"
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                 onClick={handleEditWorkspace}
               >
                 Update
@@ -4057,7 +4068,7 @@ const DashboardPage = () => {
                 Cancel
               </Button>
               <Button
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                 onClick={() => {
                   handleAddWorkspace(newWsName);
                   setNewWsName("");
@@ -4360,7 +4371,7 @@ const DashboardPage = () => {
                 disabled={
                   !newFolderName.trim() || !hasChanges() || isCreatingFolder
                 }
-                className="px-4 py-2  text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+                className="px-4 py-2  bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
               >
                 {isCreatingFolder
                   ? editingFolderId
@@ -4410,6 +4421,20 @@ const DashboardPage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* footer */}
+        <div className="absolute left-8 bottom-1 text-xs font-semibold text-gray-700">
+          © Teknik Corp. All rights reserved.
+        </div>
+
+        <div className="absolute right-6 bottom-1 flex items-center gap-3 text-xs text-gray-700">
+          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+          <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+          <a className="hover:underline font-semibold" href="">About</a>
+          <span>·</span>
+          <a className="hover:underline font-semibold" href="">Support</a>
+        </div>
       </div>
     </div>
   );

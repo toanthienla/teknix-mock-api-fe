@@ -242,14 +242,14 @@ export default function Topbar({
                               );
                             }
                           }}
-                          className="font-medium text-slate-900"
+                          className="font-medium text-slate-400"
                         >
                           {item.label}
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
-                      <BreadcrumbSeparator className="font-medium text-slate-900"/>
+                      <BreadcrumbSeparator className="font-medium text-slate-400"/>
                     )}
                   </React.Fragment>
                 );
@@ -288,12 +288,12 @@ export default function Topbar({
         {showNewResponseButton && (
           <Button
             onClick={onNewResponse}
-            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
           >
             <img
               src={addIcon}
               alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
+              className="w-5 h-5 object-contain brightness-0"
             />
             New Response
           </Button>
@@ -303,12 +303,12 @@ export default function Topbar({
         {showNewProjectButton && (
           <Button
             onClick={onNewProject}
-            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
           >
             <img
               src={addIcon}
               alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
+              className="w-5 h-5 object-contain brightness-0"
             />
             New Project
           </Button>
@@ -318,12 +318,12 @@ export default function Topbar({
         {showNewFolderButton && (
           <Button
             onClick={onNewFolder}
-            className="bg-blue-600 hover:bg-blue-700 px-4 h-10 rounded-md"
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
           >
             <img
               src={addIcon}
               alt="Add icon"
-              className="w-5 h-5 object-contain invert brightness-0"
+              className="w-5 h-5 object-contain brightness-0"
             />
             New Folder
           </Button>
