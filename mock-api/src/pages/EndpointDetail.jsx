@@ -30,7 +30,7 @@ import {
 import { toast } from "react-toastify";
 import {
   Dialog,
-  DialogContent,
+  DialogContent, DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -46,7 +46,14 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-// import JSONEditor from 'jsoneditor';
+import webBg from "@/assets/dot_web.svg";
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
+import Editor from "react-simple-code-editor";
+import { highlight, languages } from "prismjs/components/prism-core";
+import "prismjs/components/prism-json";
+import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
 
@@ -145,8 +152,6 @@ const statusCodes = [
 
 const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [schemaFields, setSchemaFields] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [selectedFieldId, setSelectedFieldId] = useState(null);
   // Thêm state cho dropdown của GET method
   const [availableFields, setAvailableFields] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -154,86 +159,50 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
-      if (method === "GET") {
-        // Lấy schema từ endpointData.schema.fields (định dạng đúng từ API)
-        const fields = endpointData.schema.fields || [];
+      // Lấy schema từ endpointData.schema.fields (định dạng đúng từ API)
+      const fields = endpointData.schema.fields || [];
 
-        // Đảm bảo "id" luôn được bao gồm
-        const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
+      // Đảm bảo "id" luôn được bao gồm
+      const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
 
-        // Lấy type từ base_schema nếu có
-        const fieldsConfig = schemaWithId.map((name, index) => {
-          // Tìm type từ availableFields (đã được fetch từ /base_schema/{id})
-          const fieldConfig = availableFields.find((f) =>
-            typeof f === "string" ? f === name : f.name === name
-          );
-
-          return {
-            id: `field-${index}`,
-            name,
-            type: fieldConfig
-              ? typeof fieldConfig === "string"
-                ? "string"
-                : fieldConfig.type
-              : "string",
-            required: false,
-            isDefault: name === "id",
-          };
-        });
-
-        setSchemaFields(fieldsConfig);
-      } else {
-        // For POST/PUT, schema is { field: { type, required }, ... }
-        // Đảm bảo luôn có field "id"
-        const schemaWithId = {
-          id: { type: "number", required: false },
-          ...endpointData.schema,
-        };
-
-        const fields = Object.entries(schemaWithId).map(
-          ([name, config], index) => ({
-            id: `field-${index}`,
-            name,
-            type: config.type || "string",
-            required: config.required !== undefined ? config.required : false,
-            isDefault: name === "id",
-          })
+      // Lấy type từ base_schema nếu có
+      const fieldsConfig = schemaWithId.map((name, index) => {
+        // Tìm type từ availableFields (đã được fetch từ /base_schema/{id})
+        const fieldConfig = availableFields.find((f) =>
+          typeof f === "string" ? f === name : f.name === name
         );
-        setSchemaFields(fields);
-      }
-    } else {
-      // Initialize with default schema
-      if (method === "GET") {
-        const defaultSchema = { fields: ["id"] };
-        const fieldsConfig = defaultSchema.fields.map((name, index) => ({
+
+        return {
           id: `field-${index}`,
           name,
-          type: "string",
+          type: fieldConfig
+            ? typeof fieldConfig === "string"
+              ? "string"
+              : fieldConfig.type
+            : "string",
           required: false,
           isDefault: name === "id",
-        }));
-        setSchemaFields(fieldsConfig);
-      } else {
-        const defaultSchema = {
-          id: { type: "number", required: false },
         };
-        const fields = Object.entries(defaultSchema).map(
-          ([name, config], index) => ({
-            id: `field-${index}`,
-            name,
-            type: config.type || "string",
-            required: config.required !== undefined ? config.required : false,
-            isDefault: true,
-          })
-        );
-        setSchemaFields(fields);
-      }
+      });
+
+      setSchemaFields(fieldsConfig);
+    } else {
+      // Initialize with default schema
+      const defaultSchema = { fields: ["id"] };
+      const fieldsConfig = defaultSchema.fields.map((name, index) => ({
+        id: `field-${index}`,
+        name,
+        type: "string",
+        required: false,
+        isDefault: name === "id",
+      }));
+      setSchemaFields(fieldsConfig);
     }
   }, [endpointData, method, availableFields]);
 
   // Fetch available fields for GET method
   useEffect(() => {
-    if (method === "GET" && endpointId) {
+    if (endpointId) {
       fetch(`${API_ROOT}/base_schema/${endpointId}`)
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch base schema");
@@ -251,141 +220,9 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
           setAvailableFields([]);
         });
     }
-  }, [method, endpointId]);
+  }, [endpointId]);
 
-  const validateField = (field) => {
-    // Không validate field mặc định hoặc khi method là GET
-    if (field.isDefault || method === "GET") return {};
-
-    const newErrors = {};
-
-    if (!field.name.trim()) {
-      newErrors.name = "Field name cannot be empty";
-    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
-      newErrors.name = "Invalid field name format";
-    }
-
-    return newErrors;
-  };
-
-  const validateAllFields = () => {
-    const allErrors = {};
-    let isValid = true;
-
-    schemaFields.forEach((field) => {
-      // Bỏ qua field mặc định và khi method là GET khi validate
-      if (field.isDefault || method === "GET") return;
-
-      const fieldErrors = validateField(field);
-      if (Object.keys(fieldErrors).length > 0) {
-        allErrors[field.id] = fieldErrors;
-        isValid = false;
-      }
-    });
-
-    setErrors(allErrors);
-    return isValid;
-  };
-
-  const handleAddField = () => {
-    if (method === "GET") return;
-
-    if (!validateAllFields()) {
-      toast.error("Please fix errors before adding new field");
-      return;
-    }
-
-    const newField = {
-      id: `field-${Date.now()}`,
-      name: "",
-      type: "string",
-      required: false,
-      isDefault: false,
-    };
-
-    setSchemaFields((prev) => [...prev, newField]);
-    setSelectedFieldId(newField.id);
-  };
-
-  const handleDeleteField = (id) => {
-    if (method === "GET") return;
-
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault) {
-      toast.error("Default field cannot be deleted");
-      return;
-    }
-
-    setSchemaFields((prev) => {
-      const filtered = prev.filter((field) => field.id !== id);
-      setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
-        delete newErrors[id];
-        return newErrors;
-      });
-
-      toast.info("Field removed locally. Click 'Save Changes' to apply.");
-
-      return filtered;
-    });
-
-    if (selectedFieldId === id) {
-      setSelectedFieldId(null);
-    }
-  };
-
-  const handleFieldClick = (id, event) => {
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault || method === "GET") return;
-
-    if (event.target.closest("button")) {
-      return;
-    }
-    setSelectedFieldId(id);
-  };
-
-  const handleNameChange = (id, value) => {
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault || method === "GET") return;
-
-    setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, name: value } : field))
-    );
-
-    // Validate sau khi thay đổi
-    setTimeout(() => {
-      const field = schemaFields.find((f) => f.id === id);
-      if (field && !field.isDefault && method !== "GET") {
-        const fieldErrors = validateField({ ...field, name: value });
-        setErrors((prev) => ({
-          ...prev,
-          [id]: fieldErrors,
-        }));
-      }
-    }, 0);
-  };
-
-  const handleTypeChange = (id, value) => {
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault || method === "GET") return;
-
-    setSchemaFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, type: value } : field))
-    );
-  };
-
-  const handleRequiredChange = (id, value) => {
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.isDefault || method === "GET") return;
-
-    setSchemaFields((prev) =>
-      prev.map((field) =>
-        field.id === id ? { ...field, required: value === "true" } : field
-      )
-    );
-  };
-
-  // Hàm xử lý toggle field cho GET method
+  // Hàm xử lý toggle field cho tất cả các method
   const handleFieldToggle = (fieldName) => {
     setSchemaFields((prev) => {
       const idField = prev.find((f) => f.name === "id");
@@ -431,46 +268,16 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    if (method === "GET") {
-      // For GET, return { fields: [...] } format
-      const fields = schemaFields
-        .filter((field) => !field.isDefault)
-        .map((field) => field.name);
+    // For all methods, return { fields: [...] } format
+    const fields = schemaFields
+      .filter((field) => !field.isDefault)
+      .map((field) => field.name);
 
-      // Always include "id" for GET
-      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
-    } else {
-      // For POST/PUT, return { field: { type, required }, ... } format
-      const schema = {};
-
-      schemaFields.forEach((field) => {
-        if (field.name.trim()) {
-          schema[field.name] = {
-            type: field.type,
-            required: field.required,
-          };
-        }
-      });
-
-      return schema;
-    }
+    // Always include "id" for all methods
+    return { fields: ["id", ...fields.filter((f) => f !== "id")] };
   };
 
   const handleSave = () => {
-    if (method === "GET") {
-      // Khi method là GET, chỉ lưu schema mà không validate
-      const newSchema = prepareSchema();
-      onSave(newSchema);
-      toast.success("Response Body updated successfully!");
-      setIsDropdownOpen(false);
-      return;
-    }
-
-    if (!validateAllFields()) {
-      toast.error("Please fix all errors before saving");
-      return;
-    }
-
     // Chuẩn bị schema và gọi callback onSave từ parent
     const newSchema = prepareSchema();
     onSave(newSchema);
@@ -481,318 +288,317 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
-            {method === "GET" ? "Response Body" : "Schema Definition"}
+            Schema Definition
           </h1>
         </div>
-        {/* Thêm thanh header cho Schema Definition */}
-        {method !== "GET" && (
-          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
-            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Field Name
-              </span>
-            </div>
-            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Type
-              </span>
-            </div>
-            {method !== "GET" && (
-              <div className="absolute left-[470px] top-[6px] w-[151px] h-[30px] rounded-[6px] flex items-center">
-                <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                  Required
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        {/* Thêm thanh header cho Response Body (GET method) */}
-        {method === "GET" && (
-          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
-            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Field Name
-              </span>
-            </div>
-            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Type
-              </span>
-            </div>
-          </div>
-        )}
-        <div className="space-y-4">
-          {schemaFields.map((field) => (
-            <div
-              key={field.id}
-              onClick={(e) => handleFieldClick(field.id, e)}
-              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
-                field.id === selectedFieldId
-                  ? "border-black"
-                  : "border-slate-300"
-              } ${field.isDefault ? "bg-gray-50" : ""}`}
-            >
-              {method !== "GET" ? (
-                // POST/PUT method UI
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-[220px]">
-                    <Input
-                      value={field.name}
-                      onChange={(e) =>
-                        !field.isDefault &&
-                        method !== "GET" &&
-                        handleNameChange(field.id, e.target.value)
-                      }
-                      className={`w-full ${
-                        field.isDefault || method === "GET"
-                          ? "bg-gray-100 cursor-not-allowed"
-                          : ""
-                      } ${errors[field.id]?.name ? "border-red-500" : ""}`}
-                      placeholder="Field name"
-                      disabled={field.isDefault || method === "GET"}
-                    />
-                  </div>
 
-                  <div className="w-[220px]">
-                    <Select
-                      value={field.type}
-                      onValueChange={(value) =>
-                        !field.isDefault &&
-                        method !== "GET" &&
-                        handleTypeChange(field.id, value)
-                      }
-                      disabled={field.isDefault || method === "GET"}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="string">string</SelectItem>
-                        <SelectItem value="number">number</SelectItem>
-                        <SelectItem value="boolean">boolean</SelectItem>
-                        <SelectItem value="array">array</SelectItem>
-                        <SelectItem value="object">object</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+        {/* Thêm tiêu đề Fields Input */}
+        <div className="mb-2">
+          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+            Fields Input
+          </span>
+        </div>
 
-                  {method !== "GET" && (
-                    <div className="w-[170px]">
-                      <Select
-                        value={field.required.toString()}
-                        onValueChange={(value) =>
-                          !field.isDefault &&
-                          handleRequiredChange(field.id, value)
+        {/* Thêm nút dropdown cho tất cả các method */}
+        <div className="relative w-full h-[65px]">
+          <div
+            className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
+            <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
+              {
+                schemaFields.filter((f) => f.name === "id" || !f.isDefault)
+                  .length
+              }{" "}
+              fields selected
+            </span>
+            <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
+          </div>
+
+          {isDropdownOpen && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {availableFields.map((field) => {
+                const fieldName =
+                  typeof field === "string" ? field : field.name;
+                const fieldType =
+                  typeof field === "object" ? field.type : "string";
+
+                // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
+                const isChecked =
+                  schemaFields.some(
+                    (f) => f.name === fieldName && !f.isDefault
+                  ) ||
+                  (fieldName === "id" &&
+                    schemaFields.some((f) => f.name === "id"));
+
+                return (
+                  <div
+                    key={fieldName}
+                    className="flex items-center px-3 py-2 hover:bg-gray-100"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
+                      className={`mr-2 cursor-pointer ${
+                        fieldName === "id" ? "opacity-50" : ""
+                      }`}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (fieldName !== "id") {
+                          handleFieldToggle(fieldName);
                         }
-                        disabled={field.isDefault}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Required" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="true">true</SelectItem>
-                          <SelectItem value="false">false</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {method !== "GET" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                      }}
+                    />
+                    <span
+                      className={`cursor-pointer flex-1 ${
+                        fieldName === "id" ? "text-gray-500" : ""
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteField(field.id);
+                        if (fieldName !== "id") {
+                          handleFieldToggle(fieldName);
+                        }
                       }}
-                      disabled={field.isDefault}
                     >
-                      <Trash2
-                        className={`w-4 h-4 ${
-                          field.isDefault ? "text-gray-400" : ""
-                        }`}
-                      />
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                // GET method UI - chỉ hiển thị, không cho chỉnh sửa
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-[220px]">
-                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
-                      {field.name}
-                    </div>
+                      {fieldName}{" "}
+                      <span className="text-gray-500 text-xs">
+                        ({fieldType})
+                      </span>
+                    </span>
                   </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-                  <div className="w-[220px]">
-                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
-                      {field.type}
-                    </div>
-                  </div>
+        <div className="mb-2">
+          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
+            Selected Fields
+          </span>
+        </div>
+        {/* Hiển thị các trường đã chọn dưới dạng tag */}
+        {schemaFields.filter((f) => !f.isDefault).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {schemaFields
+              .filter((f) => !f.isDefault)
+              .map((field) => (
+                <div
+                  key={field.id}
+                  className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
+                >
+                  <span className="text-[#2563EB] text-[10.0034px] leading-[17px] mr-2">
+                    {field.name}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFieldToggle(field.name);
+                    }}
+                    className="w-5 h-5 ml-1 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
-              )}
+              ))}
+          </div>
+        )}
 
-              {/* Hiển thị lỗi */}
+        {/* Nút lưu */}
+        <div className="flex justify-end mt-4">
+          <Button
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (folderData?.schema) {
+      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type || "string",
+        required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    }
+  }, [folderData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => prev.filter((f) => f.id !== id));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+  };
+
+  const handleChange = (id, key, value) => {
+    setSchemaFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+    );
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        newSchema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+
+    onSave(newSchema);
+  };
+
+  return (
+    <div className="max-h-[70vh] overflow-y-auto">
+      <Card className="p-4 border border-slate-300 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          Folder Base Schema
+        </h2>
+
+        {/* Header */}
+        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div>Field Name</div>
+          <div>Type</div>
+          <div>Required</div>
+        </div>
+
+        {/* Fields */}
+        <div className="space-y-3">
+          {schemaFields.map((field) => (
+            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
+              <Input
+                value={field.name}
+                onChange={(e) => handleChange(field.id, "name", e.target.value)}
+                className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
+                placeholder="Field name"
+              />
+
+              <Select
+                value={field.type}
+                onValueChange={(value) => handleChange(field.id, "type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">string</SelectItem>
+                  <SelectItem value="number">number</SelectItem>
+                  <SelectItem value="boolean">boolean</SelectItem>
+                  <SelectItem value="array">array</SelectItem>
+                  <SelectItem value="object">object</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2">
+                <Select
+                  value={field.required.toString()}
+                  onValueChange={(value) =>
+                    handleChange(field.id, "required", value === "true")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">true</SelectItem>
+                    <SelectItem value="false">false</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteField(field.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </div>
+
               {errors[field.id]?.name && (
-                <div className="text-red-500 text-xs mt-1 pl-2">
+                <div className="col-span-3 text-red-500 text-xs">
                   {errors[field.id].name}
-                </div>
-              )}
-
-              {/* Hiển thị thông báo cho field mặc định */}
-              {field.isDefault && (
-                <div className="text-gray-500 text-xs mt-1 pl-2">
-                  This is a default field and cannot be modified
                 </div>
               )}
             </div>
           ))}
+        </div>
 
-          {/* Thông báo khi không có trường nào */}
-          {schemaFields.length === 0 && (
-            <div className="text-gray-500 text-sm mt-2 pl-2">
-              No schema fields defined.
-            </div>
-          )}
-
-          {/* Thêm tiêu đề Fields Input */}
-          {method === "GET" && (
-            <div className="mb-2">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-                Fields Input
-              </span>
-            </div>
-          )}
-
-          {/* Thêm nút dropdown cho GET method */}
-          {method === "GET" && (
-            <div className="relative w-full h-[65px]">
-              <div
-                className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
-                  {
-                    schemaFields.filter((f) => f.name === "id" || !f.isDefault)
-                      .length
-                  }{" "}
-                  fields selected
-                </span>
-                <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
-              </div>
-
-              {isDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {availableFields.map((field) => {
-                    const fieldName =
-                      typeof field === "string" ? field : field.name;
-                    const fieldType =
-                      typeof field === "object" ? field.type : "string";
-
-                    // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
-                    const isChecked =
-                      schemaFields.some(
-                        (f) => f.name === fieldName && !f.isDefault
-                      ) ||
-                      (fieldName === "id" &&
-                        schemaFields.some((f) => f.name === "id"));
-
-                    return (
-                      <div
-                        key={fieldName}
-                        className="flex items-center px-3 py-2 hover:bg-gray-100"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
-                          className={`mr-2 cursor-pointer ${
-                            fieldName === "id" ? "opacity-50" : ""
-                          }`}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            if (fieldName !== "id") {
-                              handleFieldToggle(fieldName);
-                            }
-                          }}
-                        />
-                        <span
-                          className={`cursor-pointer flex-1 ${
-                            fieldName === "id" ? "text-gray-500" : ""
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (fieldName !== "id") {
-                              handleFieldToggle(fieldName);
-                            }
-                          }}
-                        >
-                          {fieldName}{" "}
-                          <span className="text-gray-500 text-xs">
-                            ({fieldType})
-                          </span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {method === "GET" && (
-            <div className="mb-2">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-                Selected Fields
-              </span>
-            </div>
-          )}
-          {/* Hiển thị các trường đã chọn dưới dạng tag */}
-          {method === "GET" &&
-            schemaFields.filter((f) => !f.isDefault).length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {schemaFields
-                  .filter((f) => !f.isDefault)
-                  .map((field) => (
-                    <div
-                      key={field.id}
-                      className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
-                    >
-                      <span className="text-[#2563EB] text-[10.0034px] leading-[17px] mr-2">
-                        {field.name}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFieldToggle(field.name);
-                        }}
-                        className="w-5 h-5 ml-1 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-          {/* Nút thêm trường và lưu */}
-          <div className="flex justify-between items-center mt-4 gap-4">
-            <div>
-              {method !== "GET" && (
-                <Button variant="outline" onClick={handleAddField}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add field
-                </Button>
-              )}
-            </div>
-
-            <Button
-              className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
-              onClick={handleSave}
-            >
-              Save Changes
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={handleAddField}>
+            <Plus className="w-4 h-4 mr-2" /> Add Field
+          </Button>
+          <Button
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
         </div>
       </Card>
     </div>
@@ -1229,7 +1035,7 @@ const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
             {selectedResponse && (
               <div className="flex justify-end">
                 <Button
-                  className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={handleSave}
                 >
                   Save Changes
@@ -1320,6 +1126,8 @@ const DashboardPage = () => {
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
+  const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
+  const [folderSchema, setFolderSchema] = useState(null);
 
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
@@ -1603,10 +1411,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1616,23 +1424,41 @@ const DashboardPage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) {
-          // If error, revert state
-          setEndpoints((prev) =>
-            prev.map((ep) =>
-              String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
-                : ep
-            )
-          );
-          setIsStateful(previousState);
+          // Lấy nội dung lỗi từ server (text hoặc JSON)
+          const text = await res.text();
+
+          // Trường hợp folder chưa có base schema
+          if (text.includes("Folder does not have a base schema")) {
+            toast.warning(
+              "This folder needs a base schema before converting to stateful."
+            );
+
+            // Hiển thị dialog edit schema cho folder
+            setOpenSchemaDialog(true);
+
+            // Revert lại UI state
+            setEndpoints((prev) =>
+              prev.map((ep) =>
+                String(ep.id) === String(currentEndpointId)
+                  ? { ...ep, is_stateful: previousState }
+                  : ep
+              )
+            );
+            setIsStateful(previousState);
+
+            // Ngừng xử lý
+            throw new Error("Folder does not have a base schema");
+          }
+
+          // Các lỗi khác
           throw new Error("Failed to convert endpoint to stateful mode");
         }
+
         return res.json();
       })
       .then((updatedEndpoint) => {
-        // Update endpoint with data from API
         setEndpoints((prev) =>
           prev.map((ep) =>
             String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
@@ -1640,7 +1466,6 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // After switching to stateful, need to fetch endpoint data
         const currentEndpoint = endpoints.find(
           (ep) => String(ep.id) === String(currentEndpointId)
         );
@@ -1649,19 +1474,57 @@ const DashboardPage = () => {
           fetchEndpointDataByPath(currentEndpoint.path);
         }
 
-        // Fetch endpoint responses in stateful mode
         fetchEndpointResponses(true);
-
         toast.success("Endpoint switched to stateful mode!");
         window.location.reload();
       })
       .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
+        console.error("Error converting to stateful:", error);
+        if (!error.message.includes("Folder does not have a base schema")) {
+          toast.error(error.message);
+        }
       })
       .finally(() => {
         setIsSwitchingMode(false);
       });
+  };
+
+  useEffect(() => {
+    if (!currentFolder?.id || !openSchemaDialog) return;
+
+    // Fetch base_schema từ folder
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch folder schema");
+        return res.json();
+      })
+      .then((data) => {
+        setFolderSchema(data.base_schema || {});
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to fetch folder schema");
+      });
+  }, [currentFolder, openSchemaDialog]);
+
+  const handleSaveFolderSchema = async (newSchema) => {
+    if (!currentFolder?.id) return;
+
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder schema");
+      toast.success("Folder schema updated successfully!");
+      setFolderSchema(newSchema);
+      setOpenSchemaDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save folder schema");
+    }
   };
 
   // Hàm xử lý xác nhận chuyển sang stateless
@@ -2949,7 +2812,15 @@ const DashboardPage = () => {
       </aside>
 
       {/* Main Content */}
-      <div className={`pt-8 flex-1 transition-all duration-300`}>
+      <div
+        className="pt-8 flex-1 transition-all duration-300 relative"
+        style={{
+          backgroundImage: `url(${webBg})`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
         {/* Header */}
         <Topbar
           className="mt-0 mb-4"
@@ -3078,7 +2949,7 @@ const DashboardPage = () => {
                   />
                 </Button>
               )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] border border-[#D1D5DB] rounded-md flex-1 min-w-0">
+              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] bg-white border border-[#D1D5DB] rounded-md flex-1 min-w-0">
                 <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
@@ -3447,40 +3318,43 @@ const DashboardPage = () => {
                           </Label>
                           <div className="col-span-3 space-y-2">
                             <div className="relative">
-                              <Textarea
-                                id="response-body"
+                              <Editor
                                 value={responseBody}
-                                onChange={(e) => {
+                                onValueChange={(code) => {
                                   const canEdit =
                                     !isStateful ||
                                     statusCode !== "200" ||
                                     method !== "GET";
                                   if (canEdit) {
-                                    setResponseBody(e.target.value);
+                                    setResponseBody(code);
                                   }
                                 }}
+                                highlight={(code) =>
+                                  highlight(code, languages.json)
+                                }
+                                padding={10}
+                                style={{
+                                  fontFamily:
+                                    '"Fira code", "Fira Mono", monospace',
+                                  fontSize: 12,
+                                  minHeight: "200px",
+                                  maxHeight: "400px",
+                                  overflow: "auto",
+                                  border: "1px solid #CBD5E1",
+                                  borderRadius: "0.375rem",
+                                  backgroundColor: "#233554",
+                                  color: "white",
+                                }}
+                                textareaClassName="focus:outline-none"
                                 disabled={
                                   isStateful &&
                                   statusCode === "200" &&
                                   method === "GET"
                                 }
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 bg-[#233554] text-white ${
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "opacity-70 cursor-not-allowed"
-                                    : ""
-                                }`}
-                                placeholder={
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "Read-only for 200 OK responses with GET method"
-                                    : ""
-                                }
                               />
-                              {/* Nhóm nút trên cùng bên phải */}
-                              <div className="absolute top-2 right-2 flex space-x-2">
+
+                              {/* JSON Editor controls */}
+                              <div className="absolute top-2 right-2 flex space-x-2 z-10">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -3672,7 +3546,7 @@ const DashboardPage = () => {
 
                         <div className="flex justify-end">
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                             onClick={handleSaveResponse}
                           >
                             Save Changes
@@ -3740,7 +3614,7 @@ const DashboardPage = () => {
                         </div>
                         <div className="flex justify-end">
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                             onClick={handleSaveResponse}
                           >
                             Save Changes
@@ -3837,25 +3711,38 @@ const DashboardPage = () => {
 
                         <div className="mb-6">
                           <div className="relative">
-                            <Textarea
-                              id="initial-value"
+                            <Editor
                               value={tempDataDefaultString}
-                              onChange={(e) => {
-                                setTempDataDefaultString(e.target.value);
+                              onValueChange={(code) => {
+                                setTempDataDefaultString(code);
                                 try {
                                   // Chỉ cập nhật state khi JSON hợp lệ
-                                  setTempDataDefault(
-                                    JSON.parse(e.target.value)
-                                  );
+                                  setTempDataDefault(JSON.parse(code));
                                 } catch {
                                   // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
-                              placeholder="Enter initial value"
+                              highlight={(code) =>
+                                highlight(code, languages.json)
+                              }
+                              padding={10}
+                              style={{
+                                fontFamily:
+                                  '"Fira code", "Fira Mono", monospace',
+                                fontSize: 12,
+                                minHeight: "200px",
+                                maxHeight: "400px",
+                                overflow: "auto",
+                                border: "1px solid #CBD5E1",
+                                borderRadius: "0.375rem",
+                                backgroundColor: "#233554",
+                                color: "white",
+                              }}
+                              textareaClassName="focus:outline-none"
                             />
-                            {/* Top right buttons */}
-                            <div className="absolute top-2 right-2 flex space-x-2">
+
+                            {/* JSON Editor controls */}
+                            <div className="absolute top-2 right-2 flex space-x-2 z-10">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -3992,7 +3879,7 @@ const DashboardPage = () => {
                             Cancel
                           </Button>
                           <Button
-                            className="bg-[#2563EB] hover:bg-[#1E40AF] text-white w-[90px] h-[40px] rounded-[8px]"
+                            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
                             onClick={handleSaveInitialValue}
                           >
                             Update
@@ -4042,6 +3929,28 @@ const DashboardPage = () => {
                 Switch
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* === Folder Schema Dialog === */}
+        <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle></DialogTitle>
+              <DialogDescription>
+              </DialogDescription>
+            </DialogHeader>
+
+            {folderSchema ? (
+              <BaseSchemaEditor
+                folderData={{ schema: folderSchema }}
+                folderId={currentFolder?.id}
+                onSave={handleSaveFolderSchema}
+                method={"PUT"}
+              />
+            ) : (
+              <div className="text-gray-500 text-center py-6">Loading schema...</div>
+            )}
           </DialogContent>
         </Dialog>
 
@@ -4121,7 +4030,7 @@ const DashboardPage = () => {
               </Button>
               <Button
                 type="button"
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                 onClick={handleEditWorkspace}
               >
                 Update
@@ -4159,7 +4068,7 @@ const DashboardPage = () => {
                 Cancel
               </Button>
               <Button
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                 onClick={() => {
                   handleAddWorkspace(newWsName);
                   setNewWsName("");
@@ -4462,7 +4371,7 @@ const DashboardPage = () => {
                 disabled={
                   !newFolderName.trim() || !hasChanges() || isCreatingFolder
                 }
-                className="px-4 py-2  text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+                className="px-4 py-2  bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
               >
                 {isCreatingFolder
                   ? editingFolderId
@@ -4512,6 +4421,20 @@ const DashboardPage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* footer */}
+        <div className="absolute left-8 bottom-1 text-xs font-semibold text-gray-700">
+          © Teknik Corp. All rights reserved.
+        </div>
+
+        <div className="absolute right-6 bottom-1 flex items-center gap-3 text-xs text-gray-700">
+          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+          <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+          <a className="hover:underline font-semibold" href="">About</a>
+          <span>·</span>
+          <a className="hover:underline font-semibold" href="">Support</a>
+        </div>
       </div>
     </div>
   );

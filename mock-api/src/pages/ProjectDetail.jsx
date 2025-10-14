@@ -42,6 +42,8 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2 } from "lucide-react";
 
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
@@ -49,10 +51,241 @@ import blueFolder from "@/assets/blue_folder.svg"
 import userCogIcon from "@/assets/fa-solid_user-cog.svg";
 import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
-import birdIcon from "@/assets/Bird.svg";
 import editIcon from "@/assets/Edit Icon.svg";
 import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
+import schemaIcon from "@/assets/schema.svg"
+import tiktokIcon from "@/assets/tiktok.svg";
+import fbIcon from "@/assets/facebook.svg";
+import linkedinIcon from "@/assets/linkedin.svg";
+import webBg from "@/assets/dot_web.svg";
+
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingSchema, setPendingSchema] = useState(null);
+
+  useEffect(() => {
+    if (folderData?.schema) {
+      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type || "string",
+        required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    }
+  }, [folderData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => prev.filter((f) => f.id !== id));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+  };
+
+  const handleChange = (id, key, value) => {
+    setSchemaFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+    );
+  };
+
+  const prepareSchema = () => {
+    const newSchema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        newSchema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+    return newSchema;
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = prepareSchema();
+    setPendingSchema(newSchema);
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = () => {
+    if (pendingSchema) {
+      onSave(pendingSchema);
+      toast.success("Folder schema saved successfully!");
+    }
+    setConfirmOpen(false);
+  };
+
+  return (
+    <div className="max-h-[70vh] overflow-y-auto">
+      <Card className="p-4 border border-slate-300 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          Folder Base Schema
+        </h2>
+
+        {/* Header */}
+        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div>Field Name</div>
+          <div>Type</div>
+          <div>Required</div>
+        </div>
+
+        {/* Fields */}
+        <div className="space-y-3">
+          {schemaFields.map((field) => (
+            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
+              <Input
+                value={field.name}
+                onChange={(e) => handleChange(field.id, "name", e.target.value)}
+                className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
+                placeholder="Field name"
+              />
+
+              <Select
+                value={field.type}
+                onValueChange={(value) => handleChange(field.id, "type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">string</SelectItem>
+                  <SelectItem value="number">number</SelectItem>
+                  <SelectItem value="boolean">boolean</SelectItem>
+                  <SelectItem value="array">array</SelectItem>
+                  <SelectItem value="object">object</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2">
+                <Select
+                  value={field.required.toString()}
+                  onValueChange={(value) =>
+                    handleChange(field.id, "required", value === "true")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">true</SelectItem>
+                    <SelectItem value="false">false</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteField(field.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </div>
+
+              {errors[field.id]?.name && (
+                <div className="col-span-3 text-red-500 text-xs">
+                  {errors[field.id].name}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={handleAddField}>
+            <Plus className="w-4 h-4 mr-2" /> Add Field
+          </Button>
+          <Button
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </Card>
+
+      {/* ✅ Confirm Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Schema Update</DialogTitle>
+            <DialogDescription>
+              Updating this folder's schema will <b>delete all endpoint data</b> that no longer fits the new schema.
+              <br /> <br />
+              Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={confirmSave}
+            >
+              Yes, Save Anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -94,6 +327,9 @@ export default function Dashboard() {
   const [editWsId, setEditWsId] = useState(null);
   const [editWsName, setEditWsName] = useState("");
 
+  const [openNewWs, setOpenNewWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+
   // folder state
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -115,9 +351,10 @@ export default function Dashboard() {
   const [showPermission, setShowPermission] = useState(false);
   const popupRef = useRef(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [folderOwner, setFolderOwner] = useState(""); // username của owner
-  const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
   const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
+  const [folderSchema, setFolderSchema] = useState(null);
 
   useEffect(() => {
     const checkUserLogin = async () => {
@@ -159,41 +396,6 @@ export default function Dashboard() {
 
     fetchFolderDetail();
   }, [selectedFolder, showPermission]);
-
-  useEffect(() => {
-    if (!selectedFolder?.id) return; // nếu chưa có folder thì thôi
-
-    // --- Lấy owner ---
-    const fetchOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/getOwner/${selectedFolder.id}`, {
-          credentials: "include", // nếu cần gửi cookie
-        });
-        const data = await res.json();
-        setFolderOwner(data.username || "Unknown");
-      } catch (err) {
-        console.error("Error fetching folder owner:", err);
-        setFolderOwner("Unknown");
-      }
-    };
-
-    // --- Kiểm tra user hiện tại có phải owner ---
-    const checkOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/checkOwner/${selectedFolder.id}`, {
-          credentials: "include", // gửi cookie JWT
-        });
-        const data = await res.json();
-        setIsOwner(data.success); // success = true → là owner
-      } catch (err) {
-        console.error("Error checking folder owner:", err);
-        setIsOwner(false);
-      }
-    };
-
-    fetchOwner();
-    checkOwner();
-  }, [selectedFolder]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -773,6 +975,44 @@ export default function Dashboard() {
     };
   }, [showPermission]);
 
+  useEffect(() => {
+    if (!selectedFolder?.id || !openSchemaDialog) return;
+
+    // Fetch base_schema từ folder
+    fetch(`${API_ROOT}/folders/${selectedFolder.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch folder schema");
+        return res.json();
+      })
+      .then((data) => {
+        setFolderSchema(data.base_schema || {});
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to fetch folder schema");
+      });
+  }, [selectedFolder, openSchemaDialog]);
+
+  const handleSaveFolderSchema = async (newSchema) => {
+    if (!selectedFolder?.id) return;
+
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder schema");
+      toast.success("Folder schema updated successfully!");
+      setFolderSchema(newSchema);
+      setOpenSchemaDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save folder schema");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -802,6 +1042,7 @@ export default function Dashboard() {
             setOpenFoldersMap={setOpenFoldersMap}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
+            setOpenNewWs={setOpenNewWs}
             onAddFolder={handleAddFolder}
             onEditFolder={handleEditFolder}
             onDeleteFolder={handleDeleteFolder}
@@ -811,7 +1052,13 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main
-          className="pt-8 flex-1 transition-all duration-300 "
+          className="pt-8 flex-1 transition-all duration-300 relative"
+          style={{
+            backgroundImage: `url(${webBg})`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
         >
           {/* Top Navbar */}
           <Topbar
@@ -853,6 +1100,13 @@ export default function Dashboard() {
           >
             <div className="flex flex-col">
               <div className="flex ml-auto border-b border-gray-200 mb-4 text-stone-500">
+                {currentProject ? (
+                  <h2 className="absolute left-16 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                    {currentProject.name}
+                  </h2>
+                ) : (
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => setActiveTab("folders")}
@@ -892,7 +1146,7 @@ export default function Dashboard() {
                         .map((folder) => (
                           <div
                             key={folder.id}
-                            className="relative flex flex-col items-center group"
+                            className="relative flex flex-col items-center group rounded-xl p-4 border border-slate-300 bg-white/70 backdrop-blur hover:shadow-md hover:border-yellow-300 transition-all cursor-pointer"
                           >
                             {/* Folder Image */}
                             <img
@@ -938,7 +1192,17 @@ export default function Dashboard() {
                                       setShowPermission(true);
                                     }}
                                   >
-                                    <img src={Group} className="w-4 h-4"/> Folder Permission
+                                    <img src={Group} className="w-4 h-4" alt="Group Icon"/> Folder Permission
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFolder(folder);
+                                      setOpenSchemaDialog(true);
+                                    }}
+                                  >
+                                    <img src={schemaIcon} className="w-4 h-4" alt="Schema Icon" />
+                                    Schema
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
@@ -980,7 +1244,7 @@ export default function Dashboard() {
                           Cancel
                         </Button>
                         <Button
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                           onClick={async () => {
                             try {
                               const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
@@ -1002,12 +1266,35 @@ export default function Dashboard() {
                               setEditDialogOpen(false);
                             } catch (err) {
                               toast.error("Failed to update folder!");
+                              console.error(err);
                             }
                           }}
                         >
                           Update
                         </Button>
                       </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* === Folder Schema Dialog === */}
+                  <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
+                    <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle></DialogTitle>
+                        <DialogDescription>
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      {folderSchema ? (
+                        <BaseSchemaEditor
+                          folderData={{ schema: folderSchema }}
+                          folderId={selectedFolder?.id}
+                          onSave={handleSaveFolderSchema}
+                          method={"PUT"} // không cần phân biệt GET/POST ở đây
+                        />
+                      ) : (
+                        <div className="text-gray-500 text-center py-6">Loading schema...</div>
+                      )}
                     </DialogContent>
                   </Dialog>
 
@@ -1079,29 +1366,8 @@ export default function Dashboard() {
                         </h3>
                       </div>
 
-                      {/* User Info */}
-                      <div
-                        className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={birdIcon}
-                            alt="User avatar"
-                            className="w-7 h-7 object-contain"
-                          />
-                          <div>
-                            <div className="font-semibold text-[16px]">
-                              {folderOwner || "Unknown"}
-                            </div>
-
-                          </div>
-                        </div>
-                        <div className="text-sm font-semibold text-gray-700 underline">
-                          Owner
-                        </div>
-                      </div>
-
                       {/* Folder Protection */}
-                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
+                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3">
                         <div className="flex items-center gap-2 text-gray-700 font-medium">
                           <span>
                             Data in folder{" "}
@@ -1139,7 +1405,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* Permissions Table */}
-                      <div className="border-t border-gray-300 pt-4 mt-4">
+                      <div className="border-t border-gray-300 pt-4">
                         <div className="font-semibold text-gray-900 text-[16px] mb-3">
                           Your Permissions
                         </div>
@@ -1149,28 +1415,6 @@ export default function Dashboard() {
                             <span>Permissions</span>
                             <span className="text-center">Allowed</span>
                             <span className="text-center">Not Allowed</span>
-                          </div>
-
-                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                            <span>Set folder mode</span>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="setMode"
-                                className="accent-black"
-                                checked={isOwner === true}
-                                readOnly
-                              />
-                            </div>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="setMode"
-                                className="accent-black"
-                                checked={isOwner === false}
-                                readOnly
-                              />
-                            </div>
                           </div>
 
                           <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
@@ -1376,6 +1620,48 @@ export default function Dashboard() {
         </main>
       </div>
 
+      {/* New Workspace */}
+      <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Workspace</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <Input
+              placeholder="Workspace name"
+              value={newWsName}
+              onChange={(e) => setNewWsName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddWorkspace(newWsName);
+                  setNewWsName("");
+                  setOpenNewWs(false);
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenNewWs(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              onClick={() => {
+                handleAddWorkspace(newWsName);
+                setNewWsName("");
+                setOpenNewWs(false);
+              }}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
@@ -1414,7 +1700,7 @@ export default function Dashboard() {
             </Button>
             <Button
               type="button"
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={handleEditWorkspace}
             >
               Update
@@ -1519,7 +1805,7 @@ export default function Dashboard() {
             <Button
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
             >
               {isCreatingFolder
                 ? (editingFolderId ? "Updating..." : "Creating...")
@@ -1596,6 +1882,20 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* footer */}
+      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
+        © Teknik Corp. All rights reserved.
+      </div>
+
+      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
+        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+        <a className="hover:underline font-semibold" href="">About</a>
+        <span>·</span>
+        <a className="hover:underline font-semibold" href="">Support</a>
+      </div>
     </div>
   );
 }

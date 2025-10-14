@@ -2,6 +2,7 @@ import {Routes, Route, Navigate} from "react-router-dom";
 import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
 import WelcomePage from "@/pages/WelcomePage.jsx";
+import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectDetail from "./pages/ProjectDetail.jsx";
 import ProjectEndpoints from "./pages/FolderDetail.jsx";
@@ -14,13 +15,14 @@ export default function App() {
     <>
       <Routes>
         {/* Redirect root to login */}
-        <Route path="/" element={<Navigate to="/hello" replace/>}/>
+        <Route path="/" element={<Navigate to="/auth" replace/>}/>
 
         {/* Auth pages */}
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/signup" element={<SignupPage/>}/>
         <Route path="/hello" element={<WelcomePage/>}/>
-        <Route path="/forgot-password" element={<Navigate to="/login"/>}/>
+
+        <Route path="/auth" element={<AuthPage/>}/>
 
         {/* Dashboard routes */}
         <Route path="/dashboard" element={<DashboardPage/>}/>

@@ -10,9 +10,9 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import React from "react";
-import {useNavigate} from "react-router-dom";
 import {toast} from "react-toastify";
 import {login} from "@/services/api.js";
+import {useNavigate} from "react-router-dom";
 
 export function LoginForm({className, ...props}) {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ export function LoginForm({className, ...props}) {
       setIsSubmitting(true);
       await login({ username, password });
       toast.success("Login successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setTimeout(() => (window.location.href = "/dashboard"), 2000);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Invalid credentials. Please try again.");
@@ -95,7 +95,7 @@ export function LoginForm({className, ...props}) {
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Logging in..." : "Login"}
@@ -104,9 +104,13 @@ export function LoginForm({className, ...props}) {
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="font-semibold underline underline-offset-4">
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                className="font-semibold underline underline-offset-4 text-violet-300"
+              >
                 Sign up
-              </a>
+              </button>
             </div>
           </form>
         </CardContent>
