@@ -9,13 +9,11 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {useNavigate} from "react-router-dom";
 import {toast} from "react-toastify";
 import React, {useState} from "react";
 import {signup} from "@/services/api.js";
 
-export function SignupForm({className, ...props}) {
-  const navigate = useNavigate();
+export function SignupForm({className, onSwitchPage, ...props}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,7 +50,7 @@ export function SignupForm({className, ...props}) {
       setIsSubmitting(true);
       await signup({ username, password });
       toast.success("Signup successful! Redirecting...");
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => onSwitchPage?.("login"), 1500);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Username already exists");
@@ -121,6 +119,16 @@ export function SignupForm({className, ...props}) {
                 >
                   {isSubmitting ? "Signing up..." : "Sign up"}
                 </Button>
+                <div className="mt-2 text-center text-sm">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => onSwitchPage?.("login")}
+                    className="font-semibold underline underline-offset-4 text-blue-700"
+                  >
+                    Login
+                  </button>
+                </div>
               </div>
             </div>
           </form>

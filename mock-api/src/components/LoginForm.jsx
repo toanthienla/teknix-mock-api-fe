@@ -10,13 +10,10 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import React from "react";
-import {useNavigate} from "react-router-dom";
 import {toast} from "react-toastify";
 import {login} from "@/services/api.js";
 
-export function LoginForm({className, ...props}) {
-  const navigate = useNavigate();
-
+export function LoginForm({className, onSwitchPage, ...props}) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -49,7 +46,7 @@ export function LoginForm({className, ...props}) {
       setIsSubmitting(true);
       await login({ username, password });
       toast.success("Login successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setTimeout(() => (window.location.href = "/dashboard"), 2000);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Invalid credentials. Please try again.");
@@ -104,9 +101,13 @@ export function LoginForm({className, ...props}) {
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="font-semibold underline underline-offset-4">
+              <button
+                type="button"
+                onClick={() => onSwitchPage?.("signup")}
+                className="font-semibold underline underline-offset-4 text-blue-700"
+              >
                 Sign up
-              </a>
+              </button>
             </div>
           </form>
         </CardContent>

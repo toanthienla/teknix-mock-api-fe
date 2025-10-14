@@ -42,6 +42,8 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2, X } from "lucide-react";
 
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
@@ -53,6 +55,248 @@ import birdIcon from "@/assets/Bird.svg";
 import editIcon from "@/assets/Edit Icon.svg";
 import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
+import schemaIcon from "@/assets/schema.svg"
+
+const SchemaBodyEditor = ({ folderData, folderId, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingSchema, setPendingSchema] = useState(null);
+
+  // ✅ Khởi tạo schema cơ bản hoặc từ folderData
+  useEffect(() => {
+    if (folderData?.schema) {
+      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type || "string",
+        required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    } else {
+      const defaultSchema = {
+        id: { type: "number", required: false },
+        name: { type: "string", required: true },
+        age: { type: "number", required: false },
+      };
+      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type,
+        required: config.required,
+      }));
+      setSchemaFields(fields);
+    }
+  }, [folderData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => prev.filter((f) => f.id !== id));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+  };
+
+  const handleChange = (id, key, value) => {
+    setSchemaFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+    );
+  };
+
+  const prepareSchema = () => {
+    const newSchema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        newSchema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+    return newSchema;
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = prepareSchema();
+    setPendingSchema(newSchema);
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = () => {
+    if (pendingSchema) {
+      onSave(pendingSchema);
+      toast.success("Folder schema saved successfully!");
+    }
+    setConfirmOpen(false);
+  };
+
+  return (
+    <div className="max-h-[70vh] overflow-y-auto">
+      <Card className="p-4 border border-slate-300 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          Folder Base Schema
+        </h2>
+
+        {/* Header */}
+        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div>Field Name</div>
+          <div>Type</div>
+          <div>Required</div>
+        </div>
+
+        {/* Fields */}
+        <div className="space-y-3">
+          {schemaFields.map((field) => (
+            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
+              <Input
+                value={field.name}
+                onChange={(e) => handleChange(field.id, "name", e.target.value)}
+                className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
+                placeholder="Field name"
+              />
+
+              <Select
+                value={field.type}
+                onValueChange={(value) => handleChange(field.id, "type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">string</SelectItem>
+                  <SelectItem value="number">number</SelectItem>
+                  <SelectItem value="boolean">boolean</SelectItem>
+                  <SelectItem value="array">array</SelectItem>
+                  <SelectItem value="object">object</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2">
+                <Select
+                  value={field.required.toString()}
+                  onValueChange={(value) =>
+                    handleChange(field.id, "required", value === "true")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">true</SelectItem>
+                    <SelectItem value="false">false</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteField(field.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </div>
+
+              {errors[field.id]?.name && (
+                <div className="col-span-3 text-red-500 text-xs">
+                  {errors[field.id].name}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={handleAddField}>
+            <Plus className="w-4 h-4 mr-2" /> Add Field
+          </Button>
+          <Button
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </Card>
+
+      {/* ✅ Confirm Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Schema Update</DialogTitle>
+            <DialogDescription>
+              Updating this folder's schema will <b>delete all endpoint data</b> that no longer fits the new schema.
+              <br /> <br />
+              Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={confirmSave}
+            >
+              Yes, Save Anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -121,6 +365,9 @@ export default function Dashboard() {
   const [folderOwner, setFolderOwner] = useState(""); // username của owner
   const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
   const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
+  const [folderSchema, setFolderSchema] = useState(null);
 
   useEffect(() => {
     const checkUserLogin = async () => {
@@ -776,6 +1023,44 @@ export default function Dashboard() {
     };
   }, [showPermission]);
 
+  useEffect(() => {
+    if (!selectedFolder?.id || !openSchemaDialog) return;
+
+    // Fetch base_schema từ folder
+    fetch(`${API_ROOT}/folders/${selectedFolder.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch folder schema");
+        return res.json();
+      })
+      .then((data) => {
+        setFolderSchema(data.base_schema || {});
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to fetch folder schema");
+      });
+  }, [selectedFolder, openSchemaDialog]);
+
+  const handleSaveFolderSchema = async (newSchema) => {
+    if (!selectedFolder?.id) return;
+
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder schema");
+      toast.success("Folder schema updated successfully!");
+      setFolderSchema(newSchema);
+      setOpenSchemaDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save folder schema");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <div className="flex">
@@ -942,7 +1227,17 @@ export default function Dashboard() {
                                       setShowPermission(true);
                                     }}
                                   >
-                                    <img src={Group} className="w-4 h-4"/> Folder Permission
+                                    <img src={Group} className="w-4 h-4" alt="Group Icon"/> Folder Permission
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedFolder(folder);
+                                      setOpenSchemaDialog(true);
+                                    }}
+                                  >
+                                    <img src={schemaIcon} className="w-4 h-4" alt="Schema Icon" />
+                                    Schema
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
@@ -1006,12 +1301,36 @@ export default function Dashboard() {
                               setEditDialogOpen(false);
                             } catch (err) {
                               toast.error("Failed to update folder!");
+                              console.error(err);
                             }
                           }}
                         >
                           Update
                         </Button>
                       </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* === Folder Schema Dialog === */}
+                  <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
+                    <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle>Folder Schema</DialogTitle>
+                        <DialogDescription>
+                          View or modify the base schema of this folder.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      {folderSchema ? (
+                        <SchemaBodyEditor
+                          folderData={{ schema: folderSchema }}
+                          folderId={selectedFolder?.id}
+                          onSave={handleSaveFolderSchema}
+                          method={"PUT"} // không cần phân biệt GET/POST ở đây
+                        />
+                      ) : (
+                        <div className="text-gray-500 text-center py-6">Loading schema...</div>
+                      )}
                     </DialogContent>
                   </Dialog>
 
