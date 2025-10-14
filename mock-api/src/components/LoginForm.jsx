@@ -12,8 +12,11 @@ import {Label} from "@/components/ui/label"
 import React from "react";
 import {toast} from "react-toastify";
 import {login} from "@/services/api.js";
+import {useNavigate} from "react-router-dom";
 
-export function LoginForm({className, onSwitchPage, ...props}) {
+export function LoginForm({className, ...props}) {
+  const navigate = useNavigate();
+
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -92,7 +95,7 @@ export function LoginForm({className, onSwitchPage, ...props}) {
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Logging in..." : "Login"}
@@ -103,8 +106,8 @@ export function LoginForm({className, onSwitchPage, ...props}) {
               Don&apos;t have an account?{" "}
               <button
                 type="button"
-                onClick={() => onSwitchPage?.("signup")}
-                className="font-semibold underline underline-offset-4 text-blue-700"
+                onClick={() => navigate("/signup")}
+                className="font-semibold underline underline-offset-4 text-violet-300"
               >
                 Sign up
               </button>

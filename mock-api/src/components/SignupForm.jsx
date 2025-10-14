@@ -12,8 +12,11 @@ import {Label} from "@/components/ui/label"
 import {toast} from "react-toastify";
 import React, {useState} from "react";
 import {signup} from "@/services/api.js";
+import {useNavigate} from "react-router-dom";
 
-export function SignupForm({className, onSwitchPage, ...props}) {
+export function SignupForm({className, ...props}) {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -50,7 +53,7 @@ export function SignupForm({className, onSwitchPage, ...props}) {
       setIsSubmitting(true);
       await signup({ username, password });
       toast.success("Signup successful! Redirecting...");
-      setTimeout(() => onSwitchPage?.("login"), 1500);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
       if (error.response && error.response.status === 400) {
         toast.error("Username already exists");
@@ -114,17 +117,17 @@ export function SignupForm({className, onSwitchPage, ...props}) {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-violet-300 hover:bg-violet-400 text-indigo-950"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Signing up..." : "Sign up"}
+                  {isSubmitting ? "Creating..." : "Create Account"}
                 </Button>
                 <div className="mt-2 text-center text-sm">
                   Already have an account?{" "}
                   <button
                     type="button"
-                    onClick={() => onSwitchPage?.("login")}
-                    className="font-semibold underline underline-offset-4 text-blue-700"
+                    onClick={() => navigate("/login")}
+                    className="font-semibold underline underline-offset-4 text-yellow-400"
                   >
                     Login
                   </button>
