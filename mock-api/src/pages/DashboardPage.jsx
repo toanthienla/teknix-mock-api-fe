@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import {useParams, useNavigate} from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
-import { ChevronDown } from "lucide-react";
-import { API_ROOT } from "../utils/constants";
+import {ChevronDown} from "lucide-react";
+import {API_ROOT} from "../utils/constants";
 
 import {
   Dialog,
@@ -13,9 +13,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {getCurrentUser} from "@/services/api.js";
 import webBg from "@/assets/dot_web.svg"
 import tiktokIcon from "@/assets/tiktok.svg";
@@ -32,7 +32,7 @@ import linkedinIcon from "@/assets/linkedin.svg";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
+  const {projectId} = useParams();
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -136,10 +136,10 @@ export default function DashboardPage() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Also listen for manual localStorage updates in same tab
     const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
+    localStorage.setItem = function (key, value) {
       originalSetItem.apply(this, arguments);
       if (key === 'currentWorkspace') {
         handleStorageChange();
@@ -234,12 +234,12 @@ export default function DashboardPage() {
       // Delete all endpoints in the folder first
       await Promise.all(
         endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
       // Delete the folder
-      await fetch(`${API_ROOT}/folders/${folderId}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/folders/${folderId}`, {method: "DELETE"});
 
       // Update local state
       setFolders(prev => prev.filter(f => f.id !== folderId));
@@ -300,7 +300,7 @@ export default function DashboardPage() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -312,7 +312,7 @@ export default function DashboardPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
         localStorage.setItem("currentWorkspace", createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Workspace created successfully");
         fetchWorkspaces();
       })
@@ -335,7 +335,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -344,7 +344,7 @@ export default function DashboardPage() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -382,26 +382,26 @@ export default function DashboardPage() {
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -485,7 +485,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(newProject),
     })
       .then((res) => res.json())
@@ -496,7 +496,7 @@ export default function DashboardPage() {
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-        setOpenProjectsMap({ [createdProject.workspace_id]: true });
+        setOpenProjectsMap({[createdProject.workspace_id]: true});
 
         setNewTitle("");
         setNewDesc("");
@@ -531,7 +531,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/projects/${editId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         id: editId,
         name: editTitle.trim(),
@@ -580,19 +580,19 @@ export default function DashboardPage() {
       // 3. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
       // 4. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
         )
       );
 
       // 5. Delete the project
-      await fetch(`${API_ROOT}/projects/${deleteProjectId}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/projects/${deleteProjectId}`, {method: "DELETE"});
 
       // 6. Update local state
       setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
@@ -621,7 +621,7 @@ export default function DashboardPage() {
       <div className="flex min-h-screen bg-white">
         <aside
           className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"
-            }`}
+          }`}
         >
           <Sidebar
             workspaces={workspaces}
@@ -669,7 +669,7 @@ export default function DashboardPage() {
             backgroundSize: "cover",
           }}
         >
-        <Topbar
+          <Topbar
             breadcrumb={
               currentWorkspace
                 ? [
@@ -688,17 +688,17 @@ export default function DashboardPage() {
           />
 
           <div
-            className={`transition-all duration-300 px-8 pt-4 pb-8
+            className={`transition-all duration-300 px-8 pt-1 pb-8
               ${isSidebarCollapsed
-                ? "w-[calc(100%+16rem)] -translate-x-64"
-                : "w-full"
-              }
+              ? "w-[calc(100%+16rem)] -translate-x-64"
+              : "w-full"
+            }
             `}
           >
             {currentProject ? (
               <div>
-                <h2 className="text-2xl font-semibold mb-4">
-                  {currentProject.name}
+                <h2 className="mt-4 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  {currentWorkspace.name}
                 </h2>
                 <p className="text-slate-600">{currentProject.description}</p>
                 <Button
@@ -714,7 +714,7 @@ export default function DashboardPage() {
                 <div className="flex pl-8 pr-8 items-center justify-between mb-4">
                   <div>
                     {currentWorkspace && (
-                      <h2 className="mt-4 text-3xl font-bold text-slate-900 mb-2">
+                      <h2 className="mt-4 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                         {currentWorkspace.name}
                       </h2>
                     )}
@@ -726,7 +726,7 @@ export default function DashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
                         <span>{sortOption}</span>
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-4 h-4"/>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -762,13 +762,16 @@ export default function DashboardPage() {
                       );
 
                       return (
-                        <ProjectCard
-                          key={p.id}
-                          project={{ ...p, endpoints: projectEndpoints }}
-                          onClick={() => navigate(`/dashboard/${p.id}`)}
-                          onEdit={() => openEditProjectDialog(p)}
-                          onDelete={() => openDeleteProjectDialog(p.id)}
-                        />
+                        <div
+                          className="rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100 hover:border-yellow-300 bg-white/70 backdrop-blur">
+                          <ProjectCard
+                            key={p.id}
+                            project={{...p, endpoints: projectEndpoints}}
+                            onClick={() => navigate(`/dashboard/${p.id}`)}
+                            onEdit={() => openEditProjectDialog(p)}
+                            onDelete={() => openDeleteProjectDialog(p.id)}
+                          />
+                        </div>
                       );
                     })
                   ) : (
@@ -1053,9 +1056,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
-        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+        <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
         <a className="hover:underline font-semibold" href="">About</a>
         <span>·</span>
         <a className="hover:underline font-semibold" href="">Support</a>

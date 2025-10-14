@@ -20,11 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import userCogIcon from "@/assets/fa-solid_user-cog.svg";
 import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
-import frameIcon from "@/assets/Frame.svg";
-import birdIcon from "@/assets/Bird.svg";
 import {toast} from "react-toastify";
 
 const StateModeToggle = ({isStateful, onToggle}) => {
@@ -101,7 +98,6 @@ export default function Topbar({
                                  showNewFolderButton,
                                  showNewResponseButton,
                                  showStateModeToggle,
-                                 showSettingsButton,
                                  onOpenSettings,
                                  isStateful,
                                  onStateModeChange,
@@ -114,61 +110,28 @@ export default function Topbar({
 
   const [folderMode, setFolderMode] = useState("public");
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [folderOwner, setFolderOwner] = useState(""); // username của owner
-  const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
 
   useEffect(() => {
     if (currentFolder?.id) {
       setSelectedFolder(currentFolder);
+
+      // 🟡 Fetch is_public ngay khi vừa có folder
+      const fetchFolderMode = async () => {
+        try {
+          const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error("Failed to fetch folder info");
+          const data = await res.json();
+          setFolderMode(data.is_public ? "public" : "private");
+        } catch (err) {
+          console.error("Error fetching folder mode:", err);
+        }
+      };
+
+      fetchFolderMode();
     }
   }, [currentFolder]);
-
-  // 🔹 Khi có selectedFolder → fetch thông tin owner và quyền
-  useEffect(() => {
-    if (!selectedFolder?.id || !showPermission) return;
-
-    const fetchFolderDetail = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setFolderMode(data.is_public ? "public" : "private");
-      } catch (err) {
-        console.error("Failed to fetch folder detail:", err);
-      }
-    };
-
-    const fetchOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/getOwner/${selectedFolder.id}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setFolderOwner(data.username || "Unknown");
-      } catch (err) {
-        console.error("Error fetching folder owner:", err);
-        setFolderOwner("Unknown");
-      }
-    };
-
-    const checkOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/checkOwner/${selectedFolder.id}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setIsOwner(data.success);
-      } catch (err) {
-        console.error("Error checking folder owner:", err);
-        setIsOwner(false);
-      }
-    };
-
-    fetchFolderDetail();
-    fetchOwner();
-    checkOwner();
-  }, [selectedFolder, showPermission]);
 
   // 🔹 Đóng popup khi click ra ngoài
   useEffect(() => {
@@ -329,157 +292,32 @@ export default function Topbar({
           </Button>
         )}
 
-        {/* ⚙️ Settings + Permission Popup */}
-        {showSettingsButton && (
-          <div className="relative">
-            <Button
-              ref={settingsRef}
-              variant="ghost"
-              size="lg"
-              onClick={() => setShowPermission((v) => !v)}
-              className="p-0 hover:bg-transparent focus-visible:ring-0"
+        {/* Folder Mode Toggle */}
+        {currentFolder && (
+          <div className="flex items-center ml-2">
+            <button
+              className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-3 py-2 w-[70px] h-[50px] ${
+                folderMode === "public"
+                  ? "bg-white text-black"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+              onClick={() => handleChangeFolderMode("public")}
             >
-              <img src={frameIcon} alt="Settings" className="w-7 h-7 object-contain"/>
-            </Button>
+              <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
+              <span className="text-xs font-semibold">Public</span>
+            </button>
 
-
-            {/* === Folder Permission Popup === */}
-            {showPermission && (
-              <div
-                ref={popupRef}
-                className="absolute right-[0px] top-12 w-[540px] bg-neutral-100 rounded-2xl shadow-2xl border border-gray-300 p-6 z-50"
-              >
-                {/* Header */}
-                <div className="flex items-center gap-2 mb-2">
-                  <img
-                    src={userCogIcon}
-                    alt="User cog icon"
-                    className="w-6 h-6 text-gray-700"
-                  />
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Users Permission
-                  </h3>
-                </div>
-
-                {/* User Info */}
-                <div
-                  className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={birdIcon}
-                      alt="User avatar"
-                      className="w-7 h-7 object-contain"
-                    />
-                    <div>
-                      <div className="font-semibold text-[16px]">
-                        {folderOwner || "Unknown"}
-                      </div>
-
-                    </div>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-700 underline">
-                    Owner
-                  </div>
-                </div>
-
-                {/* Folder Protection */}
-                <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
-                  <div className="flex items-center gap-2 text-gray-700 font-medium">
-                          <span>
-                            Data in folder{" "}
-                            <span className="font-semibold text-black-700">
-                              {selectedFolder?.name || "this folder"}
-                            </span>{" "}
-                            is protected
-                          </span>
-                  </div>
-
-                  <div className="flex items-center">
-                    <button
-                      className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
-                        folderMode === "public"
-                          ? "bg-white text-black"
-                          : "bg-gray-300 text-gray-500"
-                      }`}
-                      onClick={() => handleChangeFolderMode("public")}
-                    >
-                      <img src={folderPublic} alt="Public folder" className="w-4 h-4"/>
-                      <span className="text-xs font-semibold">Public</span>
-                    </button>
-                    <button
-                      className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
-                        folderMode === "private"
-                          ? "bg-white text-black"
-                          : "bg-gray-300 text-gray-500"
-                      }`}
-                      onClick={() => handleChangeFolderMode("private")}
-                    >
-                      <img src={folderPrivate} alt="Private folder" className="w-4 h-4"/>
-                      <span className="text-xs font-semibold">Private</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Permissions Table */}
-                <div className="border-t border-gray-300 pt-4 mt-4">
-                  <div className="font-semibold text-gray-900 text-[16px] mb-3">
-                    Your Permissions
-                  </div>
-                  <div className="border bg-white border-gray-300 rounded-xl">
-                    <div
-                      className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
-                      <span>Permissions</span>
-                      <span className="text-center">Allowed</span>
-                      <span className="text-center">Not Allowed</span>
-                    </div>
-
-                    <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                      <span>Set folder mode</span>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="setMode"
-                          className="accent-black"
-                          checked={isOwner === true}
-                          readOnly
-                        />
-                      </div>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="setMode"
-                          className="accent-black"
-                          checked={isOwner === false}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                      <span>Sharing Data</span>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="sharing"
-                          className="accent-black"
-                          checked={folderMode === "public"}
-                          readOnly
-                        />
-                      </div>
-                      <div className="flex justify-center">
-                        <input
-                          type="radio"
-                          name="sharing"
-                          className="accent-black"
-                          checked={folderMode === "private"}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <button
+              className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-3 py-2 w-[70px] h-[50px] ${
+                folderMode === "private"
+                  ? "bg-white text-black"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+              onClick={() => handleChangeFolderMode("private")}
+            >
+              <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
+              <span className="text-xs font-semibold">Private</span>
+            </button>
           </div>
         )}
       </div>

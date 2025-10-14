@@ -51,7 +51,6 @@ import blueFolder from "@/assets/blue_folder.svg"
 import userCogIcon from "@/assets/fa-solid_user-cog.svg";
 import folderPublic from "@/assets/folder-public.svg";
 import folderPrivate from "@/assets/folder-private.svg";
-import birdIcon from "@/assets/Bird.svg";
 import editIcon from "@/assets/Edit Icon.svg";
 import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
@@ -352,8 +351,6 @@ export default function Dashboard() {
   const [showPermission, setShowPermission] = useState(false);
   const popupRef = useRef(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [folderOwner, setFolderOwner] = useState(""); // username của owner
-  const [isOwner, setIsOwner] = useState(false); // xem user hiện tại có phải owner không
   const [currentUsername, setCurrentUsername] = useState("Unknown");
 
   const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
@@ -399,41 +396,6 @@ export default function Dashboard() {
 
     fetchFolderDetail();
   }, [selectedFolder, showPermission]);
-
-  useEffect(() => {
-    if (!selectedFolder?.id) return; // nếu chưa có folder thì thôi
-
-    // --- Lấy owner ---
-    const fetchOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/getOwner/${selectedFolder.id}`, {
-          credentials: "include", // nếu cần gửi cookie
-        });
-        const data = await res.json();
-        setFolderOwner(data.username || "Unknown");
-      } catch (err) {
-        console.error("Error fetching folder owner:", err);
-        setFolderOwner("Unknown");
-      }
-    };
-
-    // --- Kiểm tra user hiện tại có phải owner ---
-    const checkOwner = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/checkOwner/${selectedFolder.id}`, {
-          credentials: "include", // gửi cookie JWT
-        });
-        const data = await res.json();
-        setIsOwner(data.success); // success = true → là owner
-      } catch (err) {
-        console.error("Error checking folder owner:", err);
-        setIsOwner(false);
-      }
-    };
-
-    fetchOwner();
-    checkOwner();
-  }, [selectedFolder]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -1138,6 +1100,13 @@ export default function Dashboard() {
           >
             <div className="flex flex-col">
               <div className="flex ml-auto border-b border-gray-200 mb-4 text-stone-500">
+                {currentProject ? (
+                  <h2 className="absolute left-16 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                    {currentProject.name}
+                  </h2>
+                ) : (
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => setActiveTab("folders")}
@@ -1177,7 +1146,7 @@ export default function Dashboard() {
                         .map((folder) => (
                           <div
                             key={folder.id}
-                            className="relative flex flex-col items-center group"
+                            className="relative flex flex-col items-center group rounded-xl p-4 border border-slate-300 bg-white/70 backdrop-blur hover:shadow-md hover:border-yellow-300 transition-all cursor-pointer"
                           >
                             {/* Folder Image */}
                             <img
@@ -1397,29 +1366,8 @@ export default function Dashboard() {
                         </h3>
                       </div>
 
-                      {/* User Info */}
-                      <div
-                        className="border border-gray-300 bg-gray-50 rounded-xl p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={birdIcon}
-                            alt="User avatar"
-                            className="w-7 h-7 object-contain"
-                          />
-                          <div>
-                            <div className="font-semibold text-[16px]">
-                              {folderOwner || "Unknown"}
-                            </div>
-
-                          </div>
-                        </div>
-                        <div className="text-sm font-semibold text-gray-700 underline">
-                          Owner
-                        </div>
-                      </div>
-
                       {/* Folder Protection */}
-                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3 mt-4">
+                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3">
                         <div className="flex items-center gap-2 text-gray-700 font-medium">
                           <span>
                             Data in folder{" "}
@@ -1457,7 +1405,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* Permissions Table */}
-                      <div className="border-t border-gray-300 pt-4 mt-4">
+                      <div className="border-t border-gray-300 pt-4">
                         <div className="font-semibold text-gray-900 text-[16px] mb-3">
                           Your Permissions
                         </div>
@@ -1467,28 +1415,6 @@ export default function Dashboard() {
                             <span>Permissions</span>
                             <span className="text-center">Allowed</span>
                             <span className="text-center">Not Allowed</span>
-                          </div>
-
-                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                            <span>Set folder mode</span>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="setMode"
-                                className="accent-black"
-                                checked={isOwner === true}
-                                readOnly
-                              />
-                            </div>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="setMode"
-                                className="accent-black"
-                                checked={isOwner === false}
-                                readOnly
-                              />
-                            </div>
                           </div>
 
                           <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">

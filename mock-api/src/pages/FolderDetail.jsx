@@ -965,11 +965,9 @@ export default function Dashboard() {
               {/* Bảng endpoints chung */}
               <div className="mb-4">
                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                  {currentWorkspace ? (
-                    <h2 className="text-xl font-bold text-gray-800 mb-2">
-                      {currentWorkspace.name}
-                      {currentProject && <> {" - "}{currentProject.name}</>}
-                      {currentFolder && <> {" / "}{currentFolder.name}</>}
+                  {currentFolder ? (
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                      {currentFolder.name}
                       {" - "}
                       {sorted.length} Endpoints
                     </h2>
@@ -1088,8 +1086,10 @@ export default function Dashboard() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableHead colSpan={6} className="text-center text-slate-500 py-4">
-                          No endpoints found.
+                        <TableHead colSpan={6}>
+                          <div className="text-center py-10 text-slate-400 border-t border-slate-100">
+                            <p>No endpoints found in this folder</p>
+                          </div>
                         </TableHead>
                       </TableRow>
                     )}
