@@ -485,7 +485,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
-            {method === "GET" ? "Response Body" : "Schema Definition"}
+            {method === "GET" ? "" : "Schema Definition"}
           </h1>
         </div>
         {/* Thêm thanh header cho Schema Definition */}
@@ -510,34 +510,20 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
             )}
           </div>
         )}
-        {/* Thêm thanh header cho Response Body (GET method) */}
-        {method === "GET" && (
-          <div className="relative w-full h-[41px] bg-[rgba(37,99,235,0.2)] border border-[#CBD5E1] rounded-[6px] mb-4">
-            <div className="absolute left-4 top-[7px] w-[168px] h-[29px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Field Name
-              </span>
-            </div>
-            <div className="absolute left-[245px] top-[6px] w-[184px] h-[30px] rounded-[6px] flex items-center">
-              <span className="font-inter font-bold text-[17px] leading-[16px] text-black pl-2">
-                Type
-              </span>
-            </div>
-          </div>
-        )}
+
         <div className="space-y-4">
-          {schemaFields.map((field) => (
-            <div
-              key={field.id}
-              onClick={(e) => handleFieldClick(field.id, e)}
-              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
-                field.id === selectedFieldId
-                  ? "border-black"
-                  : "border-slate-300"
-              } ${field.isDefault ? "bg-gray-50" : ""}`}
-            >
-              {method !== "GET" ? (
-                // POST/PUT method UI
+          {schemaFields.map((field) =>
+            method !== "GET" ? (
+              <div
+                key={field.id}
+                onClick={(e) => handleFieldClick(field.id, e)}
+                className={`flex flex-col p-3 rounded-md border cursor-pointer ${
+                  field.id === selectedFieldId
+                    ? "border-black"
+                    : "border-slate-300"
+                } ${field.isDefault ? "bg-gray-50" : ""}`}
+              >
+                {/* POST/PUT method UI */}
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-[220px]">
                     <Input
@@ -619,44 +605,22 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
                     </Button>
                   )}
                 </div>
-              ) : (
-                // GET method UI - chỉ hiển thị, không cho chỉnh sửa
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-[220px]">
-                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
-                      {field.name}
-                    </div>
+
+                {/* Hiển thị lỗi */}
+                {errors[field.id]?.name && (
+                  <div className="text-red-500 text-xs mt-1 pl-2">
+                    {errors[field.id].name}
                   </div>
+                )}
 
-                  <div className="w-[220px]">
-                    <div className="w-full p-2 bg-gray-50 rounded-md border border-gray-300">
-                      {field.type}
-                    </div>
+                {/* Hiển thị thông báo cho field mặc định */}
+                {field.isDefault && (
+                  <div className="text-gray-500 text-xs mt-1 pl-2">
+                    This is a default field and cannot be modified
                   </div>
-                </div>
-              )}
-
-              {/* Hiển thị lỗi */}
-              {errors[field.id]?.name && (
-                <div className="text-red-500 text-xs mt-1 pl-2">
-                  {errors[field.id].name}
-                </div>
-              )}
-
-              {/* Hiển thị thông báo cho field mặc định */}
-              {field.isDefault && (
-                <div className="text-gray-500 text-xs mt-1 pl-2">
-                  This is a default field and cannot be modified
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Thông báo khi không có trường nào */}
-          {schemaFields.length === 0 && (
-            <div className="text-gray-500 text-sm mt-2 pl-2">
-              No schema fields defined.
-            </div>
+                )}
+              </div>
+            ) : null
           )}
 
           {/* Thêm tiêu đề Fields Input */}
