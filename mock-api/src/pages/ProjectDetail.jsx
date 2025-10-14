@@ -43,7 +43,7 @@ import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
@@ -57,13 +57,12 @@ import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import schemaIcon from "@/assets/schema.svg"
 
-const SchemaBodyEditor = ({ folderData, folderId, onSave }) => {
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingSchema, setPendingSchema] = useState(null);
 
-  // ✅ Khởi tạo schema cơ bản hoặc từ folderData
   useEffect(() => {
     if (folderData?.schema) {
       const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
@@ -71,19 +70,6 @@ const SchemaBodyEditor = ({ folderData, folderId, onSave }) => {
         name,
         type: config.type || "string",
         required: config.required || false,
-      }));
-      setSchemaFields(fields);
-    } else {
-      const defaultSchema = {
-        id: { type: "number", required: false },
-        name: { type: "string", required: true },
-        age: { type: "number", required: false },
-      };
-      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type,
-        required: config.required,
       }));
       setSchemaFields(fields);
     }
@@ -1315,14 +1301,13 @@ export default function Dashboard() {
                   <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
                     <DialogContent className="max-w-3xl">
                       <DialogHeader>
-                        <DialogTitle>Folder Schema</DialogTitle>
+                        <DialogTitle></DialogTitle>
                         <DialogDescription>
-                          View or modify the base schema of this folder.
                         </DialogDescription>
                       </DialogHeader>
 
                       {folderSchema ? (
-                        <SchemaBodyEditor
+                        <BaseSchemaEditor
                           folderData={{ schema: folderSchema }}
                           folderId={selectedFolder?.id}
                           onSave={handleSaveFolderSchema}

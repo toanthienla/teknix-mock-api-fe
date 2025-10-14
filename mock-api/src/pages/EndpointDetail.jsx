@@ -30,7 +30,7 @@ import {
 import { toast } from "react-toastify";
 import {
   Dialog,
-  DialogContent,
+  DialogContent, DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -406,6 +406,192 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
         <div className="flex justify-end mt-4">
           <Button
             className="bg-[#2563EB] hover:bg-[#1E40AF] text-white"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+  const [schemaFields, setSchemaFields] = useState([]);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (folderData?.schema) {
+      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type || "string",
+        required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    }
+  }, [folderData]);
+
+  const validateField = (field) => {
+    const newErrors = {};
+
+    if (!field.name.trim()) {
+      newErrors.name = "Field name cannot be empty";
+    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
+      newErrors.name = "Invalid field name format";
+    }
+
+    return newErrors;
+  };
+
+  const validateAllFields = () => {
+    const allErrors = {};
+    let isValid = true;
+
+    schemaFields.forEach((field) => {
+      const fieldErrors = validateField(field);
+      if (Object.keys(fieldErrors).length > 0) {
+        allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    setErrors(allErrors);
+    return isValid;
+  };
+
+  const handleAddField = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix errors before adding new field");
+      return;
+    }
+
+    const newField = {
+      id: `field-${Date.now()}`,
+      name: "",
+      type: "string",
+      required: false,
+    };
+
+    setSchemaFields((prev) => [...prev, newField]);
+  };
+
+  const handleDeleteField = (id) => {
+    setSchemaFields((prev) => prev.filter((f) => f.id !== id));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+  };
+
+  const handleChange = (id, key, value) => {
+    setSchemaFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+    );
+  };
+
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = {};
+    schemaFields.forEach((field) => {
+      if (field.name.trim()) {
+        newSchema[field.name] = {
+          type: field.type,
+          required: field.required,
+        };
+      }
+    });
+
+    onSave(newSchema);
+  };
+
+  return (
+    <div className="max-h-[70vh] overflow-y-auto">
+      <Card className="p-4 border border-slate-300 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          Folder Base Schema
+        </h2>
+
+        {/* Header */}
+        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+          <div>Field Name</div>
+          <div>Type</div>
+          <div>Required</div>
+        </div>
+
+        {/* Fields */}
+        <div className="space-y-3">
+          {schemaFields.map((field) => (
+            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
+              <Input
+                value={field.name}
+                onChange={(e) => handleChange(field.id, "name", e.target.value)}
+                className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
+                placeholder="Field name"
+              />
+
+              <Select
+                value={field.type}
+                onValueChange={(value) => handleChange(field.id, "type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">string</SelectItem>
+                  <SelectItem value="number">number</SelectItem>
+                  <SelectItem value="boolean">boolean</SelectItem>
+                  <SelectItem value="array">array</SelectItem>
+                  <SelectItem value="object">object</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2">
+                <Select
+                  value={field.required.toString()}
+                  onValueChange={(value) =>
+                    handleChange(field.id, "required", value === "true")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">true</SelectItem>
+                    <SelectItem value="false">false</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteField(field.id)}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </div>
+
+              {errors[field.id]?.name && (
+                <div className="col-span-3 text-red-500 text-xs">
+                  {errors[field.id].name}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-between mt-6">
+          <Button variant="outline" onClick={handleAddField}>
+            <Plus className="w-4 h-4 mr-2" /> Add Field
+          </Button>
+          <Button
+            className="bg-blue-600 text-white hover:bg-blue-700"
             onClick={handleSave}
           >
             Save Changes
@@ -937,6 +1123,8 @@ const DashboardPage = () => {
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
+  const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
+  const [folderSchema, setFolderSchema] = useState(null);
 
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
@@ -1220,10 +1408,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -1233,23 +1421,41 @@ const DashboardPage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) {
-          // If error, revert state
-          setEndpoints((prev) =>
-            prev.map((ep) =>
-              String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
-                : ep
-            )
-          );
-          setIsStateful(previousState);
+          // Lấy nội dung lỗi từ server (text hoặc JSON)
+          const text = await res.text();
+
+          // Trường hợp folder chưa có base schema
+          if (text.includes("Folder does not have a base schema")) {
+            toast.warning(
+              "This folder needs a base schema before converting to stateful."
+            );
+
+            // Hiển thị dialog edit schema cho folder
+            setOpenSchemaDialog(true);
+
+            // Revert lại UI state
+            setEndpoints((prev) =>
+              prev.map((ep) =>
+                String(ep.id) === String(currentEndpointId)
+                  ? { ...ep, is_stateful: previousState }
+                  : ep
+              )
+            );
+            setIsStateful(previousState);
+
+            // Ngừng xử lý
+            throw new Error("Folder does not have a base schema");
+          }
+
+          // Các lỗi khác
           throw new Error("Failed to convert endpoint to stateful mode");
         }
+
         return res.json();
       })
       .then((updatedEndpoint) => {
-        // Update endpoint with data from API
         setEndpoints((prev) =>
           prev.map((ep) =>
             String(ep.id) === String(currentEndpointId) ? updatedEndpoint : ep
@@ -1257,7 +1463,6 @@ const DashboardPage = () => {
         );
         setIsStateful(updatedEndpoint.is_stateful);
 
-        // After switching to stateful, need to fetch endpoint data
         const currentEndpoint = endpoints.find(
           (ep) => String(ep.id) === String(currentEndpointId)
         );
@@ -1266,19 +1471,57 @@ const DashboardPage = () => {
           fetchEndpointDataByPath(currentEndpoint.path);
         }
 
-        // Fetch endpoint responses in stateful mode
         fetchEndpointResponses(true);
-
         toast.success("Endpoint switched to stateful mode!");
         window.location.reload();
       })
       .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
+        console.error("Error converting to stateful:", error);
+        if (!error.message.includes("Folder does not have a base schema")) {
+          toast.error(error.message);
+        }
       })
       .finally(() => {
         setIsSwitchingMode(false);
       });
+  };
+
+  useEffect(() => {
+    if (!currentFolder?.id || !openSchemaDialog) return;
+
+    // Fetch base_schema từ folder
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch folder schema");
+        return res.json();
+      })
+      .then((data) => {
+        setFolderSchema(data.base_schema || {});
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to fetch folder schema");
+      });
+  }, [currentFolder, openSchemaDialog]);
+
+  const handleSaveFolderSchema = async (newSchema) => {
+    if (!currentFolder?.id) return;
+
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder schema");
+      toast.success("Folder schema updated successfully!");
+      setFolderSchema(newSchema);
+      setOpenSchemaDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save folder schema");
+    }
   };
 
   // Hàm xử lý xác nhận chuyển sang stateless
@@ -3675,6 +3918,28 @@ const DashboardPage = () => {
                 Switch
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* === Folder Schema Dialog === */}
+        <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle></DialogTitle>
+              <DialogDescription>
+              </DialogDescription>
+            </DialogHeader>
+
+            {folderSchema ? (
+              <BaseSchemaEditor
+                folderData={{ schema: folderSchema }}
+                folderId={currentFolder?.id}
+                onSave={handleSaveFolderSchema}
+                method={"PUT"}
+              />
+            ) : (
+              <div className="text-gray-500 text-center py-6">Loading schema...</div>
+            )}
           </DialogContent>
         </Dialog>
 
