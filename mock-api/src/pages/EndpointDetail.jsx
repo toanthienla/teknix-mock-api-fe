@@ -47,6 +47,10 @@ import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
 // import JSONEditor from 'jsoneditor';
+import Editor from "react-simple-code-editor";
+import { highlight, languages } from "prismjs/components/prism-core";
+import "prismjs/components/prism-json";
+import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
 
@@ -3447,40 +3451,43 @@ const DashboardPage = () => {
                           </Label>
                           <div className="col-span-3 space-y-2">
                             <div className="relative">
-                              <Textarea
-                                id="response-body"
+                              <Editor
                                 value={responseBody}
-                                onChange={(e) => {
+                                onValueChange={(code) => {
                                   const canEdit =
                                     !isStateful ||
                                     statusCode !== "200" ||
                                     method !== "GET";
                                   if (canEdit) {
-                                    setResponseBody(e.target.value);
+                                    setResponseBody(code);
                                   }
                                 }}
+                                highlight={(code) =>
+                                  highlight(code, languages.json)
+                                }
+                                padding={10}
+                                style={{
+                                  fontFamily:
+                                    '"Fira code", "Fira Mono", monospace',
+                                  fontSize: 12,
+                                  minHeight: "200px",
+                                  maxHeight: "400px",
+                                  overflow: "auto",
+                                  border: "1px solid #CBD5E1",
+                                  borderRadius: "0.375rem",
+                                  backgroundColor: "#233554",
+                                  color: "white",
+                                }}
+                                textareaClassName="focus:outline-none"
                                 disabled={
                                   isStateful &&
                                   statusCode === "200" &&
                                   method === "GET"
                                 }
-                                className={`font-mono h-60 border-[#CBD5E1] rounded-md pr-16 bg-[#233554] text-white ${
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "opacity-70 cursor-not-allowed"
-                                    : ""
-                                }`}
-                                placeholder={
-                                  isStateful &&
-                                  statusCode === "200" &&
-                                  method === "GET"
-                                    ? "Read-only for 200 OK responses with GET method"
-                                    : ""
-                                }
                               />
-                              {/* Nhóm nút trên cùng bên phải */}
-                              <div className="absolute top-2 right-2 flex space-x-2">
+
+                              {/* JSON Editor controls */}
+                              <div className="absolute top-2 right-2 flex space-x-2 z-10">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -3837,25 +3844,38 @@ const DashboardPage = () => {
 
                         <div className="mb-6">
                           <div className="relative">
-                            <Textarea
-                              id="initial-value"
+                            <Editor
                               value={tempDataDefaultString}
-                              onChange={(e) => {
-                                setTempDataDefaultString(e.target.value);
+                              onValueChange={(code) => {
+                                setTempDataDefaultString(code);
                                 try {
                                   // Chỉ cập nhật state khi JSON hợp lệ
-                                  setTempDataDefault(
-                                    JSON.parse(e.target.value)
-                                  );
+                                  setTempDataDefault(JSON.parse(code));
                                 } catch {
                                   // Giữ nguyên state cũ nếu JSON không hợp lệ
                                 }
                               }}
-                              className="font-mono h-[258px] border-[#CBD5E1] rounded-md pb-16 bg-[#233554] text-white placeholder:text-gray-400"
-                              placeholder="Enter initial value"
+                              highlight={(code) =>
+                                highlight(code, languages.json)
+                              }
+                              padding={10}
+                              style={{
+                                fontFamily:
+                                  '"Fira code", "Fira Mono", monospace',
+                                fontSize: 12,
+                                minHeight: "200px",
+                                maxHeight: "400px",
+                                overflow: "auto",
+                                border: "1px solid #CBD5E1",
+                                borderRadius: "0.375rem",
+                                backgroundColor: "#233554",
+                                color: "white",
+                              }}
+                              textareaClassName="focus:outline-none"
                             />
-                            {/* Top right buttons */}
-                            <div className="absolute top-2 right-2 flex space-x-2">
+
+                            {/* JSON Editor controls */}
+                            <div className="absolute top-2 right-2 flex space-x-2 z-10">
                               <Button
                                 variant="outline"
                                 size="sm"
