@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from "react";
+import React, {useEffect, useState} from "react";
 import { getCurrentUser } from "@/services/api.js";
 import {Button} from "@/components/ui/button";
 import {
@@ -48,11 +48,7 @@ import { Plus, Trash2 } from "lucide-react";
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
 import blueFolder from "@/assets/blue_folder.svg"
-import userCogIcon from "@/assets/fa-solid_user-cog.svg";
-import folderPublic from "@/assets/folder-public.svg";
-import folderPrivate from "@/assets/folder-private.svg";
 import editIcon from "@/assets/Edit Icon.svg";
-import Group from "@/assets/Group.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import schemaIcon from "@/assets/schema.svg"
 import tiktokIcon from "@/assets/tiktok.svg";
@@ -372,13 +368,10 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
 
-  const [folderMode, setFolderMode] = useState("public"); // mặc định public
   const [newFolderMode, setNewFolderMode] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [showPermission, setShowPermission] = useState(false);
-  const popupRef = useRef(null);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [currentUsername, setCurrentUsername] = useState("Unknown");
 
@@ -406,25 +399,6 @@ export default function Dashboard() {
 
     checkUserLogin();
   }, []);
-
-  useEffect(() => {
-    if (!selectedFolder?.id || !showPermission) return;
-
-    const fetchFolderDetail = async () => {
-      try {
-        const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        // Cập nhật folderMode từ is_public (true = public, false = private)
-        setFolderMode(data.is_public ? "public" : "private");
-      } catch (err) {
-        console.error("Failed to fetch folder detail:", err);
-      }
-    };
-
-    fetchFolderDetail();
-  }, [selectedFolder, showPermission]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -799,37 +773,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleChangeFolderMode = async (mode) => {
-    if (!selectedFolder?.id) return;
-    try {
-      const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_public: mode === "public" }),
-      });
-
-      if (res.status === 403) {
-        toast.error("Unauthorized: You do not have permission to change this folder mode!");
-        return;
-      }
-
-      if (!res.ok) throw new Error("Failed to update folder mode");
-
-      setFolderMode(mode);
-      toast.success(`Folder is now ${mode}!`);
-      // Cập nhật luôn state folders để UI đồng bộ
-      setFolders((prev) =>
-        prev.map((f) =>
-          f.id === selectedFolder.id ? { ...f, is_public: mode === "public" } : f
-        )
-      );
-    } catch (err) {
-      toast.error("Failed to update folder mode!");
-      console.error(err);
-    }
-  };
-
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
     const trimmed = name.trim();
@@ -986,24 +929,6 @@ export default function Dashboard() {
   } else if (sortOption === "Alphabetical (Z-A)") {
     sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
   }
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        setShowPermission(false);
-      }
-    };
-
-    if (showPermission) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showPermission]);
 
   useEffect(() => {
     if (!selectedFolder?.id || !openSchemaDialog) return;
@@ -1219,15 +1144,6 @@ export default function Dashboard() {
                                   <DropdownMenuItem
                                     onClick={() => {
                                       setSelectedFolder(folder);
-                                      setShowPermission(true);
-                                    }}
-                                  >
-                                    <img src={Group} className="w-4 h-4" alt="Group Icon"/> Folder Permission
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
                                       setOpenSchemaDialog(true);
                                     }}
                                   >
@@ -1377,101 +1293,6 @@ export default function Dashboard() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
-
-                  {/* === Folder Permission Popup === */}
-                  {showPermission && (
-                    <div
-                      ref={popupRef}
-                      className="absolute right-[0px] top-12 w-[540px] bg-neutral-100 rounded-2xl shadow-2xl border border-gray-300 p-6 z-50"
-                    >
-                      {/* Header */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <img
-                          src={userCogIcon}
-                          alt="User cog icon"
-                          className="w-6 h-6 text-gray-700"
-                        />
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Users Permission
-                        </h3>
-                      </div>
-
-                      {/* Folder Protection */}
-                      <div className="flex justify-between items-center bg-gray-100 rounded-xl px-4 py-3">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium">
-                          <span>
-                            Data in folder{" "}
-                            <span className="font-semibold text-black-700">
-                              {selectedFolder?.name || "this folder"}
-                            </span>{" "}
-                            is protected
-                          </span>
-                        </div>
-
-                        <div className="flex items-center">
-                          <button
-                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-4 py-2 w-[60px] h-[45px] ${
-                              folderMode === "public"
-                                ? "bg-white text-black"
-                                : "bg-gray-300 text-gray-500"
-                            }`}
-                            onClick={() => handleChangeFolderMode("public")}
-                          >
-                            <img src={folderPublic} alt="Public folder" className="w-4 h-4"/>
-                            <span className="text-xs font-semibold">Public</span>
-                          </button>
-                          <button
-                            className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-4 py-2 w-[60px] h-[45px] ${
-                              folderMode === "private"
-                                ? "bg-white text-black"
-                                : "bg-gray-300 text-gray-500"
-                            }`}
-                            onClick={() => handleChangeFolderMode("private")}
-                          >
-                            <img src={folderPrivate} alt="Private folder" className="w-4 h-4"/>
-                            <span className="text-xs font-semibold">Private</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Permissions Table */}
-                      <div className="border-t border-gray-300 pt-4">
-                        <div className="font-semibold text-gray-900 text-[16px] mb-3">
-                          Your Permissions
-                        </div>
-                        <div className="border bg-white border-gray-300 rounded-xl">
-                          <div
-                            className="grid grid-cols-3 bg-gray-50 text-[15px] font-semibold mx-2 my-1 px-2 py-1 rounded-t-xl">
-                            <span>Permissions</span>
-                            <span className="text-center">Allowed</span>
-                            <span className="text-center">Not Allowed</span>
-                          </div>
-
-                          <div className="grid grid-cols-3 items-center px-4 py-2 text-sm text-gray-700">
-                            <span>Sharing Data</span>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="sharing"
-                                className="accent-black"
-                                checked={folderMode === "public"}
-                                readOnly
-                              />
-                            </div>
-                            <div className="flex justify-center">
-                              <input
-                                type="radio"
-                                name="sharing"
-                                className="accent-black"
-                                checked={folderMode === "private"}
-                                readOnly
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                 </>
               ) : activeTab === "logs" ? (
