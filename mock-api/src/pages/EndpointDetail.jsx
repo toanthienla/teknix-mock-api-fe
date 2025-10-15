@@ -153,9 +153,50 @@ const statusCodes = [
 
 const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [schemaFields, setSchemaFields] = useState([]);
-  // Thêm state cho dropdown của GET method
   const [availableFields, setAvailableFields] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Thêm state mới để lưu schema từ endpoints/{id}
+  const [endpointSchema, setEndpointSchema] = useState(null);
+
+  // Fetch schema từ endpoints/{id} cho phần tag name
+  useEffect(() => {
+    if (endpointId) {
+      fetch(`${API_ROOT}/endpoints/${endpointId}`, {
+        credentials: "include",
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch endpoint schema");
+          return res.json();
+        })
+        .then((data) => {
+          setEndpointSchema(data);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch endpoint schema:", error);
+          toast.error("Failed to fetch endpoint schema for tags");
+          setEndpointSchema(null);
+        });
+    }
+  }, [endpointId]);
+
+  // Hàm lấy tất cả các trường từ schema của endpoint (dùng cho tag name)
+  const getEndpointSchemaFields = () => {
+    if (!endpointSchema?.schema) return [];
+
+    // Xử lý riêng cho GET method
+    if (method === "GET" && endpointSchema.schema.fields) {
+      // Với GET, schema.fields là mảng tên field
+      return endpointSchema.schema.fields;
+    } else if (
+      (method === "POST" || method === "PUT") &&
+      endpointSchema.schema
+    ) {
+      // Với POST/PUT, schema là object với key là tên field
+      return Object.keys(endpointSchema.schema);
+    }
+
+    return [];
+  };
 
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
@@ -213,7 +254,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Fetch available fields for GET method
   useEffect(() => {
     if (endpointId) {
-      fetch(`${API_ROOT}/base_schema/${endpointId}`, {
+      fetch(`${API_ROOT}/endpoints/base_schema/${endpointId}`, {
         credentials: "include",
       })
         .then((res) => {
@@ -441,33 +482,22 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
 
         <div className="mb-2">
           <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-            Selected Fields
+            Schema Fields
           </span>
         </div>
-        {/* Hiển thị các trường đã chọn dưới dạng tag */}
-        {schemaFields.filter((f) => !f.isDefault).length > 0 && (
+        {/* Hiển thị các trường trong schema từ endpoints/{id} dưới dạng tag */}
+        {getEndpointSchemaFields().length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {schemaFields
-              .filter((f) => !f.isDefault)
-              .map((field) => (
-                <div
-                  key={field.id}
-                  className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
-                >
-                  <span className="text-[#2563EB] text-[10.0034px] leading-[17px] mr-2">
-                    {field.name}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFieldToggle(field.name);
-                    }}
-                    className="w-5 h-5 ml-1 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+            {getEndpointSchemaFields().map((fieldName) => (
+              <div
+                key={fieldName}
+                className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
+              >
+                <span className="text-[#2563EB] text-[10.0034px] leading-[17px]">
+                  {fieldName}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -1275,7 +1305,7 @@ const DashboardPage = () => {
       !isSwitchingMode
     ) {
       // Fetch endpoint definition including schema
-      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`, {
+      fetch(`${API_ROOT}/endpoints/base_schema/${currentEndpointId}`, {
         credentials: "include",
       })
         .then((res) => res.json())
