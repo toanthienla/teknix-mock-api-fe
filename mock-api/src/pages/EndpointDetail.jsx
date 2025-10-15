@@ -1426,30 +1426,27 @@ const DashboardPage = () => {
   };
 
   const handleSaveSchema = (newSchema) => {
-    if (!currentFolder) {
-      toast.error("Folder not found. Cannot update schema.");
+    if (!currentEndpointId) {
+      toast.error("Endpoint not found. Cannot update schema.");
       return;
     }
 
     const payload = {
-      base_schema: newSchema,
+      schema: newSchema,
     };
 
-    fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
+    // Sử dụng endpoint đúng theo yêu cầu
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update folder schema");
+        if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
       })
-      .then((updatedFolder) => {
-        // Update the folder in state
-        setFolders((prev) =>
-          prev.map((f) => (f.id === currentFolder.id ? updatedFolder : f))
-        );
-        toast.success("Folder schema updated successfully!");
+      .then(() => {
+        toast.success("Schema updated successfully!");
       })
       .catch((error) => {
         console.error(error);
