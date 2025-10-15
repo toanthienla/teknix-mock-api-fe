@@ -307,35 +307,31 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    if (method === "GET") {
-      // For GET method, return the old format
-      const fields = schemaFields
-        .filter((field) => !field.isDefault)
-        .map((field) => field.name);
+    // Format schema the same for all methods (without required for GET)
+    const schema = {};
 
-      // Always include "id" for all methods
-      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
-    } else {
-      // For POST/PUT methods, return the new format
-      const schema = {};
+    schemaFields.forEach((field) => {
+      if (!field.isDefault) {
+        // For all methods, include type
+        const fieldSchema = { type: field.type };
 
-      schemaFields.forEach((field) => {
-        if (!field.isDefault) {
-          schema[field.name] = {
-            type: field.type,
-            required: field.required,
-          };
+        // Only include required for POST/PUT methods
+        if (method !== "GET") {
+          fieldSchema.required = field.required;
         }
-      });
 
-      // Always include "id" for all methods
-      schema["id"] = {
-        type: "number",
-        required: false,
-      };
+        schema[field.name] = fieldSchema;
+      }
+    });
 
-      return schema;
-    }
+    // Always include "id" for all methods
+    schema["id"] = {
+      type: "number",
+      // Only include required for POST/PUT methods
+      ...(method !== "GET" && { required: false }),
+    };
+
+    return schema;
   };
 
   const handleSave = () => {
@@ -1367,7 +1363,9 @@ const DashboardPage = () => {
       return;
     }
 
-    const payload = newSchema;
+    const payload = {
+      schema: newSchema,
+    };
 
     // Sử dụng endpoint đúng theo yêu cầu
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
