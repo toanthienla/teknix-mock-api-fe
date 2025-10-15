@@ -157,6 +157,8 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Thêm state mới để lưu schema từ endpoints/{id}
   const [endpointSchema, setEndpointSchema] = useState(null);
+  // Thêm state để trigger refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch schema từ endpoints/{id} cho phần tag name
   useEffect(() => {
@@ -177,7 +179,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
           setEndpointSchema(null);
         });
     }
-  }, [endpointId]);
+  }, [endpointId, refreshTrigger]); // Thêm refreshTrigger vào dependency
 
   // Hàm lấy tất cả các trường từ schema của endpoint (dùng cho tag name)
   const getEndpointSchemaFields = () => {
@@ -254,7 +256,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Fetch available fields for GET method
   useEffect(() => {
     if (endpointId) {
-      fetch(`${API_ROOT}/endpoints/base_schema/${endpointId}`, {
+      fetch(`${API_ROOT}/base_schema/${endpointId}`, {
         credentials: "include",
       })
         .then((res) => {
@@ -385,6 +387,12 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
     // Chuẩn bị schema và gọi callback onSave từ parent
     const newSchema = prepareSchema();
     onSave(newSchema);
+
+    // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
+    setRefreshTrigger((prev) => prev + 1);
+
+    // Hiển thị thông báo thành công
+    toast.success("Schema updated and tags refreshed successfully!");
   };
 
   return (
@@ -1305,7 +1313,7 @@ const DashboardPage = () => {
       !isSwitchingMode
     ) {
       // Fetch endpoint definition including schema
-      fetch(`${API_ROOT}/endpoints/base_schema/${currentEndpointId}`, {
+      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`, {
         credentials: "include",
       })
         .then((res) => res.json())
