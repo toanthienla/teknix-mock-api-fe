@@ -307,31 +307,35 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    // Format schema the same for all methods (without required for GET)
-    const schema = {};
+    if (method === "GET") {
+      // For GET method, return the old format
+      const fields = schemaFields
+        .filter((field) => !field.isDefault)
+        .map((field) => field.name);
 
-    schemaFields.forEach((field) => {
-      if (!field.isDefault) {
-        // For all methods, include type
-        const fieldSchema = { type: field.type };
+      // Always include "id" for all methods
+      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
+    } else {
+      // For POST/PUT methods, return the new format
+      const schema = {};
 
-        // Only include required for POST/PUT methods
-        if (method !== "GET") {
-          fieldSchema.required = field.required;
+      schemaFields.forEach((field) => {
+        if (!field.isDefault) {
+          schema[field.name] = {
+            type: field.type,
+            required: field.required,
+          };
         }
+      });
 
-        schema[field.name] = fieldSchema;
-      }
-    });
+      // Always include "id" for all methods
+      schema["id"] = {
+        type: "number",
+        required: false,
+      };
 
-    // Always include "id" for all methods
-    schema["id"] = {
-      type: "number",
-      // Only include required for POST/PUT methods
-      ...(method !== "GET" && { required: false }),
-    };
-
-    return schema;
+      return schema;
+    }
   };
 
   const handleSave = () => {
@@ -1358,30 +1362,25 @@ const DashboardPage = () => {
   };
 
   const handleSaveSchema = (newSchema) => {
-    if (!currentFolder) {
-      toast.error("Folder not found. Cannot update schema.");
+    if (!currentEndpointId) {
+      toast.error("Endpoint not found. Cannot update schema.");
       return;
     }
 
-    const payload = {
-      base_schema: newSchema,
-    };
+    const payload = newSchema;
 
-    fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
+    // Sử dụng endpoint đúng theo yêu cầu
+    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update folder schema");
+        if (!res.ok) throw new Error("Failed to update schema");
         return res.json();
       })
-      .then((updatedFolder) => {
-        // Update the folder in state
-        setFolders((prev) =>
-          prev.map((f) => (f.id === currentFolder.id ? updatedFolder : f))
-        );
-        toast.success("Folder schema updated successfully!");
+      .then(() => {
+        toast.success("Schema updated successfully!");
       })
       .catch((error) => {
         console.error(error);
