@@ -66,13 +66,26 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingSchema, setPendingSchema] = useState(null);
 
+  // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
-    if (folderData?.schema) {
+    if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
       const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
         id: `field-${index}`,
         name,
         type: config.type || "string",
         required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    } else {
+      // Mặc định có sẵn "id"
+      const defaultSchema = {
+        id: { type: "number", required: false },
+      };
+      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type,
+        required: config.required,
       }));
       setSchemaFields(fields);
     }
@@ -123,6 +136,12 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   };
 
   const handleDeleteField = (id) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.name === "id") {
+      toast.error("Default field 'id' cannot be deleted");
+      return;
+    }
+
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -192,11 +211,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 onChange={(e) => handleChange(field.id, "name", e.target.value)}
                 className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
                 placeholder="Field name"
+                disabled={field.name === "id"}
               />
 
               <Select
                 value={field.type}
                 onValueChange={(value) => handleChange(field.id, "type", value)}
+                disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -216,6 +237,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   onValueChange={(value) =>
                     handleChange(field.id, "required", value === "true")
                   }
+                  disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -230,8 +252,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeleteField(field.id)}
+                  disabled={field.name === "id"}
                 >
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      field.name === "id" ? "text-gray-400" : "text-red-500"
+                    }`}
+                  />
                 </Button>
               </div>
 
@@ -258,13 +285,15 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         </div>
       </Card>
 
-      {/* ✅ Confirm Dialog */}
+      {/* Confirm Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Schema Update</DialogTitle>
             <DialogDescription>
-              Updating this folder's schema will <b>delete all endpoint data</b> that no longer fits the new schema.
+              Updating this folder's schema will{" "}
+              <b>delete all endpoint data</b> that no longer fits the new
+              schema.
               <br /> <br />
               Are you sure you want to continue?
             </DialogDescription>
@@ -344,7 +373,7 @@ export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("All time");
 
   const [folderMode, setFolderMode] = useState("public"); // mặc định public
-  const [newFolderMode, setNewFolderMode] = useState("");
+  const [newFolderMode, setNewFolderMode] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -717,7 +746,7 @@ export default function Dashboard() {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
-        is_public: newFolderMode === "public",
+        is_public: newFolderMode,
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -758,6 +787,7 @@ export default function Dashboard() {
 
       setNewFolderName("");
       setNewFolderDesc("");
+      setNewFolderMode(true);
       setEditingFolderId(null);
       setTargetProjectId(null);
       setOpenNewFolder(false);
@@ -1766,8 +1796,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="public"
-                    checked={newFolderMode === "public"}
-                    onChange={() => setNewFolderMode("public")}
+                    checked={newFolderMode === true}
+                    onChange={() => setNewFolderMode(true)}
                     className="accent-blue-600"
                   />
                   <span>Public</span>
@@ -1777,8 +1807,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="private"
-                    checked={newFolderMode === "private"}
-                    onChange={() => setNewFolderMode("private")}
+                    checked={newFolderMode === false}
+                    onChange={() => setNewFolderMode(false)}
                     className="accent-blue-600"
                   />
                   <span>Private</span>

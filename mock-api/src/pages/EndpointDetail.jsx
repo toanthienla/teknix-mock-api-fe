@@ -30,7 +30,8 @@ import {
 import { toast } from "react-toastify";
 import {
   Dialog,
-  DialogContent, DialogDescription,
+  DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -159,28 +160,37 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
   useEffect(() => {
     if (endpointData?.schema) {
-      // Lấy schema từ endpointData.schema.fields (định dạng đúng từ API)
-      const fields = endpointData.schema.fields || [];
+      let fieldsConfig = [];
+
+      // Xác định danh sách field đã chọn dựa trên method
+      let selectedFieldNames = [];
+
+      if (method === "GET" && endpointData.schema.fields) {
+        // Với GET, schema.fields là mảng tên field
+        selectedFieldNames = [...endpointData.schema.fields];
+      } else if (
+        (method === "POST" || method === "PUT") &&
+        endpointData.schema.schema
+      ) {
+        // Với POST/PUT, schema.schema là object với key là tên field
+        selectedFieldNames = Object.keys(endpointData.schema.schema);
+      }
 
       // Đảm bảo "id" luôn được bao gồm
-      const schemaWithId = ["id", ...fields.filter((f) => f !== "id")];
+      if (!selectedFieldNames.includes("id")) {
+        selectedFieldNames = ["id", ...selectedFieldNames];
+      }
 
-      // Lấy type từ base_schema nếu có
-      const fieldsConfig = schemaWithId.map((name, index) => {
-        // Tìm type từ availableFields (đã được fetch từ /base_schema/{id})
-        const fieldConfig = availableFields.find((f) =>
-          typeof f === "string" ? f === name : f.name === name
-        );
+      // Map các field đã chọn thành cấu trúc internal
+      fieldsConfig = selectedFieldNames.map((name, index) => {
+        // Tìm config từ availableFields (base schema)
+        const fieldConfig = availableFields.find((f) => f.name === name);
 
         return {
           id: `field-${index}`,
           name,
-          type: fieldConfig
-            ? typeof fieldConfig === "string"
-              ? "string"
-              : fieldConfig.type
-            : "string",
-          required: false,
+          type: fieldConfig ? fieldConfig.type : "string",
+          required: fieldConfig ? fieldConfig.required : false,
           isDefault: name === "id",
         };
       });
@@ -210,7 +220,24 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
         })
         .then((data) => {
           // Đảm bảo data.fields tồn tại và là mảng
-          const fields = Array.isArray(data.fields) ? data.fields : [];
+          let fields = [];
+
+          if (Array.isArray(data.fields)) {
+            // Handle new format where fields is an array of objects
+            fields = data.fields.map((field) => ({
+              name: field.name,
+              type: field.type,
+              required: field.required !== undefined ? field.required : false,
+            }));
+          } else if (Array.isArray(data)) {
+            // Handle old format where data is an array of strings
+            fields = data.map((name) => ({
+              name,
+              type: "string",
+              required: false,
+            }));
+          }
+
           setAvailableFields(fields);
         })
         .catch((error) => {
@@ -222,31 +249,43 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
     }
   }, [endpointId]);
 
-  // Hàm xử lý toggle field cho tất cả các method
+  // Hàm xử lý toggle field cho tất cả các method - ĐÃ SỬA LỖI CRASH
   const handleFieldToggle = (fieldName) => {
     setSchemaFields((prev) => {
-      const idField = prev.find((f) => f.name === "id");
-      const otherFields = prev.filter((f) => f.name !== "id" && !f.isDefault);
+      // Đảm bảo prev luôn là mảng
+      const safePrev = Array.isArray(prev) ? prev : [];
 
-      if (fieldName === "id") return prev;
+      // Đảm bảo idField luôn tồn tại
+      const idField = safePrev.find((f) => f.name === "id") || {
+        id: `field-${Date.now()}-id`,
+        name: "id",
+        type: "number",
+        required: false,
+        isDefault: true,
+      };
+
+      const otherFields = safePrev.filter(
+        (f) => f.name !== "id" && !f.isDefault
+      );
+
+      if (fieldName === "id") return safePrev;
 
       const isFieldSelected = otherFields.some((f) => f.name === fieldName);
 
-      // Xác định type dựa trên cấu trúc availableFields
+      // Xác định type và required dựa trên cấu trúc availableFields
       let fieldType = "string";
-      if (Array.isArray(availableFields) && availableFields.length > 0) {
-        // Nếu availableFields là mảng object
-        if (
-          typeof availableFields[0] === "object" &&
-          availableFields[0] !== null
-        ) {
-          const fieldObj = availableFields.find((f) => f.name === fieldName);
-          fieldType = fieldObj?.type || "string";
-        }
-        // Nếu availableFields là mảng string
-        else {
-          fieldType = "string"; // Hoặc có thể xác định type mặc định khác
-        }
+      let fieldRequired = false;
+
+      // Đảm bảo availableFields luôn là mảng
+      const safeAvailableFields = Array.isArray(availableFields)
+        ? availableFields
+        : [];
+
+      const fieldObj = safeAvailableFields.find((f) => f.name === fieldName);
+      if (fieldObj) {
+        fieldType = fieldObj.type || "string";
+        fieldRequired =
+          fieldObj.required !== undefined ? fieldObj.required : false;
       }
 
       if (isFieldSelected) {
@@ -259,7 +298,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
             id: `field-${Date.now()}`,
             name: fieldName,
             type: fieldType,
-            required: false,
+            required: fieldRequired,
             isDefault: false,
           },
         ];
@@ -268,13 +307,31 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    // For all methods, return { fields: [...] } format
-    const fields = schemaFields
-      .filter((field) => !field.isDefault)
-      .map((field) => field.name);
+    // Format schema the same for all methods (without required for GET)
+    const schema = {};
+
+    schemaFields.forEach((field) => {
+      if (!field.isDefault) {
+        // For all methods, include type
+        const fieldSchema = { type: field.type };
+
+        // Only include required for POST/PUT methods
+        if (method !== "GET") {
+          fieldSchema.required = field.required;
+        }
+
+        schema[field.name] = fieldSchema;
+      }
+    });
 
     // Always include "id" for all methods
-    return { fields: ["id", ...fields.filter((f) => f !== "id")] };
+    schema["id"] = {
+      type: "number",
+      // Only include required for POST/PUT methods
+      ...(method !== "GET" && { required: false }),
+    };
+
+    return schema;
   };
 
   const handleSave = () => {
@@ -318,10 +375,10 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
           {isDropdownOpen && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
               {availableFields.map((field) => {
-                const fieldName =
-                  typeof field === "string" ? field : field.name;
-                const fieldType =
-                  typeof field === "object" ? field.type : "string";
+                const fieldName = field.name;
+                const fieldType = field.type;
+                const fieldRequired =
+                  field.required !== undefined ? field.required : false;
 
                 // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
                 const isChecked =
@@ -363,7 +420,10 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
                     >
                       {fieldName}{" "}
                       <span className="text-gray-500 text-xs">
-                        ({fieldType})
+                        ({fieldType}){" "}
+                        {fieldRequired && (
+                          <span className="text-red-500">*</span>
+                        )}
                       </span>
                     </span>
                   </div>
@@ -422,14 +482,29 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingSchema, setPendingSchema] = useState(null);
 
+  // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
-    if (folderData?.schema) {
+    if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
       const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
         id: `field-${index}`,
         name,
         type: config.type || "string",
         required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    } else {
+      // Mặc định có sẵn "id"
+      const defaultSchema = {
+        id: { type: "number", required: false },
+      };
+      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type,
+        required: config.required,
       }));
       setSchemaFields(fields);
     }
@@ -480,6 +555,12 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   };
 
   const handleDeleteField = (id) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.name === "id") {
+      toast.error("Default field 'id' cannot be deleted");
+      return;
+    }
+
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -494,12 +575,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
     );
   };
 
-  const handleSave = () => {
-    if (!validateAllFields()) {
-      toast.error("Please fix all errors before saving");
-      return;
-    }
-
+  const prepareSchema = () => {
     const newSchema = {};
     schemaFields.forEach((field) => {
       if (field.name.trim()) {
@@ -509,8 +585,26 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         };
       }
     });
+    return newSchema;
+  };
 
-    onSave(newSchema);
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = prepareSchema();
+    setPendingSchema(newSchema);
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = () => {
+    if (pendingSchema) {
+      onSave(pendingSchema);
+      toast.success("Folder schema saved successfully!");
+    }
+    setConfirmOpen(false);
   };
 
   return (
@@ -536,11 +630,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 onChange={(e) => handleChange(field.id, "name", e.target.value)}
                 className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
                 placeholder="Field name"
+                disabled={field.name === "id"}
               />
 
               <Select
                 value={field.type}
                 onValueChange={(value) => handleChange(field.id, "type", value)}
+                disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -560,6 +656,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   onValueChange={(value) =>
                     handleChange(field.id, "required", value === "true")
                   }
+                  disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -574,8 +671,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeleteField(field.id)}
+                  disabled={field.name === "id"}
                 >
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      field.name === "id" ? "text-gray-400" : "text-red-500"
+                    }`}
+                  />
                 </Button>
               </div>
 
@@ -601,6 +703,34 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
           </Button>
         </div>
       </Card>
+
+      {/* Confirm Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Schema Update</DialogTitle>
+            <DialogDescription>
+              Updating this folder's schema will{" "}
+              <b>delete all endpoint data</b> that no longer fits the new
+              schema.
+              <br /> <br />
+              Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={confirmSave}
+            >
+              Yes, Save Anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -1135,6 +1265,24 @@ const DashboardPage = () => {
 
   const [currentUsername, setCurrentUsername] = useState("Unknown");
 
+  const getFullPath = (path) => {
+    if (!currentWorkspace || !currentProject) {
+      console.warn("Workspace or project not available, using raw path");
+      return path;
+    }
+    // Đảm bảo workspace name không có dấu gạch chéo ở đầu/cuối
+    const cleanWorkspaceName = currentWorkspace.name.replace(/^\/+|\/+$/g, "");
+
+    // Đảm bảo project name không có dấu gạch chéo ở đầu/cuối
+    const cleanProjectName = currentProject.name.replace(/^\/+|\/+$/g, "");
+
+    // Loại bỏ dấu gạch chéo đầu tiên của path nếu có
+    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+
+    // Xây dựng full path
+    return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
+  };
+
   const validateDelay = (value) => {
     // Cho phép giá trị rỗng (sẽ được xử lý khi lưu)
     if (value === "") return "";
@@ -1189,7 +1337,7 @@ const DashboardPage = () => {
       !isSwitchingMode
     ) {
       // Fetch endpoint definition including schema
-      fetch(`${API_ROOT}/endpoints/${currentEndpointId}`)
+      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`)
         .then((res) => res.json())
         .then((data) => {
           setEndpointDefinition(data);
@@ -1243,12 +1391,14 @@ const DashboardPage = () => {
       return;
     }
 
+    const fullPath = getFullPath(path);
+
     const payload = {
       data_default: endpointData.data_default || [],
       reset_current: true,
     };
 
-    fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+    fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1276,24 +1426,30 @@ const DashboardPage = () => {
   };
 
   const handleSaveSchema = (newSchema) => {
-    if (!endpointDefinition) return;
+    if (!currentFolder) {
+      toast.error("Folder not found. Cannot update schema.");
+      return;
+    }
 
     const payload = {
-      schema: newSchema,
+      base_schema: newSchema,
     };
 
-    // Sử dụng endpoint đúng theo yêu cầu
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to update schema");
+        if (!res.ok) throw new Error("Failed to update folder schema");
         return res.json();
       })
-      .then(() => {
-        toast.success("Schema updated successfully!");
+      .then((updatedFolder) => {
+        // Update the folder in state
+        setFolders((prev) =>
+          prev.map((f) => (f.id === currentFolder.id ? updatedFolder : f))
+        );
+        toast.success("Folder schema updated successfully!");
       })
       .catch((error) => {
         console.error(error);
@@ -1411,10 +1567,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1827,7 +1983,11 @@ const DashboardPage = () => {
   };
 
   const fetchEndpointDataByPath = (path) => {
-    return fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`)
+    const fullPath = getFullPath(path);
+
+    return fetch(
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`
+    )
       .then((res) => {
         if (!res.ok) {
           // Nếu không tìm thấy endpoint data, trả về null thay vì lỗi
@@ -2716,6 +2876,8 @@ const DashboardPage = () => {
       return;
     }
 
+    const fullPath = getFullPath(path);
+
     try {
       const parsedData = JSON.parse(tempDataDefaultString);
       const payload = {
@@ -2723,7 +2885,7 @@ const DashboardPage = () => {
         reset_current: true,
       };
 
-      fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(path)}`, {
+      fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -3039,7 +3201,7 @@ const DashboardPage = () => {
             {/* Cột trái - Response Configuration */}
             <div className="w-1/3">
               {/* Response Configuration Table */}
-              <div className="rounded-md border border-solid border-slate-300">
+              <div className="rounded-md border border-solid border-slate-300 bg-white">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
@@ -3937,8 +4099,7 @@ const DashboardPage = () => {
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle></DialogTitle>
-              <DialogDescription>
-              </DialogDescription>
+              <DialogDescription></DialogDescription>
             </DialogHeader>
 
             {folderSchema ? (
@@ -3949,7 +4110,9 @@ const DashboardPage = () => {
                 method={"PUT"}
               />
             ) : (
-              <div className="text-gray-500 text-center py-6">Loading schema...</div>
+              <div className="text-gray-500 text-center py-6">
+                Loading schema...
+              </div>
             )}
           </DialogContent>
         </Dialog>
@@ -4431,9 +4594,13 @@ const DashboardPage = () => {
           <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
           <img src={fbIcon} alt="facebook" className="w-4 h-4" />
           <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
-          <a className="hover:underline font-semibold" href="">About</a>
+          <a className="hover:underline font-semibold" href="">
+            About
+          </a>
           <span>·</span>
-          <a className="hover:underline font-semibold" href="">Support</a>
+          <a className="hover:underline font-semibold" href="">
+            Support
+          </a>
         </div>
       </div>
     </div>
