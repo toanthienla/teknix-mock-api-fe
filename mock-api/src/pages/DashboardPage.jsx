@@ -479,7 +479,7 @@ export default function DashboardPage() {
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
-      workspace_id: targetWsId || currentWsId,
+      workspace_id: workspaceId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
