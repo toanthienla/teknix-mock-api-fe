@@ -157,6 +157,8 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Thêm state mới để lưu schema từ endpoints/{id}
   const [endpointSchema, setEndpointSchema] = useState(null);
+  // Thêm state để trigger refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch schema từ endpoints/{id} cho phần tag name
   useEffect(() => {
@@ -177,7 +179,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
           setEndpointSchema(null);
         });
     }
-  }, [endpointId]);
+  }, [endpointId, refreshTrigger]); // Thêm refreshTrigger vào dependency
 
   // Hàm lấy tất cả các trường từ schema của endpoint (dùng cho tag name)
   const getEndpointSchemaFields = () => {
@@ -381,10 +383,22 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Chuẩn bị schema và gọi callback onSave từ parent
     const newSchema = prepareSchema();
-    onSave(newSchema);
+
+    try {
+      await onSave(newSchema);
+
+      // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
+      setRefreshTrigger((prev) => prev + 1);
+
+      // Hiển thị thông báo thành công
+      toast.success("Schema updated and tags refreshed successfully!");
+    } catch (error) {
+      console.error("Failed to save schema:", error);
+      // Error is already handled in handleSaveSchema
+    }
   };
 
   return (
@@ -1466,12 +1480,12 @@ const DashboardPage = () => {
   const handleSaveSchema = (newSchema) => {
     if (!currentEndpointId) {
       toast.error("Endpoint not found. Cannot update schema.");
-      return;
+      return Promise.reject(new Error("Endpoint not found"));
     }
 
     const payload = method === "GET" ? newSchema : { schema: newSchema };
 
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+    return fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1486,6 +1500,7 @@ const DashboardPage = () => {
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
+        return Promise.reject(error);
       });
   };
 
@@ -4619,7 +4634,7 @@ const DashboardPage = () => {
 
         {/* footer */}
         <div className="absolute left-8 bottom-1 text-xs font-semibold text-gray-700">
-          © Teknik Corp. All rights reserved.
+          © Teknix Corp. All rights reserved.
         </div>
 
         <div className="absolute right-6 bottom-1 flex items-center gap-3 text-xs text-gray-700">
