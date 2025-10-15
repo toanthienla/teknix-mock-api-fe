@@ -66,7 +66,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingSchema, setPendingSchema] = useState(null);
 
-  // ✅ Khởi tạo schema (luôn có "id" mặc định)
+  // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
     if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
       const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
@@ -285,7 +285,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         </div>
       </Card>
 
-      {/* ✅ Confirm Dialog */}
+      {/* Confirm Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -373,7 +373,7 @@ export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState("All time");
 
   const [folderMode, setFolderMode] = useState("public"); // mặc định public
-  const [newFolderMode, setNewFolderMode] = useState("");
+  const [newFolderMode, setNewFolderMode] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -746,7 +746,7 @@ export default function Dashboard() {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
-        is_public: newFolderMode === "public",
+        is_public: newFolderMode,
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -787,6 +787,7 @@ export default function Dashboard() {
 
       setNewFolderName("");
       setNewFolderDesc("");
+      setNewFolderMode(true);
       setEditingFolderId(null);
       setTargetProjectId(null);
       setOpenNewFolder(false);
@@ -1795,8 +1796,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="public"
-                    checked={newFolderMode === "public"}
-                    onChange={() => setNewFolderMode("public")}
+                    checked={newFolderMode === true}
+                    onChange={() => setNewFolderMode(true)}
                     className="accent-blue-600"
                   />
                   <span>Public</span>
@@ -1806,8 +1807,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="private"
-                    checked={newFolderMode === "private"}
-                    onChange={() => setNewFolderMode("private")}
+                    checked={newFolderMode === false}
+                    onChange={() => setNewFolderMode(false)}
                     className="accent-blue-600"
                   />
                   <span>Private</span>

@@ -422,14 +422,29 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingSchema, setPendingSchema] = useState(null);
 
+  // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
-    if (folderData?.schema) {
+    if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
       const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
         id: `field-${index}`,
         name,
         type: config.type || "string",
         required: config.required || false,
+      }));
+      setSchemaFields(fields);
+    } else {
+      // Mặc định có sẵn "id"
+      const defaultSchema = {
+        id: { type: "number", required: false },
+      };
+      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
+        id: `field-${index}`,
+        name,
+        type: config.type,
+        required: config.required,
       }));
       setSchemaFields(fields);
     }
@@ -480,6 +495,12 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   };
 
   const handleDeleteField = (id) => {
+    const field = schemaFields.find((f) => f.id === id);
+    if (field?.name === "id") {
+      toast.error("Default field 'id' cannot be deleted");
+      return;
+    }
+
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -494,12 +515,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
     );
   };
 
-  const handleSave = () => {
-    if (!validateAllFields()) {
-      toast.error("Please fix all errors before saving");
-      return;
-    }
-
+  const prepareSchema = () => {
     const newSchema = {};
     schemaFields.forEach((field) => {
       if (field.name.trim()) {
@@ -509,8 +525,26 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         };
       }
     });
+    return newSchema;
+  };
 
-    onSave(newSchema);
+  const handleSave = () => {
+    if (!validateAllFields()) {
+      toast.error("Please fix all errors before saving");
+      return;
+    }
+
+    const newSchema = prepareSchema();
+    setPendingSchema(newSchema);
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = () => {
+    if (pendingSchema) {
+      onSave(pendingSchema);
+      toast.success("Folder schema saved successfully!");
+    }
+    setConfirmOpen(false);
   };
 
   return (
@@ -536,11 +570,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 onChange={(e) => handleChange(field.id, "name", e.target.value)}
                 className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
                 placeholder="Field name"
+                disabled={field.name === "id"}
               />
 
               <Select
                 value={field.type}
                 onValueChange={(value) => handleChange(field.id, "type", value)}
+                disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -560,6 +596,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   onValueChange={(value) =>
                     handleChange(field.id, "required", value === "true")
                   }
+                  disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -574,8 +611,13 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeleteField(field.id)}
+                  disabled={field.name === "id"}
                 >
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      field.name === "id" ? "text-gray-400" : "text-red-500"
+                    }`}
+                  />
                 </Button>
               </div>
 
@@ -601,6 +643,34 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
           </Button>
         </div>
       </Card>
+
+      {/* Confirm Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Schema Update</DialogTitle>
+            <DialogDescription>
+              Updating this folder's schema will{" "}
+              <b>delete all endpoint data</b> that no longer fits the new
+              schema.
+              <br /> <br />
+              Are you sure you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={confirmSave}
+            >
+              Yes, Save Anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

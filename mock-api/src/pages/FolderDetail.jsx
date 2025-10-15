@@ -98,7 +98,7 @@ export default function Dashboard() {
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDesc, setNewFolderDesc] = useState("");
-  const [newFolderMode, setNewFolderMode] = useState("");
+  const [newFolderMode, setNewFolderMode] = useState(true);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [deleteFolderId, setDeleteFolderId] = useState(null);
@@ -203,16 +203,26 @@ export default function Dashboard() {
       return false;
     }
 
+    // Lấy toàn bộ folder trong project
+    const foldersInSameProject = folders.filter(
+      (f) => String(f.project_id) === String(projectId)
+    );
+
+    // Lấy toàn bộ endpoint trong các folder đó
+    const endpointsInProject = endpoints.filter((ep) =>
+      foldersInSameProject.some((f) => String(f.id) === String(ep.folder_id))
+    );
+
+    // Kiểm tra trùng path + method trong project
     if (!type) {
-      const duplicateEndpoint = endpoints.some(
+      const duplicatePath = endpointsInProject.some(
         (ep) =>
-          String(ep.folder_id) === String(folderId) &&
           ep.path.trim() === path.trim() &&
           ep.method.toUpperCase() === method.toUpperCase()
       );
-      if (duplicateEndpoint) {
+      if (duplicatePath) {
         toast.warning(
-          `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists`
+          `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists in this project`
         );
         return false;
       }
@@ -254,6 +264,7 @@ export default function Dashboard() {
 
     return true;
   };
+
 
   // fetch workspaces + projects + endpoints + stateful_endpoints
   useEffect(() => {
@@ -503,7 +514,7 @@ export default function Dashboard() {
         name: newFolderName.trim(),
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
-        is_public: newFolderMode === "public",
+        is_public: newFolderMode,
         created_at: editingFolderId ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -544,6 +555,7 @@ export default function Dashboard() {
 
       setNewFolderName("");
       setNewFolderDesc("");
+      setNewFolderMode(true);
       setEditingFolderId(null);
       setTargetProjectId(null);
       setOpenNewFolder(false);
@@ -1441,8 +1453,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="public"
-                    checked={newFolderMode === "public"}
-                    onChange={() => setNewFolderMode("public")}
+                    checked={newFolderMode === true}
+                    onChange={() => setNewFolderMode(true)}
                     className="accent-blue-600"
                   />
                   <span>Public</span>
@@ -1452,8 +1464,8 @@ export default function Dashboard() {
                     type="radio"
                     name="folderMode"
                     value="private"
-                    checked={newFolderMode === "private"}
-                    onChange={() => setNewFolderMode("private")}
+                    checked={newFolderMode === false}
+                    onChange={() => setNewFolderMode(false)}
                     className="accent-blue-600"
                   />
                   <span>Private</span>
