@@ -475,28 +475,47 @@ export default function DashboardPage() {
   const handleCreateProject = () => {
     const workspaceId = targetWsId || currentWsId;
     if (!validateProject(newTitle, newDesc, false, null, workspaceId)) return;
+
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
-      workspace_id: targetWsId || currentWsId,
+      workspace_id: workspaceId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newProject),
     })
-      .then((res) => res.json())
-      .then((createdProject) => {
+      .then(async (res) => {
+        const data = await res.json();
+
+        // Kiểm tra phản hồi từ API có success = false
+        if (!res.ok || data.success === false) {
+          if (data?.errors?.length > 0) {
+            // Lấy tất cả message lỗi và hiển thị toast
+            data.errors.forEach((err) => {
+              toast.error(err.message || "Invalid input");
+            });
+          } else if (data?.message) {
+            toast.error(data.message);
+          } else {
+            toast.error("Failed to create project");
+          }
+          throw new Error("Validation error");
+        }
+
+        // Thành công
+        const createdProject = data;
         setProjects((prev) => [...prev, createdProject]);
 
         // mở workspace tương ứng
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-        setOpenProjectsMap({[createdProject.workspace_id]: true});
+        setOpenProjectsMap({ [createdProject.workspace_id]: true });
 
         setNewTitle("");
         setNewDesc("");
@@ -504,8 +523,14 @@ export default function DashboardPage() {
         setOpenNewProject(false);
         toast.success("Project created successfully");
       })
-      .catch(() => toast.error("Failed to create project"));
+      .catch((err) => {
+        console.error("Error creating project:", err);
+        if (!err.message.includes("Validation")) {
+          toast.error("Failed to create project");
+        }
+      });
   };
+
 
   const openEditProjectDialog = (p) => {
     setEditId(p.id);
