@@ -256,7 +256,7 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Fetch available fields for GET method
   useEffect(() => {
     if (endpointId) {
-      fetch(`${API_ROOT}/base_schema/${endpointId}`, {
+      fetch(`${API_ROOT}/endpoints/base_schema/${endpointId}`, {
         credentials: "include",
       })
         .then((res) => {
@@ -1313,7 +1313,7 @@ const DashboardPage = () => {
       !isSwitchingMode
     ) {
       // Fetch endpoint definition including schema
-      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`, {
+      fetch(`${API_ROOT}/endpoints/base_schema/${currentEndpointId}`, {
         credentials: "include",
       })
         .then((res) => res.json())
