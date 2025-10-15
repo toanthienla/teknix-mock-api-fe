@@ -981,7 +981,7 @@ export default function Dashboard() {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                          className="flex items-center gap-1 px-3 py-1 rounded-md bg-white hover:bg-gray-100"
                         >
                           {statusFilter === "All" ? "All" : `${statusFilter}`} <ChevronDown className="w-4 h-4"/>
                         </Button>
@@ -998,7 +998,7 @@ export default function Dashboard() {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="flex items-center gap-1 px-3 py-1 rounded-md hover:bg-gray-100"
+                          className="flex items-center gap-1 px-3 py-1 rounded-md bg-white hover:bg-gray-100"
                         >
                           {sortOption} <ChevronsUpDown className="w-4 h-4"/>
                         </Button>
@@ -1035,7 +1035,7 @@ export default function Dashboard() {
 
               {/* Endpoint Table */}
               <div className="w-full overflow-x-auto">
-                <Table className="border-t border-b border-gray-300">
+                <Table className="border-2 border-gray-300 bg-white">
                   <TableHeader>
                     <TableRow className="border-b border-gray-300">
                       <TableHead className="w-1/4 border-r border-gray-300">
