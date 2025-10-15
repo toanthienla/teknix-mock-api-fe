@@ -21,7 +21,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
   const {id, name, path, method} = endpoint
 
   return (
-    <TableRow className="border-b border-gray-300">
+    <TableRow className="border-b border-gray-300 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
       {/* Name */}
       <TableCell className="w-1/4 border-r border-gray-300">
         <div className="flex items-center gap-2">
@@ -34,6 +34,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
           )}
           <span
             className="font-semibold text-gray-800 cursor-pointer"
+            style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)"}}
             onClick={onClick}
           >
             {name}
@@ -42,10 +43,18 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
       </TableCell>
 
       {/* Path */}
-      <TableCell className="w-1/4 font-semibold text-gray-800 border-r border-gray-300">{path}</TableCell>
+      <TableCell
+        className="w-1/4 font-semibold text-gray-800 text-sha border-r border-gray-300"
+        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
+      >
+        {path}
+      </TableCell>
 
       {/* Method */}
-      <TableCell className="w-1/12 text-center border-r border-gray-300">
+      <TableCell
+        className="w-1/12 text-center border-r border-gray-300"
+        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
+      >
         <Badge
           className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
             method === "GET"
@@ -64,7 +73,10 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
       </TableCell>
 
       {/* Created Time */}
-      <TableCell className="w-1/4 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
+      <TableCell
+        className="w-1/4 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300"
+        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
+      >
         {new Date(endpoint.created_at).toLocaleString("en-US", {
           year: "numeric",
           month: "long",
@@ -76,7 +88,10 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
       </TableCell>
 
       {/* Status */}
-      <TableCell className="w-1/12 font-semibold text-center text-gray-800 whitespace-nowrap text-sm border-r border-gray-300">
+      <TableCell
+        className="w-1/12 font-semibold text-center text-gray-800 whitespace-nowrap text-sm border-r border-gray-300"
+        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
+      >
         <span
           className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
             endpoint.is_active ? "text-emerald-400" : "text-rose-600"
