@@ -213,7 +213,9 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   // Fetch available fields for GET method
   useEffect(() => {
     if (endpointId) {
-      fetch(`${API_ROOT}/base_schema/${endpointId}`)
+      fetch(`${API_ROOT}/base_schema/${endpointId}`, {
+        credentials: "include",
+      })
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch base schema");
           return res.json();
@@ -307,31 +309,35 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   };
 
   const prepareSchema = () => {
-    // Format schema the same for all methods (without required for GET)
-    const schema = {};
+    if (method === "GET") {
+      // For GET method, return the old format
+      const fields = schemaFields
+        .filter((field) => !field.isDefault)
+        .map((field) => field.name);
 
-    schemaFields.forEach((field) => {
-      if (!field.isDefault) {
-        // For all methods, include type
-        const fieldSchema = { type: field.type };
+      // Always include "id" for all methods
+      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
+    } else {
+      // For POST/PUT methods, return the new format
+      const schema = {};
 
-        // Only include required for POST/PUT methods
-        if (method !== "GET") {
-          fieldSchema.required = field.required;
+      schemaFields.forEach((field) => {
+        if (!field.isDefault) {
+          schema[field.name] = {
+            type: field.type,
+            required: field.required,
+          };
         }
+      });
 
-        schema[field.name] = fieldSchema;
-      }
-    });
+      // Always include "id" for all methods
+      schema["id"] = {
+        type: "number",
+        required: false,
+      };
 
-    // Always include "id" for all methods
-    schema["id"] = {
-      type: "number",
-      // Only include required for POST/PUT methods
-      ...(method !== "GET" && { required: false }),
-    };
-
-    return schema;
+      return schema;
+    }
   };
 
   const handleSave = () => {
@@ -1269,7 +1275,9 @@ const DashboardPage = () => {
       !isSwitchingMode
     ) {
       // Fetch endpoint definition including schema
-      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`)
+      fetch(`${API_ROOT}/base_schema/${currentEndpointId}`, {
+        credentials: "include",
+      })
         .then((res) => res.json())
         .then((data) => {
           setEndpointDefinition(data);
@@ -1363,11 +1371,8 @@ const DashboardPage = () => {
       return;
     }
 
-    const payload = {
-      schema: newSchema,
-    };
+    const payload = method === "GET" ? newSchema : { schema: newSchema };
 
-    // Sử dụng endpoint đúng theo yêu cầu
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
