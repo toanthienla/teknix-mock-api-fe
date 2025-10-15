@@ -383,16 +383,22 @@ const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Chuẩn bị schema và gọi callback onSave từ parent
     const newSchema = prepareSchema();
-    onSave(newSchema);
 
-    // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
-    setRefreshTrigger((prev) => prev + 1);
+    try {
+      await onSave(newSchema);
 
-    // Hiển thị thông báo thành công
-    toast.success("Schema updated and tags refreshed successfully!");
+      // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
+      setRefreshTrigger((prev) => prev + 1);
+
+      // Hiển thị thông báo thành công
+      toast.success("Schema updated and tags refreshed successfully!");
+    } catch (error) {
+      console.error("Failed to save schema:", error);
+      // Error is already handled in handleSaveSchema
+    }
   };
 
   return (
@@ -1406,12 +1412,12 @@ const DashboardPage = () => {
   const handleSaveSchema = (newSchema) => {
     if (!currentEndpointId) {
       toast.error("Endpoint not found. Cannot update schema.");
-      return;
+      return Promise.reject(new Error("Endpoint not found"));
     }
 
     const payload = method === "GET" ? newSchema : { schema: newSchema };
 
-    fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
+    return fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1426,6 +1432,7 @@ const DashboardPage = () => {
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
+        return Promise.reject(error);
       });
   };
 
