@@ -538,24 +538,28 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
     if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
-      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type || "string",
-        required: config.required || false,
-      }));
+      const fields = Object.entries(folderData.schema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required || false,
+        })
+      );
       setSchemaFields(fields);
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
         id: { type: "number", required: false },
       };
-      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type,
-        required: config.required,
-      }));
+      const fields = Object.entries(defaultSchema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type,
+          required: config.required,
+        })
+      );
       setSchemaFields(fields);
     }
   }, [folderData]);
@@ -760,9 +764,8 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
           <DialogHeader>
             <DialogTitle>Confirm Schema Update</DialogTitle>
             <DialogDescription>
-              Updating this folder's schema will{" "}
-              <b>delete all endpoint data</b> that no longer fits the new
-              schema.
+              Updating this folder's schema will <b>delete all endpoint data</b>{" "}
+              that no longer fits the new schema.
               <br /> <br />
               Are you sure you want to continue?
             </DialogDescription>
@@ -1404,12 +1407,14 @@ const DashboardPage = () => {
   }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
 
   const handleCopyPath = () => {
-    const path = endpoints.find(
+    const endpoint = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
-    )?.path;
-    if (path) {
+    );
+
+    if (endpoint) {
+      const fullPath = getFullPath(endpoint.path);
       navigator.clipboard
-        .writeText(`http://localhost:3000${path}`)
+        .writeText(`http://localhost:3000${fullPath}`)
         .then(() => {
           toast.success("Path copied to clipboard!");
         })
