@@ -538,24 +538,28 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
     if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
-      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type || "string",
-        required: config.required || false,
-      }));
+      const fields = Object.entries(folderData.schema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required || false,
+        })
+      );
       setSchemaFields(fields);
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
         id: { type: "number", required: false },
       };
-      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type,
-        required: config.required,
-      }));
+      const fields = Object.entries(defaultSchema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type,
+          required: config.required,
+        })
+      );
       setSchemaFields(fields);
     }
   }, [folderData]);
@@ -580,6 +584,26 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
       const fieldErrors = validateField(field);
       if (Object.keys(fieldErrors).length > 0) {
         allErrors[field.id] = fieldErrors;
+        isValid = false;
+      }
+    });
+
+    // Kiểm tra trùng tên (chỉ tính những field có name khác rỗng)
+    const nameCounts = {};
+    schemaFields.forEach((f) => {
+      const name = f.name.trim();
+      if (name) {
+        nameCounts[name] = (nameCounts[name] || 0) + 1;
+      }
+    });
+
+    schemaFields.forEach((f) => {
+      const name = f.name.trim();
+      if (name && nameCounts[name] > 1) {
+        allErrors[f.id] = {
+          ...(allErrors[f.id] || {}),
+          name: "Field name already exists",
+        };
         isValid = false;
       }
     });
@@ -760,9 +784,8 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
           <DialogHeader>
             <DialogTitle>Confirm Schema Update</DialogTitle>
             <DialogDescription>
-              Updating this folder's schema will{" "}
-              <b>delete all endpoint data</b> that no longer fits the new
-              schema.
+              Updating this folder's schema will <b>delete all endpoint data</b>{" "}
+              that no longer fits the new schema.
               <br /> <br />
               Are you sure you want to continue?
             </DialogDescription>
@@ -1404,12 +1427,14 @@ const DashboardPage = () => {
   }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
 
   const handleCopyPath = () => {
-    const path = endpoints.find(
+    const endpoint = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
-    )?.path;
-    if (path) {
+    );
+
+    if (endpoint) {
+      const fullPath = getFullPath(endpoint.path);
       navigator.clipboard
-        .writeText(`http://localhost:3000${path}`)
+        .writeText(`http://localhost:3000${fullPath}`)
         .then(() => {
           toast.success("Path copied to clipboard!");
         })
@@ -3344,10 +3369,10 @@ const DashboardPage = () => {
               {/* Navigation Tabs */}
               <Tabs defaultValue="Header&Body" className="w-full">
                 {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
-                <TabsList className="flex w-full justify-start bg-transparent mb-4 space-x-6">
+                <TabsList className="flex w-fit justify-start bg-white mb-4 px-6 ">
                   <TabsTrigger
                     value="Header&Body"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
                     Header & Body
                   </TabsTrigger>
@@ -3356,7 +3381,7 @@ const DashboardPage = () => {
                   {!isStateful && (
                     <TabsTrigger
                       value="Rules"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Rules
                     </TabsTrigger>
@@ -3366,7 +3391,7 @@ const DashboardPage = () => {
                   {!isStateful && (
                     <TabsTrigger
                       value="proxy"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Proxy
                     </TabsTrigger>
@@ -3376,7 +3401,7 @@ const DashboardPage = () => {
                   {isStateful && (
                     <TabsTrigger
                       value="dataDefault"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Data Default
                     </TabsTrigger>
@@ -3385,7 +3410,7 @@ const DashboardPage = () => {
                   {isStateful && method !== "DELETE" && (
                     <TabsTrigger
                       value="schemaBody"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>
@@ -4634,7 +4659,7 @@ const DashboardPage = () => {
 
         {/* footer */}
         <div className="absolute left-8 bottom-1 text-xs font-semibold text-gray-700">
-          © Teknik Corp. All rights reserved.
+          © Teknix Corp. All rights reserved.
         </div>
 
         <div className="absolute right-6 bottom-1 flex items-center gap-3 text-xs text-gray-700">
