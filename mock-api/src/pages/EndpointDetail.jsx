@@ -3349,10 +3349,10 @@ const DashboardPage = () => {
               {/* Navigation Tabs */}
               <Tabs defaultValue="Header&Body" className="w-full">
                 {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
-                <TabsList className="flex w-full justify-start bg-transparent mb-4 space-x-6">
+                <TabsList className="flex w-fit justify-start bg-white mb-4 px-6 ">
                   <TabsTrigger
                     value="Header&Body"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                   >
                     Header & Body
                   </TabsTrigger>
@@ -3361,7 +3361,7 @@ const DashboardPage = () => {
                   {!isStateful && (
                     <TabsTrigger
                       value="Rules"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Rules
                     </TabsTrigger>
@@ -3371,7 +3371,7 @@ const DashboardPage = () => {
                   {!isStateful && (
                     <TabsTrigger
                       value="proxy"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Proxy
                     </TabsTrigger>
@@ -3381,7 +3381,7 @@ const DashboardPage = () => {
                   {isStateful && (
                     <TabsTrigger
                       value="dataDefault"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       Data Default
                     </TabsTrigger>
@@ -3390,7 +3390,7 @@ const DashboardPage = () => {
                   {isStateful && method !== "DELETE" && (
                     <TabsTrigger
                       value="schemaBody"
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
                     >
                       {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>

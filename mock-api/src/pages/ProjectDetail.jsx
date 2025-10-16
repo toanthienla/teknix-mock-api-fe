@@ -111,6 +111,26 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
       }
     });
 
+    // Kiểm tra trùng tên (chỉ tính những field có name khác rỗng)
+    const nameCounts = {};
+    schemaFields.forEach((f) => {
+      const name = f.name.trim();
+      if (name) {
+        nameCounts[name] = (nameCounts[name] || 0) + 1;
+      }
+    });
+
+    schemaFields.forEach((f) => {
+      const name = f.name.trim();
+      if (name && nameCounts[name] > 1) {
+        allErrors[f.id] = {
+          ...(allErrors[f.id] || {}),
+          name: "Field name already exists",
+        };
+        isValid = false;
+      }
+    });
+
     setErrors(allErrors);
     return isValid;
   };
@@ -1065,7 +1085,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   onClick={() => setActiveTab("folders")}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "folders"
+                  className={`rounded-none px-6 py-4 -mb-px bg-white border-b-2 border-stone-200 ${activeTab === "folders"
                     ? "border-b-2 border-stone-900 text-stone-900"
                     : ""
                   }`}
@@ -1078,7 +1098,7 @@ export default function Dashboard() {
                     setActiveTab("logs");
                     fetchLogs(projectId);
                   }}
-                  className={`rounded-none px-6 py-4 -mb-px ${activeTab === "logs"
+                  className={`rounded-none px-6 py-4 -mb-px bg-white border-b-2 border-stone-200 ${activeTab === "logs"
                     ? "border-b-2 border-stone-900 text-stone-900"
                     : ""
                   }`}
