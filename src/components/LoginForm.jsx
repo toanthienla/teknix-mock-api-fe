@@ -40,17 +40,18 @@ export function LoginForm({className, ...props}) {
   const handleLogin = async (e) => {
     e.preventDefault();
     const errorMessage = validateInputs(username, password);
-      if (errorMessage) {
-        toast.error(errorMessage);
-        return;
-      }
+    if (errorMessage) {
+      toast.error(errorMessage);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
-      await login({ username, password });
+      await login({username, password});
       toast.success("Login successful! Redirecting...");
       setTimeout(() => (window.location.href = "/dashboard"), 2000);
     } catch (error) {
+      setIsSubmitting(false);
       if (error.response && error.response.status === 400) {
         toast.error("Invalid credentials. Please try again.");
       } else {

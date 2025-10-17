@@ -55,6 +55,7 @@ export function SignupForm({className, ...props}) {
       toast.success("Signup successful! Redirecting...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
+      setIsSubmitting(false);
       if (error.response && error.response.status === 400) {
         toast.error("Username already exists");
       } else {
