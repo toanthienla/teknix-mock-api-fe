@@ -1,118 +1,82 @@
-import React, { useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
-import randomColor from "randomcolor";
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import detailIcon from "@/assets/view_detail.svg";
 
-// Import icon ảnh
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
+export default function ProjectCard({ project, folders, endpoints, onView, onClick }) {
+  const { id, name, created_at } = project;
 
-export default function ProjectCard({ project, onEdit, onDelete, onClick }) {
-  const { id, name, description, created_at, endpoints = [] } = project;
-
-  const bgColor = useMemo(
-    () =>
-      randomColor({
-        luminosity: "light",
-        seed: id,
-      }),
-    [id]
-  );
-
+  // Format ngày tạo
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", {
-      month: "short",
+      month: "long",
       day: "numeric",
       year: "numeric",
     });
   };
 
+  // Lấy folder + endpoint liên quan
+  const projectFolders = folders.filter((f) => String(f.project_id) === String(id));
+  const folderNames = projectFolders.map((f) => f.name);
+  const projectFolderIds = projectFolders.map((f) => String(f.id));
+  const projectEndpoints = endpoints.filter((ep) =>
+    projectFolderIds.includes(String(ep.folder_id))
+  );
+
   return (
-    <div
+    <TableRow
       onClick={onClick}
-      className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between hover:shadow-md transition cursor-pointer relative"
+      className="hover:bg-gray-50 border-b border-gray-200 transition cursor-pointer"
     >
-      {/* Header: Ngày tạo + Menu */}
-      <div className="flex justify-between items-start mb-1">
-        <div className="text-xs text-slate-500 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded-md font-medium">
-          {formatDate(created_at)}
+      {/* Project name */}
+      <TableCell className="font-medium text-gray-800">{name}</TableCell>
+
+      {/* Folders */}
+      <TableCell>
+        <div className="flex flex-wrap gap-1">
+          {folderNames.length > 0 ? (
+            folderNames.map((fn) => (
+              <span
+                key={fn}
+                className="bg-yellow-200 text-gray-800 text-sm px-2.5 py-0.5 rounded-full font-medium shadow-sm"
+              >
+                {fn}
+              </span>
+            ))
+          ) : (
+            <span className="text-gray-400 text-sm">No folders</span>
+          )}
         </div>
+      </TableCell>
 
-        {/* Dropdown menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 p-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4 text-slate-600" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 p-2">
-            <DropdownMenuLabel className="text-sm font-medium text-slate-600 px-2 py-1">
-              Actions
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="my-1" />
+      {/* Endpoints */}
+      <TableCell className="text-center text-sm font-semibold text-gray-700">
+        {projectEndpoints.length}
+      </TableCell>
 
-            {/* Edit */}
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(project);
-              }}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
-            >
-              <img src={editIcon} alt="edit" className="w-4 h-4" />
-              Edit
-            </DropdownMenuItem>
+      {/* Date Created */}
+      <TableCell className="text-sm text-right text-gray-600">
+        {formatDate(created_at)}
+      </TableCell>
 
-            {/* Delete */}
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(id);
-              }}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
-            >
-              <img src={deleteIcon} alt="delete" className="w-4 h-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Nội dung chính */}
-      <div className="flex items-start gap-2 flex-1">
-        <div
-          className="w-2.5 h-2.5 rounded-full shrink-0 mt-1"
-          style={{ backgroundColor: bgColor }}
-        />
-        <div className="flex flex-col">
-          <div className="font-semibold text-slate-900 text-base">{name}</div>
-          <div className="text-sm text-slate-600 line-clamp-2">
-            {description || "No description"}
-          </div>
+      {/* Actions */}
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-3">
+          <img
+            src={detailIcon}
+            alt="Detail"
+            className="w-4 h-4 cursor-pointer opacity-70 hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
+          />
         </div>
-      </div>
-
-      {/* Góc dưới bên phải: số lượng endpoint */}
-      <div className="flex justify-end mt-3">
-        <span className="text-xs text-black font-medium">
-          {endpoints.length} {endpoints.length === 1 ? 'Endpoint' : 'Endpoints'}
-        </span>
-      </div>
-    </div>
+      </TableCell>
+    </TableRow>
   );
 }

@@ -1,9 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {useParams, useNavigate} from "react-router-dom";
-import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
-import {ChevronDown} from "lucide-react";
 import {API_ROOT} from "../utils/constants";
 
 import {
@@ -22,13 +20,49 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 import {toast} from "react-toastify";
 import {getCurrentUser} from "@/services/api.js";
-import webBg from "@/assets/dot_web.svg"
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
+import searchIcon from "@/assets/search.svg";
+import pDesc from "@/assets/project_desc.svg";
+import folderIcon from "@/assets/folder-icon.svg";
+import dateIcon from "@/assets/date.svg";
+import statelessIcon from "@/assets/stateless.svg";;
+import statefulIcon from "@/assets/stateful.svg";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -49,20 +83,13 @@ export default function DashboardPage() {
   const [openProjectsMap, setOpenProjectsMap] = useState(
     () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
   );
-  const [openEndpointsMap, setOpenEndpointsMap] = useState(
-    () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
-  );
-  const [openFoldersMap, setOpenFoldersMap] = useState(
-    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
-  );
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
-  );
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
   const [openDeleteProject, setOpenDeleteProject] = useState(false);
   const [deleteProjectId, setDeleteProjectId] = useState(null);
+  const [openDetail, setOpenDetail] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const [openEditWs, setOpenEditWs] = useState(false);
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(null);
@@ -156,18 +183,6 @@ export default function DashboardPage() {
     localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
   }, [openProjectsMap]);
 
-  useEffect(() => {
-    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
-  }, [openEndpointsMap]);
-
-  useEffect(() => {
-    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  useEffect(() => {
-    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
-  }, [openFoldersMap]);
-
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
     fetch(`${API_ROOT}/workspaces`)
@@ -212,46 +227,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAddFolder = (projectId) => {
-    console.log('Add folder for project:', projectId);
-    // Navigate to project page to create folder
-    navigate(`/dashboard/${projectId}`);
-  };
-
-  const handleEditFolder = (folder) => {
-    console.log('Edit folder:', folder);
-    // Navigate to project page with folder selected for editing
-    navigate(`/dashboard/${folder.project_id}?folderId=${folder.id}&action=edit`);
-  };
-
-  const handleDeleteFolder = async (folderId) => {
-    try {
-      // Get all endpoints in this folder
-      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
-      const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(folderId));
-
-      // Delete all endpoints in the folder first
-      await Promise.all(
-        endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
-        )
-      );
-
-      // Delete the folder
-      await fetch(`${API_ROOT}/folders/${folderId}`, {method: "DELETE"});
-
-      // Update local state
-      setFolders(prev => prev.filter(f => f.id !== folderId));
-      setEndpoints(prev => prev.filter(e => String(e.folder_id) !== String(folderId)));
-
-      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
-    } catch (error) {
-      console.error('Delete folder error:', error);
-      toast.error("Failed to delete folder");
-    }
-  };
-
   // -------------------- Filtering & Sorting --------------------
   const currentProjects = projects.filter(
     (p) => String(p.workspace_id) === String(currentWsId)
@@ -266,10 +241,6 @@ export default function DashboardPage() {
     sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
   if (sortOption === "Z → A")
     sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
-
-  const currentProject = projectId
-    ? projects.find((p) => String(p.id) === String(projectId))
-    : null;
 
   const currentWorkspace = workspaces.find(
     (w) => String(w.id) === String(currentWsId)
@@ -486,7 +457,7 @@ export default function DashboardPage() {
 
     fetch(`${API_ROOT}/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(newProject),
     })
       .then(async (res) => {
@@ -515,7 +486,7 @@ export default function DashboardPage() {
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
-        setOpenProjectsMap({ [createdProject.workspace_id]: true });
+        setOpenProjectsMap({[createdProject.workspace_id]: true});
 
         setNewTitle("");
         setNewDesc("");
@@ -639,177 +610,215 @@ export default function DashboardPage() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const totalPages = Math.ceil(sortedProjects.length / rowsPerPage);
+  const currentPageProjects = sortedProjects.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortOption, searchTerm, currentWsId]);
+
   // -------------------- Render --------------------
   return (
-    <div className="min-h-screen bg-white text-slate-800">
-      {/* Sidebar + Main */}
-      <div className="flex min-h-screen bg-white">
-        <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"
-          }`}
-        >
-          <Sidebar
-            workspaces={workspaces}
-            projects={projects}
-            endpoints={endpoints}
-            folders={folders}
-            current={currentWsId}
-            setCurrent={setCurrentWsId}
-            onWorkspaceChange={setCurrentWsId}
-            onAddWorkspace={handleAddWorkspace}
-            onEditWorkspace={(ws) => {
-              setEditWsId(ws.id);
-              setEditWsName(ws.name);
-              setOpenEditWs(true);
-            }}
-            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-            openProjectsMap={openProjectsMap}
-            setOpenProjectsMap={setOpenProjectsMap}
-            openEndpointsMap={openEndpointsMap}
-            setOpenEndpointsMap={setOpenEndpointsMap}
-            openFoldersMap={openFoldersMap}
-            setOpenFoldersMap={setOpenFoldersMap}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            onAddProject={(workspaceId) => {
-              setTargetWsId(workspaceId);
-              setOpenNewProject(true);
-            }}
-            onAddFolder={handleAddFolder}
-            onEditFolder={handleEditFolder}
-            onDeleteFolder={handleDeleteFolder}
-            setOpenNewWs={setOpenNewWs}
-            username={currentUsername}
-          />
-
-        </aside>
-
-        {/* Main */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300 relative"
-          style={{
-            backgroundImage: `url(${webBg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
+    <div className="flex flex-col min-h-screen bg-slate-50">
+      {/* Topbar full chiều ngang */}
+      <div className="mt-8 w-full bg-white shadow-sm z-20">
+        <Topbar
+          workspaces={workspaces}
+          current={currentWsId}
+          setCurrent={setCurrentWsId}
+          onWorkspaceChange={setCurrentWsId}
+          onAddWorkspace={handleAddWorkspace}
+          onEditWorkspace={(ws) => {
+            setEditWsId(ws.id);
+            setEditWsName(ws.name);
+            setOpenEditWs(true);
           }}
-        >
-          <Topbar
-            breadcrumb={
-              currentWorkspace
-                ? [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                ]
-                : []
-            }
-            onSearch={setSearchTerm}
-            onNewProject={() => setOpenNewProject(true)}
-            showNewProjectButton={true}
-            showNewResponseButton={false}
-          />
+          onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
+          setOpenNewWs={setOpenNewWs}
+          breadcrumb={
+            currentWorkspace
+              ? [
+                {
+                  label: currentWorkspace.name,
+                  WORKSPACE_ID: currentWorkspace.id,
+                  href: "/dashboard",
+                },
+              ]
+              : []
+          }
+          onSearch={setSearchTerm}
+          onNewProject={() => setOpenNewProject(true)}
+          showNewProjectButton={true}
+          showNewResponseButton={false}
+          username={currentUsername}
+        />
+      </div>
+      <main className="flex-1 w-full flex justify-center bg-white">
+        <div className="w-[90%] max-w-6xl pt-6 pb-10">
 
-          <div
-            className={`transition-all duration-300 px-8 pt-1 pb-8
-              ${isSidebarCollapsed
-              ? "w-[calc(100%+16rem)] -translate-x-64"
-              : "w-full"
-            }
-            `}
-          >
-            {currentProject ? (
-              <div>
-                <h2 className="mt-4 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                  {currentWorkspace.name}
-                </h2>
-                <p className="text-slate-600">{currentProject.description}</p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Back to all projects
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="flex pl-8 pr-8 items-center justify-between mb-4">
-                  <div>
-                    {currentWorkspace && (
-                      <h2 className="mt-4 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                        {currentWorkspace.name}
-                      </h2>
-                    )}
-                    <h3 className="text-base text-slate-600 ml-2">
-                      All Projects
-                    </h3>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
-                        <span>{sortOption}</span>
-                        <ChevronDown className="w-4 h-4"/>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-40 bg-white shadow-md rounded-md"
-                    >
-                      <DropdownMenuItem
-                        onClick={() => setSortOption("Recently created")}
-                      >
-                        Recently created
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortOption("A → Z")}>
-                        A → Z
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortOption("Z → A")}>
-                        Z → A
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-8">
-                  {sortedProjects.length > 0 ? (
-                    sortedProjects.map((p) => {
-                      // Lấy tất cả folders của project này
-                      const projectFolders = folders.filter(
-                        (f) => String(f.project_id) === String(p.id)
-                      );
-                      const folderIds = projectFolders.map((f) => String(f.id));
+          {/* Tiêu đề + Nút New Project */}
+          <div className="flex items-center justify-between mb-6">
+            {currentWorkspace && (
+              <h2 className="text-3xl font-bold text-black">
+                {currentWorkspace.name} - {sortedProjects.length}
+              </h2>
+            )}
 
-                      // Lấy tất cả endpoints trong các folder đó
-                      const projectEndpoints = endpoints.filter((ep) =>
-                        folderIds.includes(String(ep.folder_id))
-                      );
+            <Button
+              onClick={() => setOpenNewProject(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5"
+            >
+              + New Project
+            </Button>
+          </div>
 
-                      return (
-                        <div
-                          className="rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-slate-100 hover:border-yellow-300 bg-white/70 backdrop-blur">
-                          <ProjectCard
-                            key={p.id}
-                            project={{...p, endpoints: projectEndpoints}}
-                            onClick={() => navigate(`/dashboard/${p.id}`)}
-                            onEdit={() => openEditProjectDialog(p)}
-                            onDelete={() => openDeleteProjectDialog(p.id)}
+          {/* ==== Project Table ==== */}
+          <div className="mt-6">
+            <div className="rounded-md overflow-hidden">
+              <Table className="w-full">
+                {/* ==== Header ==== */}
+                <TableHeader className="bg-white">
+                  <TableRow className="border-none">
+                    <TableHead className="w-1/4 text-black font-semibold text-sm">
+                      Project Name
+                    </TableHead>
+                    <TableHead className="w-1/3 text-black font-semibold text-sm">
+                      Folders
+                    </TableHead>
+                    <TableHead className="text-center text-black font-semibold text-sm">
+                      Endpoints
+                    </TableHead>
+                    <TableHead className="text-black text-right font-semibold text-sm">
+                      Date Created
+                    </TableHead>
+                    <TableHead className="text-right text-black font-semibold text-sm">
+                      Action
+                    </TableHead>
+                  </TableRow>
+                  <TableRow className="border-b border-slate-200">
+                    <TableHead colSpan={5}>
+                      <div className="flex items-center gap-2 w-1/4">
+                        <div className="relative w-full">
+                          <img
+                            src={searchIcon}
+                            alt="search"
+                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
+                          />
+                          <Input
+                            type="text"
+                            placeholder="Search projects..."
+                            className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                           />
                         </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-slate-500 col-span-full">No projects found.</p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </main>
-      </div>
+                      </div>
+                    </TableHead>
+                  </TableRow>
+                  <TableRow className="border-none">
+                    <TableHead colSpan={5} className="py-1">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
 
-      {/* Modals */}
+                {/* ==== Body ==== */}
+                <TableBody className="h-[300px]">
+                  {sortedProjects.length > 0 ? (
+                    currentPageProjects.map((p) => (
+                      <ProjectCard
+                        key={p.id}
+                        project={p}
+                        folders={folders}
+                        endpoints={endpoints}
+                        onClick={() => navigate(`/dashboard/${p.id}`)}
+                        onEdit={() => openEditProjectDialog(p)}
+                        onDelete={() => openDeleteProjectDialog(p.id)}
+                        onView={() => {
+                          setSelectedProject(p);
+                          setOpenDetail(true);
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan="5" className="text-center py-6 text-gray-500">
+                        No projects found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== */}
+                  {Array.from({
+                    length: Math.max(0, rowsPerPage - currentPageProjects.length),
+                  }).map((_, i) => (
+                    <TableRow key={`empty-${i}`} className="h-[64px] bg-white"></TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* ==== Pagination ==== */}
+            <div className="flex items-center justify-between mt-6 px-2 text-sm text-gray-700">
+              <div className="flex items-center gap-2">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        className={currentPage === 1 ? "opacity-50 pointer-events-none" : ""}
+                      />
+                    </PaginationItem>
+
+                    {Array.from({length: totalPages}).map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        className={currentPage === totalPages ? "opacity-50 pointer-events-none" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span>Rows per page</span>
+                <Select
+                  value={String(rowsPerPage)}
+                  onValueChange={(value) => {
+                    setRowsPerPage(Number(value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[80px] h-8 border-gray-300 text-sm">
+                    <SelectValue/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
 
       {/* New Project */}
       <Dialog open={openNewProject} onOpenChange={setOpenNewProject}>
@@ -1075,19 +1084,139 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* footer */}
-      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
-        © Teknix Corp. All rights reserved.
-      </div>
+      {/* Folder Detail */}
+      <Sheet open={openDetail} onOpenChange={setOpenDetail}>
+        <SheetContent side="right" className="w-[600px] sm:w-[720px] md:w-[800px] bg-white shadow-lg overflow-y-auto p-6">
+          {selectedProject && (
+            <>
+              <SheetHeader className="mb-4">
+                <SheetTitle className="text-xl font-semibold">Details</SheetTitle>
+              </SheetHeader>
 
-      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
-        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
-        <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
-        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
-        <a className="hover:underline font-semibold" href="">About</a>
-        <span>·</span>
-        <a className="hover:underline font-semibold" href="">Support</a>
-      </div>
+              <div className="space-y-5">
+
+                {/* Description */}
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedProject.name}</h2>
+                  <div className="flex items-center gap-2 mb-2">
+                    <img src={pDesc} alt="description" className="w-4 h-4" />
+                    <h3 className="font-semibold text-gray-700">Description</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {selectedProject.description || "No description provided."}
+                  </p>
+                </div>
+
+                {/* Folders & Endpoints */}
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <img src={folderIcon} alt="folders" className="w-4 h-4" />
+                      <h3 className="font-semibold text-gray-800">FOLDERS</h3>
+                    </div>
+                    <h3 className="font-semibold text-gray-800">ENDPOINTS</h3>
+                  </div>
+
+                  <div className="space-y-2">
+                    {folders
+                      .filter((f) => f.project_id === selectedProject.id)
+                      .map((f) => {
+                        const statelessCount = endpoints.filter(
+                          (e) => e.folder_id === f.id && e.is_stateful === false
+                        ).length;
+                        const statefulCount = endpoints.filter(
+                          (e) => e.folder_id === f.id && e.is_stateful === true
+                        ).length;
+
+                        return (
+                          <div key={f.id} className="flex justify-between items-center">
+                            {/* Folder name */}
+                            <span className="text-gray-900 font-medium">{f.name}</span>
+
+                            {/* Endpoint badge */}
+                            <div className="flex items-center bg-neutral-800 text-white rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
+                              {/* Stateless */}
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-300">{statelessCount}</span>
+                                <img
+                                  src={statelessIcon}
+                                  alt="stateless"
+                                  className="w-3.5 h-3.5 opacity-90"
+                                />
+                              </div>
+
+                              {/* Divider */}
+                              <span className="opacity-60">|</span>
+
+                              {/* Stateful */}
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-300">{statefulCount}</span>
+                                <img
+                                  src={statefulIcon}
+                                  alt="stateful"
+                                  className="w-3.5 h-3.5 opacity-90 inverted"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="border rounded-lg p-4 bg-slate-50 flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <img src={dateIcon} alt="calendar" className="w-4 h-4" />
+                    <span>Date</span>
+                  </div>
+                  <div className="text-right text-sm text-gray-700">
+                    {new Date(selectedProject.created_at).toLocaleDateString()} •{" "}
+                    {new Date(selectedProject.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <SheetFooter className="flex justify-between items-center mt-6">
+                <div className="text-sm text-gray-600 flex items-center gap-2">
+                  <span>Expand new tab</span> <span>•</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+                    onClick={() => {
+                      setOpenDetail(false);
+                      openEditProjectDialog(selectedProject);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button variant="outline" onClick={() => setOpenDetail(false)}>
+                    Close
+                  </Button>
+                </div>
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* footer */}
+      <footer
+        className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700 border-t bg-white">
+        <span>© Teknix Corp. All rights reserved.</span>
+        <div className="flex items-center gap-3 text-gray-700">
+          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+          <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
+          <a className="hover:underline font-semibold" href="">About</a>
+          <span>·</span>
+          <a className="hover:underline font-semibold" href="">Support</a>
+        </div>
+      </footer>
     </div>
   );
 }

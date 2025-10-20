@@ -570,12 +570,13 @@ export default function Dashboard() {
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
-      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
+      const res = await fetch(`${API_ROOT}/project_request_logs/${pid}`, { credentials: "include" });
       const data = await res.json();
 
-      // enrich logs với endpoint + project_id
+      const logsArray = Array.isArray(data) ? data : [data];
+
       const enrichedLogs = await Promise.all(
-        data.map(async (log) => {
+        logsArray.map(async (log) => {
           if (!log.endpoint_id) return log;
 
           const endpoint = endpoints.find((ep) => String(ep.id) === String(log.endpoint_id));
@@ -589,14 +590,14 @@ export default function Dashboard() {
 
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : null, // ✅ bổ sung project_id
+              project_id: endpoint ? endpoint.project_id : null,
               endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
             };
           } catch (err) {
             console.error("Error fetching endpoint_responses:", err);
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : null, // ✅ luôn có project_id
+              project_id: endpoint ? endpoint.project_id : null,
               endpointResponseName: endpointName,
             };
           }
@@ -1026,15 +1027,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300 relative"
-          style={{
-            backgroundImage: `url(${webBg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
-        >
+        <main className="pt-8 flex-1 transition-all duration-300 relative">
           {/* Top Navbar */}
           <Topbar
             breadcrumb={
@@ -1327,7 +1320,7 @@ export default function Dashboard() {
                           value={methodFilter}
                           onValueChange={setMethodFilter}
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[140px] bg-white">
                             <SelectValue placeholder="All Methods"/>
                           </SelectTrigger>
                           <SelectContent>
@@ -1344,7 +1337,7 @@ export default function Dashboard() {
                           value={statusFilter}
                           onValueChange={setStatusFilter}
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[140px] bg-white">
                             <SelectValue placeholder="All Status"/>
                           </SelectTrigger>
                           <SelectContent>
@@ -1361,7 +1354,7 @@ export default function Dashboard() {
                           value={timeFilter}
                           onValueChange={setTimeFilter}
                         >
-                          <SelectTrigger className="w-[160px]">
+                          <SelectTrigger className="w-[160px] bg-white">
                             <SelectValue placeholder="All time"/>
                           </SelectTrigger>
                           <SelectContent>
