@@ -151,6 +151,274 @@ const statusCodes = [
   },
 ];
 
+const ApiCallEditor = ({
+  requestBody,
+  setRequestBody,
+  isRequestBodyPopoverOpen,
+  setIsRequestBodyPopoverOpen,
+  selectedSection,
+  setSelectedSection,
+  getTemplateText,
+  insertRequestBodyTemplate,
+  setIsNewApiCallDialogOpen,
+}) => {
+  const requestBodyEditorRef = useRef(null);
+  const requestBodyPopoverRef = useRef(null);
+
+  return (
+    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
+        <Button
+          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+          onClick={() => setIsNewApiCallDialogOpen(true)}
+        >
+          New API Call
+        </Button>
+      </div>
+
+      <div className="border-b border-[#EDEFF1] mb-6"></div>
+
+      <div className="space-y-6">
+        <div className="mb-2">
+          <h3 className="text-lg font-semibold text-[#37352F]">
+            Next API Call
+          </h3>
+        </div>
+
+        {/* Target Endpoint */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+              Target Endpoint
+            </label>
+            <div className="relative flex-1 max-w-[601px]">
+              <Select defaultValue="">
+                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                  <SelectValue placeholder="Select endpoint" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="/api/users">/api/users</SelectItem>
+                  <SelectItem value="/api/products">/api/products</SelectItem>
+                  <SelectItem value="/api/orders">/api/orders</SelectItem>
+                  <SelectItem value="/api/auth">/api/auth</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Method */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+              Method
+            </label>
+            <div className="relative flex-1 max-w-[601px]">
+              <Select defaultValue="GET">
+                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GET">GET</SelectItem>
+                  <SelectItem value="POST">POST</SelectItem>
+                  <SelectItem value="PUT">PUT</SelectItem>
+                  <SelectItem value="DELETE">DELETE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Request Body */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex justify-between items-start">
+            <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
+              Request Body
+            </label>
+            <div className="flex-1 max-w-[601px] relative">
+              <div className="relative" ref={requestBodyEditorRef}>
+                <Editor
+                  value={requestBody}
+                  onValueChange={(code) => setRequestBody(code)}
+                  highlight={(code) => highlight(code, languages.json)}
+                  padding={10}
+                  style={{
+                    fontFamily: '"Fira code", "Fira Mono", monospace',
+                    fontSize: 12,
+                    minHeight: "124px",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    border: "1px solid #CBD5E1",
+                    borderRadius: "0.375rem",
+                    backgroundColor: "#233554",
+                    color: "white",
+                  }}
+                  textareaClassName="focus:outline-none"
+                />
+
+                {/* JSON Editor controls */}
+                <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                  >
+                    <Upload className="mr-1 h-4 w-4" /> Upload
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      try {
+                        const formatted = JSON.stringify(
+                          JSON.parse(requestBody),
+                          null,
+                          2
+                        );
+                        setRequestBody(formatted);
+                      } catch {
+                        toast.error("Invalid JSON format");
+                      }
+                    }}
+                  >
+                    <Code className="mr-1 h-4 w-4" /> Format
+                  </Button>
+                </div>
+
+                {/* Bottom right icon */}
+                <div className="absolute bottom-2 right-2 flex space-x-2">
+                  <FileCode
+                    className="text-gray-400 cursor-pointer hover:text-gray-600"
+                    size={20}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen);
+                    }}
+                  />
+                </div>
+
+                {/* Popover cho Request Body */}
+                {isRequestBodyPopoverOpen && (
+                  <div
+                    ref={requestBodyPopoverRef}
+                    className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                  >
+                    <div className="flex flex-col items-center gap-2 p-3.5">
+                      <div className="w-full flex justify-between items-center">
+                        <div className="font-semibold text-sm text-gray-800">
+                          Variable Picker
+                        </div>
+                        <X
+                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsRequestBodyPopoverOpen(false);
+                          }}
+                        />
+                      </div>
+
+                      <div className="w-full flex justify-between">
+                        <div
+                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                            selectedSection === "url"
+                              ? "bg-[#EDEDEC] text-[#374151]"
+                              : "text-[#374151] hover:bg-gray-100"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSection("url");
+                          }}
+                        >
+                          URL Parameters
+                        </div>
+                        <div
+                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                            selectedSection === "query"
+                              ? "bg-[#EDEDEC] text-[#374151]"
+                              : "text-[#374151] hover:bg-gray-100"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSection("query");
+                          }}
+                        >
+                          Query Parameters
+                        </div>
+                        <div
+                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                            selectedSection === "state"
+                              ? "bg-[#EDEDEC] text-[#374151]"
+                              : "text-[#374151] hover:bg-gray-100"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSection("state");
+                          }}
+                        >
+                          Project State
+                        </div>
+                      </div>
+
+                      <div
+                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          insertRequestBodyTemplate(getTemplateText().template);
+                        }}
+                      >
+                        <div className="font-mono text-[12px] text-black mb-[-5px]">
+                          {getTemplateText().template}
+                        </div>
+                        <div className="text-[12px] text-gray-500">
+                          {getTemplateText().description}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status condition */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+              Status condition
+            </label>
+            <div className="relative flex-1 max-w-[601px]">
+              <Select defaultValue="">
+                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                  <SelectValue placeholder="Select condition" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  {statusCodes.map((status) => (
+                    <SelectItem key={status.code} value={status.code}>
+                      {status.code} - {status.description.split("–")[0]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            onClick={null}
+          >
+            Save Changes
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [availableFields, setAvailableFields] = useState([]);
@@ -1335,8 +1603,43 @@ const DashboardPage = () => {
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
   const [delayError, setDelayError] = useState("");
+  const [requestBody, setRequestBody] = useState("");
 
   const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  const responseEditorRef = useRef(null);
+  const initialValueEditorRef = useRef(null);
+  const currentResponseBody = useRef(responseBody);
+  const currentTempDataDefaultString = useRef(tempDataDefaultString);
+  const requestBodyEditorRef = useRef(null);
+  const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
+    useState(false);
+
+  const [isNewApiCallDialogOpen, setIsNewApiCallDialogOpen] = useState(false);
+  const [newApiCallTargetEndpoint, setNewApiCallTargetEndpoint] = useState("");
+  const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
+  const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
+  const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
+    useState("");
+  const [
+    isNewApiCallRequestBodyPopoverOpen,
+    setIsNewApiCallRequestBodyPopoverOpen,
+  ] = useState(false);
+
+  // Thêm ref cho editor
+  const newApiCallRequestBodyEditorRef = useRef(null);
+  const newApiCallRequestBodyPopoverRef = useRef(null);
+
+  // Thêm hàm xử lý chèn template cho New API Call Request Body
+  const insertNewApiCallRequestBodyTemplate = (template) => {
+    insertIntoEditor(
+      newApiCallRequestBodyEditorRef,
+      newApiCallRequestBody,
+      setNewApiCallRequestBody,
+      template
+    );
+    setIsNewApiCallRequestBodyPopoverOpen(false);
+  };
 
   const getFullPath = (path) => {
     if (!currentWorkspace || !currentProject) {
@@ -1529,31 +1832,14 @@ const DashboardPage = () => {
       });
   };
 
+  // Hàm chèn template cho Initial Value
   const insertInitialValueTemplate = (template) => {
-    const textarea = document.getElementById("initial-value");
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    // Chèn template tại vị trí con trỏ
-    const newValue =
-      tempDataDefaultString.substring(0, start) +
-      template +
-      tempDataDefaultString.substring(end);
-
-    setTempDataDefaultString(newValue);
-
-    // Di chuyển con trỏ sau template đã chèn
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + template.length,
-        start + template.length
-      );
-    }, 0);
-
-    // Tự động đóng popover sau khi chèn
+    insertIntoEditor(
+      initialValueEditorRef,
+      tempDataDefaultString,
+      setTempDataDefaultString,
+      template
+    );
     setIsInitialValuePopoverOpen(false);
   };
 
@@ -1574,29 +1860,69 @@ const DashboardPage = () => {
     };
   }, []);
 
-  const insertTemplate = (template) => {
-    const textarea = document.getElementById("response-body");
-    if (!textarea) return;
+  useEffect(() => {
+    currentResponseBody.current = responseBody;
+  }, [responseBody]);
+
+  // Cập nhật ref khi tempDataDefaultString thay đổi
+  useEffect(() => {
+    currentTempDataDefaultString.current = tempDataDefaultString;
+  }, [tempDataDefaultString]);
+
+  // Hàm insert chung cho tất cả các editor
+  const insertIntoEditor = (editorRef, currentValue, setValue, template) => {
+    // Tìm textarea bên trong editor
+    const textarea = editorRef.current?.querySelector("textarea");
+    if (!textarea) {
+      console.error("Textarea not found in editor");
+      return;
+    }
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
+    // Sử dụng giá trị hiện tại từ textarea thay vì state
+    const currentValueFromDOM = textarea.value;
 
     // Chèn template tại vị trí con trỏ
     const newValue =
-      responseBody.substring(0, start) + template + responseBody.substring(end);
+      currentValueFromDOM.substring(0, start) +
+      template +
+      currentValueFromDOM.substring(end);
 
-    setResponseBody(newValue);
+    setValue(newValue);
 
     // Di chuyển con trỏ sau template đã chèn
     setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + template.length,
-        start + template.length
-      );
-    }, 0);
+      const updatedTextarea = editorRef.current?.querySelector("textarea");
+      if (updatedTextarea) {
+        updatedTextarea.focus();
+        updatedTextarea.setSelectionRange(
+          start + template.length,
+          start + template.length
+        );
+      }
+    }, 50); // Tăng thời gian timeout để đảm bảo DOM đã cập nhật
+  };
 
-    // Tự động đóng popover sau khi chèn
+  // Hàm chèn template cho Request Body
+  const insertRequestBodyTemplate = (template) => {
+    insertIntoEditor(
+      requestBodyEditorRef,
+      requestBody,
+      setRequestBody,
+      template
+    );
+    setIsRequestBodyPopoverOpen(false);
+  };
+
+  // Hàm chèn template cho Response Body
+  const insertTemplate = (template) => {
+    insertIntoEditor(
+      responseEditorRef,
+      responseBody,
+      setResponseBody,
+      template
+    );
     setIsPopoverOpen(false);
   };
 
@@ -3415,6 +3741,15 @@ const DashboardPage = () => {
                       {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>
                   )}
+                  {/* Thêm tab Advanced chỉ khi ở chế độ stateful */}
+                  {isStateful && (
+                    <TabsTrigger
+                      value="advanced"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Advanced
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* TabsContent */}
@@ -3551,7 +3886,7 @@ const DashboardPage = () => {
                             Response Body
                           </Label>
                           <div className="col-span-3 space-y-2">
-                            <div className="relative">
+                            <div className="relative" ref={responseEditorRef}>
                               <Editor
                                 value={responseBody}
                                 onValueChange={(code) => {
@@ -3642,24 +3977,6 @@ const DashboardPage = () => {
                                 />
                               </div>
 
-                              {/* Nhóm nút dưới cùng bên phải */}
-                              <div className="absolute bottom-2 right-2 flex space-x-2">
-                                <FileCode
-                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                  size={26}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const canEdit =
-                                      !isStateful ||
-                                      (statusCode !== "200" &&
-                                        method !== "GET");
-                                    if (canEdit) {
-                                      setIsPopoverOpen(!isPopoverOpen);
-                                    }
-                                  }}
-                                />
-                              </div>
-
                               {/* Popover */}
                               {isPopoverOpen && (
                                 <div
@@ -3726,9 +4043,10 @@ const DashboardPage = () => {
                                       className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        insertTemplate(
-                                          getTemplateText().template
-                                        );
+                                        // Đảm bảo sử dụng selectedSection hiện tại
+                                        const templateText =
+                                          getTemplateText().template;
+                                        insertTemplate(templateText);
                                       }}
                                     >
                                       <div className="font-mono text-[12px] text-black mb-[-5px]">
@@ -3944,7 +4262,7 @@ const DashboardPage = () => {
                         </DialogHeader>
 
                         <div className="mb-6">
-                          <div className="relative">
+                          <div className="relative" ref={initialValueEditorRef}>
                             <Editor
                               value={tempDataDefaultString}
                               onValueChange={(code) => {
@@ -4086,9 +4404,10 @@ const DashboardPage = () => {
                                     className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      insertInitialValueTemplate(
-                                        getTemplateText().template
-                                      );
+                                      // Đảm bảo sử dụng selectedSection hiện tại
+                                      const templateText =
+                                        getTemplateText().template;
+                                      insertInitialValueTemplate(templateText);
                                     }}
                                   >
                                     <div className="font-mono text-[12px] text-black mb-[-5px]">
@@ -4123,6 +4442,304 @@ const DashboardPage = () => {
                     </Dialog>
                   </TabsContent>
                 )}
+
+                {isStateful && (
+                  <TabsContent value="advanced" className="mt-0">
+                    <div className="mt-2">
+                      <ApiCallEditor
+                        requestBody={requestBody}
+                        setRequestBody={setRequestBody}
+                        isRequestBodyPopoverOpen={isRequestBodyPopoverOpen}
+                        setIsRequestBodyPopoverOpen={
+                          setIsRequestBodyPopoverOpen
+                        }
+                        selectedSection={selectedSection}
+                        setSelectedSection={setSelectedSection}
+                        getTemplateText={getTemplateText}
+                        insertRequestBodyTemplate={insertRequestBodyTemplate}
+                        setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
+                        onSave={null}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
+                {/* Dialog New API Call */}
+                <Dialog
+                  open={isNewApiCallDialogOpen}
+                  onOpenChange={setIsNewApiCallDialogOpen}
+                >
+                  <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-semibold text-slate-800">
+                        New API Call
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 mt-4">
+                      {/* Target Endpoint */}
+                      <div>
+                        <Label htmlFor="target-endpoint">Target Endpoint</Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallTargetEndpoint}
+                            onValueChange={setNewApiCallTargetEndpoint}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select endpoint" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="/api/users">
+                                /api/users
+                              </SelectItem>
+                              <SelectItem value="/api/products">
+                                /api/products
+                              </SelectItem>
+                              <SelectItem value="/api/orders">
+                                /api/orders
+                              </SelectItem>
+                              <SelectItem value="/api/auth">
+                                /api/auth
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Method */}
+                      <div>
+                        <Label htmlFor="method">Method</Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallMethod}
+                            onValueChange={setNewApiCallMethod}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="GET">GET</SelectItem>
+                              <SelectItem value="POST">POST</SelectItem>
+                              <SelectItem value="PUT">PUT</SelectItem>
+                              <SelectItem value="DELETE">DELETE</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Request Body */}
+                      <div>
+                        <Label htmlFor="request-body">Request Body</Label>
+                        <div
+                          className="relative mt-1"
+                          ref={newApiCallRequestBodyEditorRef}
+                        >
+                          <Editor
+                            value={newApiCallRequestBody}
+                            onValueChange={(code) =>
+                              setNewApiCallRequestBody(code)
+                            }
+                            highlight={(code) =>
+                              highlight(code, languages.json)
+                            }
+                            padding={10}
+                            style={{
+                              fontFamily: '"Fira code", "Fira Mono", monospace',
+                              fontSize: 12,
+                              minHeight: "124px",
+                              maxHeight: "200px",
+                              overflow: "auto",
+                              border: "1px solid #CBD5E1",
+                              borderRadius: "0.375rem",
+                              backgroundColor: "#233554",
+                              color: "white",
+                            }}
+                            textareaClassName="focus:outline-none"
+                          />
+
+                          {/* JSON Editor controls */}
+                          <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                            >
+                              <Upload className="mr-1 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                try {
+                                  const formatted = JSON.stringify(
+                                    JSON.parse(newApiCallRequestBody),
+                                    null,
+                                    2
+                                  );
+                                  setNewApiCallRequestBody(formatted);
+                                } catch {
+                                  toast.error("Invalid JSON format");
+                                }
+                              }}
+                            >
+                              <Code className="mr-1 h-4 w-4" /> Format
+                            </Button>
+                          </div>
+
+                          {/* Bottom right icon */}
+                          <div className="absolute bottom-2 right-2 flex space-x-2">
+                            <FileCode
+                              className="text-gray-400 cursor-pointer hover:text-gray-600"
+                              size={20}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsNewApiCallRequestBodyPopoverOpen(
+                                  !isNewApiCallRequestBodyPopoverOpen
+                                );
+                              }}
+                            />
+                          </div>
+
+                          {/* Popover cho Request Body */}
+                          {isNewApiCallRequestBodyPopoverOpen && (
+                            <div
+                              ref={newApiCallRequestBodyPopoverRef}
+                              className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                            >
+                              <div className="flex flex-col items-center gap-2 p-3.5">
+                                <div className="w-full flex justify-between items-center">
+                                  <div className="font-semibold text-sm text-gray-800">
+                                    Variable Picker
+                                  </div>
+                                  <X
+                                    className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIsNewApiCallRequestBodyPopoverOpen(
+                                        false
+                                      );
+                                    }}
+                                  />
+                                </div>
+
+                                <div className="w-full flex justify-between">
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "url"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("url");
+                                    }}
+                                  >
+                                    URL Parameters
+                                  </div>
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "query"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("query");
+                                    }}
+                                  >
+                                    Query Parameters
+                                  </div>
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "state"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("state");
+                                    }}
+                                  >
+                                    Project State
+                                  </div>
+                                </div>
+
+                                <div
+                                  className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Đảm bảo sử dụng selectedSection hiện tại
+                                    const templateText =
+                                      getTemplateText().template;
+                                    insertNewApiCallRequestBodyTemplate(
+                                      templateText
+                                    );
+                                  }}
+                                >
+                                  <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                    {getTemplateText().template}
+                                  </div>
+                                  <div className="text-[12px] text-gray-500">
+                                    {getTemplateText().description}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status condition */}
+                      <div>
+                        <Label htmlFor="status-condition">
+                          Status condition
+                        </Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallStatusCondition}
+                            onValueChange={setNewApiCallStatusCondition}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {statusCodes.map((status) => (
+                                <SelectItem
+                                  key={status.code}
+                                  value={status.code}
+                                >
+                                  {status.code} -{" "}
+                                  {status.description.split("–")[0]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-end gap-3 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsNewApiCallDialogOpen(false)}
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
+                        onClick={() => {
+                          // Chức năng sẽ được thêm sau
+                          console.log("Create API Call clicked");
+                          setIsNewApiCallDialogOpen(false);
+                        }}
+                      >
+                        Create
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </Tabs>
             </div>
           </div>
