@@ -46,7 +46,6 @@ import timeIcon from "@/assets/time&date.svg";
 import statusIcon from "@/assets/status.svg";
 import actionsIcon from "@/assets/actions.svg";
 import {getCurrentUser} from "@/services/api.js";
-import webBg from "@/assets/dot_web.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
@@ -908,15 +907,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300 relative"
-          style={{
-            backgroundImage: `url(${webBg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
-        >
+        <main className="pt-8 flex-1 transition-all duration-300 relative">
           <Topbar
             breadcrumb={
               currentWorkspace

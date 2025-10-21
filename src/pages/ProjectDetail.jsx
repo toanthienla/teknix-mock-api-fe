@@ -54,7 +54,6 @@ import schemaIcon from "@/assets/schema.svg"
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
-import webBg from "@/assets/dot_web.svg";
 
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);

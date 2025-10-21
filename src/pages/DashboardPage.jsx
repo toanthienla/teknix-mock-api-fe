@@ -15,12 +15,6 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableHeader,
   TableRow,
@@ -61,7 +55,7 @@ import searchIcon from "@/assets/search.svg";
 import pDesc from "@/assets/project_desc.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import dateIcon from "@/assets/date.svg";
-import statelessIcon from "@/assets/stateless.svg";;
+import statelessIcon from "@/assets/stateless.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
 export default function DashboardPage() {
@@ -78,7 +72,6 @@ export default function DashboardPage() {
   const [targetWsId, setTargetWsId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("Recently created");
 
   const [openProjectsMap, setOpenProjectsMap] = useState(
     () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
@@ -237,10 +230,6 @@ export default function DashboardPage() {
   );
 
   let sortedProjects = [...filteredProjects];
-  if (sortOption === "A → Z")
-    sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
-  if (sortOption === "Z → A")
-    sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
 
   const currentWorkspace = workspaces.find(
     (w) => String(w.id) === String(currentWsId)
@@ -621,7 +610,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [sortOption, searchTerm, currentWsId]);
+  }, [searchTerm, currentWsId]);
 
   // -------------------- Render --------------------
   return (
@@ -669,12 +658,11 @@ export default function DashboardPage() {
                 {currentWorkspace.name} - {sortedProjects.length}
               </h2>
             )}
-
             <Button
               onClick={() => setOpenNewProject(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5"
+              className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black font-bold px-5"
             >
-              + New Project
+              New Project
             </Button>
           </div>
 
