@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {getCurrentUser} from "@/services/api.js";
 import {Button} from "@/components/ui/button";
 import {
@@ -9,7 +9,6 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import Sidebar from "@/components/Sidebar.jsx";
 import {useNavigate, useParams} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
 import {
@@ -24,8 +23,8 @@ import {Input} from "@/components/ui/input.jsx";
 import {Label} from "@/components/ui/label.jsx";
 import {
   Select,
-  SelectContent,
-  SelectItem,
+  SelectContent, SelectGroup,
+  SelectItem, SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
@@ -41,6 +40,8 @@ import refreshIcon from "@/assets/refresh.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
+import folderIcon from "@/assets/folder-icon.svg";
+import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
@@ -378,6 +379,24 @@ export default function Dashboard() {
   const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
   const [folderSchema, setFolderSchema] = useState(null);
 
+  // new endpoint state
+  const [newEName, setNewEName] = useState("");
+  const [newEPath, setNewEPath] = useState("");
+  const [newEMethod, setNewEMethod] = useState("");
+  const [newEFolderId, setNewEFolderId] = useState(folderId || "");
+  const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
+
+  // edit endpoint state
+  const [editId, setEditId] = useState(null);
+  const [editEName, setEditEName] = useState("");
+  const [editEPath, setEditEPath] = useState("");
+  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
+  const [editEMethod, setEditEMethod] = useState("");
+
+  // dialogs
+  const [openNew, setOpenNew] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+
   useEffect(() => {
     const checkUserLogin = async () => {
       try {
@@ -542,7 +561,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (projectId && endpoints.length) fetchLogs(projectId);
   }, [projectId, endpoints]);
-
 
   const fetchLogs = async (pid) => {
     if (!pid) return;
@@ -787,6 +805,230 @@ export default function Dashboard() {
     } finally {
       setIsCreatingFolder(false);
     }
+  };
+
+  // --- Endpoint Handlers ---
+  // Regex
+  const validPath =
+    /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
+
+  // validation helpers (unchanged)...
+  const validateCreateEndpoint = (name, path, method, type) => {
+    if (!name.trim()) {
+      toast.info("Name is required");
+      return false;
+    }
+    if (name.trim().length > 20) {
+      toast.info("Name must be less than 20 characters");
+      return false;
+    }
+    if (!validName.test(name)) {
+      toast.info(
+        "Name must start with a letter and contain only letters, numbers, a space, underscores and dashes"
+      );
+      return false;
+    }
+    const duplicateName = endpoints.some(
+      (ep) =>
+        String(ep.folder_id) === String(folderId) &&
+        ep.name.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicateName) {
+      toast.warning("Name already exists");
+      return false;
+    }
+
+    if (!path.trim()) {
+      toast.info("Path is required");
+      return false;
+    }
+    if (!path.startsWith("/")) {
+      toast.info("Path must start with '/'");
+      return false;
+    }
+    if (path.length > 1 && path.endsWith("/")) {
+      toast.info("Path must not end with '/'");
+      return false;
+    }
+    if (!validPath.test(path.trim())) {
+      toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
+      return false;
+    }
+
+    // Lấy toàn bộ folder trong project
+    const foldersInSameProject = folders.filter(
+      (f) => String(f.project_id) === String(projectId)
+    );
+
+    // Lấy toàn bộ endpoint trong các folder đó
+    const endpointsInProject = endpoints.filter((ep) =>
+      foldersInSameProject.some((f) => String(f.id) === String(ep.folder_id))
+    );
+
+    // Kiểm tra trùng path + method trong project
+    if (!type) {
+      const duplicatePath = endpointsInProject.some(
+        (ep) =>
+          ep.path.trim() === path.trim() &&
+          ep.method.toUpperCase() === method.toUpperCase()
+      );
+      if (duplicatePath) {
+        toast.warning(
+          `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists in this project`
+        );
+        return false;
+      }
+    }
+
+    if (!method) {
+      toast.info("Method is required");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEditEndpoint = (id, name) => {
+    if (!name.trim()) {
+      toast.info("Name is required");
+      return false;
+    }
+    if (name.trim().length > 20) {
+      toast.info("Name must be less than 20 characters");
+      return false;
+    }
+    if (!validName.test(name.trim())) {
+      toast.info(
+        "Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes"
+      );
+      return false;
+    }
+    const duplicateName = endpoints.find(
+      (ep) =>
+        ep.id !== id &&
+        String(ep.folder_id) === String(folderId) &&
+        ep.name.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicateName) {
+      toast.warning("Name already exists");
+      return false;
+    }
+
+    return true;
+  };
+
+  // Create endpoint
+  const handleCreateEndpoint = async () => {
+    if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) return;
+
+    try {
+      const newEndpoint = {
+        name: newEName.trim(),
+        path: newEPath.trim(),
+        method: newEMethod,
+        folder_id: Number(newEFolderId),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const res = await fetch(`${API_ROOT}/endpoints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEndpoint),
+      });
+
+      // Nếu response không thành công, đọc lỗi chi tiết
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        if (errorData && errorData.errors && Array.isArray(errorData.errors)) {
+          errorData.errors.forEach(err => {
+            if (err.message) toast.error(`Error ${err.field ? `${err.field}: ` : ""}${err.message}`);
+          });
+        } else {
+          toast.error("Failed to create endpoint");
+        }
+        return;
+      }
+
+      // Nếu thành công
+      const created = await res.json();
+      setEndpoints(prev => [...prev, created]);
+      setOpenNew(false);
+      toast.success("Endpoint created!");
+    } catch (error) {
+      console.error("Error creating endpoint:", error);
+      toast.error("Failed to create endpoint");
+    }
+  };
+
+  // edit endpoint
+  const [currentEndpoint, setCurrentEndpoint] = useState(null);
+  const openEditEndpoint = (e) => {
+    setEditId(e.id);
+    setEditEName(e.name);
+    setEditEPath(e.path);
+    setEditEFolderId(e.folder_id);
+    setEditEMethod(e.method);
+
+    setCurrentEndpoint(e);
+    setOpenEdit(true);
+  };
+
+  const hasEdited = useMemo(() => {
+    if (!currentEndpoint) return false;
+    return (
+      editEName !== currentEndpoint.name ||
+      editEFolderId !== currentEndpoint.folder_id ||
+      editEPath !== currentEndpoint.path ||
+      editEMethod !== currentEndpoint.method
+    );
+  }, [editEName, editEFolderId, editEPath, editEMethod, currentEndpoint]);
+
+  const handleUpdateEndpoint = () => {
+    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
+    const updated = {
+      id: editId,
+      name: editEName,
+      path: editEPath,
+      method: editEMethod,
+      folder_id: Number(editEFolderId),
+      updated_at: new Date().toISOString(),
+    };
+
+    fetch(`${API_ROOT}/endpoints/${editId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(updated),
+    })
+      .then(() => {
+        // Cập nhật danh sách endpoints trong bảng
+        setEndpoints((prev) =>
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
+        );
+
+        // Cập nhật danh sách allEndpoints để Sidebar nhận đúng folder mới
+        setEndpoints((prev) =>
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
+        );
+
+        setOpenEdit(false);
+        toast.success("Update endpoint successfully!");
+      })
+      .catch(() => toast.error("Failed to update endpoint!"));
+  };
+
+  // delete endpoint stateless
+  const handleDeleteEndpoint = (id) => {
+    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"})
+      .then(() => {
+        setEndpoints((prev) => prev.filter((e) => e.id !== id));
+        toast.success("Delete endpoint successfully!");
+      })
+      .catch((error) => {
+        console.error("Error deleting endpoint:", error.message);
+        toast.error("Failed to delete endpoint!");
+      });
   };
 
   // -------------------- Workspace --------------------
@@ -1040,12 +1282,15 @@ export default function Dashboard() {
               <button
                 // variant="ghost"
                 onClick={() => setActiveTab("folders")}
-                className={`rounded-tl-lg px-6 py-2 -mb-px ${activeTab === "folders"
+                className={`flex rounded-tl-lg px-4 py-2 -mb-px ${activeTab === "folders"
                   ? "bg-white text-stone-900"
                   : "bg-gray-200 text-stone-500"
                 }`}
               >
-                <span className="text-md font-semibold">Folders</span>
+                <div className="flex items-center">
+                  <img src={folderIcon} alt="folder" className="w-4 h-4 mr-2" />
+                  <span className="text-md font-semibold">Folders</span>
+                </div>
               </button>
               <button
                 // variant="ghost"
@@ -1053,12 +1298,15 @@ export default function Dashboard() {
                   setActiveTab("logs");
                   fetchLogs(projectId);
                 }}
-                className={`rounded-none px-6 py-2 -mb-px ${activeTab === "logs"
+                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs"
                   ? "bg-white text-stone-900"
                   : "bg-gray-200 text-stone-500"
                 }`}
               >
-                <span className="text-dm font-semibold">Logs</span>
+                <div className="flex items-center">
+                  <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2" />
+                  <span className="text-md font-semibold">Logs</span>
+                </div>
               </button>
             </div>
 
@@ -1100,6 +1348,9 @@ export default function Dashboard() {
                                 setSelectedFolder(f);
                                 setOpenSchemaDialog(true);
                               }}
+                              onDeleteFolder={(f) => {
+                                handleDeleteFolder(f.id);
+                              }}
                               onToggleMode={async (f, newVal) => {
                                 await fetch(`${API_ROOT}/folders/${f.id}`, {
                                   method: "PUT",
@@ -1112,8 +1363,16 @@ export default function Dashboard() {
                                 );
                               }}
                               onAddEndpoint={(f) => {
-                                navigate(`/dashboard/${projectId}/folder/${f.id}/new-endpoint`);
+                                setNewEType(false);
+                                setNewEFolderId(f.id || "");
+                                setNewEName("");
+                                setNewEPath("");
+                                setNewEMethod("");
+                                setOpenNew(true);
                               }}
+                              onEditEndpoint={(ep) => openEditEndpoint(ep)}
+                              onDeleteEndpoint={(id) => handleDeleteEndpoint(id)}
+                              onOpenEndpoint={(ep) => navigate(`/dashboard/${projectId}/endpoint/${ep.id}`)} // ✅ thêm
                             />
                           ))
                       )}
@@ -1682,6 +1941,163 @@ export default function Dashboard() {
               className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium"
             >
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- Endpoint Handlers ---*/}
+      {/* New Endpoint Button + Dialog */}
+      <Dialog open={openNew} onOpenChange={setOpenNew}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              // avoid Enter triggering when selecting inside selects; create explicitly on button
+              e.preventDefault();
+              handleCreateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              New Endpoint
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={newEName}
+                onChange={(e) => setNewEName(e.target.value)}
+              />
+            </div>
+
+            {/* Folder select - only folders for current project */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
+              <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an option"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Folders</SelectLabel>
+                    {folders
+                      .filter((f) => String(f.project_id) === String(projectId))
+                      .map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
+              <Input
+                placeholder="/examples/example/:id"
+                value={newEPath}
+                onChange={(e) => setNewEPath(e.target.value)}
+              />
+            </div>
+
+            {/* Method */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
+              <Select
+                value={newEMethod}
+                onValueChange={(v) => setNewEMethod(v)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a method"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Method</SelectLabel>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => {
+                setOpenNew(false);
+                setNewEName("");
+                setNewEPath("");
+                setNewEMethod("");
+                setNewEFolderId(folderId || "");
+                setNewEType(false);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              onClick={handleCreateEndpoint}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Endpoint Dialog (unchanged) */}
+      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasEdited) {
+              e.preventDefault();
+              handleUpdateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Endpoint</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-sm text-slate-800">Endpoint details</DialogDescription>
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={editEName}
+                onChange={(e) => setEditEName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateEndpoint}
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              disabled={!hasEdited}
+            >
+              Update
             </Button>
           </DialogFooter>
         </DialogContent>

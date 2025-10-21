@@ -5,6 +5,7 @@ import editIcon from "@/assets/Edit Icon.svg";
 import editSchemaIcon from "@/assets/edit_schema.svg";
 import plusIcon from "@/assets/plus.svg";
 import minusIcon from "@/assets/minus.svg";
+import trashIcon from "@/assets/Trash Icon.svg";
 import EndpointCard from "@/components/EndpointCard";
 
 export default function FolderCard({
@@ -12,8 +13,12 @@ export default function FolderCard({
                                      endpoints,
                                      onEditName,
                                      onEditSchema,
+                                     onDeleteFolder,
                                      onToggleMode,
                                      onAddEndpoint,
+                                     onEditEndpoint,
+                                     onDeleteEndpoint,
+                                     onOpenEndpoint,
                                    }) {
   const [expanded, setExpanded] = useState(false);
   const folderEndpoints = endpoints.filter(
@@ -46,6 +51,14 @@ export default function FolderCard({
                 className="h-6 w-6 p-0 hover:bg-gray-100"
               >
                 <img src={editSchemaIcon} alt="Schema" className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDeleteFolder(folder)}
+                className="h-6 w-6 p-0 hover:bg-gray-100"
+              >
+                <img src={trashIcon} alt="Trash" className="w-4 h-4" />
               </Button>
             </div>
           )}
@@ -115,7 +128,13 @@ export default function FolderCard({
                 </tr>
               ) : (
                 folderEndpoints.map((ep) => (
-                  <EndpointCard key={ep.id} endpoint={ep} />
+                  <EndpointCard
+                    key={ep.id}
+                    endpoint={ep}
+                    onEdit={() => onEditEndpoint(ep)}
+                    onDelete={() => onDeleteEndpoint(ep.id)}
+                    onClick={() => onOpenEndpoint(ep)}
+                  />
                 ))
               )}
               </tbody>

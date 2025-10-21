@@ -65,7 +65,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
       </TableCell>
 
       {/* Time & Date */}
-      <TableCell className="py-3 text-gray-800 font-medium whitespace-nowrap text-sm text-center">
+      <TableCell className="py-3 text-slate-500 font-medium whitespace-nowrap text-sm text-center">
         {new Date(endpoint.created_at).toLocaleString("en-US", {
           year: "numeric",
           month: "long",
