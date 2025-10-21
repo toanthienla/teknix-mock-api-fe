@@ -152,18 +152,100 @@ const statusCodes = [
 ];
 
 const ApiCallEditor = ({
-  requestBody,
-  setRequestBody,
+  endpointId,
   isRequestBodyPopoverOpen,
   setIsRequestBodyPopoverOpen,
-  selectedSection,
-  setSelectedSection,
-  getTemplateText,
-  insertRequestBodyTemplate,
   setIsNewApiCallDialogOpen,
+  onSave,
 }) => {
-  const requestBodyEditorRef = useRef(null);
-  const requestBodyPopoverRef = useRef(null);
+  const [nextCalls, setNextCalls] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch advanced data khi component mount
+  useEffect(() => {
+    if (!endpointId) return;
+
+    fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch advanced data");
+        return res.json();
+      })
+      .then((data) => {
+        // Xử lý dữ liệu trả về từ API
+        const advancedConfig = data.advanced_config || {};
+        setNextCalls(advancedConfig.nextCalls || []);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to load advanced configuration");
+        setNextCalls([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [endpointId]);
+
+  const handleRemoveNextCall = (index) => {
+    const updatedCalls = [...nextCalls];
+    updatedCalls.splice(index, 1);
+    setNextCalls(updatedCalls);
+  };
+
+  const handleNextCallChange = (index, field, value) => {
+    const updatedCalls = [...nextCalls];
+    updatedCalls[index] = {
+      ...updatedCalls[index],
+      [field]: value,
+    };
+    setNextCalls(updatedCalls);
+  };
+
+  const handleBodyChange = (index, body) => {
+    try {
+      const parsedBody = JSON.parse(body);
+      handleNextCallChange(index, "body", parsedBody);
+    } catch {
+      // Invalid JSON, keep as string for now
+    }
+  };
+
+  const handleSave = () => {
+    // Chuẩn bị payload đúng định dạng
+    const payload = {
+      advanced_config: {
+        nextCalls: nextCalls.map((call) => ({
+          target_endpoint: call.target_endpoint,
+          method: call.method,
+          body: call.body,
+          condition: call.condition,
+        })),
+      },
+    };
+
+    fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
+      credentials: "include",
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to save advanced configuration");
+        toast.success("Advanced configuration saved successfully!");
+        if (onSave) onSave();
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
@@ -179,241 +261,197 @@ const ApiCallEditor = ({
 
       <div className="border-b border-[#EDEFF1] mb-6"></div>
 
-      <div className="space-y-6">
-        <div className="mb-2">
-          <h3 className="text-lg font-semibold text-[#37352F]">
-            Next API Call
-          </h3>
+      {nextCalls.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          No API calls configured. Click "New API Call" to add one.
         </div>
+      ) : (
+        nextCalls.map((call, index) => (
+          <div
+            key={call.id || index}
+            className="mb-6 p-4 border border-[#CBD5E1] rounded-lg relative"
+          >
+            {nextCalls.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                onClick={() => handleRemoveNextCall(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
 
-        {/* Target Endpoint */}
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
-              Target Endpoint
-            </label>
-            <div className="relative flex-1 max-w-[601px]">
-              <Select defaultValue="">
-                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                  <SelectValue placeholder="Select endpoint" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="/api/users">/api/users</SelectItem>
-                  <SelectItem value="/api/products">/api/products</SelectItem>
-                  <SelectItem value="/api/orders">/api/orders</SelectItem>
-                  <SelectItem value="/api/auth">/api/auth</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Method */}
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
-              Method
-            </label>
-            <div className="relative flex-1 max-w-[601px]">
-              <Select defaultValue="GET">
-                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                  <SelectValue placeholder="Select method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                  <SelectItem value="PUT">PUT</SelectItem>
-                  <SelectItem value="DELETE">DELETE</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Request Body */}
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-start">
-            <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
-              Request Body
-            </label>
-            <div className="flex-1 max-w-[601px] relative">
-              <div className="relative" ref={requestBodyEditorRef}>
-                <Editor
-                  value={requestBody}
-                  onValueChange={(code) => setRequestBody(code)}
-                  highlight={(code) => highlight(code, languages.json)}
-                  padding={10}
-                  style={{
-                    fontFamily: '"Fira code", "Fira Mono", monospace',
-                    fontSize: 12,
-                    minHeight: "124px",
-                    maxHeight: "200px",
-                    overflow: "auto",
-                    border: "1px solid #CBD5E1",
-                    borderRadius: "0.375rem",
-                    backgroundColor: "#233554",
-                    color: "white",
-                  }}
-                  textareaClassName="focus:outline-none"
-                />
-
-                {/* JSON Editor controls */}
-                <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                  >
-                    <Upload className="mr-1 h-4 w-4" /> Upload
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      try {
-                        const formatted = JSON.stringify(
-                          JSON.parse(requestBody),
-                          null,
-                          2
-                        );
-                        setRequestBody(formatted);
-                      } catch {
-                        toast.error("Invalid JSON format");
+            <div className="space-y-4">
+              {/* Target Endpoint */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                    Target Endpoint
+                  </label>
+                  <div className="relative flex-1 max-w-[601px]">
+                    <Input
+                      value={call.target_endpoint}
+                      onChange={(e) =>
+                        handleNextCallChange(
+                          index,
+                          "target_endpoint",
+                          e.target.value
+                        )
                       }
-                    }}
-                  >
-                    <Code className="mr-1 h-4 w-4" /> Format
-                  </Button>
+                      className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1"
+                      placeholder="/orders_history"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                {/* Bottom right icon */}
-                <div className="absolute bottom-2 right-2 flex space-x-2">
-                  <FileCode
-                    className="text-gray-400 cursor-pointer hover:text-gray-600"
-                    size={20}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen);
-                    }}
-                  />
+              {/* Method */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                    Method
+                  </label>
+                  <div className="relative flex-1 max-w-[601px]">
+                    <Select
+                      value={call.method}
+                      onValueChange={(value) =>
+                        handleNextCallChange(index, "method", value)
+                      }
+                    >
+                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                        <SelectValue placeholder="Select method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="DELETE">DELETE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+              </div>
 
-                {/* Popover cho Request Body */}
-                {isRequestBodyPopoverOpen && (
-                  <div
-                    ref={requestBodyPopoverRef}
-                    className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                  >
-                    <div className="flex flex-col items-center gap-2 p-3.5">
-                      <div className="w-full flex justify-between items-center">
-                        <div className="font-semibold text-sm text-gray-800">
-                          Variable Picker
-                        </div>
-                        <X
-                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+              {/* Request Body */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex justify-between items-start">
+                  <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
+                    Request Body
+                  </label>
+                  <div className="flex-1 max-w-[601px] relative">
+                    <div className="relative">
+                      <Editor
+                        value={JSON.stringify(call.body, null, 2)}
+                        onValueChange={(code) => handleBodyChange(index, code)}
+                        highlight={(code) => highlight(code, languages.json)}
+                        padding={10}
+                        style={{
+                          fontFamily: '"Fira code", "Fira Mono", monospace',
+                          fontSize: 12,
+                          minHeight: "124px",
+                          maxHeight: "200px",
+                          overflow: "auto",
+                          border: "1px solid #CBD5E1",
+                          borderRadius: "0.375rem",
+                          backgroundColor: "#233554",
+                          color: "white",
+                        }}
+                        textareaClassName="focus:outline-none"
+                      />
+
+                      {/* JSON Editor controls */}
+                      <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                        >
+                          <Upload className="mr-1 h-4 w-4" /> Upload
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsRequestBodyPopoverOpen(false);
+                            try {
+                              const formatted = JSON.stringify(
+                                JSON.parse(JSON.stringify(call.body)),
+                                null,
+                                2
+                              );
+                              handleNextCallChange(
+                                index,
+                                "body",
+                                JSON.parse(formatted)
+                              );
+                            } catch {
+                              toast.error("Invalid JSON format");
+                            }
+                          }}
+                        >
+                          <Code className="mr-1 h-4 w-4" /> Format
+                        </Button>
+                      </div>
+
+                      {/* Bottom right icon */}
+                      <div className="absolute bottom-2 right-2 flex space-x-2">
+                        <FileCode
+                          className="text-gray-400 cursor-pointer hover:text-gray-600"
+                          size={20}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsRequestBodyPopoverOpen(
+                              !isRequestBodyPopoverOpen
+                            );
                           }}
                         />
                       </div>
-
-                      <div className="w-full flex justify-between">
-                        <div
-                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                            selectedSection === "url"
-                              ? "bg-[#EDEDEC] text-[#374151]"
-                              : "text-[#374151] hover:bg-gray-100"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSection("url");
-                          }}
-                        >
-                          URL Parameters
-                        </div>
-                        <div
-                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                            selectedSection === "query"
-                              ? "bg-[#EDEDEC] text-[#374151]"
-                              : "text-[#374151] hover:bg-gray-100"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSection("query");
-                          }}
-                        >
-                          Query Parameters
-                        </div>
-                        <div
-                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                            selectedSection === "state"
-                              ? "bg-[#EDEDEC] text-[#374151]"
-                              : "text-[#374151] hover:bg-gray-100"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSection("state");
-                          }}
-                        >
-                          Project State
-                        </div>
-                      </div>
-
-                      <div
-                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          insertRequestBodyTemplate(getTemplateText().template);
-                        }}
-                      >
-                        <div className="font-mono text-[12px] text-black mb-[-5px]">
-                          {getTemplateText().template}
-                        </div>
-                        <div className="text-[12px] text-gray-500">
-                          {getTemplateText().description}
-                        </div>
-                      </div>
                     </div>
                   </div>
-                )}
+                </div>
+              </div>
+
+              {/* Status condition */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                    Status condition
+                  </label>
+                  <div className="relative flex-1 max-w-[601px]">
+                    <Select
+                      value={call.condition}
+                      onValueChange={(value) =>
+                        handleNextCallChange(index, "condition", value)
+                      }
+                    >
+                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                        <SelectValue placeholder="Select condition" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 overflow-y-auto">
+                        {statusCodes.map((status) => (
+                          <SelectItem key={status.code} value={status.code}>
+                            {status.code} - {status.description.split("–")[0]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ))
+      )}
 
-        {/* Status condition */}
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
-              Status condition
-            </label>
-            <div className="relative flex-1 max-w-[601px]">
-              <Select defaultValue="">
-                <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                  <SelectValue placeholder="Select condition" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  {statusCodes.map((status) => (
-                    <SelectItem key={status.code} value={status.code}>
-                      {status.code} - {status.description.split("–")[0]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-            onClick={null}
-          >
-            Save Changes
-          </Button>
-        </div>
+      <div className="flex justify-end mt-4">
+        <Button
+          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+          onClick={handleSave}
+        >
+          Save Changes
+        </Button>
       </div>
     </Card>
   );
@@ -1629,6 +1667,116 @@ const DashboardPage = () => {
   // Thêm ref cho editor
   const newApiCallRequestBodyEditorRef = useRef(null);
   const newApiCallRequestBodyPopoverRef = useRef(null);
+
+  const [advancedConfig, setAdvancedConfig] = useState({
+    nextCalls: [],
+  });
+
+  // Fetch advanced config khi currentEndpointId thay đổi
+  useEffect(() => {
+    if (!currentEndpointId) return;
+
+    fetch(`${API_ROOT}/endpoints/advanced/${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch advanced data");
+        return res.json();
+      })
+      .then((data) => {
+        // Chỉ lấy nextCalls từ response
+        setAdvancedConfig({
+          nextCalls: data.advanced_config?.nextCalls || [],
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to fetch advanced config:", error);
+        toast.error("Failed to load advanced configuration");
+        setAdvancedConfig({ nextCalls: [] });
+      });
+  }, [currentEndpointId]);
+
+  // Sửa lại hoàn toàn hàm handleCreateNewApiCall
+  const handleCreateNewApiCall = async () => {
+    try {
+      // Validate dữ liệu
+      if (!newApiCallTargetEndpoint.trim()) {
+        toast.error("Target endpoint is required");
+        return;
+      }
+
+      // Tạo API Call mới KHÔNG có trường id (chỉ dùng cho gửi lên server)
+      const newCallForServer = {
+        target_endpoint: newApiCallTargetEndpoint,
+        method: newApiCallMethod,
+        body: JSON.parse(newApiCallRequestBody),
+        condition: newApiCallStatusCondition,
+      };
+
+      // Chuẩn bị payload - ĐÃ SỬA: Loại bỏ id khỏi tất cả các phần tử trong nextCalls
+      const payload = {
+        advanced_config: {
+          nextCalls: [
+            // Loại bỏ id khỏi các API Call hiện có
+            ...advancedConfig.nextCalls.map((call) => ({
+              target_endpoint: call.target_endpoint,
+              method: call.method,
+              body: call.body,
+              condition: call.condition,
+            })),
+            // Thêm API Call mới (không có id)
+            newCallForServer,
+          ],
+        },
+      };
+
+      // Gửi PUT request
+      const putResponse = await fetch(
+        `${API_ROOT}/endpoints/advanced/${currentEndpointId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!putResponse.ok) {
+        const errorData = await putResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || "Failed to save advanced configuration"
+        );
+      }
+
+      toast.success("API Call added successfully!");
+      setIsNewApiCallDialogOpen(false);
+
+      // Reset form
+      setNewApiCallTargetEndpoint("");
+      setNewApiCallRequestBody("{}");
+
+      // Tạo API Call mới CÓ id (chỉ dùng cho UI)
+      const newCallForUI = {
+        id: `new-${Date.now()}`,
+        target_endpoint: newApiCallTargetEndpoint,
+        method: newApiCallMethod,
+        body: JSON.parse(newApiCallRequestBody),
+        condition: newApiCallStatusCondition,
+      };
+
+      // Cập nhật advancedConfig với API Call mới (có id cho UI)
+      setAdvancedConfig((prev) => ({
+        ...prev,
+        nextCalls: [...prev.nextCalls, newCallForUI],
+      }));
+
+      // Refresh ApiCallEditor
+      fetchEndpointResponses(isStateful);
+    } catch (error) {
+      console.error("Error creating new API call:", error);
+      toast.error(error.message || "Failed to create API call");
+    }
+  };
 
   // Thêm hàm xử lý chèn template cho New API Call Request Body
   const insertNewApiCallRequestBodyTemplate = (template) => {
@@ -4447,8 +4595,7 @@ const DashboardPage = () => {
                   <TabsContent value="advanced" className="mt-0">
                     <div className="mt-2">
                       <ApiCallEditor
-                        requestBody={requestBody}
-                        setRequestBody={setRequestBody}
+                        endpointId={currentEndpointId}
                         isRequestBodyPopoverOpen={isRequestBodyPopoverOpen}
                         setIsRequestBodyPopoverOpen={
                           setIsRequestBodyPopoverOpen
@@ -4458,7 +4605,7 @@ const DashboardPage = () => {
                         getTemplateText={getTemplateText}
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
-                        onSave={null}
+                        onSave={() => fetchEndpointResponses(isStateful)}
                       />
                     </div>
                   </TabsContent>
@@ -4488,18 +4635,15 @@ const DashboardPage = () => {
                               <SelectValue placeholder="Select endpoint" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="/api/users">
-                                /api/users
-                              </SelectItem>
-                              <SelectItem value="/api/products">
-                                /api/products
-                              </SelectItem>
-                              <SelectItem value="/api/orders">
-                                /api/orders
-                              </SelectItem>
-                              <SelectItem value="/api/auth">
-                                /api/auth
-                              </SelectItem>
+                              {/* Lấy danh sách target_endpoint từ advancedConfig.nextCalls */}
+                              {advancedConfig.nextCalls.map((call) => (
+                                <SelectItem
+                                  key={call.target_endpoint}
+                                  value={call.target_endpoint}
+                                >
+                                  {call.target_endpoint}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -4669,7 +4813,6 @@ const DashboardPage = () => {
                                   className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Đảm bảo sử dụng selectedSection hiện tại
                                     const templateText =
                                       getTemplateText().template;
                                     insertNewApiCallRequestBodyTemplate(
@@ -4729,11 +4872,7 @@ const DashboardPage = () => {
                       </Button>
                       <Button
                         className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
-                        onClick={() => {
-                          // Chức năng sẽ được thêm sau
-                          console.log("Create API Call clicked");
-                          setIsNewApiCallDialogOpen(false);
-                        }}
+                        onClick={handleCreateNewApiCall}
                       >
                         Create
                       </Button>
