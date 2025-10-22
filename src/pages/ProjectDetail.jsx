@@ -894,8 +894,8 @@ export default function Dashboard() {
       toast.info("Name is required");
       return false;
     }
-    if (name.trim().length > 255) {
-      toast.info("Name must be less than 50 characters");
+    if (name.trim().length > 20) {
+      toast.info("Name must be less than 20 characters");
       return false;
     }
     if (!validName.test(name.trim())) {
