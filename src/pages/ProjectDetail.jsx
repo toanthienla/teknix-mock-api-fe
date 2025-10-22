@@ -564,7 +564,7 @@ export default function Dashboard() {
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
-      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
+      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`, { credentials: "include" });
       if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
       const raw = await res.json();
 
