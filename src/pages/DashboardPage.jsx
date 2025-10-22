@@ -239,7 +239,7 @@ export default function DashboardPage() {
   const validateWsName = (name, excludeId = null) => {
     if (!name.trim()) return "Workspace name cannot be empty";
     if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
-      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+      return "Must start with a letter, only English, digits, '-' and '_' allowed (no spaces)";
     if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
@@ -267,17 +267,28 @@ export default function DashboardPage() {
       }),
     })
       .then((res) => res.json())
-      .then((createdWs) => {
+      .then((result) => {
+        if (!result.success || !result.data) {
+          toast.error("Failed to create workspace");
+          return;
+        }
+        const createdWs = result.data;
+
         setWorkspaces((prev) => [...prev, createdWs]);
-        setCurrentWsId(createdWs.id);
-        localStorage.setItem("currentWorkspace", createdWs.id);
-        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
+        setCurrentWsId(String(createdWs.id));
+        localStorage.setItem("currentWorkspace", String(createdWs.id));
+        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
+
         toast.success("Workspace created successfully");
         setNewWsName("");
         setOpenNewWs(false);
+
         fetchWorkspaces();
       })
-      .catch(() => toast.error("Failed to create workspace"));
+      .catch((err) => {
+        console.error("Error creating workspace:", err);
+        toast.error("Failed to create workspace");
+      });
   };
 
   const handleEditWorkspace = () => {
@@ -386,37 +397,29 @@ export default function DashboardPage() {
 
   // -------------------- Project --------------------
   const validateProject = (title, desc, editMode = false, editId = null, workspaceId) => {
-    const titleTrim = title.trim();
-    const descTrim = desc.trim();
+    // const title.trim() = title.trim();
+    // const desc.trim() = desc.trim();
 
-    if (!titleTrim) {
+    if (!title.trim()) {
       toast.warning("Project name cannot be empty");
       return false;
     }
-    if (titleTrim.length > 50) {
+    if (title.trim().length > 50) {
       toast.warning("Project name cannot exceed 50 chars");
       return false;
     }
-    if (/^[0-9]/.test(titleTrim)) {
+    if (/^[0-9]/.test(title.trim())) {
       toast.warning("Project name cannot start with a number");
       return false;
     }
-    if (/ {2,}/.test(titleTrim)) {
-      toast.warning("Project name cannot contain multiple spaces");
-      return false;
-    }
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9 ]*$/.test(titleTrim)) {
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(title.trim())) {
       toast.warning(
-        "Only letters, numbers, and spaces allowed (no special characters)"
+        "Only letters, numbers, dashes and underscores allowed (no special characters)"
       );
       return false;
     }
-    if (!descTrim) {
+    if (!desc.trim()) {
       toast.info("Project description cannot be empty");
-      return false;
-    }
-    if (descTrim.length > 200) {
-      toast.warning("Project description max 200 chars");
       return false;
     }
 
@@ -424,7 +427,7 @@ export default function DashboardPage() {
       (p) =>
         String(p.workspace_id) === String(workspaceId) &&
         (!editMode || p.id !== editId) &&
-        p.name.toLowerCase() === titleTrim.toLowerCase()
+        p.name.toLowerCase() === title.trim().toLowerCase()
     );
     if (duplicate) {
       toast.warning("Project name already exists in this workspace");
@@ -650,167 +653,183 @@ export default function DashboardPage() {
         />
       </div>
       <main className="flex-1 w-full flex justify-center bg-white">
-        <div className="w-[90%] max-w-6xl pt-6 pb-4">
-
-          {/* Tiêu đề + Nút New Project */}
-          <div className="flex items-center justify-between mb-6">
-            {currentWorkspace && (
-              <h2 className="text-3xl font-bold text-black">
-                {currentWorkspace.name} - {sortedProjects.length}
-              </h2>
-            )}
+        {workspaces.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-4">
+            <p className="text-xl font-semibold text-gray-700">
+              No available workspaces.
+            </p>
+            <p className="text-gray-500">
+              Create a new workspace to get started.
+            </p>
             <Button
-              onClick={() => setOpenNewProject(true)}
-              className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black font-bold px-5"
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 text-md font-bold px-5"
+              onClick={() => setOpenNewWs(true)}
             >
-              New Project
+              New workspace
             </Button>
           </div>
-
-          {/* ==== Project Table ==== */}
-          <div className="mt-6">
-            <div className="rounded-md overflow-hidden">
-              <Table className="w-full">
-                {/* ==== Header ==== */}
-                <TableHeader className="bg-white">
-                  <TableRow className="border-none">
-                    <TableHead className="w-1/4 text-black font-semibold text-sm">
-                      Project Name
-                    </TableHead>
-                    <TableHead className="w-1/3 text-black font-semibold text-sm">
-                      Folders
-                    </TableHead>
-                    <TableHead className="text-center text-black font-semibold text-sm">
-                      Endpoints
-                    </TableHead>
-                    <TableHead className="text-black text-right font-semibold text-sm">
-                      Date Created
-                    </TableHead>
-                    <TableHead className="text-right text-black font-semibold text-sm">
-                      Action
-                    </TableHead>
-                  </TableRow>
-                  <TableRow className="border-b border-slate-200">
-                    <TableHead colSpan={5}>
-                      <div className="flex items-center gap-2 w-1/4">
-                        <div className="relative w-full">
-                          <img
-                            src={searchIcon}
-                            alt="search"
-                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
-                          />
-                          <Input
-                            type="text"
-                            placeholder="Search projects..."
-                            className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                  <TableRow className="border-none">
-                    <TableHead colSpan={5} className="py-1">
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                {/* ==== Body ==== */}
-                <TableBody>
-                  {sortedProjects.length > 0 ? (
-                    currentPageProjects.map((p) => (
-                      <ProjectCard
-                        key={p.id}
-                        project={p}
-                        folders={folders}
-                        endpoints={endpoints}
-                        onClick={() => navigate(`/dashboard/${p.id}`)}
-                        onEdit={() => openEditProjectDialog(p)}
-                        onDelete={() => openDeleteProjectDialog(p.id)}
-                        onView={() => {
-                          setSelectedProject(p);
-                          setOpenDetail(true);
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan="5" className="text-center py-6 text-gray-500">
-                        No projects found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {/* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== */}
-                  {Array.from({
-                    length: Math.max(0, rowsPerPage - currentPageProjects.length),
-                  }).map((_, i) => (
-                    <TableRow
-                      key={`empty-${i}`}
-                      className="h-[64px] bg-white border-none">
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        ) : (
+          <div className="w-[90%] max-w-6xl pt-6 pb-4">
+            {/* Tiêu đề + Nút New Project */}
+            <div className="flex items-center justify-between mb-6">
+              {currentWorkspace && (
+                <h2 className="text-3xl font-bold text-black">
+                  {currentWorkspace.name} - {sortedProjects.length}
+                </h2>
+              )}
+              <Button
+                onClick={() => setOpenNewProject(true)}
+                className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black font-bold px-5"
+              >
+                New Project
+              </Button>
             </div>
 
-            {/* ==== Pagination ==== */}
-            <div className="flex items-center justify-between mt-4 px-2 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                        className={currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
+            {/* ==== Project Table ==== */}
+            <div className="mt-6">
+              <div className="rounded-md overflow-hidden">
+                <Table className="w-full">
+                  {/* ==== Header ==== */}
+                  <TableHeader className="bg-white">
+                    <TableRow className="border-none">
+                      <TableHead className="w-1/4 text-black font-semibold text-sm">
+                        Project Name
+                      </TableHead>
+                      <TableHead className="w-1/3 text-black font-semibold text-sm">
+                        Folders
+                      </TableHead>
+                      <TableHead className="text-center text-black font-semibold text-sm">
+                        Endpoints
+                      </TableHead>
+                      <TableHead className="text-black text-right font-semibold text-sm">
+                        Date Created
+                      </TableHead>
+                      <TableHead className="text-right text-black font-semibold text-sm">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                    <TableRow className="border-b border-slate-200">
+                      <TableHead colSpan={5}>
+                        <div className="flex items-center gap-2 w-1/4">
+                          <div className="relative w-full">
+                            <img
+                              src={searchIcon}
+                              alt="search"
+                              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
+                            />
+                            <Input
+                              type="text"
+                              placeholder="Search projects..."
+                              className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                    <TableRow className="border-none">
+                      <TableHead colSpan={5} className="py-1">
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
 
-                    {Array.from({length: totalPages}).map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink
-                          isActive={currentPage === i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className="cursor-pointer"
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
+                  {/* ==== Body ==== */}
+                  <TableBody>
+                    {sortedProjects.length > 0 ? (
+                      currentPageProjects.map((p) => (
+                        <ProjectCard
+                          key={p.id}
+                          project={p}
+                          folders={folders}
+                          endpoints={endpoints}
+                          onClick={() => navigate(`/dashboard/${p.id}`)}
+                          onEdit={() => openEditProjectDialog(p)}
+                          onDelete={() => openDeleteProjectDialog(p.id)}
+                          onView={() => {
+                            setSelectedProject(p);
+                            setOpenDetail(true);
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan="5" className="text-center py-6 text-gray-500">
+                          No projects found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {/* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== */}
+                    {Array.from({
+                      length: Math.max(0, rowsPerPage - currentPageProjects.length),
+                    }).map((_, i) => (
+                      <TableRow
+                        key={`empty-${i}`}
+                        className="h-[64px] bg-white border-none">
+                      </TableRow>
                     ))}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                        className={currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                  </TableBody>
+                </Table>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span>Rows per page</span>
-                <Select
-                  value={String(rowsPerPage)}
-                  onValueChange={(value) => {
-                    setRowsPerPage(Number(value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[80px] h-8 border-gray-300 text-sm">
-                    <SelectValue/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="15">15</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* ==== Pagination ==== */}
+              <div className="flex items-center justify-between mt-4 px-2 text-sm text-gray-700">
+                <div className="flex items-center gap-2">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                          className={currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+
+                      {Array.from({length: totalPages}).map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            isActive={currentPage === i + 1}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className="cursor-pointer"
+                          >
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                          className={currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span>Rows per page</span>
+                  <Select
+                    value={String(rowsPerPage)}
+                    onValueChange={(value) => {
+                      setRowsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[80px] h-8 border-gray-300 text-sm">
+                      <SelectValue/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="15">15</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* New Project */}
@@ -1073,13 +1092,17 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Folder Detail */}
+      {/* Project Detail */}
       <Sheet open={openDetail} onOpenChange={setOpenDetail}>
-        <SheetContent side="right" className="w-[600px] sm:w-[720px] md:w-[800px] bg-white shadow-lg overflow-y-auto p-6">
+        <SheetContent
+          side="right"
+          className="!max-w-none w-[420px] sm:w-[500px] md:w-[600px] bg-white shadow-lg overflow-y-auto p-6"
+        >
           {selectedProject && (
             <>
               <SheetHeader className="mb-4">
                 <SheetTitle className="text-xl font-semibold">Details</SheetTitle>
+                <SheetDescription></SheetDescription>
               </SheetHeader>
 
               <div className="space-y-5">
@@ -1088,7 +1111,7 @@ export default function DashboardPage() {
                 <div className="border rounded-lg p-4 bg-slate-50">
                   <h2 className="text-2xl font-bold text-gray-900">{selectedProject.name}</h2>
                   <div className="flex items-center gap-2 mb-2">
-                    <img src={pDesc} alt="description" className="w-4 h-4" />
+                    <img src={pDesc} alt="description" className="w-4 h-4"/>
                     <h3 className="font-semibold text-gray-700">Description</h3>
                   </div>
                   <p className="text-sm text-gray-600">
@@ -1100,7 +1123,7 @@ export default function DashboardPage() {
                 <div className="border rounded-lg p-4 bg-slate-50">
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
-                      <img src={folderIcon} alt="folders" className="w-4 h-4" />
+                      <img src={folderIcon} alt="folders" className="w-4 h-4"/>
                       <h3 className="font-semibold text-gray-800">FOLDERS</h3>
                     </div>
                     <h3 className="font-semibold text-gray-800">ENDPOINTS</h3>
@@ -1123,7 +1146,8 @@ export default function DashboardPage() {
                             <span className="text-gray-900 font-medium">{f.name}</span>
 
                             {/* Endpoint badge */}
-                            <div className="flex items-center bg-neutral-800 text-white rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
+                            <div
+                              className="flex items-center bg-neutral-800 text-white rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
                               {/* Stateless */}
                               <div className="flex items-center gap-1">
                                 <span className="text-gray-300">{statelessCount}</span>
@@ -1156,7 +1180,7 @@ export default function DashboardPage() {
                 {/* Date */}
                 <div className="border rounded-lg p-4 bg-slate-50 flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <img src={dateIcon} alt="calendar" className="w-4 h-4" />
+                    <img src={dateIcon} alt="calendar" className="w-4 h-4"/>
                     <span>Date</span>
                   </div>
                   <div className="text-right text-sm text-gray-700">
