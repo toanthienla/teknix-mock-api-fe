@@ -252,7 +252,7 @@ export default function Topbar({
                       title={item.label}
                     >
                       {isLast || !item.href ? (
-                        <BreadcrumbPage className="font-medium text-slate-900">
+                        <BreadcrumbPage className="font-bold text-slate-900">
                           {item.label}
                         </BreadcrumbPage>
                       ) : (
@@ -266,7 +266,7 @@ export default function Topbar({
                               );
                             }
                           }}
-                          className="font-medium text-slate-400"
+                          className="font-bold text-slate-400"
                         >
                           {item.label}
                         </BreadcrumbLink>
@@ -315,7 +315,7 @@ export default function Topbar({
       {/* User + Notification + Logout */}
       <div className="flex items-center gap-4">
         {/* Notification */}
-        <button className="relative border-r-2 py-1 pr-4 border-slate-900">
+        <button className="relative border-r-2 py-1 pr-4 ml-4 border-slate-900">
           <img src={bellIcon} alt="Notifications" className="w-5 h-5" />
         </button>
 
