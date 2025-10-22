@@ -208,32 +208,47 @@ const DashboardPage = () => {
         return;
       }
 
-      // Tạo API Call mới KHÔNG có trường id
-      const newCallForServer = {
+      // Tạo ID tạm thời cho UI
+      const tempId = `temp-${Date.now()}`;
+      const creationTime = Date.now(); // Lưu thời gian tạo để xác định API call mới
+
+      // Tạo API Call mới với ID tạm thời
+      const newCallForUI = {
+        id: tempId,
         target_endpoint: newApiCallTargetEndpoint,
         method: newApiCallMethod,
         body: JSON.parse(newApiCallRequestBody),
         condition: newApiCallStatusCondition,
+        _creationTime: creationTime, // Thêm trường tạm để xác định API call mới
       };
 
-      // Chuẩn bị payload
+      // Cập nhật UI ngay lập tức với ID tạm thời
+      setNextCalls([...nextCalls, newCallForUI]);
+
+      // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
         advanced_config: {
           nextCalls: [
-            // Loại bỏ id khỏi các API Call hiện có
+            // Giữ nguyên các API Call hiện có (bao gồm id)
             ...nextCalls.map((call) => ({
+              id: call.id,
               target_endpoint: call.target_endpoint,
               method: call.method,
               body: call.body,
               condition: call.condition,
             })),
             // Thêm API Call mới (không có id)
-            newCallForServer,
+            {
+              target_endpoint: newApiCallTargetEndpoint,
+              method: newApiCallMethod,
+              body: JSON.parse(newApiCallRequestBody),
+              condition: newApiCallStatusCondition,
+            },
           ],
         },
       };
 
-      // GỬI PUT REQUEST TRƯỚC KHI CẬP NHẬT UI
+      // GỬI PUT REQUEST
       const putResponse = await fetch(
         `${API_ROOT}/endpoints/advanced/${currentEndpointId}`,
         {
@@ -245,44 +260,58 @@ const DashboardPage = () => {
       );
 
       if (!putResponse.ok) {
+        // Nếu API thất bại, loại bỏ API call tạm thời
+        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
+
         const errorData = await putResponse.json().catch(() => ({}));
         throw new Error(
           errorData.message || "Failed to save advanced configuration"
         );
       }
 
-      // CHỈ CẬP NHẬT UI SAU KHI API THÀNH CÔNG
+      // Lấy response từ server (chứa ID thực)
+      const updatedData = await putResponse.json();
+
+      // Tìm API call mới nhất từ response dựa trên thời gian tạo
+      const newCallFromServer = updatedData.advanced_config.nextCalls
+        .filter(
+          (call) =>
+            call.target_endpoint === newApiCallTargetEndpoint &&
+            call.method === newApiCallMethod &&
+            call.condition === newApiCallStatusCondition
+        )
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+      if (newCallFromServer) {
+        // Cập nhật ID tạm thời thành ID thực
+        setNextCalls((prev) =>
+          prev.map((call) =>
+            call._creationTime === creationTime
+              ? {
+                  ...call,
+                  id: newCallFromServer.id,
+                  _creationTime: undefined,
+                  created_at: newCallFromServer.created_at,
+                  updated_at: newCallFromServer.updated_at,
+                }
+              : call
+          )
+        );
+      } else {
+        // Nếu không tìm thấy, xóa API call tạm thời
+        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
+        throw new Error("Failed to get new API call ID from server");
+      }
+
       toast.success("API Call added successfully!");
       setIsNewApiCallDialogOpen(false);
 
       // Reset form
       setNewApiCallTargetEndpoint("");
       setNewApiCallRequestBody("{}");
-
-      // Tạo API Call mới CÓ id (chỉ dùng cho UI)
-      const newCallForUI = {
-        id: `new-${Date.now()}`,
-        target_endpoint: newApiCallTargetEndpoint,
-        method: newApiCallMethod,
-        body: JSON.parse(newApiCallRequestBody),
-        condition: newApiCallStatusCondition,
-      };
-
-      // CẬP NHẬT nextCalls SAU KHI API THÀNH CÔNG
-      setNextCalls((prev) => [...prev, newCallForUI]);
-
-      // GỌI fetchEndpointResponses ĐỂ ĐẢM BẢO DỮ LIỆU MỚI NHẤT
-      await fetchEndpointResponses(isStateful);
-
-      // Thêm toast thông báo cập nhật thành công
-      toast.success("API Call list updated successfully!");
     } catch (error) {
       console.error("Error creating new API call:", error);
       toast.error(error.message || "Failed to create API call");
-
-      // KHÔNG CẬP NHẬT UI NẾU API THẤT BẠI
-      // fetchEndpointResponses để đồng bộ lại với server
-      await fetchEndpointResponses(isStateful);
     }
   };
 
@@ -2407,7 +2436,6 @@ const DashboardPage = () => {
                     </TabsTrigger>
                   )}
                 </TabsList>
-
                 {/* TabsContent */}
                 <TabsContent value="Header&Body" className="mt-0">
                   <div></div>
@@ -2764,7 +2792,6 @@ const DashboardPage = () => {
                     </Card>
                   </div>
                 </TabsContent>
-
                 {/* Chỉ render tab Rules khi không phải stateful */}
                 {!isStateful && (
                   <TabsContent value="Rules" className="mt-0">
@@ -2779,7 +2806,6 @@ const DashboardPage = () => {
                     </div>
                   </TabsContent>
                 )}
-
                 {/* Chỉ render tab Proxy khi không phải stateful */}
                 {!isStateful && (
                   <TabsContent value="proxy" className="mt-0">
@@ -2832,7 +2858,6 @@ const DashboardPage = () => {
                     </Card>
                   </TabsContent>
                 )}
-
                 {isStateful && method !== "DELETE" && (
                   <TabsContent value="schemaBody" className="mt-0">
                     <div className="mt-2">
@@ -2845,9 +2870,7 @@ const DashboardPage = () => {
                     </div>
                   </TabsContent>
                 )}
-
                 {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
-
                 {isStateful && (
                   <TabsContent value="dataDefault" className="mt-0">
                     <div className="mt-2">
@@ -3098,7 +3121,6 @@ const DashboardPage = () => {
                     </Dialog>
                   </TabsContent>
                 )}
-
                 {isStateful && (
                   <TabsContent value="advanced" className="mt-0">
                     <div className="mt-2">
@@ -3122,6 +3144,7 @@ const DashboardPage = () => {
                   </TabsContent>
                 )}
                 {/* Dialog New API Call */}
+
                 <Dialog
                   open={isNewApiCallDialogOpen}
                   onOpenChange={setIsNewApiCallDialogOpen}
@@ -3134,7 +3157,7 @@ const DashboardPage = () => {
                     </DialogHeader>
 
                     <div className="space-y-6 mt-4">
-                      {/* Target Endpoint */}
+                      {/* Target Endpoint - Sửa lại để hiển thị danh sách target_endpoint duy nhất */}
                       <div>
                         <Label htmlFor="target-endpoint">Target Endpoint</Label>
                         <div className="relative mt-1">
@@ -3146,13 +3169,12 @@ const DashboardPage = () => {
                               <SelectValue placeholder="Select endpoint" />
                             </SelectTrigger>
                             <SelectContent>
-                              {/* LẤY DANH SÁCH TỪ nextCalls ĐÃ ĐƯỢC QUẢN LÝ TRONG DASHBOARD PAGE */}
-                              {nextCalls.map((call) => (
-                                <SelectItem
-                                  key={call.target_endpoint}
-                                  value={call.target_endpoint}
-                                >
-                                  {call.target_endpoint}
+                              {/* Hiển thị danh sách các target_endpoint duy nhất */}
+                              {Array.from(
+                                new Set(nextCalls.map((c) => c.target_endpoint))
+                              ).map((endpoint) => (
+                                <SelectItem key={endpoint} value={endpoint}>
+                                  {endpoint}
                                 </SelectItem>
                               ))}
                             </SelectContent>

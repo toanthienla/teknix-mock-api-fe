@@ -28,10 +28,65 @@ export const ApiCallEditor = ({
   setIsNewApiCallDialogOpen,
   onSave,
 }) => {
+  // Thêm state để lưu trữ JSON string và trạng thái lỗi
+  const [jsonStrings, setJsonStrings] = useState({});
+  const [jsonErrors, setJsonErrors] = useState({});
+
+  // Khởi tạo JSON strings từ nextCalls
+  useEffect(() => {
+    const initialJsonStrings = {};
+    nextCalls.forEach((call, index) => {
+      try {
+        initialJsonStrings[index] = JSON.stringify(call.body, null, 2);
+      } catch {
+        initialJsonStrings[index] =
+          '{\n  "orderId": "{{response.body.orderId}}"\n}';
+      }
+    });
+    setJsonStrings(initialJsonStrings);
+  }, [nextCalls]);
+
+  const handleJsonChange = (index, value) => {
+    setJsonStrings((prev) => ({
+      ...prev,
+      [index]: value,
+    }));
+
+    // Validate JSON
+    try {
+      JSON.parse(value);
+      setJsonErrors((prev) => ({
+        ...prev,
+        [index]: null,
+      }));
+
+      // Cập nhật body chỉ khi JSON hợp lệ
+      handleNextCallChange(index, "body", JSON.parse(value));
+    } catch (e) {
+      setJsonErrors((prev) => ({
+        ...prev,
+        [index]: e.message,
+      }));
+    }
+  };
+
   const handleRemoveNextCall = (index) => {
     const updatedCalls = [...nextCalls];
     updatedCalls.splice(index, 1);
     setNextCalls(updatedCalls);
+
+    // Xóa JSON string tương ứng
+    setJsonStrings((prev) => {
+      const newStrings = { ...prev };
+      delete newStrings[index];
+      return newStrings;
+    });
+
+    setJsonErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
   };
 
   const handleNextCallChange = (index, field, value) => {
@@ -43,20 +98,12 @@ export const ApiCallEditor = ({
     setNextCalls(updatedCalls);
   };
 
-  const handleBodyChange = (index, body) => {
-    try {
-      const parsedBody = JSON.parse(body);
-      handleNextCallChange(index, "body", parsedBody);
-    } catch {
-      // Invalid JSON, keep as string for now
-    }
-  };
-
   const handleSave = () => {
     // Chuẩn bị payload đúng định dạng
     const payload = {
       advanced_config: {
         nextCalls: nextCalls.map((call) => ({
+          id: call.id,
           target_endpoint: call.target_endpoint,
           method: call.method,
           body: call.body,
@@ -131,25 +178,34 @@ export const ApiCallEditor = ({
             <div className="border-b border-[#EDEFF1] mb-4"></div>
 
             <div className="space-y-4">
-              {/* Target Endpoint */}
+              {/* Target Endpoint - Sửa lại để sử dụng target_endpoint làm giá trị */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
                     Target Endpoint
                   </label>
                   <div className="relative flex-1 max-w-[601px]">
-                    <Input
-                      value={call.target_endpoint}
-                      onChange={(e) =>
-                        handleNextCallChange(
-                          index,
-                          "target_endpoint",
-                          e.target.value
-                        )
-                      }
-                      className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1"
-                      placeholder="/orders_history"
-                    />
+                    <Select
+                      value={call.target_endpoint} // Sử dụng target_endpoint làm giá trị
+                      onValueChange={(value) => {
+                        // Cập nhật trực tiếp target_endpoint cho API call hiện tại
+                        handleNextCallChange(index, "target_endpoint", value);
+                      }}
+                    >
+                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                        <SelectValue placeholder="Select endpoint" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 overflow-y-auto">
+                        {/* Hiển thị danh sách các target_endpoint duy nhất */}
+                        {Array.from(
+                          new Set(nextCalls.map((c) => c.target_endpoint))
+                        ).map((endpoint) => (
+                          <SelectItem key={endpoint} value={endpoint}>
+                            {endpoint}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -190,8 +246,11 @@ export const ApiCallEditor = ({
                   <div className="flex-1 max-w-[601px] relative">
                     <div className="relative">
                       <Editor
-                        value={JSON.stringify(call.body, null, 2)}
-                        onValueChange={(code) => handleBodyChange(index, code)}
+                        value={
+                          jsonStrings[index] ||
+                          '{\n  "orderId": "{{response.body.orderId}}"\n}'
+                        }
+                        onValueChange={(code) => handleJsonChange(index, code)}
                         highlight={(code) => highlight(code, languages.json)}
                         padding={10}
                         style={{
@@ -200,7 +259,9 @@ export const ApiCallEditor = ({
                           minHeight: "124px",
                           maxHeight: "200px",
                           overflow: "auto",
-                          border: "1px solid #CBD5E1",
+                          border: jsonErrors[index]
+                            ? "1px solid #ef4444"
+                            : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
                           backgroundColor: "#233554",
                           color: "white",
@@ -225,15 +286,11 @@ export const ApiCallEditor = ({
                             e.stopPropagation();
                             try {
                               const formatted = JSON.stringify(
-                                JSON.parse(JSON.stringify(call.body)),
+                                JSON.parse(jsonStrings[index]),
                                 null,
                                 2
                               );
-                              handleNextCallChange(
-                                index,
-                                "body",
-                                JSON.parse(formatted)
-                              );
+                              handleJsonChange(index, formatted);
                             } catch {
                               toast.error("Invalid JSON format");
                             }
@@ -257,6 +314,13 @@ export const ApiCallEditor = ({
                         />
                       </div>
                     </div>
+
+                    {/* Hiển thị lỗi JSON */}
+                    {jsonErrors[index] && (
+                      <div className="text-red-400 text-xs mt-1 pl-2">
+                        Invalid JSON: {jsonErrors[index]}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
