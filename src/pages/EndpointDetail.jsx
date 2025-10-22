@@ -57,1205 +57,15 @@ import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
 
-const statusCodes = [
-  {
-    code: "100",
-    description: "Continue.",
-  },
-  {
-    code: "101",
-    description: "Switching Protocols.",
-  },
-  {
-    code: "102",
-    description: "Processing.",
-  },
-  { code: "200", description: "OK." },
-  { code: "201", description: "Created." },
-  {
-    code: "202",
-    description: "Accepted.",
-  },
-  {
-    code: "204",
-    description: "No Content.",
-  },
-  {
-    code: "206",
-    description: "Partial Content.",
-  },
-  {
-    code: "301",
-    description: "Moved Permanently.",
-  },
-  { code: "302", description: "Found." },
-  { code: "303", description: "See Other." },
-  {
-    code: "304",
-    description: "Not Modified.",
-  },
-  {
-    code: "307",
-    description: "Temporary Redirect.",
-  },
-  {
-    code: "308",
-    description: "Permanent Redirect.",
-  },
-  { code: "400", description: "Bad Request." },
-  { code: "401", description: "Unauthorized." },
-  {
-    code: "403",
-    description: "Forbidden.",
-  },
-  { code: "404", description: "Not Found." },
-  {
-    code: "405",
-    description: "Method Not Allowed.",
-  },
-  {
-    code: "408",
-    description: "Request Timeout.",
-  },
-  {
-    code: "409",
-    description: "Conflict.",
-  },
-  { code: "410", description: "Gone." },
-  {
-    code: "415",
-    description: "Unsupported Media Type.",
-  },
-  { code: "429", description: "Too Many Requests." },
-  { code: "500", description: "Internal Server Error." },
-  {
-    code: "501",
-    description: "Not Implemented.",
-  },
-  {
-    code: "502",
-    description: "Bad Gateway.",
-  },
-  {
-    code: "503",
-    description: "Service Unavailable.",
-  },
-  {
-    code: "504",
-    description: "Gateway Timeout.",
-  },
-  {
-    code: "505",
-    description: "HTTP Version Not Supported.",
-  },
-];
-
-const SchemaBodyEditor = ({ endpointData, endpointId, onSave, method }) => {
-  const [schemaFields, setSchemaFields] = useState([]);
-  const [availableFields, setAvailableFields] = useState([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // Thêm state mới để lưu schema từ endpoints/{id}
-  const [endpointSchema, setEndpointSchema] = useState(null);
-  // Thêm state để trigger refresh
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Fetch schema từ endpoints/{id} cho phần tag name
-  useEffect(() => {
-    if (endpointId) {
-      fetch(`${API_ROOT}/endpoints/${endpointId}`, {
-        credentials: "include",
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch endpoint schema");
-          return res.json();
-        })
-        .then((data) => {
-          setEndpointSchema(data);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch endpoint schema:", error);
-          toast.error("Failed to fetch endpoint schema for tags");
-          setEndpointSchema(null);
-        });
-    }
-  }, [endpointId, refreshTrigger]); // Thêm refreshTrigger vào dependency
-
-  // Hàm lấy tất cả các trường từ schema của endpoint (dùng cho tag name)
-  const getEndpointSchemaFields = () => {
-    if (!endpointSchema?.schema) return [];
-
-    // Xử lý riêng cho GET method
-    if (method === "GET" && endpointSchema.schema.fields) {
-      // Với GET, schema.fields là mảng tên field
-      return endpointSchema.schema.fields;
-    } else if (
-      (method === "POST" || method === "PUT") &&
-      endpointSchema.schema
-    ) {
-      // Với POST/PUT, schema là object với key là tên field
-      return Object.keys(endpointSchema.schema);
-    }
-
-    return [];
-  };
-
-  // Khởi tạo schema fields từ endpointData với field "id" mặc định
-  useEffect(() => {
-    if (endpointData?.schema) {
-      let fieldsConfig = [];
-
-      // Xác định danh sách field đã chọn dựa trên method
-      let selectedFieldNames = [];
-
-      if (method === "GET" && endpointData.schema.fields) {
-        // Với GET, schema.fields là mảng tên field
-        selectedFieldNames = [...endpointData.schema.fields];
-      } else if (
-        (method === "POST" || method === "PUT") &&
-        endpointData.schema.schema
-      ) {
-        // Với POST/PUT, schema.schema là object với key là tên field
-        selectedFieldNames = Object.keys(endpointData.schema.schema);
-      }
-
-      // Đảm bảo "id" luôn được bao gồm
-      if (!selectedFieldNames.includes("id")) {
-        selectedFieldNames = ["id", ...selectedFieldNames];
-      }
-
-      // Map các field đã chọn thành cấu trúc internal
-      fieldsConfig = selectedFieldNames.map((name, index) => {
-        // Tìm config từ availableFields (base schema)
-        const fieldConfig = availableFields.find((f) => f.name === name);
-
-        return {
-          id: `field-${index}`,
-          name,
-          type: fieldConfig ? fieldConfig.type : "string",
-          required: fieldConfig ? fieldConfig.required : false,
-          isDefault: name === "id",
-        };
-      });
-
-      setSchemaFields(fieldsConfig);
-    } else {
-      // Initialize with default schema
-      const defaultSchema = { fields: ["id"] };
-      const fieldsConfig = defaultSchema.fields.map((name, index) => ({
-        id: `field-${index}`,
-        name,
-        type: "string",
-        required: false,
-        isDefault: name === "id",
-      }));
-      setSchemaFields(fieldsConfig);
-    }
-  }, [endpointData, method, availableFields]);
-
-  // Fetch available fields for GET method
-  useEffect(() => {
-    if (endpointId) {
-      fetch(`${API_ROOT}/endpoints/base_schema/${endpointId}`, {
-        credentials: "include",
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch base schema");
-          return res.json();
-        })
-        .then((data) => {
-          // Đảm bảo data.fields tồn tại và là mảng
-          let fields = [];
-
-          if (Array.isArray(data.fields)) {
-            // Handle new format where fields is an array of objects
-            fields = data.fields.map((field) => ({
-              name: field.name,
-              type: field.type,
-              required: field.required !== undefined ? field.required : false,
-            }));
-          } else if (Array.isArray(data)) {
-            // Handle old format where data is an array of strings
-            fields = data.map((name) => ({
-              name,
-              type: "string",
-              required: false,
-            }));
-          }
-
-          setAvailableFields(fields);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch base schema:", error);
-          toast.error("Failed to fetch available fields");
-          // Đặt availableFields thành mảng rỗng khi có lỗi
-          setAvailableFields([]);
-        });
-    }
-  }, [endpointId]);
-
-  // Hàm xử lý toggle field cho tất cả các method - ĐÃ SỬA LỖI CRASH
-  const handleFieldToggle = (fieldName) => {
-    setSchemaFields((prev) => {
-      // Đảm bảo prev luôn là mảng
-      const safePrev = Array.isArray(prev) ? prev : [];
-
-      // Đảm bảo idField luôn tồn tại
-      const idField = safePrev.find((f) => f.name === "id") || {
-        id: `field-${Date.now()}-id`,
-        name: "id",
-        type: "number",
-        required: false,
-        isDefault: true,
-      };
-
-      const otherFields = safePrev.filter(
-        (f) => f.name !== "id" && !f.isDefault
-      );
-
-      if (fieldName === "id") return safePrev;
-
-      const isFieldSelected = otherFields.some((f) => f.name === fieldName);
-
-      // Xác định type và required dựa trên cấu trúc availableFields
-      let fieldType = "string";
-      let fieldRequired = false;
-
-      // Đảm bảo availableFields luôn là mảng
-      const safeAvailableFields = Array.isArray(availableFields)
-        ? availableFields
-        : [];
-
-      const fieldObj = safeAvailableFields.find((f) => f.name === fieldName);
-      if (fieldObj) {
-        fieldType = fieldObj.type || "string";
-        fieldRequired =
-          fieldObj.required !== undefined ? fieldObj.required : false;
-      }
-
-      if (isFieldSelected) {
-        return [idField, ...otherFields.filter((f) => f.name !== fieldName)];
-      } else {
-        return [
-          idField,
-          ...otherFields,
-          {
-            id: `field-${Date.now()}`,
-            name: fieldName,
-            type: fieldType,
-            required: fieldRequired,
-            isDefault: false,
-          },
-        ];
-      }
-    });
-  };
-
-  const prepareSchema = () => {
-    if (method === "GET") {
-      // For GET method, return the old format
-      const fields = schemaFields
-        .filter((field) => !field.isDefault)
-        .map((field) => field.name);
-
-      // Always include "id" for all methods
-      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
-    } else {
-      // For POST/PUT methods, return the new format
-      const schema = {};
-
-      schemaFields.forEach((field) => {
-        if (!field.isDefault) {
-          schema[field.name] = {
-            type: field.type,
-            required: field.required,
-          };
-        }
-      });
-
-      // Always include "id" for all methods
-      schema["id"] = {
-        type: "number",
-        required: false,
-      };
-
-      return schema;
-    }
-  };
-
-  const handleSave = async () => {
-    // Chuẩn bị schema và gọi callback onSave từ parent
-    const newSchema = prepareSchema();
-
-    try {
-      await onSave(newSchema);
-
-      // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
-      setRefreshTrigger((prev) => prev + 1);
-
-      // Hiển thị thông báo thành công
-      toast.success("Schema updated and tags refreshed successfully!");
-    } catch (error) {
-      console.error("Failed to save schema:", error);
-      // Error is already handled in handleSaveSchema
-    }
-  };
-
-  return (
-    <div>
-      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#37352F]">
-            Schema Definition
-          </h1>
-        </div>
-
-        {/* Thêm tiêu đề Fields Input */}
-        <div className="mb-2">
-          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-            Fields Input
-          </span>
-        </div>
-
-        {/* Thêm nút dropdown cho tất cả các method */}
-        <div className="relative w-full h-[65px]">
-          <div
-            className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
-              {
-                schemaFields.filter((f) => f.name === "id" || !f.isDefault)
-                  .length
-              }{" "}
-              fields selected
-            </span>
-            <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
-          </div>
-
-          {isDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {availableFields.map((field) => {
-                const fieldName = field.name;
-                const fieldType = field.type;
-                const fieldRequired =
-                  field.required !== undefined ? field.required : false;
-
-                // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
-                const isChecked =
-                  schemaFields.some(
-                    (f) => f.name === fieldName && !f.isDefault
-                  ) ||
-                  (fieldName === "id" &&
-                    schemaFields.some((f) => f.name === "id"));
-
-                return (
-                  <div
-                    key={fieldName}
-                    className="flex items-center px-3 py-2 hover:bg-gray-100"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
-                      className={`mr-2 cursor-pointer ${
-                        fieldName === "id" ? "opacity-50" : ""
-                      }`}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        if (fieldName !== "id") {
-                          handleFieldToggle(fieldName);
-                        }
-                      }}
-                    />
-                    <span
-                      className={`cursor-pointer flex-1 ${
-                        fieldName === "id" ? "text-gray-500" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (fieldName !== "id") {
-                          handleFieldToggle(fieldName);
-                        }
-                      }}
-                    >
-                      {fieldName}{" "}
-                      <span className="text-gray-500 text-xs">
-                        ({fieldType}){" "}
-                        {fieldRequired && (
-                          <span className="text-red-500">*</span>
-                        )}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="mb-2">
-          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-            Schema Fields
-          </span>
-        </div>
-        {/* Hiển thị các trường trong schema từ endpoints/{id} dưới dạng tag */}
-        {getEndpointSchemaFields().length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {getEndpointSchemaFields().map((fieldName) => (
-              <div
-                key={fieldName}
-                className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
-              >
-                <span className="text-[#2563EB] text-[10.0034px] leading-[17px]">
-                  {fieldName}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Nút lưu */}
-        <div className="flex justify-end mt-4">
-          <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
-  const [schemaFields, setSchemaFields] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingSchema, setPendingSchema] = useState(null);
-
-  // Khởi tạo schema (luôn có "id" mặc định)
-  useEffect(() => {
-    if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
-      const fields = Object.entries(folderData.schema).map(
-        ([name, config], index) => ({
-          id: `field-${index}`,
-          name,
-          type: config.type || "string",
-          required: config.required || false,
-        })
-      );
-      setSchemaFields(fields);
-    } else {
-      // Mặc định có sẵn "id"
-      const defaultSchema = {
-        id: { type: "number", required: false },
-      };
-      const fields = Object.entries(defaultSchema).map(
-        ([name, config], index) => ({
-          id: `field-${index}`,
-          name,
-          type: config.type,
-          required: config.required,
-        })
-      );
-      setSchemaFields(fields);
-    }
-  }, [folderData]);
-
-  const validateField = (field) => {
-    const newErrors = {};
-
-    if (!field.name.trim()) {
-      newErrors.name = "Field name cannot be empty";
-    } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field.name)) {
-      newErrors.name = "Invalid field name format";
-    }
-
-    return newErrors;
-  };
-
-  const validateAllFields = () => {
-    const allErrors = {};
-    let isValid = true;
-
-    schemaFields.forEach((field) => {
-      const fieldErrors = validateField(field);
-      if (Object.keys(fieldErrors).length > 0) {
-        allErrors[field.id] = fieldErrors;
-        isValid = false;
-      }
-    });
-
-    // Kiểm tra trùng tên (chỉ tính những field có name khác rỗng)
-    const nameCounts = {};
-    schemaFields.forEach((f) => {
-      const name = f.name.trim();
-      if (name) {
-        nameCounts[name] = (nameCounts[name] || 0) + 1;
-      }
-    });
-
-    schemaFields.forEach((f) => {
-      const name = f.name.trim();
-      if (name && nameCounts[name] > 1) {
-        allErrors[f.id] = {
-          ...(allErrors[f.id] || {}),
-          name: "Field name already exists",
-        };
-        isValid = false;
-      }
-    });
-
-    setErrors(allErrors);
-    return isValid;
-  };
-
-  const handleAddField = () => {
-    if (!validateAllFields()) {
-      toast.error("Please fix errors before adding new field");
-      return;
-    }
-
-    const newField = {
-      id: `field-${Date.now()}`,
-      name: "",
-      type: "string",
-      required: false,
-    };
-
-    setSchemaFields((prev) => [...prev, newField]);
-  };
-
-  const handleDeleteField = (id) => {
-    const field = schemaFields.find((f) => f.id === id);
-    if (field?.name === "id") {
-      toast.error("Default field 'id' cannot be deleted");
-      return;
-    }
-
-    setSchemaFields((prev) => prev.filter((f) => f.id !== id));
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[id];
-      return newErrors;
-    });
-  };
-
-  const handleChange = (id, key, value) => {
-    setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
-    );
-  };
-
-  const prepareSchema = () => {
-    const newSchema = {};
-    schemaFields.forEach((field) => {
-      if (field.name.trim()) {
-        newSchema[field.name] = {
-          type: field.type,
-          required: field.required,
-        };
-      }
-    });
-    return newSchema;
-  };
-
-  const handleSave = () => {
-    if (!validateAllFields()) {
-      toast.error("Please fix all errors before saving");
-      return;
-    }
-
-    const newSchema = prepareSchema();
-    setPendingSchema(newSchema);
-    setConfirmOpen(true);
-  };
-
-  const confirmSave = () => {
-    if (pendingSchema) {
-      onSave(pendingSchema);
-      toast.success("Folder schema saved successfully!");
-    }
-    setConfirmOpen(false);
-  };
-
-  return (
-    <div className="max-h-[70vh] overflow-y-auto">
-      <Card className="p-4 border border-slate-300 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          Folder Base Schema
-        </h2>
-
-        {/* Header */}
-        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
-          <div>Field Name</div>
-          <div>Type</div>
-          <div>Required</div>
-        </div>
-
-        {/* Fields */}
-        <div className="space-y-3">
-          {schemaFields.map((field) => (
-            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
-              <Input
-                value={field.name}
-                onChange={(e) => handleChange(field.id, "name", e.target.value)}
-                className={`${errors[field.id]?.name ? "border-red-500" : ""}`}
-                placeholder="Field name"
-                disabled={field.name === "id"}
-              />
-
-              <Select
-                value={field.type}
-                onValueChange={(value) => handleChange(field.id, "type", value)}
-                disabled={field.name === "id"} // id luôn là number
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="string">string</SelectItem>
-                  <SelectItem value="number">number</SelectItem>
-                  <SelectItem value="boolean">boolean</SelectItem>
-                  <SelectItem value="array">array</SelectItem>
-                  <SelectItem value="object">object</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-2">
-                <Select
-                  value={field.required.toString()}
-                  onValueChange={(value) =>
-                    handleChange(field.id, "required", value === "true")
-                  }
-                  disabled={field.name === "id"} // id luôn required = false
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">true</SelectItem>
-                    <SelectItem value="false">false</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteField(field.id)}
-                  disabled={field.name === "id"}
-                >
-                  <Trash2
-                    className={`w-4 h-4 ${
-                      field.name === "id" ? "text-gray-400" : "text-red-500"
-                    }`}
-                  />
-                </Button>
-              </div>
-
-              {errors[field.id]?.name && (
-                <div className="col-span-3 text-red-500 text-xs">
-                  {errors[field.id].name}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2" /> Add Field
-          </Button>
-          <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        </div>
-      </Card>
-
-      {/* Confirm Dialog */}
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Schema Update</DialogTitle>
-            <DialogDescription>
-              Updating this folder's schema will <b>delete all endpoint data</b>{" "}
-              that no longer fits the new schema.
-              <br /> <br />
-              Are you sure you want to continue?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={confirmSave}
-            >
-              Yes, Save Anyway
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-const Frame = ({ responseName, selectedResponse, onUpdateRules, onSave }) => {
-  const [parameterRows, setParameterRows] = useState([]);
-
-  const [errors, setErrors] = useState({});
-  const [selectedRuleId, setSelectedRuleId] = useState(null);
-
-  const validateRule = (row) => {
-    const newErrors = {};
-
-    if (!row.name.trim()) {
-      newErrors.name = "Name cannot be empty";
-    } else if (row.type === "Route Parameter" && /\s/.test(row.name)) {
-      newErrors.name = "Route parameter name cannot contain spaces";
-    }
-
-    if (!row.value.trim()) {
-      newErrors.value = "Value cannot be empty";
-    } else if (row.type === "Body") {
-      try {
-        JSON.parse(row.value);
-      } catch {
-        newErrors.value = "Value must be valid JSON";
-      }
-    }
-
-    const existingRules = parameterRows.filter((r) => r.id !== row.id);
-    const duplicateRule = existingRules.find(
-      (r) =>
-        r.type === row.type &&
-        r.name.trim().toLowerCase() === row.name.trim().toLowerCase()
-    );
-
-    if (duplicateRule) {
-      newErrors.name = `Duplicate ${row.type.toLowerCase()} name. "${
-        row.name
-      }" already exists.`;
-    }
-
-    return newErrors;
-  };
-
-  const validateAllRules = () => {
-    const allErrors = {};
-    let isValid = true;
-
-    parameterRows.forEach((row) => {
-      const rowErrors = validateRule(row);
-      if (Object.keys(rowErrors).length > 0) {
-        allErrors[row.id] = rowErrors;
-        isValid = false;
-      }
-    });
-
-    setErrors(allErrors);
-    return isValid;
-  };
-
-  // Initialize rows from selectedResponse if available
-  useEffect(() => {
-    if (selectedResponse?.condition) {
-      const condition = selectedResponse.condition;
-      const newRows = [];
-
-      // Process params
-      if (condition.params) {
-        Object.entries(condition.params).forEach(([key, value], index) => {
-          newRows.push({
-            id: `param-${index}`,
-            type: "Route Parameter",
-            name: key,
-            value: String(value),
-          });
-        });
-      }
-
-      // Process query
-      if (condition.query) {
-        Object.entries(condition.query).forEach(([key, value], index) => {
-          newRows.push({
-            id: `query-${index}`,
-            type: "Query parameter",
-            name: key,
-            value: String(value),
-          });
-        });
-      }
-
-      // Process headers
-      if (condition.headers) {
-        Object.entries(condition.headers).forEach(([key, value], index) => {
-          newRows.push({
-            id: `header-${index}`,
-            type: "Header",
-            name: key,
-            value: String(value),
-          });
-        });
-      }
-
-      // Process body
-      if (condition.body) {
-        Object.entries(condition.body).forEach(([key, value], index) => {
-          newRows.push({
-            id: `body-${index}`,
-            type: "Body",
-            name: key,
-            value:
-              typeof value === "string"
-                ? value
-                : JSON.stringify(value, null, 2),
-          });
-        });
-      }
-
-      setParameterRows(newRows);
-
-      // Validate all rules after initialization
-      setTimeout(() => {
-        validateAllRules();
-      }, 0);
-    } else {
-      setParameterRows([]);
-    }
-  }, [selectedResponse]);
-
-  const getPlaceholderText = (type) => {
-    switch (type) {
-      case "Route Parameter":
-        return "route parameter name";
-      case "Query parameter":
-        return "parameter name or object path";
-      case "Body":
-        return "object path (empty for full body)";
-      case "Header":
-        return "header name";
-      default:
-        return "route parameter name";
-    }
-  };
-
-  const handleTypeChange = (id, newType) => {
-    setParameterRows((prevRows) =>
-      prevRows.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
-          : row
-      )
-    );
-
-    // Validate rule after type change
-    setTimeout(() => {
-      const row = parameterRows.find((r) => r.id === id);
-      if (row) {
-        const rowErrors = validateRule(row);
-        setErrors((prev) => ({
-          ...prev,
-          [id]: rowErrors,
-        }));
-      }
-    }, 0);
-  };
-
-  const handleAddRule = () => {
-    // Validate tất cả rules trước khi thêm mới
-    if (!validateAllRules()) {
-      toast.error("Please fix errors before adding new rule");
-      return;
-    }
-
-    const newRow = {
-      id: `rule-${Date.now()}`,
-      type: "Route Parameter",
-      name: "",
-      value: "",
-    };
-
-    setParameterRows((prevRows) => [...prevRows, newRow]);
-    setSelectedRuleId(newRow.id);
-  };
-
-  const handleRuleClick = (id, event) => {
-    if (event.target.closest("button")) {
-      return;
-    }
-    setSelectedRuleId(id);
-  };
-
-  const handleDeleteRule = (idToDelete) => {
-    setParameterRows((prevRows) => {
-      const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
-
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[idToDelete];
-        return newErrors;
-      });
-
-      if (filteredRows.length < prevRows.length) {
-        toast.info("Rule removed locally. Click 'Save Changes' to apply.");
-      }
-
-      return filteredRows;
-    });
-
-    if (selectedRuleId === idToDelete) {
-      setSelectedRuleId(null);
-    }
-  };
-
-  const handleNameChange = (id, value) => {
-    setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
-    );
-
-    // Validate rule sau khi thay đổi tên
-    setTimeout(() => {
-      const row = parameterRows.find((r) => r.id === id);
-      if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
-        setErrors((prev) => ({
-          ...prev,
-          [id]: rowErrors,
-        }));
-      }
-    }, 0);
-  };
-
-  const handleValueChange = (id, value) => {
-    setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
-    );
-
-    // Validate rule after value change
-    setTimeout(() => {
-      const row = parameterRows.find((r) => r.id === id);
-      if (row) {
-        const rowErrors = validateRule({ ...row, value });
-        setErrors((prev) => ({
-          ...prev,
-          [id]: rowErrors,
-        }));
-      }
-    }, 0);
-  };
-
-  // Prepare condition object for API
-  const prepareCondition = () => {
-    const condition = {};
-
-    parameterRows.forEach((row) => {
-      if (!row.name.trim() && !row.value.trim()) return;
-
-      let key = row.name.trim();
-      let value = row.value.trim();
-
-      // Try to parse value as JSON, fallback to string
-      try {
-        value = JSON.parse(value);
-      } catch {
-        // Keep as string if not valid JSON
-      }
-
-      switch (row.type) {
-        case "Route Parameter":
-          if (!condition.params) condition.params = {};
-          condition.params[key] = value;
-          break;
-        case "Query parameter":
-          if (!condition.query) condition.query = {};
-          condition.query[key] = value;
-          break;
-        case "Header":
-          if (!condition.headers) condition.headers = {};
-          condition.headers[key] = value;
-          break;
-        case "Body":
-          if (!condition.body) condition.body = {};
-          condition.body[key] = value;
-          break;
-      }
-    });
-
-    return condition;
-  };
-
-  // Notify parent when rules change
-  useEffect(() => {
-    if (onUpdateRules) {
-      onUpdateRules(prepareCondition());
-    }
-  }, [parameterRows]);
-
-  const handleSave = () => {
-    if (!validateAllRules()) {
-      toast.error("Please fix all errors before saving");
-      return;
-    }
-
-    onSave();
-  };
-
-  return (
-    <div>
-      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#37352F]">
-            {responseName || "No Response Selected"}
-          </h1>
-        </div>
-
-        <div className="space-y-4">
-          {parameterRows.map((row) => (
-            <div
-              key={row.id}
-              onClick={(e) => handleRuleClick(row.id, e)}
-              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
-                row.id === selectedRuleId
-                  ? "border-blue-600"
-                  : "border-slate-300"
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-[168px]">
-                  <Select
-                    value={row.type}
-                    onValueChange={(value) => handleTypeChange(row.id, value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Route Parameter">
-                        Route Parameter
-                      </SelectItem>
-                      <SelectItem value="Query parameter">
-                        Query Parameter
-                      </SelectItem>
-                      <SelectItem value="Header">Header</SelectItem>
-                      <SelectItem value="Body">Body</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Input
-                  id={`rule-name-${row.id}`}
-                  name={`rule-name-${row.id}`}
-                  value={row.name}
-                  onChange={(e) => handleNameChange(row.id, e.target.value)}
-                  className={`w-[184px] ${
-                    errors[row.id]?.name ? "border-red-500" : ""
-                  }`}
-                  placeholder={getPlaceholderText(row.type)}
-                />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
-                  <span
-                    className="text-[32px] text-black"
-                    style={{
-                      fontFamily: "Inter",
-                      position: "absolute",
-                      left: "4px",
-                      top: "1px",
-                      lineHeight: "23px",
-                    }}
-                  >
-                    =
-                  </span>
-                </div>
-                <Input
-                  id={`rule-value-${row.id}`}
-                  name={`rule-value-${row.id}`}
-                  value={row.value}
-                  onChange={(e) => handleValueChange(row.id, e.target.value)}
-                  className={`w-[151px] ${
-                    errors[row.id]?.value ? "border-red-500" : ""
-                  }`}
-                  placeholder="value"
-                />
-
-                {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteRule(row.id);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Hiển thị lỗi */}
-              {(errors[row.id]?.name || errors[row.id]?.value) && (
-                <div className="text-red-500 text-xs mt-1 pl-2">
-                  {errors[row.id]?.name || errors[row.id]?.value}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Thêm thông báo khi không có rule nào */}
-          {parameterRows.length === 0 && (
-            <div className="text-gray-500 text-sm mt-2 pl-2">
-              No rules are available.
-            </div>
-          )}
-
-          {/* Nút Add full width, căn phải, style giống hàng input */}
-          <div className="flex flex-col gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={handleAddRule}
-              className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add
-            </Button>
-
-            {selectedResponse && (
-              <div className="flex justify-end">
-                <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-                  onClick={handleSave}
-                >
-                  Save Changes
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-};
+import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
+import {
+  SchemaBodyEditor,
+  BaseSchemaEditor,
+} from "@/components/endpoint/SchemaComponents";
+import { statusCodes } from "@/components/endpoint/constants";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  // Ref cho JSON Editor
-  // const jsonEditorContainerRef = useRef(null);
-  // const jsonEditorRef = useRef(null);
   // Thêm state để quản lý data default
   const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
@@ -1334,8 +144,157 @@ const DashboardPage = () => {
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
   const [delayError, setDelayError] = useState("");
+  const [requestBody, setRequestBody] = useState("");
 
   const [currentUsername, setCurrentUsername] = useState("Unknown");
+
+  const responseEditorRef = useRef(null);
+  const initialValueEditorRef = useRef(null);
+  const currentResponseBody = useRef(responseBody);
+  const currentTempDataDefaultString = useRef(tempDataDefaultString);
+  const requestBodyEditorRef = useRef(null);
+  const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
+    useState(false);
+
+  const [isNewApiCallDialogOpen, setIsNewApiCallDialogOpen] = useState(false);
+  const [newApiCallTargetEndpoint, setNewApiCallTargetEndpoint] = useState("");
+  const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
+  const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
+  const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
+    useState("");
+  const [
+    isNewApiCallRequestBodyPopoverOpen,
+    setIsNewApiCallRequestBodyPopoverOpen,
+  ] = useState(false);
+
+  // Thêm ref cho editor
+  const newApiCallRequestBodyEditorRef = useRef(null);
+  const newApiCallRequestBodyPopoverRef = useRef(null);
+
+  const [nextCalls, setNextCalls] = useState([]);
+  // Sửa lại useEffect để cập nhật nextCalls khi endpointId thay đổi
+  useEffect(() => {
+    if (!currentEndpointId || !isStateful) {
+      setNextCalls([]);
+      return;
+    }
+
+    fetch(`${API_ROOT}/endpoints/advanced/${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch advanced data");
+        return res.json();
+      })
+      .then((data) => {
+        // Chỉ lấy nextCalls từ response
+        const advancedConfig = data.advanced_config || {};
+        setNextCalls(advancedConfig.nextCalls || []);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch advanced config:", error);
+        toast.error("Failed to load advanced configuration");
+        setNextCalls([]);
+      });
+  }, [currentEndpointId, isStateful]);
+
+  // Sửa lại hoàn toàn hàm handleCreateNewApiCall
+  const handleCreateNewApiCall = async () => {
+    try {
+      // Validate dữ liệu
+      if (!newApiCallTargetEndpoint.trim()) {
+        toast.error("Target endpoint is required");
+        return;
+      }
+
+      // Tạo API Call mới KHÔNG có trường id
+      const newCallForServer = {
+        target_endpoint: newApiCallTargetEndpoint,
+        method: newApiCallMethod,
+        body: JSON.parse(newApiCallRequestBody),
+        condition: newApiCallStatusCondition,
+      };
+
+      // Chuẩn bị payload
+      const payload = {
+        advanced_config: {
+          nextCalls: [
+            // Loại bỏ id khỏi các API Call hiện có
+            ...nextCalls.map((call) => ({
+              target_endpoint: call.target_endpoint,
+              method: call.method,
+              body: call.body,
+              condition: call.condition,
+            })),
+            // Thêm API Call mới (không có id)
+            newCallForServer,
+          ],
+        },
+      };
+
+      // GỬI PUT REQUEST TRƯỚC KHI CẬP NHẬT UI
+      const putResponse = await fetch(
+        `${API_ROOT}/endpoints/advanced/${currentEndpointId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!putResponse.ok) {
+        const errorData = await putResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || "Failed to save advanced configuration"
+        );
+      }
+
+      // CHỈ CẬP NHẬT UI SAU KHI API THÀNH CÔNG
+      toast.success("API Call added successfully!");
+      setIsNewApiCallDialogOpen(false);
+
+      // Reset form
+      setNewApiCallTargetEndpoint("");
+      setNewApiCallRequestBody("{}");
+
+      // Tạo API Call mới CÓ id (chỉ dùng cho UI)
+      const newCallForUI = {
+        id: `new-${Date.now()}`,
+        target_endpoint: newApiCallTargetEndpoint,
+        method: newApiCallMethod,
+        body: JSON.parse(newApiCallRequestBody),
+        condition: newApiCallStatusCondition,
+      };
+
+      // CẬP NHẬT nextCalls SAU KHI API THÀNH CÔNG
+      setNextCalls((prev) => [...prev, newCallForUI]);
+
+      // GỌI fetchEndpointResponses ĐỂ ĐẢM BẢO DỮ LIỆU MỚI NHẤT
+      await fetchEndpointResponses(isStateful);
+
+      // Thêm toast thông báo cập nhật thành công
+      toast.success("API Call list updated successfully!");
+    } catch (error) {
+      console.error("Error creating new API call:", error);
+      toast.error(error.message || "Failed to create API call");
+
+      // KHÔNG CẬP NHẬT UI NẾU API THẤT BẠI
+      // fetchEndpointResponses để đồng bộ lại với server
+      await fetchEndpointResponses(isStateful);
+    }
+  };
+
+  // Thêm hàm xử lý chèn template cho New API Call Request Body
+  const insertNewApiCallRequestBodyTemplate = (template) => {
+    insertIntoEditor(
+      newApiCallRequestBodyEditorRef,
+      newApiCallRequestBody,
+      setNewApiCallRequestBody,
+      template
+    );
+    setIsNewApiCallRequestBodyPopoverOpen(false);
+  };
 
   const getFullPath = (path) => {
     if (!currentWorkspace || !currentProject) {
@@ -1528,31 +487,14 @@ const DashboardPage = () => {
       });
   };
 
+  // Hàm chèn template cho Initial Value
   const insertInitialValueTemplate = (template) => {
-    const textarea = document.getElementById("initial-value");
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-
-    // Chèn template tại vị trí con trỏ
-    const newValue =
-      tempDataDefaultString.substring(0, start) +
-      template +
-      tempDataDefaultString.substring(end);
-
-    setTempDataDefaultString(newValue);
-
-    // Di chuyển con trỏ sau template đã chèn
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + template.length,
-        start + template.length
-      );
-    }, 0);
-
-    // Tự động đóng popover sau khi chèn
+    insertIntoEditor(
+      initialValueEditorRef,
+      tempDataDefaultString,
+      setTempDataDefaultString,
+      template
+    );
     setIsInitialValuePopoverOpen(false);
   };
 
@@ -1573,29 +515,69 @@ const DashboardPage = () => {
     };
   }, []);
 
-  const insertTemplate = (template) => {
-    const textarea = document.getElementById("response-body");
-    if (!textarea) return;
+  useEffect(() => {
+    currentResponseBody.current = responseBody;
+  }, [responseBody]);
+
+  // Cập nhật ref khi tempDataDefaultString thay đổi
+  useEffect(() => {
+    currentTempDataDefaultString.current = tempDataDefaultString;
+  }, [tempDataDefaultString]);
+
+  // Hàm insert chung cho tất cả các editor
+  const insertIntoEditor = (editorRef, currentValue, setValue, template) => {
+    // Tìm textarea bên trong editor
+    const textarea = editorRef.current?.querySelector("textarea");
+    if (!textarea) {
+      console.error("Textarea not found in editor");
+      return;
+    }
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
+    // Sử dụng giá trị hiện tại từ textarea thay vì state
+    const currentValueFromDOM = textarea.value;
 
     // Chèn template tại vị trí con trỏ
     const newValue =
-      responseBody.substring(0, start) + template + responseBody.substring(end);
+      currentValueFromDOM.substring(0, start) +
+      template +
+      currentValueFromDOM.substring(end);
 
-    setResponseBody(newValue);
+    setValue(newValue);
 
     // Di chuyển con trỏ sau template đã chèn
     setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + template.length,
-        start + template.length
-      );
-    }, 0);
+      const updatedTextarea = editorRef.current?.querySelector("textarea");
+      if (updatedTextarea) {
+        updatedTextarea.focus();
+        updatedTextarea.setSelectionRange(
+          start + template.length,
+          start + template.length
+        );
+      }
+    }, 50); // Tăng thời gian timeout để đảm bảo DOM đã cập nhật
+  };
 
-    // Tự động đóng popover sau khi chèn
+  // Hàm chèn template cho Request Body
+  const insertRequestBodyTemplate = (template) => {
+    insertIntoEditor(
+      requestBodyEditorRef,
+      requestBody,
+      setRequestBody,
+      template
+    );
+    setIsRequestBodyPopoverOpen(false);
+  };
+
+  // Hàm chèn template cho Response Body
+  const insertTemplate = (template) => {
+    insertIntoEditor(
+      responseEditorRef,
+      responseBody,
+      setResponseBody,
+      template
+    );
     setIsPopoverOpen(false);
   };
 
@@ -3009,18 +1991,15 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
-      {/* Sidebar */}
-      <aside
-        className={`border-r border-slate-100 bg-white transition-all duration-300
-                ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
-      >
-        <Sidebar
+      {/* Main Content */}
+      <div className="pt-8 flex-1 transition-all duration-300 relative">
+        {/* Header */}
+        <Topbar
+          className="mt-0 mb-4"
           workspaces={workspaces}
-          projects={projects}
-          endpoints={endpoints}
-          folders={folders}
           current={currentWsId}
           setCurrent={setCurrentWsId}
+          onWorkspaceChange={setCurrentWsId}
           onAddWorkspace={handleAddWorkspace}
           onEditWorkspace={(ws) => {
             setEditWsId(ws.id);
@@ -3028,27 +2007,7 @@ const DashboardPage = () => {
             setOpenEditWs(true);
           }}
           onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-          openProjectsMap={openProjectsMap}
-          setOpenProjectsMap={setOpenProjectsMap}
-          openEndpointsMap={openEndpointsMap}
-          setOpenEndpointsMap={setOpenEndpointsMap}
-          openFoldersMap={openFoldersMap}
-          setOpenFoldersMap={setOpenFoldersMap}
-          isCollapsed={isSidebarCollapsed} // Truyền trạng thái xuống
-          setIsCollapsed={setIsSidebarCollapsed} // Truyền hàm set trạng thái
-          onAddFolder={handleAddFolder}
           setOpenNewWs={setOpenNewWs}
-          onEditFolder={handleEditFolder}
-          onDeleteFolder={handleDeleteFolder}
-          username={currentUsername}
-        />
-      </aside>
-
-      {/* Main Content */}
-      <div className="pt-8 flex-1 transition-all duration-300 relative">
-        {/* Header */}
-        <Topbar
-          className="mt-0 mb-4"
           breadcrumb={
             currentWorkspace
               ? currentProject
@@ -3119,6 +2078,7 @@ const DashboardPage = () => {
           showStateModeToggle={true}
           isStateful={isStateful}
           onStateModeChange={handleStateModeChange}
+          username={currentUsername}
         />
 
         {/* Navigation Tabs */}
@@ -3406,6 +2366,15 @@ const DashboardPage = () => {
                       {method === "GET" ? "Response Body" : "Request Body"}
                     </TabsTrigger>
                   )}
+                  {/* Thêm tab Advanced chỉ khi ở chế độ stateful */}
+                  {isStateful && (
+                    <TabsTrigger
+                      value="advanced"
+                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none"
+                    >
+                      Advanced
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* TabsContent */}
@@ -3542,7 +2511,7 @@ const DashboardPage = () => {
                             Response Body
                           </Label>
                           <div className="col-span-3 space-y-2">
-                            <div className="relative">
+                            <div className="relative" ref={responseEditorRef}>
                               <Editor
                                 value={responseBody}
                                 onValueChange={(code) => {
@@ -3633,24 +2602,6 @@ const DashboardPage = () => {
                                 />
                               </div>
 
-                              {/* Nhóm nút dưới cùng bên phải */}
-                              <div className="absolute bottom-2 right-2 flex space-x-2">
-                                <FileCode
-                                  className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                  size={26}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const canEdit =
-                                      !isStateful ||
-                                      (statusCode !== "200" &&
-                                        method !== "GET");
-                                    if (canEdit) {
-                                      setIsPopoverOpen(!isPopoverOpen);
-                                    }
-                                  }}
-                                />
-                              </div>
-
                               {/* Popover */}
                               {isPopoverOpen && (
                                 <div
@@ -3717,9 +2668,10 @@ const DashboardPage = () => {
                                       className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        insertTemplate(
-                                          getTemplateText().template
-                                        );
+                                        // Đảm bảo sử dụng selectedSection hiện tại
+                                        const templateText =
+                                          getTemplateText().template;
+                                        insertTemplate(templateText);
                                       }}
                                     >
                                       <div className="font-mono text-[12px] text-black mb-[-5px]">
@@ -3935,7 +2887,7 @@ const DashboardPage = () => {
                         </DialogHeader>
 
                         <div className="mb-6">
-                          <div className="relative">
+                          <div className="relative" ref={initialValueEditorRef}>
                             <Editor
                               value={tempDataDefaultString}
                               onValueChange={(code) => {
@@ -4077,9 +3029,10 @@ const DashboardPage = () => {
                                     className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      insertInitialValueTemplate(
-                                        getTemplateText().template
-                                      );
+                                      // Đảm bảo sử dụng selectedSection hiện tại
+                                      const templateText =
+                                        getTemplateText().template;
+                                      insertInitialValueTemplate(templateText);
                                     }}
                                   >
                                     <div className="font-mono text-[12px] text-black mb-[-5px]">
@@ -4114,6 +3067,298 @@ const DashboardPage = () => {
                     </Dialog>
                   </TabsContent>
                 )}
+
+                {isStateful && (
+                  <TabsContent value="advanced" className="mt-0">
+                    <div className="mt-2">
+                      <ApiCallEditor
+                        endpointId={currentEndpointId}
+                        isStateful={isStateful}
+                        nextCalls={nextCalls}
+                        setNextCalls={setNextCalls}
+                        isRequestBodyPopoverOpen={isRequestBodyPopoverOpen}
+                        setIsRequestBodyPopoverOpen={
+                          setIsRequestBodyPopoverOpen
+                        }
+                        selectedSection={selectedSection}
+                        setSelectedSection={setSelectedSection}
+                        getTemplateText={getTemplateText}
+                        insertRequestBodyTemplate={insertRequestBodyTemplate}
+                        setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
+                        onSave={() => fetchEndpointResponses(isStateful)}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
+                {/* Dialog New API Call */}
+                <Dialog
+                  open={isNewApiCallDialogOpen}
+                  onOpenChange={setIsNewApiCallDialogOpen}
+                >
+                  <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-semibold text-slate-800">
+                        New API Call
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 mt-4">
+                      {/* Target Endpoint */}
+                      <div>
+                        <Label htmlFor="target-endpoint">Target Endpoint</Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallTargetEndpoint}
+                            onValueChange={setNewApiCallTargetEndpoint}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select endpoint" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {/* LẤY DANH SÁCH TỪ nextCalls ĐÃ ĐƯỢC QUẢN LÝ TRONG DASHBOARD PAGE */}
+                              {nextCalls.map((call) => (
+                                <SelectItem
+                                  key={call.target_endpoint}
+                                  value={call.target_endpoint}
+                                >
+                                  {call.target_endpoint}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Method */}
+                      <div>
+                        <Label htmlFor="method">Method</Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallMethod}
+                            onValueChange={setNewApiCallMethod}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="GET">GET</SelectItem>
+                              <SelectItem value="POST">POST</SelectItem>
+                              <SelectItem value="PUT">PUT</SelectItem>
+                              <SelectItem value="DELETE">DELETE</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Request Body */}
+                      <div>
+                        <Label htmlFor="request-body">Request Body</Label>
+                        <div
+                          className="relative mt-1"
+                          ref={newApiCallRequestBodyEditorRef}
+                        >
+                          <Editor
+                            value={newApiCallRequestBody}
+                            onValueChange={(code) =>
+                              setNewApiCallRequestBody(code)
+                            }
+                            highlight={(code) =>
+                              highlight(code, languages.json)
+                            }
+                            padding={10}
+                            style={{
+                              fontFamily: '"Fira code", "Fira Mono", monospace',
+                              fontSize: 12,
+                              minHeight: "124px",
+                              maxHeight: "200px",
+                              overflow: "auto",
+                              border: "1px solid #CBD5E1",
+                              borderRadius: "0.375rem",
+                              backgroundColor: "#233554",
+                              color: "white",
+                            }}
+                            textareaClassName="focus:outline-none"
+                          />
+
+                          {/* JSON Editor controls */}
+                          <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                            >
+                              <Upload className="mr-1 h-4 w-4" /> Upload
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                try {
+                                  const formatted = JSON.stringify(
+                                    JSON.parse(newApiCallRequestBody),
+                                    null,
+                                    2
+                                  );
+                                  setNewApiCallRequestBody(formatted);
+                                } catch {
+                                  toast.error("Invalid JSON format");
+                                }
+                              }}
+                            >
+                              <Code className="mr-1 h-4 w-4" /> Format
+                            </Button>
+                          </div>
+
+                          {/* Bottom right icon */}
+                          <div className="absolute bottom-2 right-2 flex space-x-2">
+                            <FileCode
+                              className="text-gray-400 cursor-pointer hover:text-gray-600"
+                              size={20}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsNewApiCallRequestBodyPopoverOpen(
+                                  !isNewApiCallRequestBodyPopoverOpen
+                                );
+                              }}
+                            />
+                          </div>
+
+                          {/* Popover cho Request Body */}
+                          {isNewApiCallRequestBodyPopoverOpen && (
+                            <div
+                              ref={newApiCallRequestBodyPopoverRef}
+                              className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                            >
+                              <div className="flex flex-col items-center gap-2 p-3.5">
+                                <div className="w-full flex justify-between items-center">
+                                  <div className="font-semibold text-sm text-gray-800">
+                                    Variable Picker
+                                  </div>
+                                  <X
+                                    className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIsNewApiCallRequestBodyPopoverOpen(
+                                        false
+                                      );
+                                    }}
+                                  />
+                                </div>
+
+                                <div className="w-full flex justify-between">
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "url"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("url");
+                                    }}
+                                  >
+                                    URL Parameters
+                                  </div>
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "query"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("query");
+                                    }}
+                                  >
+                                    Query Parameters
+                                  </div>
+                                  <div
+                                    className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                      selectedSection === "state"
+                                        ? "bg-[#EDEDEC] text-[#374151]"
+                                        : "text-[#374151] hover:bg-gray-100"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSection("state");
+                                    }}
+                                  >
+                                    Project State
+                                  </div>
+                                </div>
+
+                                <div
+                                  className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const templateText =
+                                      getTemplateText().template;
+                                    insertNewApiCallRequestBodyTemplate(
+                                      templateText
+                                    );
+                                  }}
+                                >
+                                  <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                    {getTemplateText().template}
+                                  </div>
+                                  <div className="text-[12px] text-gray-500">
+                                    {getTemplateText().description}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status condition */}
+                      <div>
+                        <Label htmlFor="status-condition">
+                          Status condition
+                        </Label>
+                        <div className="relative mt-1">
+                          <Select
+                            value={newApiCallStatusCondition}
+                            onValueChange={setNewApiCallStatusCondition}
+                          >
+                            <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {statusCodes.map((status) => (
+                                <SelectItem
+                                  key={status.code}
+                                  value={status.code}
+                                >
+                                  {status.code} -{" "}
+                                  {status.description.split("–")[0]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-end gap-3 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsNewApiCallDialogOpen(false)}
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
+                        onClick={handleCreateNewApiCall}
+                      >
+                        Create
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </Tabs>
             </div>
           </div>
