@@ -811,7 +811,7 @@ export default function Dashboard() {
   // Regex
   const validPath =
     /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
-  const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
   // validation helpers (unchanged)...
   const validateCreateEndpoint = (name, path, method, type) => {
@@ -819,7 +819,7 @@ export default function Dashboard() {
       toast.info("Name is required");
       return false;
     }
-    if (name.trim().length > 20) {
+    if (name.trim().length > 255) {
       toast.info("Name must be less than 20 characters");
       return false;
     }
@@ -900,7 +900,7 @@ export default function Dashboard() {
     }
     if (!validName.test(name.trim())) {
       toast.info(
-        "Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes"
+        "Name must start with a letter and contain only letters, numbers, underscores and dashes"
       );
       return false;
     }
@@ -1268,9 +1268,6 @@ export default function Dashboard() {
               : []
           }
           onSearch={setSearchTerm}
-          onNewFolder={() => setOpenNewFolder(true)}
-          showNewProjectButton={false}
-          showNewFolderButton={true}
           showNewResponseButton={false}
           username={currentUsername}
         />
