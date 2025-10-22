@@ -187,7 +187,6 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const confirmSave = () => {
     if (pendingSchema) {
       onSave(pendingSchema);
-      toast.success("Folder schema saved successfully!");
     }
     setConfirmOpen(false);
   };
@@ -682,17 +681,15 @@ export default function Dashboard() {
   };
 
   const validateFolderName = (name) => {
-    const trimmed = name.trim();
-
-    if (!trimmed) {
+    if (!name.trim()) {
       return "Folder name cannot be empty";
     }
 
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed)) {
-      return "Must start with a letter, no special chars, single spaces allowed";
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name)) {
+      return "Must start with a letter, only English, digits and underscores allowed (no spaces)";
     }
 
-    if (trimmed.length > 20) {
+    if (name.trim().length > 20) {
       return "Folder name max 20 chars";
     }
 
@@ -701,7 +698,7 @@ export default function Dashboard() {
       String(f.project_id) === String(projectId) &&
       f.id !== editingFolderId
     );
-    if (projectFolders.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (projectFolders.some(f => f.name.toLowerCase() === name.trim().toLowerCase())) {
       return "Folder name already exists in this project";
     }
 
@@ -811,16 +808,12 @@ export default function Dashboard() {
   // Regex
   const validPath =
     /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
-  const validName = /^[A-Za-z_][A-Za-z0-9_-]*$/;
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
 
   // validation helpers (unchanged)...
   const validateCreateEndpoint = (name, path, method, type) => {
     if (!name.trim()) {
       toast.info("Name is required");
-      return false;
-    }
-    if (name.trim().length > 255) {
-      toast.info("Name must be less than 20 characters");
       return false;
     }
     if (!validName.test(name)) {
@@ -892,10 +885,6 @@ export default function Dashboard() {
   const validateEditEndpoint = (id, name) => {
     if (!name.trim()) {
       toast.info("Name is required");
-      return false;
-    }
-    if (name.trim().length > 20) {
-      toast.info("Name must be less than 20 characters");
       return false;
     }
     if (!validName.test(name.trim())) {
@@ -1274,7 +1263,7 @@ export default function Dashboard() {
       </div>
       {/* Main Content */}
       <main className="flex justify-center items-center bg-white transition-all duration-300">
-        <div className="w-full px-2 pt-4 pb-4">
+        <div className="w-full px-2 pt-2 pb-4">
           <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white mb-4">
             <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
               <button
@@ -1370,7 +1359,7 @@ export default function Dashboard() {
                               }}
                               onEditEndpoint={(ep) => openEditEndpoint(ep)}
                               onDeleteEndpoint={(id) => handleDeleteEndpoint(id)}
-                              onOpenEndpoint={(ep) => navigate(`/dashboard/${projectId}/endpoint/${ep.id}`)} // ✅ thêm
+                              onOpenEndpoint={(ep) => navigate(`/dashboard/${projectId}/endpoint/${ep.id}`)}
                             />
                           ))
                       )}

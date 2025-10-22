@@ -1,5 +1,4 @@
 import React, {useEffect} from "react";
-import {API_ROOT} from "@/utils/constants";
 
 import logoIcon from "@/assets/logo.svg";
 import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
@@ -12,7 +11,6 @@ import {
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
 import addIcon from "@/assets/Add.svg";
-import bellIcon from "@/assets/notification.svg";
 import logoutIcon from "@/assets/logout.svg";
 import {
   Breadcrumb,
@@ -34,6 +32,7 @@ import {useNavigate} from "react-router-dom";
 import {logout} from "@/services/api.js";
 import avatar from "@/assets/user-avatar.svg";
 import {Button} from "@/components/ui/button.jsx";
+import NotificationsSheet from "../components/Notifications.jsx";
 
 const StateModeToggle = ({isStateful, onToggle}) => {
   return (
@@ -138,24 +137,30 @@ export default function Topbar({
     (ws) => String(ws.id) === String(current)
   );
 
-  // const handleChangeFolderMode = async (mode) => {
-  //   if (!selectedFolder?.id) return;
-  //   try {
-  //     const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-  //       method: "PUT",
-  //       credentials: "include",
-  //       headers: {"Content-Type": "application/json"},
-  //       body: JSON.stringify({is_public: mode === "public"}),
-  //     });
-  //
-  //     if (!res.ok) throw new Error("Failed to update folder mode");
-  //     setFolderMode(mode);
-  //     toast.success(`Folder is now ${mode.toUpperCase()}!`);
-  //   } catch (err) {
-  //     toast.error("Failed to update folder mode!");
-  //     console.error(err);
-  //   }
-  // };
+  const mockNotifications = [
+    {
+      method: "GET",
+      path: "/orders",
+      status: "200 OK",
+      is_stateful: true,
+      request: "{'dish_id': 5, 'quantity': 3}",
+      response: "{'message': 'order created successfully'}",
+      time: "2 min ago",
+      user: "hancontam",
+      is_read: false,
+    },
+    {
+      method: "POST",
+      path: "/orders",
+      status: "200 OK",
+      is_stateful: true,
+      request: "{'dish_id': 5, 'quantity': 3}",
+      response: "{'message': 'order created successfully'}",
+      time: "5 min ago",
+      user: "hancontam",
+      is_read: true,
+    },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -315,9 +320,7 @@ export default function Topbar({
       {/* User + Notification + Logout */}
       <div className="flex items-center gap-4">
         {/* Notification */}
-        <button className="relative border-r-2 py-1 pr-4 ml-4 border-slate-900">
-          <img src={bellIcon} alt="Notifications" className="w-5 h-5" />
-        </button>
+        <NotificationsSheet notifications={mockNotifications} />
 
         {/* Avatar + Name */}
         <div className="flex items-center gap-2">

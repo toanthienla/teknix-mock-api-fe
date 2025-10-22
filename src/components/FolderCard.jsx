@@ -28,18 +28,25 @@ export default function FolderCard({
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-50 mb-6 overflow-hidden">
       {/* Folder Header */}
-      <div className={`flex items-center justify-between px-3 py-2 mx-6 my-2 rounded-t-2xl
-        ${expanded ? 'border-b border-gray-200 bg-gray-50' : ''}`}>
+      <div
+        className={`flex items-center justify-between px-3 py-2 mx-6 my-2 rounded-t-2xl cursor-pointer ${
+          expanded ? 'border-b border-gray-200 bg-gray-50' : ''
+        }`}
+        onClick={() => setExpanded(!expanded)}
+      >
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-800">{folder.name}</h2>
-          <span className="text-gray-400 font-semibold text-sm">{folderEndpoints.length}</span>
+          <span className="text-gray-400 font-semibold text-lg">{folderEndpoints.length}</span>
 
           {expanded && (
             <div className="flex gap-2 ml-2">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onEditName(folder)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditName(folder);
+                }}
                 className="h-6 w-6 p-0 hover:bg-gray-100"
               >
                 <img src={editIcon} alt="Edit" className="w-4 h-4" />
@@ -47,7 +54,10 @@ export default function FolderCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onEditSchema(folder)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditSchema(folder);
+                }}
                 className="h-6 w-6 p-0 hover:bg-gray-100"
               >
                 <img src={editSchemaIcon} alt="Schema" className="w-4 h-4" />
@@ -55,7 +65,10 @@ export default function FolderCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDeleteFolder(folder)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteFolder(folder);
+                }}
                 className="h-6 w-6 p-0 hover:bg-gray-100"
               >
                 <img src={trashIcon} alt="Trash" className="w-4 h-4" />
@@ -69,8 +82,11 @@ export default function FolderCard({
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Public</span>
               <Switch
-                checked={folder.is_public}
-                onCheckedChange={(val) => onToggleMode(folder, val)}
+                checked={!!folder.is_public}
+                onCheckedChange={(val) => {
+                  onToggleMode(folder, val);
+                }}
+                onClick={(e) => e.stopPropagation()}
                 className="data-[state=checked]:bg-yellow-300"
               />
             </div>
@@ -79,7 +95,10 @@ export default function FolderCard({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setExpanded(!expanded)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
             className="h-6 w-6 p-0 hover:bg-gray-100 rounded-4xl"
           >
             {expanded ? (

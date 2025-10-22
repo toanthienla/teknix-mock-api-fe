@@ -103,9 +103,6 @@ const DashboardPage = () => {
   const [openFoldersMap, setOpenFoldersMap] = useState(
     () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
   );
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
-  );
   const [showStatefulConfirmDialog, setShowStatefulConfirmDialog] =
     useState(false);
   const [showStatelessConfirmDialog, setShowStatelessConfirmDialog] =
@@ -1161,13 +1158,6 @@ const DashboardPage = () => {
     localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
   }, [openFoldersMap]);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "isSidebarCollapsed",
-      JSON.stringify(isSidebarCollapsed)
-    );
-  }, [isSidebarCollapsed]);
-
   // Keep sidebar expanded when on endpoint detail
   useEffect(() => {
     if (!projectId) return;
@@ -1992,7 +1982,7 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Main Content */}
-      <div className="pt-8 flex-1 transition-all duration-300 relative">
+      <div className="pt-8 flex-1 relative">
         {/* Header */}
         <Topbar
           className="mt-0 mb-4"
@@ -2082,14 +2072,7 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div
-          className={`transition-all duration-300 px-8 pt-4 pb-8
-            ${
-              isSidebarCollapsed
-                ? "w-[calc(100%+16rem)] -translate-x-64"
-                : "w-full"
-            }`}
-        >
+        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full"`}>
           {/* Container chung cho cả hai phần */}
           <div className="flex justify-between items-center mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -2118,7 +2101,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-4 flex-1 min-w-0">
+            <div className="flex items-center gap-2 ml-4 flex-1">
               {/*  reset state button */}
               {isStateful && (
                 <Button
