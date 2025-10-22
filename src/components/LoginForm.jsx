@@ -53,7 +53,7 @@ export function LoginForm({className, ...props}) {
     } catch (error) {
       setIsSubmitting(false);
       if (error.response && error.response.status === 400) {
-        toast.error("Invalid credentials. Please try again.");
+        toast.error("Incorrect username or password. Please try again.");
       } else {
         toast.error("An error occurred during login");
       }

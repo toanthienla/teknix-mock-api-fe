@@ -1,9 +1,9 @@
-import React from "react"
-import {Button} from "@/components/ui/button"
-import {Badge} from "@/components/ui/badge"
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
-import statefulEndpoint from "@/assets/stateful.svg"
+// import statefulEndpoint from "@/assets/stateful.svg";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,69 +14,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {TableRow, TableCell} from "@/components/ui/table"
+} from "@/components/ui/alert-dialog";
+import { TableRow, TableCell } from "@/components/ui/table";
 
-export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
-  const {id, name, path, method} = endpoint
+export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
+  const { id, name, path, method } = endpoint;
 
   return (
-    <TableRow className="border-b border-gray-300 bg-white hover:bg-gray-50 cursor-pointer transition-colors">
-      {/* Name */}
-      <TableCell className="w-1/4 border-r border-gray-300">
-        <div className="flex items-center gap-2">
-          {endpoint.is_stateful && (
-            <img
-              src={statefulEndpoint}
-              alt="stateful endpoint"
-              className="w-5 h-5"
-            />
-          )}
+    <TableRow className="hover:bg-gray-50 transition-colors">
+      {/* Endpoint Name */}
+      <TableCell className="py-3">
+        <div className="flex flex-col">
           <span
-            className="font-semibold text-gray-800 cursor-pointer"
-            style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)"}}
+            className="font-semibold text-gray-900 cursor-pointer"
             onClick={onClick}
           >
             {name}
           </span>
+          <span className="text-sm text-gray-400">{path}</span>
         </div>
       </TableCell>
 
-      {/* Path */}
-      <TableCell
-        className="w-1/4 font-semibold text-gray-800 text-sha border-r border-gray-300"
-        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
-      >
-        {path}
+      {/* State */}
+      <TableCell className="py-3 text-gray-800 font-medium text-center">
+        {endpoint.is_stateful ? "stateful" : "stateless"}
       </TableCell>
 
       {/* Method */}
-      <TableCell
-        className="w-1/12 text-center border-r border-gray-300"
-        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
-      >
+      <TableCell className="py-3 text-center">
         <Badge
-          className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
+          className={`px-3 py-0.5 text-xs font-semibold rounded-md ${
             method === "GET"
-              ? "bg-emerald-100 text-black hover:bg-emerald-200"
+              ? "bg-lime-200 text-black hover:bg-lime-300"
               : method === "POST"
-                ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                ? "bg-sky-300 text-black hover:bg-sky-400"
                 : method === "PUT"
-                  ? "bg-orange-400 text-black hover:bg-orange-500"
+                  ? "bg-pink-300 text-black hover:bg-pink-400"
                   : method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                    ? "bg-red-400 text-white hover:bg-red-500"
+                    : "bg-gray-200 text-black"
           }`}
         >
           {method}
         </Badge>
       </TableCell>
 
-      {/* Created Time */}
-      <TableCell
-        className="w-1/4 font-semibold text-gray-800 whitespace-nowrap text-sm border-r border-gray-300"
-        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
-      >
+      {/* Status */}
+      <TableCell className="py-3 text-emerald-400 font-semibold text-center">
+        {endpoint.is_active ? "active" : "inactive"}
+      </TableCell>
+
+      {/* Time & Date */}
+      <TableCell className="py-3 text-slate-500 font-medium whitespace-nowrap text-sm text-center">
         {new Date(endpoint.created_at).toLocaleString("en-US", {
           year: "numeric",
           month: "long",
@@ -87,30 +76,16 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
         })}
       </TableCell>
 
-      {/* Status */}
-      <TableCell
-        className="w-1/12 font-semibold text-center text-gray-800 whitespace-nowrap text-sm border-r border-gray-300"
-        style={{ textShadow: "0px 4px 4px rgba(0,0,0,0.25)" }}
-      >
-        <span
-          className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
-            endpoint.is_active ? "text-emerald-400" : "text-rose-600"
-          }`}
-        >
-          {endpoint.is_active ? "active" : "inactive"}
-        </span>
-      </TableCell>
-
       {/* Actions */}
-      <TableCell className="w-1/12 text-center">
-        <div className="flex items-center gap-2">
+      <TableCell className="py-3 text-center">
+        <div className="flex items-center justify-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="text-blue-600 hover:text-blue-800"
+            className="text-gray-600 hover:text-gray-800"
             onClick={() => onEdit(endpoint)}
           >
-            <img src={editIcon} alt="edit" className="w-4 h-4"/>
+            <img src={editIcon} alt="edit" className="w-4 h-4" />
           </Button>
 
           <AlertDialog>
@@ -120,7 +95,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
                 size="icon"
                 className="h-7 w-7 text-gray-500 hover:text-red-600"
               >
-                <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
+                <img src={deleteIcon} alt="delete" className="w-4 h-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent
@@ -134,8 +109,7 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete endpoint data from
-                  our servers.
+                  This action cannot be undone. This will permanently delete endpoint data from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -154,5 +128,5 @@ export default function EndpointRow({endpoint, onEdit, onDelete, onClick}) {
         </div>
       </TableCell>
     </TableRow>
-  )
+  );
 }

@@ -1,9 +1,19 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, {useEffect} from "react";
 import {API_ROOT} from "@/utils/constants";
 
-import {Search} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import logoIcon from "@/assets/logo.svg";
+import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import editIcon from "@/assets/Edit Icon.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
+import addIcon from "@/assets/Add.svg";
+import bellIcon from "@/assets/notification.svg";
+import logoutIcon from "@/assets/logout.svg";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +22,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import addIcon from "@/assets/Add.svg";
 import {
   Select,
   SelectContent,
@@ -20,9 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import folderPublic from "@/assets/folder-public.svg";
-import folderPrivate from "@/assets/folder-private.svg";
 import {toast} from "react-toastify";
+import {useNavigate} from "react-router-dom";
+import {logout} from "@/services/api.js";
+import avatar from "@/assets/user-avatar.svg";
+import {Button} from "@/components/ui/button.jsx";
 
 const StateModeToggle = ({isStateful, onToggle}) => {
   return (
@@ -89,93 +100,143 @@ const StateModeDropdown = ({isStateful, onStateModeChange}) => {
 };
 
 export default function Topbar({
+                                 workspaces = [],
+                                 current,
+                                 setCurrent,
+                                 onWorkspaceChange,
+                                 onEditWorkspace,
+                                 onDeleteWorkspace,
+                                 setOpenNewWs,
                                  breadcrumb = [],
-                                 onSearch,
-                                 onNewProject,
-                                 onNewFolder,
                                  onNewResponse,
-                                 showNewProjectButton,
-                                 showNewFolderButton,
                                  showNewResponseButton,
                                  showStateModeToggle,
-                                 onOpenSettings,
                                  isStateful,
                                  onStateModeChange,
-                                 currentFolder,
+                                 username,
                                }) {
-  const [query, setQuery] = useState("");
-  const [showPermission, setShowPermission] = useState(false);
-  const settingsRef = useRef(null);
-  const popupRef = useRef(null);
-
-  const [folderMode, setFolderMode] = useState("public");
-  const [selectedFolder, setSelectedFolder] = useState(null);
+  const navigate = useNavigate();
+  const userName = username;
 
   useEffect(() => {
-    if (currentFolder?.id) {
-      setSelectedFolder(currentFolder);
-
-      // 🟡 Fetch is_public ngay khi vừa có folder
-      const fetchFolderMode = async () => {
-        try {
-          const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
-            credentials: "include",
-          });
-          if (!res.ok) throw new Error("Failed to fetch folder info");
-          const data = await res.json();
-          setFolderMode(data.is_public ? "public" : "private");
-        } catch (err) {
-          console.error("Error fetching folder mode:", err);
-        }
-      };
-
-      fetchFolderMode();
+    if (workspaces.length > 0 && !current) {
+      const firstWsId = workspaces[0].id;
+      setCurrent?.(firstWsId);
+      onWorkspaceChange?.(firstWsId);
+      localStorage.setItem("currentWorkspace", firstWsId);
     }
-  }, [currentFolder]);
+  }, [workspaces, current]);
 
-  // 🔹 Đóng popup khi click ra ngoài
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(e.target) &&
-        !settingsRef.current.contains(e.target)
-      ) {
-        setShowPermission(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleChangeFolderMode = async (mode) => {
-    if (!selectedFolder?.id) return;
-    try {
-      const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({is_public: mode === "public"}),
-      });
-
-      if (!res.ok) throw new Error("Failed to update folder mode");
-      setFolderMode(mode);
-      toast.success(`Folder is now ${mode.toUpperCase()}!`);
-    } catch (err) {
-      toast.error("Failed to update folder mode!");
-      console.error(err);
-    }
+  const handleSelectWorkspace = (wsId) => {
+    if (setCurrent) setCurrent(wsId);
+    if (onWorkspaceChange) onWorkspaceChange(wsId);
+    localStorage.setItem("currentWorkspace", wsId);
+    navigate("/dashboard");
   };
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setQuery(value);
-    if (onSearch) onSearch(value);
+  const currentWorkspace = workspaces.find(
+    (ws) => String(ws.id) === String(current)
+  );
+
+  // const handleChangeFolderMode = async (mode) => {
+  //   if (!selectedFolder?.id) return;
+  //   try {
+  //     const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+  //       method: "PUT",
+  //       credentials: "include",
+  //       headers: {"Content-Type": "application/json"},
+  //       body: JSON.stringify({is_public: mode === "public"}),
+  //     });
+  //
+  //     if (!res.ok) throw new Error("Failed to update folder mode");
+  //     setFolderMode(mode);
+  //     toast.success(`Folder is now ${mode.toUpperCase()}!`);
+  //   } catch (err) {
+  //     toast.error("Failed to update folder mode!");
+  //     console.error(err);
+  //   }
+  // };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully.");
+
+      localStorage.clear();
+      sessionStorage.clear();
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed. Please try again.");
+    }
   };
 
   return (
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
-      {/* Breadcrumb bên trái */}
+      {/* Logo + Workspace Selector */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center cursor-pointer select-none"
+             onClick={() => window.location.href = '/dashboard'}>
+          <img src={logoIcon} className="w-10 h-10" alt="Logo"/>
+        </div>
+
+        {/* Workspace Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
+              <span>{currentWorkspace?.name || "Select Workspace"}</span>
+              <ChevronDown className="w-4 h-4 text-slate-500"/>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
+            {workspaces?.map((ws) => (
+              <div
+                key={ws.id}
+                className={`flex justify-between items-center px-2 py-1 ${
+                  String(currentWorkspace?.id) === String(ws.id)
+                    ? "bg-slate-50 font-semibold"
+                    : ""
+                }`}
+              >
+                <DropdownMenuItem
+                  className="flex-1 cursor-pointer"
+                  onSelect={() => handleSelectWorkspace(ws.id)}
+                >
+                  {ws.name}
+                </DropdownMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 hover:bg-slate-100 rounded">
+                      <MoreHorizontal className="w-4 h-4 text-slate-500"/>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-44">
+                    <DropdownMenuItem onSelect={() => onEditWorkspace?.(ws)}>
+                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onDeleteWorkspace?.(ws.id)}>
+                      <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/>
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+            <div
+              className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
+              onClick={() => setOpenNewWs?.(true)}
+            >
+              <Plus className="w-4 h-4"/>
+              <span>New workspace</span>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Breadcrumb */}
       {breadcrumb.length > 0 && (
         <div className="px-4 py-2 rounded-md inline-flex overflow-hidden">
           <Breadcrumb>
@@ -224,19 +285,6 @@ export default function Topbar({
 
       {/* Search + Buttons */}
       <div className="flex items-center gap-4 ml-auto relative">
-        {/* Search box */}
-        <div className="relative w-[250px]">
-          <Input
-            placeholder="Search..."
-            value={query}
-            onChange={handleChange}
-            className="pl-9 pr-3 py-2 h-10 bg-slate-100 rounded-lg text-[15px] font-medium placeholder:font-medium"
-          />
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-            <Search size={16}/>
-          </div>
-        </div>
-
         {/* State Mode Toggle */}
         {showStateModeToggle && (
           <div className="flex-1 flex justify-end mr-4">
@@ -262,64 +310,29 @@ export default function Topbar({
           </Button>
         )}
 
-        {/* Project button */}
-        {showNewProjectButton && (
-          <Button
-            onClick={onNewProject}
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain brightness-0"
-            />
-            New Project
-          </Button>
-        )}
+      </div>
 
-        {/* Folder button */}
-        {showNewFolderButton && (
-          <Button
-            onClick={onNewFolder}
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain brightness-0"
-            />
-            New Folder
-          </Button>
-        )}
+      {/* User + Notification + Logout */}
+      <div className="flex items-center gap-4">
+        {/* Notification */}
+        <button className="relative border-r-2 py-1 pr-4 border-slate-900">
+          <img src={bellIcon} alt="Notifications" className="w-5 h-5" />
+        </button>
 
-        {/* Folder Mode Toggle */}
-        {currentFolder && (
-          <div className="flex items-center ml-2">
-            <button
-              className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-r-0 border-stone-400 rounded-l-lg px-3 py-2 w-[70px] h-[50px] ${
-                folderMode === "public"
-                  ? "bg-white text-black"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-              onClick={() => handleChangeFolderMode("public")}
-            >
-              <img src={folderPublic} alt="Public folder" className="w-4 h-4" />
-              <span className="text-xs font-semibold">Public</span>
-            </button>
+        {/* Avatar + Name */}
+        <div className="flex items-center gap-2">
+          <img
+            src={avatar}
+            alt="User avatar"
+            className="w-8 h-8 rounded-full border"
+          />
+          <span className="font-medium text-sm text-slate-900">{userName}</span>
+        </div>
 
-            <button
-              className={`flex flex-col items-center justify-center gap-1 text-sm border-2 border-stone-400 rounded-r-lg px-3 py-2 w-[70px] h-[50px] ${
-                folderMode === "private"
-                  ? "bg-white text-black"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-              onClick={() => handleChangeFolderMode("private")}
-            >
-              <img src={folderPrivate} alt="Private folder" className="w-4 h-4" />
-              <span className="text-xs font-semibold">Private</span>
-            </button>
-          </div>
-        )}
+        {/* Logout Button */}
+        <button onClick={handleLogout} className="relative">
+          <img src={logoutIcon} alt="Logout" className="w-4 h-4 mr-2" />
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import { getCurrentUser } from "@/services/api.js";
+import React, {useEffect, useMemo, useState} from "react";
+import {getCurrentUser} from "@/services/api.js";
 import {Button} from "@/components/ui/button";
 import {
   Table,
@@ -9,7 +9,6 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import Sidebar from "@/components/Sidebar.jsx";
 import {useNavigate, useParams} from "react-router-dom";
 import {API_ROOT} from "@/utils/constants.js";
 import {
@@ -24,39 +23,28 @@ import {Input} from "@/components/ui/input.jsx";
 import {Label} from "@/components/ui/label.jsx";
 import {
   Select,
-  SelectContent,
-  SelectItem,
+  SelectContent, SelectGroup,
+  SelectItem, SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
-import {MoreVertical} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
-import { Card } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import {Card} from "@/components/ui/card";
+import {Plus, Trash2} from "lucide-react";
 
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
-import blueFolder from "@/assets/blue_folder.svg"
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
-import schemaIcon from "@/assets/schema.svg"
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
-import webBg from "@/assets/dot_web.svg";
+import folderIcon from "@/assets/folder-icon.svg";
+import logsIcon from "@/assets/logs.svg";
+import FolderCard from "@/components/FolderCard.jsx";
 
-const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -75,7 +63,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
-        id: { type: "number", required: false },
+        id: {type: "number", required: false},
       };
       const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
         id: `field-${index}`,
@@ -160,7 +148,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
-      const newErrors = { ...prev };
+      const newErrors = {...prev};
       delete newErrors[id];
       return newErrors;
     });
@@ -168,7 +156,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
   const handleChange = (id, key, value) => {
     setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+      prev.map((f) => (f.id === id ? {...f, [key]: value} : f))
     );
   };
 
@@ -236,7 +224,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="string">string</SelectItem>
@@ -256,7 +244,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue/>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">true</SelectItem>
@@ -290,7 +278,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         {/* Actions */}
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2" /> Add Field
+            <Plus className="w-4 h-4 mr-2"/> Add Field
           </Button>
           <Button
             className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
@@ -310,7 +298,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
               Updating this folder's schema will{" "}
               <b>delete all endpoint data</b> that no longer fits the new
               schema.
-              <br /> <br />
+              <br/> <br/>
               Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>
@@ -335,7 +323,6 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const {projectId, folderId} = useParams();
-  // const location = useLocation();
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
@@ -357,12 +344,6 @@ export default function Dashboard() {
   );
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
     () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
-  );
-  const [openFoldersMap, setOpenFoldersMap] = useState(
-    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
-  );
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
-    () => JSON.parse(localStorage.getItem("isSidebarCollapsed")) ?? false
   );
   // const [targetWsId, setTargetWsId] = useState(null);
   const [targetProjectId, setTargetProjectId] = useState(null);
@@ -397,6 +378,24 @@ export default function Dashboard() {
 
   const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
   const [folderSchema, setFolderSchema] = useState(null);
+
+  // new endpoint state
+  const [newEName, setNewEName] = useState("");
+  const [newEPath, setNewEPath] = useState("");
+  const [newEMethod, setNewEMethod] = useState("");
+  const [newEFolderId, setNewEFolderId] = useState(folderId || "");
+  const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
+
+  // edit endpoint state
+  const [editId, setEditId] = useState(null);
+  const [editEName, setEditEName] = useState("");
+  const [editEPath, setEditEPath] = useState("");
+  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
+  const [editEMethod, setEditEMethod] = useState("");
+
+  // dialogs
+  const [openNew, setOpenNew] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
 
   useEffect(() => {
     const checkUserLogin = async () => {
@@ -463,14 +462,6 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
   }, [openEndpointsMap]);
-
-  useEffect(() => {
-    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
-  }, [openFoldersMap]);
-
-  useEffect(() => {
-    localStorage.setItem("isSidebarCollapsed", JSON.stringify(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
 
   // Keep sidebar expanded for selected project when navigating into project view
   useEffect(() => {
@@ -567,36 +558,58 @@ export default function Dashboard() {
       .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
   };
 
+  useEffect(() => {
+    if (projectId && endpoints.length) fetchLogs(projectId);
+  }, [projectId, endpoints]);
+
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
       const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`);
-      const data = await res.json();
+      if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
+      const raw = await res.json();
 
-      // enrich logs với endpoint + project_id
+      const logsArray = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw.items)
+          ? raw.items
+          : Array.isArray(raw.data)
+            ? raw.data
+            : [];
+
+      const endpointMap = new Map(endpoints.map(e => [String(e.id), e]));
+
       const enrichedLogs = await Promise.all(
-        data.map(async (log) => {
-          if (!log.endpoint_id) return log;
+        logsArray.map(async (log) => {
+          if (!log || !log.endpoint_id) return {...log, project_id: log?.project_id ?? pid};
 
-          const endpoint = endpoints.find((ep) => String(ep.id) === String(log.endpoint_id));
+          const endpoint = endpointMap.get(String(log.endpoint_id));
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
 
           try {
-            const res = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
-            const responses = await res.json();
+            const r2 = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
+            if (!r2.ok) throw new Error('responses not ok');
+            const payload = await r2.json();
+            const responses = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload.items)
+                ? payload.items
+                : Array.isArray(payload.data)
+                  ? payload.data
+                  : [];
 
             const matched = responses.find(r => String(r.id) === String(log.response_id)) || responses[0];
 
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : null, // ✅ bổ sung project_id
+              project_id: endpoint ? endpoint.project_id : (log.project_id ?? pid),
               endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
             };
           } catch (err) {
             console.error("Error fetching endpoint_responses:", err);
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : null, // ✅ luôn có project_id
+              project_id: endpoint ? endpoint.project_id : (log.project_id ?? pid),
               endpointResponseName: endpointName,
             };
           }
@@ -604,6 +617,7 @@ export default function Dashboard() {
       );
 
       setLogs(enrichedLogs);
+
     } catch (err) {
       console.error("Error fetching logs:", err);
       toast.error("Failed to load logs");
@@ -793,17 +807,240 @@ export default function Dashboard() {
     }
   };
 
+  // --- Endpoint Handlers ---
+  // Regex
+  const validPath =
+    /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
+
+  // validation helpers (unchanged)...
+  const validateCreateEndpoint = (name, path, method, type) => {
+    if (!name.trim()) {
+      toast.info("Name is required");
+      return false;
+    }
+    if (name.trim().length > 20) {
+      toast.info("Name must be less than 20 characters");
+      return false;
+    }
+    if (!validName.test(name)) {
+      toast.info(
+        "Name must start with a letter and contain only letters, numbers, a space, underscores and dashes"
+      );
+      return false;
+    }
+    const duplicateName = endpoints.some(
+      (ep) =>
+        String(ep.folder_id) === String(folderId) &&
+        ep.name.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicateName) {
+      toast.warning("Name already exists");
+      return false;
+    }
+
+    if (!path.trim()) {
+      toast.info("Path is required");
+      return false;
+    }
+    if (!path.startsWith("/")) {
+      toast.info("Path must start with '/'");
+      return false;
+    }
+    if (path.length > 1 && path.endsWith("/")) {
+      toast.info("Path must not end with '/'");
+      return false;
+    }
+    if (!validPath.test(path.trim())) {
+      toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
+      return false;
+    }
+
+    // Lấy toàn bộ folder trong project
+    const foldersInSameProject = folders.filter(
+      (f) => String(f.project_id) === String(projectId)
+    );
+
+    // Lấy toàn bộ endpoint trong các folder đó
+    const endpointsInProject = endpoints.filter((ep) =>
+      foldersInSameProject.some((f) => String(f.id) === String(ep.folder_id))
+    );
+
+    // Kiểm tra trùng path + method trong project
+    if (!type) {
+      const duplicatePath = endpointsInProject.some(
+        (ep) =>
+          ep.path.trim() === path.trim() &&
+          ep.method.toUpperCase() === method.toUpperCase()
+      );
+      if (duplicatePath) {
+        toast.warning(
+          `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists in this project`
+        );
+        return false;
+      }
+    }
+
+    if (!method) {
+      toast.info("Method is required");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEditEndpoint = (id, name) => {
+    if (!name.trim()) {
+      toast.info("Name is required");
+      return false;
+    }
+    if (name.trim().length > 20) {
+      toast.info("Name must be less than 20 characters");
+      return false;
+    }
+    if (!validName.test(name.trim())) {
+      toast.info(
+        "Name must start with a letter and contain only letters, numbers, spaces, underscores and dashes"
+      );
+      return false;
+    }
+    const duplicateName = endpoints.find(
+      (ep) =>
+        ep.id !== id &&
+        String(ep.folder_id) === String(folderId) &&
+        ep.name.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicateName) {
+      toast.warning("Name already exists");
+      return false;
+    }
+
+    return true;
+  };
+
+  // Create endpoint
+  const handleCreateEndpoint = async () => {
+    if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) return;
+
+    try {
+      const newEndpoint = {
+        name: newEName.trim(),
+        path: newEPath.trim(),
+        method: newEMethod,
+        folder_id: Number(newEFolderId),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const res = await fetch(`${API_ROOT}/endpoints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEndpoint),
+      });
+
+      // Nếu response không thành công, đọc lỗi chi tiết
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        if (errorData && errorData.errors && Array.isArray(errorData.errors)) {
+          errorData.errors.forEach(err => {
+            if (err.message) toast.error(`Error ${err.field ? `${err.field}: ` : ""}${err.message}`);
+          });
+        } else {
+          toast.error("Failed to create endpoint");
+        }
+        return;
+      }
+
+      // Nếu thành công
+      const created = await res.json();
+      setEndpoints(prev => [...prev, created]);
+      setOpenNew(false);
+      toast.success("Endpoint created!");
+    } catch (error) {
+      console.error("Error creating endpoint:", error);
+      toast.error("Failed to create endpoint");
+    }
+  };
+
+  // edit endpoint
+  const [currentEndpoint, setCurrentEndpoint] = useState(null);
+  const openEditEndpoint = (e) => {
+    setEditId(e.id);
+    setEditEName(e.name);
+    setEditEPath(e.path);
+    setEditEFolderId(e.folder_id);
+    setEditEMethod(e.method);
+
+    setCurrentEndpoint(e);
+    setOpenEdit(true);
+  };
+
+  const hasEdited = useMemo(() => {
+    if (!currentEndpoint) return false;
+    return (
+      editEName !== currentEndpoint.name ||
+      editEFolderId !== currentEndpoint.folder_id ||
+      editEPath !== currentEndpoint.path ||
+      editEMethod !== currentEndpoint.method
+    );
+  }, [editEName, editEFolderId, editEPath, editEMethod, currentEndpoint]);
+
+  const handleUpdateEndpoint = () => {
+    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
+    const updated = {
+      id: editId,
+      name: editEName,
+      path: editEPath,
+      method: editEMethod,
+      folder_id: Number(editEFolderId),
+      updated_at: new Date().toISOString(),
+    };
+
+    fetch(`${API_ROOT}/endpoints/${editId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(updated),
+    })
+      .then(() => {
+        // Cập nhật danh sách endpoints trong bảng
+        setEndpoints((prev) =>
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
+        );
+
+        // Cập nhật danh sách allEndpoints để Sidebar nhận đúng folder mới
+        setEndpoints((prev) =>
+          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
+        );
+
+        setOpenEdit(false);
+        toast.success("Update endpoint successfully!");
+      })
+      .catch(() => toast.error("Failed to update endpoint!"));
+  };
+
+  // delete endpoint stateless
+  const handleDeleteEndpoint = (id) => {
+    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"})
+      .then(() => {
+        setEndpoints((prev) => prev.filter((e) => e.id !== id));
+        toast.success("Delete endpoint successfully!");
+      })
+      .catch((error) => {
+        console.error("Error deleting endpoint:", error.message);
+        toast.error("Failed to delete endpoint!");
+      });
+  };
+
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (!name.trim()) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
+      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+    if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
         (w) =>
-          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -831,6 +1068,8 @@ export default function Dashboard() {
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
+        setNewWsName("");
+        setOpenNewWs(false);
         fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -974,8 +1213,8 @@ export default function Dashboard() {
     try {
       const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base_schema: newSchema }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({base_schema: newSchema}),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -990,506 +1229,331 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
-      <div className="flex">
-        {/* Sidebar */}
-        <aside
-          className={`border-slate-100 bg-white transition-all duration-300 ${!isSidebarCollapsed ? "border-r" : "border-none"}`}
-        >
-          <Sidebar
-            workspaces={workspaces}
-            projects={projects}
-            endpoints={endpoints}
-            folders={folders}
-            current={currentWsId}
-            setCurrent={setCurrentWsId}
-            onAddWorkspace={handleAddWorkspace}
-            onEditWorkspace={(ws) => {
-              setEditWsId(ws.id);
-              setEditWsName(ws.name);
-              setOpenEditWs(true);
-            }}
-            onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-            openProjectsMap={openProjectsMap}
-            setOpenProjectsMap={setOpenProjectsMap}
-            openEndpointsMap={openEndpointsMap}
-            setOpenEndpointsMap={setOpenEndpointsMap}
-            openFoldersMap={openFoldersMap}
-            setOpenFoldersMap={setOpenFoldersMap}
-            isCollapsed={isSidebarCollapsed}
-            setIsCollapsed={setIsSidebarCollapsed}
-            setOpenNewWs={setOpenNewWs}
-            onAddFolder={handleAddFolder}
-            onEditFolder={handleEditFolder}
-            onDeleteFolder={handleDeleteFolder}
-            username={currentUsername}
-          />
-        </aside>
-
-        {/* Main Content */}
-        <main
-          className="pt-8 flex-1 transition-all duration-300 relative"
-          style={{
-            backgroundImage: `url(${webBg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
+      <div className="mt-8 w-full bg-white shadow-sm z-20">
+        {/* Top Navbar */}
+        <Topbar
+          workspaces={workspaces}
+          current={currentWsId}
+          setCurrent={setCurrentWsId}
+          onWorkspaceChange={setCurrentWsId}
+          onAddWorkspace={handleAddWorkspace}
+          onEditWorkspace={(ws) => {
+            setEditWsId(ws.id);
+            setEditWsName(ws.name);
+            setOpenEditWs(true);
           }}
-        >
-          {/* Top Navbar */}
-          <Topbar
-            breadcrumb={
-              currentWorkspace
-                ? currentProject
-                  ? [
-                    {
-                      label: currentWorkspace.name,
-                      WORKSPACE_ID: currentWorkspace.id,
-                      href: "/dashboard",
-                    },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                    },
-                  ]
-                  : [
-                    {
-                      label: currentWorkspace.name,
-                      WORKSPACE_ID: currentWorkspace.id,
-                      href: "/dashboard",
-                    },
-                  ]
-                : []
-            }
-            onSearch={setSearchTerm}
-            onNewFolder={() => setOpenNewFolder(true)}
-            showNewProjectButton={false}
-            showNewFolderButton={true}
-            showNewResponseButton={false}
-          />
+          onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
+          setOpenNewWs={setOpenNewWs}
+          breadcrumb={
+            currentWorkspace
+              ? currentProject
+                ? [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                  },
+                  {
+                    label: currentProject.name,
+                    href: `/dashboard/${currentProject.id}`,
+                  },
+                ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                  },
+                ]
+              : []
+          }
+          onSearch={setSearchTerm}
+          onNewFolder={() => setOpenNewFolder(true)}
+          showNewProjectButton={false}
+          showNewFolderButton={true}
+          showNewResponseButton={false}
+          username={currentUsername}
+        />
+      </div>
+      {/* Main Content */}
+      <main className="flex justify-center items-center bg-white transition-all duration-300">
+        <div className="w-full px-2 pt-4 pb-4">
+          <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white mb-4">
+            <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
+              <button
+                // variant="ghost"
+                onClick={() => setActiveTab("folders")}
+                className={`flex rounded-tl-lg px-4 py-2 -mb-px ${activeTab === "folders"
+                  ? "bg-white text-stone-900"
+                  : "bg-gray-200 text-stone-500"
+                }`}
+              >
+                <div className="flex items-center">
+                  <img src={folderIcon} alt="folder" className="w-4 h-4 mr-2" />
+                  <span className="text-md font-semibold">Folders</span>
+                </div>
+              </button>
+              <button
+                // variant="ghost"
+                onClick={() => {
+                  setActiveTab("logs");
+                  fetchLogs(projectId);
+                }}
+                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs"
+                  ? "bg-white text-stone-900"
+                  : "bg-gray-200 text-stone-500"
+                }`}
+              >
+                <div className="flex items-center">
+                  <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2" />
+                  <span className="text-md font-semibold">Logs</span>
+                </div>
+              </button>
+            </div>
 
-          {/* Content Area */}
-          <div
-            className={`transition-all duration-300 px-8 pt-4 pb-8
-            ${isSidebarCollapsed ? "w-[calc(100%+16rem)] -translate-x-64" : "w-full"
-            }`}
-          >
-            <div className="flex flex-col">
-              <div className="flex ml-auto border-b border-gray-200 mb-4 text-stone-500">
-                {currentProject ? (
-                  <h2 className="absolute left-16 text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent mb-2">
-                    {currentProject.name}
-                  </h2>
-                ) : (
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">Loading...</h2>
-                )}
-                <Button
-                  variant="ghost"
-                  onClick={() => setActiveTab("folders")}
-                  className={`rounded-none px-6 py-4 -mb-px bg-white border-b-2 border-stone-200 ${activeTab === "folders"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
-                  }`}
-                >
-                  <span className="text-lg">Folders</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setActiveTab("logs");
-                    fetchLogs(projectId);
-                  }}
-                  className={`rounded-none px-6 py-4 -mb-px bg-white border-b-2 border-stone-200 ${activeTab === "logs"
-                    ? "border-b-2 border-stone-900 text-stone-900"
-                    : ""
-                  }`}
-                >
-                  <span className="text-lg">Logs</span>
-                </Button>
-              </div>
+            {activeTab === "folders" ? (
+              <>
+                <div className="flex flex-col items-center justify-center w-full">
+                  <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-4">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-semibold text-gray-800">
+                        {currentProject?.name} — {folders.filter(f => String(f.project_id) === String(projectId)).length} Folder(s)
+                      </h2>
 
-              {activeTab === "folders" ? (
-                <>
-                  {/* Folder List */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 px-8">
-                    {folders.filter(f => String(f.project_id) === String(projectId)).length === 0 ? (
-                      <div className="col-span-full text-center text-slate-500 py-8">
-                        No folders found in this project.
-                      </div>
-                    ) : (
-                      folders
-                        .filter(f => String(f.project_id) === String(projectId))
-                        .map((folder) => (
-                          <div
-                            key={folder.id}
-                            className="relative flex flex-col items-center group rounded-xl p-4 border border-slate-300 bg-white/70 backdrop-blur hover:shadow-md hover:border-yellow-300 transition-all cursor-pointer"
-                          >
-                            {/* Folder Image */}
-                            <img
-                              src={blueFolder}
-                              alt="Folder"
-                              className="w-32 h-18 cursor-pointer hover:opacity-80"
-                              onClick={() =>
-                                navigate(`/dashboard/${projectId}/folder/${folder.id}`)
-                              }
-                            />
-                            <span className="mt-1 text-sm font-medium text-gray-800 text-center">
-                              {folder.name}
-                            </span>
-
-                            {/* === Dropdown Menu (Actions) === */}
-                            <div
-                              className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 rounded-full hover:bg-gray-100">
-                                    <MoreVertical className="w-5 h-5 text-gray-600"/>
-                                  </button>
-                                </DropdownMenuTrigger>
-
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator/>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setNewFolderName(folder.name);
-                                      setEditDialogOpen(true);
-                                    }}
-                                  >
-                                    <img src={editIcon} alt="edit" className="w-4 h-4"/>
-                                    Edit
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setOpenSchemaDialog(true);
-                                    }}
-                                  >
-                                    <img src={schemaIcon} className="w-4 h-4" alt="Schema Icon" />
-                                    Schema
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedFolder(folder);
-                                      setDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <img src={deleteIcon} alt="delete" className="w-4 h-4"/>
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        ))
-                    )}
-                  </div>
-
-                  {/* === Edit Folder Dialog === */}
-                  <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Edit Folder</DialogTitle>
-                      </DialogHeader>
-
-                      <div className="mt-4 space-y-2">
-                        <Label htmlFor="folderName">Name</Label>
-                        <Input
-                          id="folderName"
-                          value={newFolderName}
-                          onChange={(e) => setNewFolderName(e.target.value)}
-                          placeholder="Enter folder name..."
-                        />
-                      </div>
-
-                      <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-                          onClick={async () => {
-                            try {
-                              const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                                method: "PUT",
-                                credentials: "include",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({name: newFolderName}),
-                              });
-
-                              if (!res.ok) throw new Error("Failed to update folder");
-
-                              setFolders((prev) =>
-                                prev.map((f) =>
-                                  f.id === selectedFolder.id ? {...f, name: newFolderName} : f
-                                )
-                              );
-
-                              toast.success("Folder updated successfully!");
-                              setEditDialogOpen(false);
-                            } catch (err) {
-                              toast.error("Failed to update folder!");
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Update
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* === Folder Schema Dialog === */}
-                  <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
-                    <DialogContent className="max-w-3xl">
-                      <DialogHeader>
-                        <DialogTitle></DialogTitle>
-                        <DialogDescription>
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      {folderSchema ? (
-                        <BaseSchemaEditor
-                          folderData={{ schema: folderSchema }}
-                          folderId={selectedFolder?.id}
-                          onSave={handleSaveFolderSchema}
-                          method={"PUT"} // không cần phân biệt GET/POST ở đây
-                        />
-                      ) : (
-                        <div className="text-gray-500 text-center py-6">Loading schema...</div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* === Delete Confirmation Dialog === */}
-                  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Delete Folder</DialogTitle>
-                      </DialogHeader>
-
-                      <p className="mt-2 text-gray-600">
-                        Are you sure you want to delete{" "}
-                        <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
-                        <span className="text-red-500 text-sm">
-                          This action cannot be undone.
-                        </span>
-                      </p>
-
-                      <DialogFooter className="mt-4 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                          onClick={async () => {
-                            try {
-                              if (!selectedFolder?.id) throw new Error("No folder selected");
-
-                              const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                                method: "DELETE",
-                                credentials: "include",
-                              });
-
-                              if (!res.ok) throw new Error("Failed to delete folder");
-
-                              setFolders((prev) =>
-                                prev.filter((f) => f.id !== selectedFolder.id)
-                              );
-
-                              toast.success("Folder deleted successfully!");
-                              setDeleteDialogOpen(false);
-                            } catch (err) {
-                              toast.error("Failed to delete folder!");
-                              console.error(err);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-                </>
-              ) : activeTab === "logs" ? (
-                <>
-
-                  {/* Logs */}
-                  <div className="w-full overflow-x-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex gap-2">
-                        {/* Method Filter */}
-                        <Select
-                          value={methodFilter}
-                          onValueChange={setMethodFilter}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Methods"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All Methods">All Methods</SelectItem>
-                            <SelectItem value="GET">GET</SelectItem>
-                            <SelectItem value="POST">POST</SelectItem>
-                            <SelectItem value="PUT">PUT</SelectItem>
-                            <SelectItem value="DELETE">DELETE</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        {/* Status Filter */}
-                        <Select
-                          value={statusFilter}
-                          onValueChange={setStatusFilter}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Status"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All Status">All Status</SelectItem>
-                            <SelectItem value="200">200</SelectItem>
-                            <SelectItem value="400">400</SelectItem>
-                            <SelectItem value="404">404</SelectItem>
-                            <SelectItem value="500">500</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        {/* Time Filter */}
-                        <Select
-                          value={timeFilter}
-                          onValueChange={setTimeFilter}
-                        >
-                          <SelectTrigger className="w-[160px]">
-                            <SelectValue placeholder="All time"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All time">All time</SelectItem>
-                            <SelectItem value="Last 24 hours">
-                              Last 24 hours
-                            </SelectItem>
-                            <SelectItem value="Last 7 days">
-                              Last 7 days
-                            </SelectItem>
-                            <SelectItem value="Last 30 days">
-                              Last 30 days
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <img
-                            src={exportIcon}
-                            alt="Export Icon"
-                            className="w-4 h-4 object-contain"
-                          />
-                          Export
-                        </Button>
-                        <Button variant="outline" onClick={() => fetchLogs(projectId)}>
-                          <img
-                            src={refreshIcon}
-                            alt="Refresh Icon"
-                            className="w-4 h-4 object-contain"
-                          />
-                          Refresh
-                        </Button>
-                      </div>
+                      <Button
+                        className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                        onClick={() => handleAddFolder()}
+                      >
+                        New Folder
+                      </Button>
                     </div>
 
-                    <Table>
-                      <TableHeader>
+                    {/* Folder List */}
+                    <div className="gap-6">
+                      {folders.filter(f => String(f.project_id) === String(projectId)).length === 0 ? (
+                        <div className="text-center text-slate-500 py-12">
+                          No folders found in this project.
+                        </div>
+                      ) : (
+                        folders
+                          .filter(f => String(f.project_id) === String(projectId))
+                          .map((folder) => (
+                            <FolderCard
+                              key={folder.id}
+                              folder={folder}
+                              endpoints={endpoints}
+                              onEditName={(f) => {
+                                handleEditFolder(f);
+                              }}
+                              onEditSchema={(f) => {
+                                setSelectedFolder(f);
+                                setOpenSchemaDialog(true);
+                              }}
+                              onDeleteFolder={(f) => {
+                                handleDeleteFolder(f.id);
+                              }}
+                              onToggleMode={async (f, newVal) => {
+                                await fetch(`${API_ROOT}/folders/${f.id}`, {
+                                  method: "PUT",
+                                  credentials: "include",
+                                  headers: {"Content-Type": "application/json"},
+                                  body: JSON.stringify({is_public: newVal}),
+                                });
+                                setFolders((prev) =>
+                                  prev.map((ff) => (ff.id === f.id ? {...ff, is_public: newVal} : ff))
+                                );
+                              }}
+                              onAddEndpoint={(f) => {
+                                setNewEType(false);
+                                setNewEFolderId(f.id || "");
+                                setNewEName("");
+                                setNewEPath("");
+                                setNewEMethod("");
+                                setOpenNew(true);
+                              }}
+                              onEditEndpoint={(ep) => openEditEndpoint(ep)}
+                              onDeleteEndpoint={(id) => handleDeleteEndpoint(id)}
+                              onOpenEndpoint={(ep) => navigate(`/dashboard/${projectId}/endpoint/${ep.id}`)} // ✅ thêm
+                            />
+                          ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : activeTab === "logs" ? (
+              <>
+                {/* Logs */}
+                <div className="w-full overflow-x-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex gap-2">
+                      {/* Method Filter */}
+                      <Select
+                        value={methodFilter}
+                        onValueChange={setMethodFilter}
+                      >
+                        <SelectTrigger className="w-[140px] bg-white">
+                          <SelectValue placeholder="All Methods"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All Methods">All Methods</SelectItem>
+                          <SelectItem value="GET">GET</SelectItem>
+                          <SelectItem value="POST">POST</SelectItem>
+                          <SelectItem value="PUT">PUT</SelectItem>
+                          <SelectItem value="DELETE">DELETE</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* Status Filter */}
+                      <Select
+                        value={statusFilter}
+                        onValueChange={setStatusFilter}
+                      >
+                        <SelectTrigger className="w-[140px] bg-white">
+                          <SelectValue placeholder="All Status"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All Status">All Status</SelectItem>
+                          <SelectItem value="200">200</SelectItem>
+                          <SelectItem value="400">400</SelectItem>
+                          <SelectItem value="404">404</SelectItem>
+                          <SelectItem value="500">500</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {/* Time Filter */}
+                      <Select
+                        value={timeFilter}
+                        onValueChange={setTimeFilter}
+                      >
+                        <SelectTrigger className="w-[160px] bg-white">
+                          <SelectValue placeholder="All time"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All time">All time</SelectItem>
+                          <SelectItem value="Last 24 hours">
+                            Last 24 hours
+                          </SelectItem>
+                          <SelectItem value="Last 7 days">
+                            Last 7 days
+                          </SelectItem>
+                          <SelectItem value="Last 30 days">
+                            Last 30 days
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button variant="outline">
+                        <img
+                          src={exportIcon}
+                          alt="Export Icon"
+                          className="w-4 h-4 object-contain"
+                        />
+                        Export
+                      </Button>
+                      <Button variant="outline" onClick={() => fetchLogs(projectId)}>
+                        <img
+                          src={refreshIcon}
+                          alt="Refresh Icon"
+                          className="w-4 h-4 object-contain"
+                        />
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="col-span-3">Timestamp</TableHead>
+                        <TableHead className="col-span-1">Method</TableHead>
+                        <TableHead className="col-span-2">Path</TableHead>
+                        <TableHead className="col-span-2">Latency</TableHead>
+                        <TableHead className="col-span-1">Status</TableHead>
+                        <TableHead className="col-span-3">
+                          Matched Response
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {logs.length === 0 ? (
                         <TableRow>
-                          <TableHead className="col-span-3">Timestamp</TableHead>
-                          <TableHead className="col-span-1">Method</TableHead>
-                          <TableHead className="col-span-2">Path</TableHead>
-                          <TableHead className="col-span-2">Latency</TableHead>
-                          <TableHead className="col-span-1">Status</TableHead>
-                          <TableHead className="col-span-3">
-                            Matched Response
-                          </TableHead>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-slate-500 py-4"
+                          >
+                            No logs available.
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
+                      ) : filteredLogs.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-slate-500 py-4"
+                          >
+                            No logs found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
+                      )}
+                    </TableBody>
+                  </Table>
 
-                      <TableBody>
-                        {logs.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="text-center text-slate-500 py-4"
-                            >
-                              No logs available.
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredLogs.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="text-center text-slate-500 py-4"
-                            >
-                              No logs found.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
-                        )}
-                      </TableBody>
-                    </Table>
+                  <div className="flex items-center justify-end mt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Rows per page</span>
+                      <Select
+                        value={rowsPerPage.toString()}
+                        onValueChange={(val) => {
+                          setRowsPerPage(Number(val));
+                          setPage(1); // reset về trang 1 khi đổi size
+                        }}
+                      >
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[5, 10, 20, 50].map((size) => (
+                            <SelectItem key={size} value={size.toString()}>
+                              {size}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                    <div className="flex items-center justify-end mt-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">Rows per page</span>
-                        <Select
-                          value={rowsPerPage.toString()}
-                          onValueChange={(val) => {
-                            setRowsPerPage(Number(val));
-                            setPage(1); // reset về trang 1 khi đổi size
-                          }}
-                        >
-                          <SelectTrigger className="w-[80px]">
-                            <SelectValue/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[5, 10, 20, 50].map((size) => (
-                              <SelectItem key={size} value={size.toString()}>
-                                {size}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 1}
-                          onClick={() => setPage((p) => p - 1)}
-                        >
-                          ‹
-                        </Button>
-                        <span className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                      >
+                        ‹
+                      </Button>
+                      <span className="text-sm">
                           Page {page} of {totalPages || 1}
                         </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === totalPages || totalPages === 0}
-                          onClick={() => setPage((p) => p + 1)}
-                        >
-                          ›
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages || totalPages === 0}
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        ›
+                      </Button>
                     </div>
                   </div>
-                </>
-              ) : null}
-            </div>
+                </div>
+              </>
+            ) : null}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
 
       {/* New Workspace */}
       <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
@@ -1509,8 +1573,6 @@ export default function Dashboard() {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddWorkspace(newWsName);
-                  setNewWsName("");
-                  setOpenNewWs(false);
                 }
               }}
             />
@@ -1523,8 +1585,6 @@ export default function Dashboard() {
               className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
-                setNewWsName("");
-                setOpenNewWs(false);
               }}
             >
               Create
@@ -1580,6 +1640,39 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Confirm Delete Workspace */}
+      <Dialog
+        open={!!confirmDeleteWs}
+        onOpenChange={() => setConfirmDeleteWs(null)}
+      >
+        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Workspace</DialogTitle>
+          </DialogHeader>
+          <p>
+            Are you sure you want to delete this workspace and all its projects?
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteWs(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                handleDeleteWorkspace(confirmDeleteWs);
+                setConfirmDeleteWs(null);
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
         <DialogContent
@@ -1614,6 +1707,7 @@ export default function Dashboard() {
                       setOpenNewFolder(false);
                       setNewFolderName("");
                       setNewFolderDesc("");
+                      setNewFolderMode(false);
                       setEditingFolderId(null);
                     }
                   }
@@ -1622,6 +1716,7 @@ export default function Dashboard() {
                     setOpenNewFolder(false);
                     setNewFolderName("");
                     setNewFolderDesc("");
+                    setNewFolderMode(false);
                     setEditingFolderId(null);
                   }
                 }}
@@ -1665,7 +1760,7 @@ export default function Dashboard() {
                 setOpenNewFolder(false);
                 setNewFolderName("");
                 setNewFolderDesc("");
-                setNewFolderMode("");
+                setNewFolderMode(false);
                 setEditingFolderId(null);
               }}
               className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1686,30 +1781,124 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Delete Workspace */}
-      <Dialog
-        open={!!confirmDeleteWs}
-        onOpenChange={() => setConfirmDeleteWs(null)}
-      >
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+      {/* === Edit Folder Dialog === */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Workspace</DialogTitle>
+            <DialogTitle>Edit Folder</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this workspace and all its projects?
-          </p>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteWs(null)}
-            >
+
+          <div className="mt-4 space-y-2">
+            <Label htmlFor="folderName">Name</Label>
+            <Input
+              id="folderName"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name..."
+            />
+          </div>
+
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={() => {
-                handleDeleteWorkspace(confirmDeleteWs);
-                setConfirmDeleteWs(null);
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+                    method: "PUT",
+                    credentials: "include",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({name: newFolderName}),
+                  });
+
+                  if (!res.ok) throw new Error("Failed to update folder");
+
+                  setFolders((prev) =>
+                    prev.map((f) =>
+                      f.id === selectedFolder.id ? {...f, name: newFolderName} : f
+                    )
+                  );
+
+                  toast.success("Folder updated successfully!");
+                  setEditDialogOpen(false);
+                } catch (err) {
+                  toast.error("Failed to update folder!");
+                  console.error(err);
+                }
+              }}
+            >
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* === Folder Schema Dialog === */}
+      <Dialog open={openSchemaDialog} onOpenChange={setOpenSchemaDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle></DialogTitle>
+            <DialogDescription>
+            </DialogDescription>
+          </DialogHeader>
+
+          {folderSchema ? (
+            <BaseSchemaEditor
+              folderData={{schema: folderSchema}}
+              folderId={selectedFolder?.id}
+              onSave={handleSaveFolderSchema}
+              method={"PUT"} // không cần phân biệt GET/POST ở đây
+            />
+          ) : (
+            <div className="text-gray-500 text-center py-6">Loading schema...</div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* === Delete Confirmation Dialog === */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Folder</DialogTitle>
+          </DialogHeader>
+
+          <p className="mt-2 text-gray-600">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
+            <span className="text-red-500 text-sm">
+              This action cannot be undone.
+            </span>
+          </p>
+
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={async () => {
+                try {
+                  if (!selectedFolder?.id) throw new Error("No folder selected");
+
+                  const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+                    method: "DELETE",
+                    credentials: "include",
+                  });
+
+                  if (!res.ok) throw new Error("Failed to delete folder");
+
+                  setFolders((prev) =>
+                    prev.filter((f) => f.id !== selectedFolder.id)
+                  );
+
+                  toast.success("Folder deleted successfully!");
+                  setDeleteDialogOpen(false);
+                } catch (err) {
+                  toast.error("Failed to delete folder!");
+                  console.error(err);
+                }
               }}
             >
               Delete
@@ -1754,19 +1943,176 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* footer */}
-      <div className="absolute left-72 bottom-4 text-xs font-semibold text-gray-700">
-        © Teknix Corp. All rights reserved.
-      </div>
+      {/* --- Endpoint Handlers ---*/}
+      {/* New Endpoint Button + Dialog */}
+      <Dialog open={openNew} onOpenChange={setOpenNew}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              // avoid Enter triggering when selecting inside selects; create explicitly on button
+              e.preventDefault();
+              handleCreateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              New Endpoint
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
+          </DialogHeader>
 
-      <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-700">
-        <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-        <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-        <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
-        <a className="hover:underline font-semibold" href="">About</a>
-        <span>·</span>
-        <a className="hover:underline font-semibold" href="">Support</a>
-      </div>
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={newEName}
+                onChange={(e) => setNewEName(e.target.value)}
+              />
+            </div>
+
+            {/* Folder select - only folders for current project */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
+              <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an option"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Folders</SelectLabel>
+                    {folders
+                      .filter((f) => String(f.project_id) === String(projectId))
+                      .map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
+              <Input
+                placeholder="/examples/example/:id"
+                value={newEPath}
+                onChange={(e) => setNewEPath(e.target.value)}
+              />
+            </div>
+
+            {/* Method */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
+              <Select
+                value={newEMethod}
+                onValueChange={(v) => setNewEMethod(v)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a method"/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Method</SelectLabel>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value="PUT">PUT</SelectItem>
+                    <SelectItem value="DELETE">DELETE</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => {
+                setOpenNew(false);
+                setNewEName("");
+                setNewEPath("");
+                setNewEMethod("");
+                setNewEFolderId(folderId || "");
+                setNewEType(false);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              onClick={handleCreateEndpoint}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Endpoint Dialog (unchanged) */}
+      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+        <DialogContent
+          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasEdited) {
+              e.preventDefault();
+              handleUpdateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Endpoint</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-sm text-slate-800">Endpoint details</DialogDescription>
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={editEName}
+                onChange={(e) => setEditEName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="text-black hover:text-red-600"
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateEndpoint}
+              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              disabled={!hasEdited}
+            >
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* footer */}
+      <footer
+        className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+        <span>© Teknix Corp. All rights reserved.</span>
+        <div className="flex items-center gap-3 text-gray-700">
+          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+          <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
+          <a className="hover:underline font-semibold" href="">About</a>
+          <span>·</span>
+          <a className="hover:underline font-semibold" href="">Support</a>
+        </div>
+      </footer>
     </div>
   );
 }

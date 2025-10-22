@@ -47,7 +47,6 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
-import webBg from "@/assets/dot_web.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
@@ -3046,15 +3045,7 @@ const DashboardPage = () => {
       </aside>
 
       {/* Main Content */}
-      <div
-        className="pt-8 flex-1 transition-all duration-300 relative"
-        style={{
-          backgroundImage: `url(${webBg})`,
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-        }}
-      >
+      <div className="pt-8 flex-1 transition-all duration-300 relative">
         {/* Header */}
         <Topbar
           className="mt-0 mb-4"
