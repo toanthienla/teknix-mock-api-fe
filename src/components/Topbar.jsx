@@ -185,12 +185,12 @@ export default function Topbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="flex items-center justify-between px-3 py-2 rounded-md border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
+              className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
               <span>{currentWorkspace?.name || "Select Workspace"}</span>
               <ChevronDown className="w-4 h-4 text-slate-500"/>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
+          <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
             {workspaces?.map((ws) => (
               <div
                 key={ws.id}

@@ -1033,15 +1033,14 @@ export default function Dashboard() {
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (!name.trim()) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
+      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+    if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
         (w) =>
-          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -1069,6 +1068,8 @@ export default function Dashboard() {
         setCurrentWsId(createdWs.id);
         setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
+        setNewWsName("");
+        setOpenNewWs(false);
         fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -1276,8 +1277,8 @@ export default function Dashboard() {
       </div>
       {/* Main Content */}
       <main className="flex justify-center items-center bg-white transition-all duration-300">
-        <div className="w-full px-2 pt-4 pb-8">
-          <div className="flex flex-col border-2 border-gray-200 rounded-lg bg-white mb-4">
+        <div className="w-full px-2 pt-4 pb-4">
+          <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white mb-4">
             <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
               <button
                 // variant="ghost"
@@ -1313,7 +1314,7 @@ export default function Dashboard() {
             {activeTab === "folders" ? (
               <>
                 <div className="flex flex-col items-center justify-center w-full">
-                  <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-6">
+                  <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-4">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-xl font-semibold text-gray-800">
                         {currentProject?.name} — {folders.filter(f => String(f.project_id) === String(projectId)).length} Folder(s)
@@ -1572,8 +1573,6 @@ export default function Dashboard() {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddWorkspace(newWsName);
-                  setNewWsName("");
-                  setOpenNewWs(false);
                 }
               }}
             />
@@ -1586,8 +1585,6 @@ export default function Dashboard() {
               className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
-                setNewWsName("");
-                setOpenNewWs(false);
               }}
             >
               Create
@@ -2105,7 +2102,7 @@ export default function Dashboard() {
 
       {/* footer */}
       <footer
-        className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700 border-t bg-white">
+        className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
         <span>© Teknix Corp. All rights reserved.</span>
         <div className="flex items-center gap-3 text-gray-700">
           <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>

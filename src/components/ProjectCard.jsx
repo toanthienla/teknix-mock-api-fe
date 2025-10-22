@@ -30,7 +30,7 @@ export default function ProjectCard({ project, folders, endpoints, onView, onCli
   return (
     <TableRow
       onClick={onClick}
-      className="hover:bg-gray-50 border-b border-gray-200 transition cursor-pointer"
+      className="h-[64px] hover:bg-gray-50 border-b border-gray-200 transition cursor-pointer"
     >
       {/* Project name */}
       <TableCell className="font-medium text-gray-800">{name}</TableCell>

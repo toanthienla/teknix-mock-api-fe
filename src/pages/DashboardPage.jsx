@@ -237,15 +237,14 @@ export default function DashboardPage() {
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (!name.trim()) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
+      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+    if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
         (w) =>
-          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -274,6 +273,8 @@ export default function DashboardPage() {
         localStorage.setItem("currentWorkspace", createdWs.id);
         setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Workspace created successfully");
+        setNewWsName("");
+        setOpenNewWs(false);
         fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
@@ -649,7 +650,7 @@ export default function DashboardPage() {
         />
       </div>
       <main className="flex-1 w-full flex justify-center bg-white">
-        <div className="w-[90%] max-w-6xl pt-6 pb-10">
+        <div className="w-[90%] max-w-6xl pt-6 pb-4">
 
           {/* Tiêu đề + Nút New Project */}
           <div className="flex items-center justify-between mb-6">
@@ -716,7 +717,7 @@ export default function DashboardPage() {
                 </TableHeader>
 
                 {/* ==== Body ==== */}
-                <TableBody className="h-[300px]">
+                <TableBody>
                   {sortedProjects.length > 0 ? (
                     currentPageProjects.map((p) => (
                       <ProjectCard
@@ -745,21 +746,24 @@ export default function DashboardPage() {
                   {Array.from({
                     length: Math.max(0, rowsPerPage - currentPageProjects.length),
                   }).map((_, i) => (
-                    <TableRow key={`empty-${i}`} className="h-[64px] bg-white"></TableRow>
+                    <TableRow
+                      key={`empty-${i}`}
+                      className="h-[64px] bg-white border-none">
+                    </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
 
             {/* ==== Pagination ==== */}
-            <div className="flex items-center justify-between mt-6 px-2 text-sm text-gray-700">
+            <div className="flex items-center justify-between mt-4 px-2 text-sm text-gray-700">
               <div className="flex items-center gap-2">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                        className={currentPage === 1 ? "opacity-50 pointer-events-none" : ""}
+                        className={currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}
                       />
                     </PaginationItem>
 
@@ -768,6 +772,7 @@ export default function DashboardPage() {
                         <PaginationLink
                           isActive={currentPage === i + 1}
                           onClick={() => setCurrentPage(i + 1)}
+                          className="cursor-pointer"
                         >
                           {i + 1}
                         </PaginationLink>
@@ -777,7 +782,7 @@ export default function DashboardPage() {
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                        className={currentPage === totalPages ? "opacity-50 pointer-events-none" : ""}
+                        className={currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -991,8 +996,6 @@ export default function DashboardPage() {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddWorkspace(newWsName);
-                  setNewWsName("");
-                  setOpenNewWs(false);
                 }
               }}
             />
@@ -1005,8 +1008,6 @@ export default function DashboardPage() {
               className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
               onClick={() => {
                 handleAddWorkspace(newWsName);
-                setNewWsName("");
-                setOpenNewWs(false);
               }}
             >
               Create
