@@ -2151,7 +2151,7 @@ const DashboardPage = () => {
             }`}
         >
           {/* Container chung cho cả hai phần */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col gap-4 mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
             <div className="flex items-center flex-shrink-0">
               <h2 className="text-2xl font-bold text-[#37352F] mr-4">
@@ -2178,7 +2178,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-4 flex-1 min-w-0">
+            <div className="flex items-center gap-1 w-175">
               {/*  reset state button */}
               {isStateful && (
                 <Button
@@ -2240,6 +2240,32 @@ const DashboardPage = () => {
                   )}
                 </div>
               </div>
+              {/* State Mode Toggle - thay thế Select bằng toggle button */}
+              <div className="ml-4 flex-shrink-0">
+                <div
+                  className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+                  onClick={handleStateModeChange}
+                >
+                  <div className="flex flex-row items-center w-[60px] h-[30px]">
+                    <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+                      {isStateful ? "Stateful" : "Stateless"}
+                    </span>
+                  </div>
+                  <div className="relative w-[60px] h-[30px]">
+                    <div
+                      className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+                        isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+                      }`}
+                    >
+                      <div
+                        className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+                          isStateful ? "left-[32px]" : "left-[3px]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2282,43 +2308,88 @@ const DashboardPage = () => {
 
           <div className="flex gap-6">
             {/* Cột trái - Response Configuration */}
-            <div className="w-1/3">
+            <div className="w-1/4">
+              {/* Header với nút Add và Search */}
+              <div className="flex flex-col bg-white rounded-lg ">
+                <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
+                  <div className="flex items-center gap-3.5">
+                    <button
+                      className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                      onClick={handleNewResponse}
+                      disabled={isStateful}
+                      title={
+                        isStateful
+                          ? "Cannot add responses in stateful mode"
+                          : "Add new response"
+                      }
+                    >
+                      <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                    </button>
+                    <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
+                      <div className="flex items-center gap-0.5 px-0.5">
+                        <div className="w-[14.65px] h-[14.65px]">
+                          <svg
+                            width="14.65"
+                            height="14.65"
+                            viewBox="0 0 14.65 14.65"
+                            fill="none"
+                          >
+                            <path
+                              d="M6.5 11.5C9.26142 11.5 11.5 9.26142 11.5 6.5C11.5 3.73858 9.26142 1.5 6.5 1.5C3.73858 1.5 1.5 3.73858 1.5 6.5C1.5 9.26142 3.73858 11.5 6.5 11.5Z"
+                              stroke="rgba(28, 28, 28, 0.2)"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M10.5 10.5L13.5 13.5"
+                              stroke="rgba(28, 28, 28, 0.2)"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgba(28,28,28,0.2)] bg-transparent border-none focus:outline-none"
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Response Configuration Table */}
-              <div className="rounded-md border border-solid border-slate-300 bg-white">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                      <TableHead className="w-[119.2px] h-10 px-1 py-0">
-                        <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                            Status Code
-                          </div>
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                        <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                              Name Response
-                            </div>
-                          </div>
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {statusData.map((status, index) => (
-                      <TableRow
+              <div className="square-lg border border-[#EDEFF1] bg-white overflow-hidden">
+                <div className="overflow-y-auto max-h-[400px]">
+                  {statusData.map((status, index) => {
+                    // Xác định màu sắc dựa trên status code
+                    let statusColor = "#1C1C1C";
+                    const statusCode = status.code.toString();
+
+                    if (statusCode.startsWith("1")) {
+                      statusColor = "#ff6bfa";
+                    } else if (statusCode.startsWith("2")) {
+                      statusColor = "#328F4F";
+                    } else if (statusCode.startsWith("3")) {
+                      statusColor = "#3e70dd";
+                    } else if (statusCode.startsWith("4")) {
+                      statusColor = "#ed4245";
+                    } else if (statusCode.startsWith("5")) {
+                      statusColor = "#ef8843";
+                    }
+
+                    return (
+                      <div
                         key={status.id || status.code}
-                        className={`
-                          border-b [border-bottom-style:solid] border-neutral-200 ${
-                            index === statusData.length - 1 ? "border-b-0" : ""
-                          } ${draggedItem === index ? "opacity-50" : ""} ${
+                        className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
                           selectedResponse?.id === status.id
                             ? "bg-gray-100"
-                            : ""
+                            : "hover:bg-gray-50"
+                        } ${
+                          index === statusData.length - 1 ? "border-b-0" : ""
                         }`}
-                        draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
+                        draggable={!isStateful}
                         onDragStart={
                           !isStateful
                             ? (e) => handleDragStart(e, index)
@@ -2338,45 +2409,38 @@ const DashboardPage = () => {
                           if (response) handleResponseSelect(response);
                         }}
                       >
-                        <TableCell className="w-[119.2px] h-[49px] p-2">
-                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            {/* Hiển thị GripVertical chỉ khi không phải stateful */}
-                            {!isStateful && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                            )}
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                        <div className="flex items-center gap-2">
+                          {!isStateful && (
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                          )}
+                          <div className="flex items-center gap-1">
+                            <span
+                              className="text-[12px] font-medium"
+                              style={{ color: statusColor }}
+                            >
                               {status.code}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            </span>
+                            <span className="text-[12px] text-[#212121]">
                               {status.name}
-                            </div>
+                            </span>
                           </div>
-                        </TableCell>
-                        {/* Hiển thị cột Default chỉ khi không phải stateful */}
-                        {!isStateful && (
-                          <TableCell className="w-[80px] h-[49px] p-2">
-                            {status.isDefault && (
-                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
-                                <span className="text-xs font-medium text-[#0A0A0A]">
-                                  Default
-                                </span>
-                              </div>
-                            )}
-                          </TableCell>
+                        </div>
+                        {!isStateful && status.isDefault && (
+                          <div className="flex items-center justify-center px-1.5 py-0.5 bg-[#DCFA79] border border-[#7A787C] rounded-[5.34536px]">
+                            <span className="text-[8px] font-bold uppercase text-black">
+                              Default
+                            </span>
+                          </div>
                         )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Cột phải - Navigation và Content */}
-            <div className="w-2/3">
+            <div className="w-3/4">
               {/* Navigation Tabs */}
               <Tabs defaultValue="Header&Body" className="w-full">
                 {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
@@ -2933,7 +2997,7 @@ const DashboardPage = () => {
                       open={isInitialValueDialogOpen}
                       onOpenChange={setIsInitialValueDialogOpen}
                     >
-                      <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+                      <DialogContent className="max-w-[512px] max-h-[80vh] overflow-y-auto p-8 rounded-2xl shadow-lg">
                         <DialogHeader className="flex justify-between items-start mb-4">
                           <DialogTitle className="text-xl font-bold text-slate-800">
                             Update Initial Value
@@ -2941,7 +3005,10 @@ const DashboardPage = () => {
                         </DialogHeader>
 
                         <div className="mb-6">
-                          <div className="relative" ref={initialValueEditorRef}>
+                          <div
+                            className="relative w-full"
+                            ref={initialValueEditorRef}
+                          >
                             <Editor
                               value={tempDataDefaultString}
                               onValueChange={(code) => {
@@ -2968,8 +3035,13 @@ const DashboardPage = () => {
                                 borderRadius: "0.375rem",
                                 backgroundColor: "#233554",
                                 color: "white",
+                                width: "100%",
+                                boxSizing: "border-box",
+                                wordBreak: "break-word",
+                                whiteSpace: "pre-wrap",
+                                overflowWrap: "break-word",
                               }}
-                              textareaClassName="focus:outline-none"
+                              textareaClassName="focus:outline-none w-full"
                             />
 
                             {/* JSON Editor controls */}
