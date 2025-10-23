@@ -204,32 +204,47 @@ const DashboardPage = () => {
         return;
       }
 
-      // Tạo API Call mới KHÔNG có trường id
-      const newCallForServer = {
+      // Tạo ID tạm thời cho UI
+      const tempId = `temp-${Date.now()}`;
+      const creationTime = Date.now(); // Lưu thời gian tạo để xác định API call mới
+
+      // Tạo API Call mới với ID tạm thời
+      const newCallForUI = {
+        id: tempId,
         target_endpoint: newApiCallTargetEndpoint,
         method: newApiCallMethod,
         body: JSON.parse(newApiCallRequestBody),
         condition: newApiCallStatusCondition,
+        _creationTime: creationTime, // Thêm trường tạm để xác định API call mới
       };
 
-      // Chuẩn bị payload
+      // Cập nhật UI ngay lập tức với ID tạm thời
+      setNextCalls([...nextCalls, newCallForUI]);
+
+      // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
         advanced_config: {
           nextCalls: [
-            // Loại bỏ id khỏi các API Call hiện có
+            // Giữ nguyên các API Call hiện có (bao gồm id)
             ...nextCalls.map((call) => ({
+              id: call.id,
               target_endpoint: call.target_endpoint,
               method: call.method,
               body: call.body,
               condition: call.condition,
             })),
             // Thêm API Call mới (không có id)
-            newCallForServer,
+            {
+              target_endpoint: newApiCallTargetEndpoint,
+              method: newApiCallMethod,
+              body: JSON.parse(newApiCallRequestBody),
+              condition: newApiCallStatusCondition,
+            },
           ],
         },
       };
 
-      // GỬI PUT REQUEST TRƯỚC KHI CẬP NHẬT UI
+      // GỬI PUT REQUEST
       const putResponse = await fetch(
         `${API_ROOT}/endpoints/advanced/${currentEndpointId}`,
         {
@@ -241,44 +256,58 @@ const DashboardPage = () => {
       );
 
       if (!putResponse.ok) {
+        // Nếu API thất bại, loại bỏ API call tạm thời
+        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
+
         const errorData = await putResponse.json().catch(() => ({}));
         throw new Error(
           errorData.message || "Failed to save advanced configuration"
         );
       }
 
-      // CHỈ CẬP NHẬT UI SAU KHI API THÀNH CÔNG
+      // Lấy response từ server (chứa ID thực)
+      const updatedData = await putResponse.json();
+
+      // Tìm API call mới nhất từ response dựa trên thời gian tạo
+      const newCallFromServer = updatedData.advanced_config.nextCalls
+        .filter(
+          (call) =>
+            call.target_endpoint === newApiCallTargetEndpoint &&
+            call.method === newApiCallMethod &&
+            call.condition === newApiCallStatusCondition
+        )
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+      if (newCallFromServer) {
+        // Cập nhật ID tạm thời thành ID thực
+        setNextCalls((prev) =>
+          prev.map((call) =>
+            call._creationTime === creationTime
+              ? {
+                  ...call,
+                  id: newCallFromServer.id,
+                  _creationTime: undefined,
+                  created_at: newCallFromServer.created_at,
+                  updated_at: newCallFromServer.updated_at,
+                }
+              : call
+          )
+        );
+      } else {
+        // Nếu không tìm thấy, xóa API call tạm thời
+        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
+        throw new Error("Failed to get new API call ID from server");
+      }
+
       toast.success("API Call added successfully!");
       setIsNewApiCallDialogOpen(false);
 
       // Reset form
       setNewApiCallTargetEndpoint("");
       setNewApiCallRequestBody("{}");
-
-      // Tạo API Call mới CÓ id (chỉ dùng cho UI)
-      const newCallForUI = {
-        id: `new-${Date.now()}`,
-        target_endpoint: newApiCallTargetEndpoint,
-        method: newApiCallMethod,
-        body: JSON.parse(newApiCallRequestBody),
-        condition: newApiCallStatusCondition,
-      };
-
-      // CẬP NHẬT nextCalls SAU KHI API THÀNH CÔNG
-      setNextCalls((prev) => [...prev, newCallForUI]);
-
-      // GỌI fetchEndpointResponses ĐỂ ĐẢM BẢO DỮ LIỆU MỚI NHẤT
-      await fetchEndpointResponses(isStateful);
-
-      // Thêm toast thông báo cập nhật thành công
-      toast.success("API Call list updated successfully!");
     } catch (error) {
       console.error("Error creating new API call:", error);
       toast.error(error.message || "Failed to create API call");
-
-      // KHÔNG CẬP NHẬT UI NẾU API THẤT BẠI
-      // fetchEndpointResponses để đồng bộ lại với server
-      await fetchEndpointResponses(isStateful);
     }
   };
 
@@ -2157,6 +2186,32 @@ const DashboardPage = () => {
                   )}
                 </div>
               </div>
+              {/* State Mode Toggle - thay thế Select bằng toggle button */}
+              <div className="ml-4 flex-shrink-0">
+                <div
+                  className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
+                  onClick={handleStateModeChange}
+                >
+                  <div className="flex flex-row items-center w-[60px] h-[30px]">
+                    <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
+                      {isStateful ? "Stateful" : "Stateless"}
+                    </span>
+                  </div>
+                  <div className="relative w-[60px] h-[30px]">
+                    <div
+                      className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
+                        isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
+                      }`}
+                    >
+                      <div
+                        className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
+                          isStateful ? "left-[32px]" : "left-[3px]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2199,43 +2254,88 @@ const DashboardPage = () => {
 
           <div className="flex gap-6">
             {/* Cột trái - Response Configuration */}
-            <div className="w-1/3">
+            <div className="w-1/4">
+              {/* Header với nút Add và Search */}
+              <div className="flex flex-col bg-white rounded-lg ">
+                <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
+                  <div className="flex items-center gap-3.5">
+                    <button
+                      className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                      onClick={handleNewResponse}
+                      disabled={isStateful}
+                      title={
+                        isStateful
+                          ? "Cannot add responses in stateful mode"
+                          : "Add new response"
+                      }
+                    >
+                      <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                    </button>
+                    <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
+                      <div className="flex items-center gap-0.5 px-0.5">
+                        <div className="w-[14.65px] h-[14.65px]">
+                          <svg
+                            width="14.65"
+                            height="14.65"
+                            viewBox="0 0 14.65 14.65"
+                            fill="none"
+                          >
+                            <path
+                              d="M6.5 11.5C9.26142 11.5 11.5 9.26142 11.5 6.5C11.5 3.73858 9.26142 1.5 6.5 1.5C3.73858 1.5 1.5 3.73858 1.5 6.5C1.5 9.26142 3.73858 11.5 6.5 11.5Z"
+                              stroke="rgba(28, 28, 28, 0.2)"
+                              strokeWidth="1.5"
+                            />
+                            <path
+                              d="M10.5 10.5L13.5 13.5"
+                              stroke="rgba(28, 28, 28, 0.2)"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgba(28,28,28,0.2)] bg-transparent border-none focus:outline-none"
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Response Configuration Table */}
-              <div className="rounded-md border border-solid border-slate-300 bg-white">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-transparent rounded-[6px_6px_0px_0px] [border-top-style:none] [border-right-style:none] border-b [border-bottom-style:solid] [border-left-style:none] border-neutral-200">
-                      <TableHead className="w-[119.2px] h-10 px-1 py-0">
-                        <div className="inline-flex items-center justify-center gap-2.5 relative flex-[0_0_auto]">
-                          <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style)]">
-                            Status Code
-                          </div>
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-[270.55px] h-10 mr-[-96.75px]">
-                        <div className="flex w-[92.99px] h-10 items-center px-0 py-2 relative rounded-md">
-                          <div className="inline-flex justify-center mr-[-33.01px] items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-medium font-[number:var(--text-sm-medium-font-weight)] text-neutral-950 text-[length:var(--text-sm-medium-font-size)] tracking-[var(--text-sm-medium-letter-spacing)] leading-[var(--text-sm-medium-line-height)] whitespace-nowrap [font-style:var(--text-sm-medium-font-style]">
-                              Name Response
-                            </div>
-                          </div>
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {statusData.map((status, index) => (
-                      <TableRow
+              <div className="square-lg border border-[#EDEFF1] bg-white overflow-hidden">
+                <div className="overflow-y-auto max-h-[400px]">
+                  {statusData.map((status, index) => {
+                    // Xác định màu sắc dựa trên status code
+                    let statusColor = "#1C1C1C";
+                    const statusCode = status.code.toString();
+
+                    if (statusCode.startsWith("1")) {
+                      statusColor = "#ff6bfa";
+                    } else if (statusCode.startsWith("2")) {
+                      statusColor = "#328F4F";
+                    } else if (statusCode.startsWith("3")) {
+                      statusColor = "#3e70dd";
+                    } else if (statusCode.startsWith("4")) {
+                      statusColor = "#ed4245";
+                    } else if (statusCode.startsWith("5")) {
+                      statusColor = "#ef8843";
+                    }
+
+                    return (
+                      <div
                         key={status.id || status.code}
-                        className={`
-                          border-b [border-bottom-style:solid] border-neutral-200 ${
-                            index === statusData.length - 1 ? "border-b-0" : ""
-                          } ${draggedItem === index ? "opacity-50" : ""} ${
+                        className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
                           selectedResponse?.id === status.id
                             ? "bg-gray-100"
-                            : ""
+                            : "hover:bg-gray-50"
+                        } ${
+                          index === statusData.length - 1 ? "border-b-0" : ""
                         }`}
-                        draggable={!isStateful} // Chỉ cho phép drag khi không phải stateful
+                        draggable={!isStateful}
                         onDragStart={
                           !isStateful
                             ? (e) => handleDragStart(e, index)
@@ -2255,45 +2355,38 @@ const DashboardPage = () => {
                           if (response) handleResponseSelect(response);
                         }}
                       >
-                        <TableCell className="w-[119.2px] h-[49px] p-2">
-                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            {/* Hiển thị GripVertical chỉ khi không phải stateful */}
-                            {!isStateful && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                            )}
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                        <div className="flex items-center gap-2">
+                          {!isStateful && (
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                          )}
+                          <div className="flex items-center gap-1">
+                            <span
+                              className="text-[12px] font-medium"
+                              style={{ color: statusColor }}
+                            >
                               {status.code}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="w-[270.55px] h-[49px] p-2 mr-[-96.75px] relative">
-                          <div className="flex self-stretch w-full items-center gap-2.5 relative flex-[0_0_auto]">
-                            <div className="relative w-fit mt-[-1.00px] font-text-sm-regular font-[number:var(--text-sm-regular-font-weight)] text-neutral-950 text-[length:var(--text-sm-regular-font-size)] tracking-[var(--text-sm-regular-letter-spacing)] leading-[var(--text-sm-regular-line-height)] whitespace-nowrap [font-style:var(--text-sm-regular-font-style)]">
+                            </span>
+                            <span className="text-[12px] text-[#212121]">
                               {status.name}
-                            </div>
+                            </span>
                           </div>
-                        </TableCell>
-                        {/* Hiển thị cột Default chỉ khi không phải stateful */}
-                        {!isStateful && (
-                          <TableCell className="w-[80px] h-[49px] p-2">
-                            {status.isDefault && (
-                              <div className="flex items-center justify-center px-2.5 py-0.5 border border-[#7A787C] rounded-md">
-                                <span className="text-xs font-medium text-[#0A0A0A]">
-                                  Default
-                                </span>
-                              </div>
-                            )}
-                          </TableCell>
+                        </div>
+                        {!isStateful && status.isDefault && (
+                          <div className="flex items-center justify-center px-1.5 py-0.5 bg-[#DCFA79] border border-[#7A787C] rounded-[5.34536px]">
+                            <span className="text-[8px] font-bold uppercase text-black">
+                              Default
+                            </span>
+                          </div>
                         )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Cột phải - Navigation và Content */}
-            <div className="w-2/3">
+            <div className="w-3/4">
               {/* Navigation Tabs */}
               <Tabs defaultValue="Header&Body" className="w-full">
                 {/* TabsList — chỉnh lại UI để các tab nằm sát bên trái */}
@@ -2793,7 +2886,6 @@ const DashboardPage = () => {
                 )}
 
                 {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
-
                 {isStateful && (
                   <TabsContent value="dataDefault" className="mt-0">
                     <div className="mt-2">
@@ -2856,7 +2948,7 @@ const DashboardPage = () => {
                       open={isInitialValueDialogOpen}
                       onOpenChange={setIsInitialValueDialogOpen}
                     >
-                      <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+                      <DialogContent className="max-w-[512px] max-h-[80vh] overflow-y-auto p-8 rounded-2xl shadow-lg">
                         <DialogHeader className="flex justify-between items-start mb-4">
                           <DialogTitle className="text-xl font-bold text-slate-800">
                             Update Initial Value
@@ -2864,7 +2956,10 @@ const DashboardPage = () => {
                         </DialogHeader>
 
                         <div className="mb-6">
-                          <div className="relative" ref={initialValueEditorRef}>
+                          <div
+                            className="relative w-full"
+                            ref={initialValueEditorRef}
+                          >
                             <Editor
                               value={tempDataDefaultString}
                               onValueChange={(code) => {
@@ -2891,8 +2986,13 @@ const DashboardPage = () => {
                                 borderRadius: "0.375rem",
                                 backgroundColor: "#233554",
                                 color: "white",
+                                width: "100%",
+                                boxSizing: "border-box",
+                                wordBreak: "break-word",
+                                whiteSpace: "pre-wrap",
+                                overflowWrap: "break-word",
                               }}
-                              textareaClassName="focus:outline-none"
+                              textareaClassName="focus:outline-none w-full"
                             />
 
                             {/* JSON Editor controls */}
@@ -3067,6 +3167,7 @@ const DashboardPage = () => {
                     </div>
                   </TabsContent>
                 )}
+
                 {/* Dialog New API Call */}
                 <Dialog
                   open={isNewApiCallDialogOpen}
@@ -3080,7 +3181,7 @@ const DashboardPage = () => {
                     </DialogHeader>
 
                     <div className="space-y-6 mt-4">
-                      {/* Target Endpoint */}
+                      {/* Target Endpoint - Sửa lại để hiển thị danh sách target_endpoint duy nhất */}
                       <div>
                         <Label htmlFor="target-endpoint">Target Endpoint</Label>
                         <div className="relative mt-1">
@@ -3092,13 +3193,12 @@ const DashboardPage = () => {
                               <SelectValue placeholder="Select endpoint" />
                             </SelectTrigger>
                             <SelectContent>
-                              {/* LẤY DANH SÁCH TỪ nextCalls ĐÃ ĐƯỢC QUẢN LÝ TRONG DASHBOARD PAGE */}
-                              {nextCalls.map((call) => (
-                                <SelectItem
-                                  key={call.target_endpoint}
-                                  value={call.target_endpoint}
-                                >
-                                  {call.target_endpoint}
+                              {/* Hiển thị danh sách các target_endpoint duy nhất */}
+                              {Array.from(
+                                new Set(nextCalls.map((c) => c.target_endpoint))
+                              ).map((endpoint) => (
+                                <SelectItem key={endpoint} value={endpoint}>
+                                  {endpoint}
                                 </SelectItem>
                               ))}
                             </SelectContent>
