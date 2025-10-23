@@ -58,7 +58,7 @@ import dateIcon from "@/assets/date.svg";
 import statelessIcon from "@/assets/stateless.svg";
 import statefulIcon from "@/assets/stateful.svg";
 
-export default function DashboardPage() {
+export default function ProjectPage() {
   const navigate = useNavigate();
   const {projectId} = useParams();
 
@@ -210,10 +210,10 @@ export default function DashboardPage() {
 
   const fetchFolders = async () => {
     try {
-      console.log('DashboardPage: Fetching folders...');
+      console.log('ProjectPage: Fetching folders...');
       const response = await fetch(`${API_ROOT}/folders`);
       const data = await response.json();
-      console.log('DashboardPage: Folders fetched:', data);
+      console.log('ProjectPage: Folders fetched:', data);
       setFolders(data);
     } catch (error) {
       console.error('Error fetching folders:', error);

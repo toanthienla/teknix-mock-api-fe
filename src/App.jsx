@@ -3,10 +3,10 @@ import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
 import WelcomePage from "@/pages/WelcomePage.jsx";
 // import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import ProjectDetail from "./pages/ProjectDetail.jsx";
+import ProjectPage from "./pages/ProjectPage.jsx";
+import ProjectDetail from "./pages/FolderPage.jsx";
 import ProjectEndpoints from "./pages/FolderDetail.jsx";
-import EndpointDetail from "@/pages/EndpointDetail.jsx";
+import EndpointDetail from "@/pages/ResponsePage.jsx";
 import {ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,7 +25,7 @@ export default function App() {
         {/*<Route path="/auth" element={<AuthPage/>}/>*/}
 
         {/* Dashboard routes */}
-        <Route path="/dashboard" element={<DashboardPage/>}/>
+        <Route path="/dashboard" element={<ProjectPage/>}/>
 
         <Route path="/dashboard/:projectId" element={<ProjectDetail/>}/>
         <Route path="/dashboard/:projectId/folder/:folderId" element={<ProjectEndpoints/>}/>
