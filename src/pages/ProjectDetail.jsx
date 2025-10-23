@@ -43,6 +43,7 @@ import linkedinIcon from "@/assets/linkedin.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
+import searchIcon from "@/assets/search.svg";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -512,7 +513,7 @@ export default function Dashboard() {
 
         projectsArr.forEach((p) => {
           // fetch folders của từng project
-          fetch(`${API_ROOT}/folders?project_id=${p.id}`)
+          fetch(`${API_ROOT}/folders?project_id=${p.id}`, {credentials: "include"})
             .then(r => r.json())
             .then(fData => {
               const fArr = Array.isArray(fData) ? fData : fData.data || [];
@@ -528,7 +529,7 @@ export default function Dashboard() {
 
               // fetch endpoints cho từng folder
               fArr.forEach((f) => {
-                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`)
+                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`, {credentials: "include"})
                   .then(r2 => r2.json())
                   .then(eData => {
                     const eArr = Array.isArray(eData) ? eData : eData.data || [];
@@ -557,14 +558,14 @@ export default function Dashboard() {
       .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
   };
 
-  useEffect(() => {
-    if (projectId && endpoints.length) fetchLogs(projectId);
-  }, [projectId, endpoints]);
+  // useEffect(() => {
+  //   if (projectId && endpoints.length) fetchLogs(projectId);
+  // }, [projectId, endpoints]);
 
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
-      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`, { credentials: "include" });
+      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`, {credentials: "include"});
       if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
       const raw = await res.json();
 
@@ -586,7 +587,10 @@ export default function Dashboard() {
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
 
           try {
-            const r2 = await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`);
+            const r2 =
+              await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`, {
+                credentials: "include"
+              });
             if (!r2.ok) throw new Error('responses not ok');
             const payload = await r2.json();
             const responses = Array.isArray(payload)
@@ -654,7 +658,7 @@ export default function Dashboard() {
       // Delete all endpoints in the folder first
       await Promise.all(
         endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE", credentials: "include",})
         )
       );
 
@@ -923,7 +927,8 @@ export default function Dashboard() {
 
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(newEndpoint),
       });
 
@@ -987,6 +992,7 @@ export default function Dashboard() {
 
     fetch(`${API_ROOT}/endpoints/${editId}`, {
       method: "PUT",
+      credentials: "include",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(updated),
     })
@@ -1009,7 +1015,7 @@ export default function Dashboard() {
 
   // delete endpoint stateless
   const handleDeleteEndpoint = (id) => {
-    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE"})
+    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE", credentials: "include",})
       .then(() => {
         setEndpoints((prev) => prev.filter((e) => e.id !== id));
         toast.success("Delete endpoint successfully!");
@@ -1100,11 +1106,11 @@ export default function Dashboard() {
 
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE" , credentials: "include",})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE", credentials: "include",});
 
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
       setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
@@ -1182,7 +1188,7 @@ export default function Dashboard() {
     if (!selectedFolder?.id || !openSchemaDialog) return;
 
     // Fetch base_schema từ folder
-    fetch(`${API_ROOT}/folders/${selectedFolder.id}`)
+    fetch(`${API_ROOT}/folders/${selectedFolder.id}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch folder schema");
         return res.json();
@@ -1202,6 +1208,7 @@ export default function Dashboard() {
     try {
       const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
         method: "PUT",
+        credentials: "include",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({base_schema: newSchema}),
       });
@@ -1256,7 +1263,6 @@ export default function Dashboard() {
                 ]
               : []
           }
-          onSearch={setSearchTerm}
           showNewResponseButton={false}
           username={currentUsername}
         />
@@ -1275,7 +1281,7 @@ export default function Dashboard() {
                 }`}
               >
                 <div className="flex items-center">
-                  <img src={folderIcon} alt="folder" className="w-4 h-4 mr-2" />
+                  <img src={folderIcon} alt="folder" className="w-4 h-4 mr-2"/>
                   <span className="text-md font-semibold">Folders</span>
                 </div>
               </button>
@@ -1291,7 +1297,7 @@ export default function Dashboard() {
                 }`}
               >
                 <div className="flex items-center">
-                  <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2" />
+                  <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2"/>
                   <span className="text-md font-semibold">Logs</span>
                 </div>
               </button>
@@ -1370,168 +1376,192 @@ export default function Dashboard() {
             ) : activeTab === "logs" ? (
               <>
                 {/* Logs */}
-                <div className="w-full overflow-x-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-2">
-                      {/* Method Filter */}
-                      <Select
-                        value={methodFilter}
-                        onValueChange={setMethodFilter}
-                      >
-                        <SelectTrigger className="w-[140px] bg-white">
-                          <SelectValue placeholder="All Methods"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All Methods">All Methods</SelectItem>
-                          <SelectItem value="GET">GET</SelectItem>
-                          <SelectItem value="POST">POST</SelectItem>
-                          <SelectItem value="PUT">PUT</SelectItem>
-                          <SelectItem value="DELETE">DELETE</SelectItem>
-                        </SelectContent>
-                      </Select>
+                <div className="flex flex-col items-center justify-center w-full">
+                  <div className="w-full max-w-7xl overflow-x-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-2">
+                        {/* Method Filter */}
+                        <Select
+                          value={methodFilter}
+                          onValueChange={setMethodFilter}
+                        >
+                          <SelectTrigger className="w-[140px] bg-white">
+                            <SelectValue placeholder="All Methods"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="All Methods">All Methods</SelectItem>
+                            <SelectItem value="GET">GET</SelectItem>
+                            <SelectItem value="POST">POST</SelectItem>
+                            <SelectItem value="PUT">PUT</SelectItem>
+                            <SelectItem value="DELETE">DELETE</SelectItem>
+                          </SelectContent>
+                        </Select>
 
-                      {/* Status Filter */}
-                      <Select
-                        value={statusFilter}
-                        onValueChange={setStatusFilter}
-                      >
-                        <SelectTrigger className="w-[140px] bg-white">
-                          <SelectValue placeholder="All Status"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All Status">All Status</SelectItem>
-                          <SelectItem value="200">200</SelectItem>
-                          <SelectItem value="400">400</SelectItem>
-                          <SelectItem value="404">404</SelectItem>
-                          <SelectItem value="500">500</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        {/* Status Filter */}
+                        <Select
+                          value={statusFilter}
+                          onValueChange={setStatusFilter}
+                        >
+                          <SelectTrigger className="w-[140px] bg-white">
+                            <SelectValue placeholder="All Status"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="All Status">All Status</SelectItem>
+                            <SelectItem value="200">200</SelectItem>
+                            <SelectItem value="400">400</SelectItem>
+                            <SelectItem value="404">404</SelectItem>
+                            <SelectItem value="500">500</SelectItem>
+                          </SelectContent>
+                        </Select>
 
-                      {/* Time Filter */}
-                      <Select
-                        value={timeFilter}
-                        onValueChange={setTimeFilter}
-                      >
-                        <SelectTrigger className="w-[160px] bg-white">
-                          <SelectValue placeholder="All time"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All time">All time</SelectItem>
-                          <SelectItem value="Last 24 hours">
-                            Last 24 hours
-                          </SelectItem>
-                          <SelectItem value="Last 7 days">
-                            Last 7 days
-                          </SelectItem>
-                          <SelectItem value="Last 30 days">
-                            Last 30 days
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant="outline">
-                        <img
-                          src={exportIcon}
-                          alt="Export Icon"
-                          className="w-4 h-4 object-contain"
-                        />
-                        Export
-                      </Button>
-                      <Button variant="outline" onClick={() => fetchLogs(projectId)}>
-                        <img
-                          src={refreshIcon}
-                          alt="Refresh Icon"
-                          className="w-4 h-4 object-contain"
-                        />
-                        Refresh
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="col-span-3">Timestamp</TableHead>
-                        <TableHead className="col-span-1">Method</TableHead>
-                        <TableHead className="col-span-2">Path</TableHead>
-                        <TableHead className="col-span-2">Latency</TableHead>
-                        <TableHead className="col-span-1">Status</TableHead>
-                        <TableHead className="col-span-3">
-                          Matched Response
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                      {logs.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center text-slate-500 py-4"
-                          >
-                            No logs available.
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredLogs.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center text-slate-500 py-4"
-                          >
-                            No logs found.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
-                      )}
-                    </TableBody>
-                  </Table>
-
-                  <div className="flex items-center justify-end mt-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">Rows per page</span>
-                      <Select
-                        value={rowsPerPage.toString()}
-                        onValueChange={(val) => {
-                          setRowsPerPage(Number(val));
-                          setPage(1); // reset về trang 1 khi đổi size
-                        }}
-                      >
-                        <SelectTrigger className="w-[80px]">
-                          <SelectValue/>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[5, 10, 20, 50].map((size) => (
-                            <SelectItem key={size} value={size.toString()}>
-                              {size}
+                        {/* Time Filter */}
+                        <Select
+                          value={timeFilter}
+                          onValueChange={setTimeFilter}
+                        >
+                          <SelectTrigger className="w-[160px] bg-white">
+                            <SelectValue placeholder="All time"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="All time">All time</SelectItem>
+                            <SelectItem value="Last 24 hours">
+                              Last 24 hours
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            <SelectItem value="Last 7 days">
+                              Last 7 days
+                            </SelectItem>
+                            <SelectItem value="Last 30 days">
+                              Last 30 days
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="outline">
+                          <img
+                            src={exportIcon}
+                            alt="Export Icon"
+                            className="w-4 h-4 object-contain"
+                          />
+                          Export
+                        </Button>
+                        <Button variant="outline" onClick={() => fetchLogs(projectId)}>
+                          <img
+                            src={refreshIcon}
+                            alt="Refresh Icon"
+                            className="w-4 h-4 object-contain"
+                          />
+                          Refresh
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage((p) => p - 1)}
-                      >
-                        ‹
-                      </Button>
-                      <span className="text-sm">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-1/4 text-black">Matched Response</TableHead>
+                          <TableHead className="w-1/12 text-black">Method</TableHead>
+                          <TableHead className="w-1/4 text-black">Path</TableHead>
+                          <TableHead className="w-1/12 text-black">Status</TableHead>
+                          <TableHead className="w-1/12 text-black">Latency</TableHead>
+                          <TableHead className="w-1/4 text-black">Timestamp</TableHead>
+                        </TableRow>
+                        <TableRow className="border-b border-slate-200">
+                          <TableHead colSpan={5}>
+                            <div className="flex items-center gap-2 w-1/4">
+                              <div className="relative w-full">
+                                <img
+                                  src={searchIcon}
+                                  alt="search"
+                                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
+                                />
+                                <Input
+                                  type="text"
+                                  placeholder="Search..."
+                                  className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
+                                  value={searchTerm}
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </TableHead>
+                        </TableRow>
+                        <TableRow className="border-none">
+                          <TableHead colSpan={5} className="py-1">
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+
+                      <TableBody>
+                        {logs.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={6}
+                              className="text-center text-slate-500 py-4"
+                            >
+                              No logs available.
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredLogs.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={6}
+                              className="text-center text-slate-500 py-4"
+                            >
+                              No logs found.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
+                        )}
+                      </TableBody>
+                    </Table>
+
+                    <div className="flex items-center justify-end mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">Rows per page</span>
+                        <Select
+                          value={rowsPerPage.toString()}
+                          onValueChange={(val) => {
+                            setRowsPerPage(Number(val));
+                            setPage(1); // reset về trang 1 khi đổi size
+                          }}
+                        >
+                          <SelectTrigger className="w-[80px]">
+                            <SelectValue/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[5, 10, 20, 50].map((size) => (
+                              <SelectItem key={size} value={size.toString()}>
+                                {size}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page === 1}
+                          onClick={() => setPage((p) => p - 1)}
+                        >
+                          ‹
+                        </Button>
+                        <span className="text-sm">
                           Page {page} of {totalPages || 1}
                         </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages || totalPages === 0}
-                        onClick={() => setPage((p) => p + 1)}
-                      >
-                        ›
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page === totalPages || totalPages === 0}
+                          onClick={() => setPage((p) => p + 1)}
+                        >
+                          ›
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

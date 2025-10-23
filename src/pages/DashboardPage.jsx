@@ -495,7 +495,6 @@ export default function DashboardPage() {
       });
   };
 
-
   const openEditProjectDialog = (p) => {
     setEditId(p.id);
     setEditTitle(p.name);

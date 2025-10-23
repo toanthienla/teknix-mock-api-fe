@@ -13,15 +13,9 @@ export default function LogCard({log}) {
 
   return (
     <TableRow>
-      <TableCell>
-        {new Date(created_at).toLocaleString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })}
+
+      <TableCell className="font-mono text-sm">
+        {log.endpointResponseName || "No response"}
       </TableCell>
 
       <TableCell>
@@ -43,14 +37,22 @@ export default function LogCard({log}) {
       </TableCell>
 
       <TableCell className="font-mono text-sm">{request_path}</TableCell>
-      <TableCell>{latency_ms || "-"}</TableCell>
 
       <TableCell className={response_status_code || "text-gray-600"}>
         {response_status_code}
       </TableCell>
 
-      <TableCell className="font-mono text-sm">
-        {log.endpointResponseName || "No response"}
+      <TableCell className="text-center">{latency_ms + " ms" || "-"}</TableCell>
+
+      <TableCell>
+        {new Date(created_at).toLocaleString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })}
       </TableCell>
     </TableRow>
   );
