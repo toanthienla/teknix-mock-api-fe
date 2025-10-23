@@ -2038,7 +2038,8 @@ const DashboardPage = () => {
                         },
                         {
                           label: currentFolder.name,
-                          href: `/dashboard/${currentProject.id}/folder/${currentFolder.id}`,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
                         },
                         {
                           label:
@@ -2061,7 +2062,8 @@ const DashboardPage = () => {
                         },
                         {
                           label: currentFolder.name,
-                          href: `/dashboard/${currentProject.id}?folderId=${currentFolder.id}`,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
                         },
                       ]
                   : [
@@ -3971,22 +3973,18 @@ const DashboardPage = () => {
         </Dialog>
 
         {/* footer */}
-        <div className="absolute left-8 bottom-1 text-xs font-semibold text-gray-700">
-          © Teknix Corp. All rights reserved.
-        </div>
-
-        <div className="absolute right-6 bottom-1 flex items-center gap-3 text-xs text-gray-700">
-          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-          <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
-          <a className="hover:underline font-semibold" href="">
-            About
-          </a>
-          <span>·</span>
-          <a className="hover:underline font-semibold" href="">
-            Support
-          </a>
-        </div>
+        <footer
+          className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+          <span>© Teknix Corp. All rights reserved.</span>
+          <div className="flex items-center gap-3 text-gray-700">
+            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+            <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
+            <a className="hover:underline font-semibold" href="">About</a>
+            <span>·</span>
+            <a className="hover:underline font-semibold" href="">Support</a>
+          </div>
+        </footer>
       </div>
     </div>
   );

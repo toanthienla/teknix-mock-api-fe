@@ -265,10 +265,10 @@ export default function Topbar({
                           href={item.href}
                           onClick={() => {
                             if (item.WORKSPACE_ID) {
-                              localStorage.setItem(
-                                "currentWorkspace",
-                                item.WORKSPACE_ID
-                              );
+                              localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                            }
+                            if (item.folder_id) {
+                              localStorage.setItem("currentFolder", item.folder_id);
                             }
                           }}
                           className="font-bold text-slate-400"
