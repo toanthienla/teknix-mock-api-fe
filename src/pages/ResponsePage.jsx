@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { API_ROOT } from "../utils/constants";
-import Sidebar from "../components/Sidebar";
 import {
   Table,
   TableBody,
@@ -100,9 +99,7 @@ const DashboardPage = () => {
   const [openEndpointsMap, setOpenEndpointsMap] = useState(
     () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
   );
-  const [openFoldersMap, setOpenFoldersMap] = useState(
-    () => JSON.parse(localStorage.getItem("openFoldersMap")) || {}
-  );
+
   const [showStatefulConfirmDialog, setShowStatefulConfirmDialog] =
     useState(false);
   const [showStatelessConfirmDialog, setShowStatelessConfirmDialog] =
@@ -125,16 +122,7 @@ const DashboardPage = () => {
   const initialValuePopoverRef = useRef(null);
   const [openNewWs, setOpenNewWs] = useState(false);
   const [newWsName, setNewWsName] = useState("");
-  const [targetProjectId, setTargetProjectId] = useState(null);
 
-  const [openNewFolder, setOpenNewFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  const [newFolderDesc, setNewFolderDesc] = useState("");
-  const [newFolderMode, setNewFolderMode] = useState("");
-  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [editingFolderId, setEditingFolderId] = useState(null);
-  const [deleteFolderId, setDeleteFolderId] = useState(null);
-  const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
   const [openSchemaDialog, setOpenSchemaDialog] = useState(false);
   const [folderSchema, setFolderSchema] = useState(null);
 
@@ -1192,10 +1180,6 @@ const DashboardPage = () => {
     localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
   }, [openEndpointsMap]);
 
-  useEffect(() => {
-    localStorage.setItem("openFoldersMap", JSON.stringify(openFoldersMap));
-  }, [openFoldersMap]);
-
   // Keep sidebar expanded when on endpoint detail
   useEffect(() => {
     if (!projectId) return;
@@ -1300,181 +1284,6 @@ const DashboardPage = () => {
       toast.success("Delete workspace successfully!");
     } catch {
       toast.error("Failed to delete workspace!");
-    }
-  };
-
-  const validateFolderName = (name) => {
-    const trimmed = name.trim();
-
-    if (!trimmed) {
-      return "Folder name cannot be empty";
-    }
-
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed)) {
-      return "Must start with a letter, no special chars, single spaces allowed";
-    }
-
-    if (trimmed.length > 20) {
-      return "Folder name max 20 chars";
-    }
-
-    const projectFolders = folders.filter(
-      (f) =>
-        String(f.project_id) === String(projectId) && f.id !== editingFolderId
-    );
-    if (
-      projectFolders.some((f) => f.name.toLowerCase() === trimmed.toLowerCase())
-    ) {
-      return "Folder name already exists in this project";
-    }
-
-    return "";
-  };
-
-  const handleCreateFolder = async () => {
-    // Clear any existing toasts first
-    toast.dismiss();
-
-    // Check if no changes when editing
-    if (editingFolderId) {
-      const originalFolder = folders.find((f) => f.id === editingFolderId);
-      if (
-        originalFolder &&
-        newFolderName.trim() === originalFolder.name &&
-        newFolderDesc.trim() === (originalFolder.description || "")
-      ) {
-        // No changes, just close dialog
-        setOpenNewFolder(false);
-        setNewFolderName("");
-        setNewFolderDesc("");
-        setEditingFolderId(null);
-        return;
-      }
-    }
-
-    const validationError = validateFolderName(newFolderName);
-    if (validationError) {
-      toast.warning(validationError);
-      return;
-    }
-
-    if (isCreatingFolder) {
-      return; // Prevent double submission
-    }
-
-    setIsCreatingFolder(true);
-
-    try {
-      const folderData = {
-        name: newFolderName.trim(),
-        description: newFolderDesc.trim(),
-        project_id: targetProjectId || projectId,
-        is_public: newFolderMode === "public",
-        created_at: editingFolderId ? undefined : new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      let response;
-      if (editingFolderId) {
-        // Update existing folder
-        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingFolderId, ...folderData }),
-        });
-      } else {
-        // Create new folder
-        response = await fetch(`${API_ROOT}/folders`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(folderData),
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to save folder");
-      }
-
-      const savedFolder = await response.json();
-
-      if (editingFolderId) {
-        setFolders((prev) =>
-          prev.map((f) => (f.id === editingFolderId ? savedFolder : f))
-        );
-        toast.success(`Folder "${savedFolder.name}" updated successfully!`);
-      } else {
-        setFolders((prev) => [...prev, savedFolder]);
-        toast.success(`Folder "${savedFolder.name}" created successfully!`);
-        // Không auto navigate, để user ở project page
-      }
-
-      setNewFolderName("");
-      setNewFolderDesc("");
-      setEditingFolderId(null);
-      setTargetProjectId(null);
-      setOpenNewFolder(false);
-    } catch (error) {
-      console.error("Error saving folder:", error);
-      toast.error("Failed to save folder. Please try again.");
-    } finally {
-      setIsCreatingFolder(false);
-    }
-  };
-
-  const hasChanges = () => {
-    if (!editingFolderId) return true;
-    const originalFolder = folders.find((f) => f.id === editingFolderId);
-    if (!originalFolder) return true;
-    return (
-      newFolderName.trim() !== originalFolder.name ||
-      newFolderDesc.trim() !== (originalFolder.description || "")
-    );
-  };
-
-  const confirmDeleteFolder = async () => {
-    if (!deleteFolderId) return;
-
-    try {
-      const endpointsRes = await fetch(`${API_ROOT}/endpoints`, {
-        credentials: "include",
-      });
-      const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(
-        (e) => String(e.folder_id) === String(deleteFolderId)
-      );
-
-      await Promise.all(
-        endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {
-            method: "DELETE",
-            credentials: "include",
-          })
-        )
-      );
-
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      setFolders((prev) => prev.filter((f) => f.id !== deleteFolderId));
-
-      toast.dismiss();
-      toast.success(
-        `Folder and its ${endpointsToDelete.length} endpoints deleted successfully`
-      );
-
-      if (currentFolder.id === deleteFolderId) {
-        navigate(`/projects/${projectId}`);
-      }
-
-      setOpenDeleteFolder(false);
-      setDeleteFolderId(null);
-    } catch (error) {
-      console.error("Delete folder error:", error);
-      toast.error("Failed to delete folder");
     }
   };
 
@@ -3486,6 +3295,22 @@ const DashboardPage = () => {
             </Dialog>
           </div>
         </div>
+        {/* footer */}
+        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+          <span>© Teknix Corp. All rights reserved.</span>
+          <div className="flex items-center gap-3 text-gray-700">
+            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+            <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+            <a className="hover:underline font-semibold" href="">
+              About
+            </a>
+            <span>·</span>
+            <a className="hover:underline font-semibold" href="">
+              Support
+            </a>
+          </div>
+        </footer>
       </div>
 
       {/* Dialog xác nhận chuyển sang stateful */}
@@ -3853,160 +3678,7 @@ const DashboardPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* New Folder Dialog */}
-      <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              {editingFolderId ? "Edit Folder" : "New Folder"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label
-                htmlFor="folder-name"
-                className="text-sm font-medium text-gray-700"
-              >
-                Name
-              </Label>
-              <Input
-                id="folder-name"
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    newFolderName.trim() &&
-                    !isCreatingFolder
-                  ) {
-                    e.preventDefault();
-                    if (hasChanges()) {
-                      handleCreateFolder();
-                    } else {
-                      setOpenNewFolder(false);
-                      setNewFolderName("");
-                      setNewFolderDesc("");
-                      setEditingFolderId(null);
-                    }
-                  }
-                  if (e.key === "Escape") {
-                    e.preventDefault();
-                    setOpenNewFolder(false);
-                    setNewFolderName("");
-                    setNewFolderDesc("");
-                    setEditingFolderId(null);
-                  }
-                }}
-              />
-            </div>
-
-            {/* Folder Mode */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Folder Mode
-              </Label>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="folderMode"
-                    value="public"
-                    checked={newFolderMode === "public"}
-                    onChange={() => setNewFolderMode("public")}
-                    className="accent-blue-600"
-                  />
-                  <span>Public</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="folderMode"
-                    value="private"
-                    checked={newFolderMode === "private"}
-                    onChange={() => setNewFolderMode("private")}
-                    className="accent-blue-600"
-                  />
-                  <span>Private</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="pt-4 flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setOpenNewFolder(false);
-                setNewFolderName("");
-                setNewFolderDesc("");
-                setEditingFolderId(null);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateFolder}
-              disabled={
-                !newFolderName.trim() || !hasChanges() || isCreatingFolder
-              }
-              className="px-4 py-2  bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
-            >
-              {isCreatingFolder
-                ? editingFolderId
-                  ? "Updating..."
-                  : "Creating..."
-                : editingFolderId
-                ? "Update"
-                : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Folder Dialog */}
-      <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              Delete Folder
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="py-2">
-            <p className="text-sm text-gray-600">
-              Are you sure you want to delete this folder and all its endpoints?
-              This action cannot be undone.
-            </p>
-          </div>
-
-          <DialogFooter className="pt-4 flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setOpenDeleteFolder(false);
-                setDeleteFolderId(null);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={confirmDeleteFolder}
-              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium"
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
-
 export default DashboardPage;
