@@ -1390,23 +1390,6 @@ const DashboardPage = () => {
     }
   };
 
-  const handleAddFolder = (targetProjectId = null) => {
-    setTargetProjectId(targetProjectId || projectId);
-    setOpenNewFolder(true);
-  };
-
-  const handleEditFolder = (folder) => {
-    setNewFolderName(folder.name);
-    setNewFolderDesc(folder.description || "");
-    setEditingFolderId(folder.id);
-    setOpenNewFolder(true);
-  };
-
-  const handleDeleteFolder = async (folderIdParam) => {
-    setDeleteFolderId(folderIdParam);
-    setOpenDeleteFolder(true);
-  };
-
   const hasChanges = () => {
     if (!editingFolderId) return true;
     const originalFolder = folders.find((f) => f.id === editingFolderId);

@@ -918,11 +918,6 @@ export default function Dashboard() {
     try {
       const newEndpoint = {
         name: newEName.trim(),
-        path: newEPath.trim(),
-        method: newEMethod,
-        folder_id: Number(newEFolderId),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
       const res = await fetch(`${API_ROOT}/endpoints`, {
@@ -982,12 +977,7 @@ export default function Dashboard() {
   const handleUpdateEndpoint = () => {
     if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
     const updated = {
-      id: editId,
       name: editEName,
-      path: editEPath,
-      method: editEMethod,
-      folder_id: Number(editEFolderId),
-      updated_at: new Date().toISOString(),
     };
 
     fetch(`${API_ROOT}/endpoints/${editId}`, {
