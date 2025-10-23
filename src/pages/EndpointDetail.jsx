@@ -432,6 +432,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
       method: "PUT",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
@@ -467,6 +468,7 @@ const DashboardPage = () => {
 
     return fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
@@ -628,6 +630,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
@@ -699,7 +702,7 @@ const DashboardPage = () => {
     if (!currentFolder?.id || !openSchemaDialog) return;
 
     // Fetch base_schema từ folder
-    fetch(`${API_ROOT}/folders/${currentFolder.id}`)
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`, { credentials: "include"})
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch folder schema");
         return res.json();
@@ -719,6 +722,7 @@ const DashboardPage = () => {
     try {
       const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ base_schema: newSchema }),
       });
@@ -758,6 +762,7 @@ const DashboardPage = () => {
     // Call new API to convert to stateless
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
@@ -914,7 +919,7 @@ const DashboardPage = () => {
   const fetchEndpointResponses = (isStatefulMode) => {
     const endpointIdStr = String(currentEndpointId);
 
-    return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`)
+    return fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         // Processing for stateful endpoint
@@ -1036,7 +1041,7 @@ const DashboardPage = () => {
     const fullPath = getFullPath(path);
 
     return fetch(
-      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`
+      `${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}` , { credentials: "include"}
     )
       .then((res) => {
         if (!res.ok) {
@@ -1416,7 +1421,7 @@ const DashboardPage = () => {
     if (!deleteFolderId) return;
 
     try {
-      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`, { credentials: "include" });
       const allEndpoints = await endpointsRes.json();
       const endpointsToDelete = allEndpoints.filter(
         (e) => String(e.folder_id) === String(deleteFolderId)
@@ -1424,12 +1429,13 @@ const DashboardPage = () => {
 
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE", credentials: "include" })
         )
       );
 
       await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       setFolders((prev) => prev.filter((f) => f.id !== deleteFolderId));
@@ -1467,6 +1473,7 @@ const DashboardPage = () => {
 
     fetch(`${API_ROOT}/endpoint_responses/${selectedResponse.id}`, {
       method: "DELETE",
+      credentials: "include",
     })
       .then((res) => {
         if (!res.ok) {
@@ -1498,6 +1505,7 @@ const DashboardPage = () => {
   const updatePriorities = (priorityUpdates) => {
     fetch(`${API_ROOT}/endpoint_responses/priority`, {
       method: "PUT",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -1552,6 +1560,7 @@ const DashboardPage = () => {
     // Gọi API đúng endpoint theo yêu cầu
     fetch(`${API_ROOT}/endpoint_responses/${responseId}/set_default`, {
       method: "PUT",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -1655,7 +1664,7 @@ const DashboardPage = () => {
       ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
       : `${API_ROOT}/endpoint_responses/${response.id}`;
 
-    fetch(url)
+    fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (isStateful) {
@@ -1769,6 +1778,7 @@ const DashboardPage = () => {
 
     fetch(url, {
       method,
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
@@ -1930,6 +1940,7 @@ const DashboardPage = () => {
 
       fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
