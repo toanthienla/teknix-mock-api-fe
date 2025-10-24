@@ -268,7 +268,10 @@ export default function Topbar({
                               localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
                             }
                             if (item.folder_id) {
-                              localStorage.setItem("currentFolder", item.folder_id);
+                              let savedFolders;
+                              savedFolders = [];
+                              savedFolders.push(String(item.folder_id));
+                              localStorage.setItem("openFolders", JSON.stringify(savedFolders));
                             }
                           }}
                           className="font-bold text-slate-400"

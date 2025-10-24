@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import editIcon from "@/assets/Edit Icon.svg";
@@ -21,6 +21,56 @@ export default function FolderCard({
                                      onOpenEndpoint,
                                    }) {
   const [expanded, setExpanded] = useState(false);
+
+ // Khi load, kiểm tra xem folder này có trong danh sách lưu hay không
+  useEffect(() => {
+    let savedFolders;
+    try {
+      savedFolders = JSON.parse(localStorage.getItem("openFolders") || "[]");
+    } catch (err) {
+      console.error(err);
+      savedFolders = [];
+    }
+
+    if (!Array.isArray(savedFolders)) {
+      savedFolders = [];
+    }
+
+    if (savedFolders.includes(String(folder.id))) {
+      setExpanded(true);
+    }
+  }, [folder.id]);
+
+  const handleToggleExpand = () => {
+    const newState = !expanded;
+    setExpanded(newState);
+
+    let savedFolders;
+    try {
+      savedFolders = JSON.parse(localStorage.getItem("openFolders") || "[]");
+    } catch (err) {
+      console.error(err);
+      savedFolders = [];
+    }
+
+    // Đảm bảo savedFolders luôn là mảng
+    if (!Array.isArray(savedFolders)) {
+      savedFolders = [];
+    }
+
+    if (newState) {
+      // Nếu mở folder → thêm ID nếu chưa có
+      if (!savedFolders.includes(String(folder.id))) {
+        savedFolders.push(String(folder.id));
+        localStorage.setItem("openFolders", JSON.stringify(savedFolders));
+      }
+    } else {
+      // Nếu đóng folder → xóa ID khỏi danh sách
+      const updated = savedFolders.filter((id) => id !== String(folder.id));
+      localStorage.setItem("openFolders", JSON.stringify(updated));
+    }
+  };
+
   const folderEndpoints = endpoints.filter(
     (e) => String(e.folder_id) === String(folder.id)
   );
@@ -32,7 +82,7 @@ export default function FolderCard({
         className={`flex items-center justify-between px-3 py-2 mx-6 my-2 rounded-t-2xl cursor-pointer ${
           expanded ? 'border-b border-gray-200 bg-gray-50' : ''
         }`}
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleToggleExpand}
       >
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-800">{folder.name}</h2>
