@@ -1,7 +1,7 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 
 import logoIcon from "@/assets/logo.svg";
-import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
+import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import editIcon from "@/assets/Edit Icon.svg";
 import deleteIcon from "@/assets/Trash Icon.svg";
-import addIcon from "@/assets/Add.svg";
 import logoutIcon from "@/assets/logout.svg";
 import {
   Breadcrumb,
@@ -27,93 +26,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {toast} from "react-toastify";
-import {useNavigate} from "react-router-dom";
-import {logout} from "@/services/api.js";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { logout } from "@/services/api.js";
 import avatar from "@/assets/user-avatar.svg";
-import {Button} from "@/components/ui/button.jsx";
+import { Button } from "@/components/ui/button.jsx";
 import NotificationsSheet from "../components/Notifications.jsx";
 
-const StateModeToggle = ({isStateful, onToggle}) => {
-  return (
-    <div
-      className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
-      onClick={onToggle}
-    >
-      <div className="flex flex-row items-center w-[60px] h-[30px]">
-        <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
-          {isStateful ? "Stateful" : "Stateless"}
-        </span>
-      </div>
-      <div className="relative w-[60px] h-[30px]">
-        <div
-          className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-            isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-          }`}
-        >
-          <div
-            className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-              isStateful ? "left-[32px]" : "left-[3px]"
-            }`}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const StateModeDropdown = ({isStateful, onStateModeChange}) => {
-  return (
-    <Select
-      value={isStateful ? "stateful" : "stateless"}
-      onValueChange={(value) => {
-        if (
-          (value === "stateful" && !isStateful) ||
-          (value === "stateless" && isStateful)
-        ) {
-          onStateModeChange();
-        }
-      }}
-    >
-      <SelectTrigger className="w-[140px] h-10 border-[#CBD5E1]">
-        <SelectValue placeholder="Mode"/>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem
-          value="stateful"
-          disabled={isStateful}
-          className={isStateful ? "text-gray-400" : ""}
-        >
-          Stateful
-        </SelectItem>
-        <SelectItem
-          value="stateless"
-          disabled={!isStateful}
-          className={!isStateful ? "text-gray-400" : ""}
-        >
-          Stateless
-        </SelectItem>
-      </SelectContent>
-    </Select>
-  );
-};
-
 export default function Topbar({
-                                 workspaces = [],
-                                 current,
-                                 setCurrent,
-                                 onWorkspaceChange,
-                                 onEditWorkspace,
-                                 onDeleteWorkspace,
-                                 setOpenNewWs,
-                                 breadcrumb = [],
-                                 onNewResponse,
-                                 showNewResponseButton,
-                                 showStateModeToggle,
-                                 isStateful,
-                                 onStateModeChange,
-                                 username,
-                               }) {
+  workspaces = [],
+  current,
+  setCurrent,
+  onWorkspaceChange,
+  onEditWorkspace,
+  onDeleteWorkspace,
+  setOpenNewWs,
+  breadcrumb = [],
+  username,
+}) {
   const navigate = useNavigate();
   const userName = username;
 
@@ -181,18 +111,19 @@ export default function Topbar({
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
       {/* Logo + Workspace Selector */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center cursor-pointer select-none"
-             onClick={() => window.location.href = '/dashboard'}>
-          <img src={logoIcon} className="w-10 h-10" alt="Logo"/>
+        <div
+          className="flex items-center cursor-pointer select-none"
+          onClick={() => (window.location.href = "/dashboard")}
+        >
+          <img src={logoIcon} className="w-10 h-10" alt="Logo" />
         </div>
 
         {/* Workspace Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
+            <button className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
               <span>{currentWorkspace?.name || "Select Workspace"}</span>
-              <ChevronDown className="w-4 h-4 text-slate-500"/>
+              <ChevronDown className="w-4 h-4 text-slate-500" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
@@ -214,16 +145,22 @@ export default function Topbar({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-1 hover:bg-slate-100 rounded">
-                      <MoreHorizontal className="w-4 h-4 text-slate-500"/>
+                      <MoreHorizontal className="w-4 h-4 text-slate-500" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-44">
                     <DropdownMenuItem onSelect={() => onEditWorkspace?.(ws)}>
-                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/>
+                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => onDeleteWorkspace?.(ws.id)}>
-                      <img src={deleteIcon} className="w-4 h-4 mr-2" alt="delete"/>
+                    <DropdownMenuItem
+                      onSelect={() => onDeleteWorkspace?.(ws.id)}
+                    >
+                      <img
+                        src={deleteIcon}
+                        className="w-4 h-4 mr-2"
+                        alt="delete"
+                      />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -234,7 +171,7 @@ export default function Topbar({
               className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
               onClick={() => setOpenNewWs?.(true)}
             >
-              <Plus className="w-4 h-4"/>
+              <Plus className="w-4 h-4" />
               <span>New workspace</span>
             </div>
           </DropdownMenuContent>
@@ -281,7 +218,7 @@ export default function Topbar({
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
-                      <BreadcrumbSeparator className="font-medium text-slate-400"/>
+                      <BreadcrumbSeparator className="font-medium text-slate-400" />
                     )}
                   </React.Fragment>
                 );
@@ -292,33 +229,7 @@ export default function Topbar({
       )}
 
       {/* Search + Buttons */}
-      <div className="flex items-center gap-4 ml-auto relative">
-        {/* State Mode Toggle */}
-        {showStateModeToggle && (
-          <div className="flex-1 flex justify-end mr-4">
-            <StateModeDropdown
-              isStateful={isStateful}
-              onStateModeChange={onStateModeChange}
-            />
-          </div>
-        )}
-
-        {/* New Response - chỉ hiển thị khi không phải stateful */}
-        {showNewResponseButton && (
-          <Button
-            onClick={onNewResponse}
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 px-4 h-10 rounded-md"
-          >
-            <img
-              src={addIcon}
-              alt="Add icon"
-              className="w-5 h-5 object-contain brightness-0"
-            />
-            New Response
-          </Button>
-        )}
-
-      </div>
+      <div className="flex items-center gap-4 ml-auto relative"></div>
 
       {/* User + Notification + Logout */}
       <div className="flex items-center gap-4">
