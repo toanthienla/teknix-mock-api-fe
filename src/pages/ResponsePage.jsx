@@ -2302,18 +2302,17 @@ const DashboardPage = () => {
                                   />
                                 </Button>
                               )}
-                              {!isStateful && (
-                                <div className="flex justify-end mb-0">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                    onClick={handleSaveResponse}
-                                  >
-                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                  </Button>
-                                </div>
-                              )}
+
+                              <div className="flex justify-end mb-0">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveResponse}
+                                >
+                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                           {/* Form */}
@@ -2758,59 +2757,55 @@ const DashboardPage = () => {
                         <TabsContent value="proxy" className="mt-0">
                           {selectedResponse ? (
                             <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                              <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-[#37352F]">
+                                  Forward Proxy URL
+                                </h2>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveResponse}
+                                >
+                                  <SaveIcon className="h-10 w-10 text-[#898883]" />
+                                </Button>
+                              </div>
                               <div className="space-y-6">
-                                <div className="flex flex-col items-start gap-.5">
-                                  <Label className="text-sm font-medium text-[#000000] font-inter">
-                                    Forward proxy URL
-                                  </Label>
-                                  <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                                    <div className="flex flex-row items-center gap-[16px] w-full">
-                                      <Select
-                                        value={proxyMethod}
-                                        onValueChange={setProxyMethod}
-                                      >
-                                        <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                          <SelectValue placeholder="Method" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="GET">
-                                            GET
-                                          </SelectItem>
-                                          <SelectItem value="POST">
-                                            POST
-                                          </SelectItem>
-                                          <SelectItem value="PUT">
-                                            PUT
-                                          </SelectItem>
-                                          <SelectItem value="DELETE">
-                                            DELETE
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Input
-                                        id="proxy-url"
-                                        name="proxy-url"
-                                        placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
-                                        value={proxyUrl}
-                                        onChange={(e) =>
-                                          setProxyUrl(e.target.value)
-                                        }
-                                        className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                      Use {"{{params.id}}"} for route parameters
-                                      (e.g. /users/:id)
-                                    </p>
+                                <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
+                                  <div className="flex flex-row items-center gap-[16px] w-full">
+                                    <Select
+                                      value={proxyMethod}
+                                      onValueChange={setProxyMethod}
+                                    >
+                                      <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
+                                        <SelectValue placeholder="Method" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="GET">GET</SelectItem>
+                                        <SelectItem value="POST">
+                                          POST
+                                        </SelectItem>
+                                        <SelectItem value="PUT">PUT</SelectItem>
+                                        <SelectItem value="DELETE">
+                                          DELETE
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      id="proxy-url"
+                                      name="proxy-url"
+                                      placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
+                                      value={proxyUrl}
+                                      onChange={(e) =>
+                                        setProxyUrl(e.target.value)
+                                      }
+                                      className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                    />
                                   </div>
-                                </div>
-                                <div className="flex justify-end">
-                                  <Button
-                                    className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-                                    onClick={handleSaveResponse}
-                                  >
-                                    Save Changes
-                                  </Button>
+                                  <p className="text-xs text-gray-500">
+                                    Use {"{{params.id}}"} for route parameters
+                                    (e.g. /users/:id)
+                                  </p>
                                 </div>
                               </div>
                             </Card>

@@ -3,7 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { API_ROOT } from "@/utils/constants";
-import { Plus, Trash2, Upload, Code, Loader2, FileCode, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Upload,
+  Code,
+  Loader2,
+  FileCode,
+  X,
+  SaveIcon,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Select,
@@ -133,12 +142,22 @@ export const ApiCallEditor = ({
     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
-        <Button
-          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-          onClick={() => setIsNewApiCallDialogOpen(true)}
-        >
-          New API Call
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+            onClick={handleSave}
+          >
+            <SaveIcon className="h-5 w-5 text-[#898883]" />
+          </Button>
+          <Button
+            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            onClick={() => setIsNewApiCallDialogOpen(true)}
+          >
+            New API Call
+          </Button>
+        </div>
       </div>
 
       <div className="border-b border-[#EDEFF1] mb-6"></div>
@@ -184,7 +203,7 @@ export const ApiCallEditor = ({
                   <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
                     Target Endpoint
                   </label>
-                  <div className="relative flex-1 max-w-[601px]">
+                  <div className="relative flex-1 max-w-[801px]">
                     <Select
                       value={call.target_endpoint} // Sử dụng target_endpoint làm giá trị
                       onValueChange={(value) => {
@@ -216,7 +235,7 @@ export const ApiCallEditor = ({
                   <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
                     Method
                   </label>
-                  <div className="relative flex-1 max-w-[601px]">
+                  <div className="relative flex-1 max-w-[801px]">
                     <Select
                       value={call.method}
                       onValueChange={(value) =>
@@ -243,7 +262,7 @@ export const ApiCallEditor = ({
                   <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
                     Request Body
                   </label>
-                  <div className="flex-1 max-w-[601px] relative">
+                  <div className="flex-1 max-w-[801px] relative">
                     <div className="relative">
                       <Editor
                         value={
@@ -331,7 +350,7 @@ export const ApiCallEditor = ({
                   <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
                     Status condition
                   </label>
-                  <div className="relative flex-1 max-w-[601px]">
+                  <div className="relative flex-1 max-w-[801px]">
                     <Select
                       value={call.condition}
                       onValueChange={(value) =>
@@ -356,15 +375,6 @@ export const ApiCallEditor = ({
           </div>
         ))
       )}
-
-      <div className="flex justify-end mt-4">
-        <Button
-          className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-          onClick={handleSave}
-        >
-          Save Changes
-        </Button>
-      </div>
     </Card>
   );
 };
@@ -685,10 +695,27 @@ export const Frame = ({
   return (
     <div>
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-        <div className="mb-6">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
             {responseName || "No Response Selected"}
           </h1>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleAddRule}
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+            >
+              <Plus className="h-7 w-7" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+            >
+              <SaveIcon className="h-5 w-5 text-[#898883]" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -789,29 +816,6 @@ export const Frame = ({
               No rules are available.
             </div>
           )}
-
-          {/* Nút Add full width, căn phải, style giống hàng input */}
-          <div className="flex flex-col gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={handleAddRule}
-              className="w-full h-[42px] border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 flex justify-end pr-4"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add
-            </Button>
-
-            {selectedResponse && (
-              <div className="flex justify-end">
-                <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-                  onClick={handleSave}
-                >
-                  Save Changes
-                </Button>
-              </div>
-            )}
-          </div>
         </div>
       </Card>
     </div>

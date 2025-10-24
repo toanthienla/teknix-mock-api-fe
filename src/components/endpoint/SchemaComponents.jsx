@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { API_ROOT } from "@/utils/constants";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, SaveIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Dialog,
@@ -280,10 +280,20 @@ export const SchemaBodyEditor = ({
   return (
     <div>
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-        <div className="mb-6">
+        <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-[#37352F]">
             Schema Definition
           </h1>
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+            >
+              <SaveIcon className="h-10 w-10 text-[#898883]" />
+            </Button>
+          </div>
         </div>
 
         {/* Thêm tiêu đề Fields Input */}
@@ -390,16 +400,6 @@ export const SchemaBodyEditor = ({
             ))}
           </div>
         )}
-
-        {/* Nút lưu */}
-        <div className="flex justify-end mt-4">
-          <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        </div>
       </Card>
     </div>
   );
