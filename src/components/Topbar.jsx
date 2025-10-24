@@ -68,7 +68,7 @@ export default function Topbar({
 
       if (res?.data?.username) {
         setUsername(res.data.username);
-        setUserId(res.data.user_id);
+        setUserId(res.data.id);
       } else {
         toast.error("Please log in to continue.");
         navigate("/login");
@@ -413,7 +413,8 @@ export default function Topbar({
         <RealtimeClient
           userId={userId}
           onNewNotification={() => {
-            fetchNotifications(); // cập nhật lại danh sách khi có noti mới
+            console.log("🔔 New notification received via WebSocket.");
+            fetchNotifications();
           }}
         />
       )}

@@ -1,7 +1,7 @@
 // src/realtime.jsx
 import { useEffect, useRef } from "react";
 import { Centrifuge } from "centrifuge";
-import { getCentrifugoToken } from "@/services/api.js";
+import { getCentrifugoToken, getSubToken } from "@/services/api.js";
 
 export default function RealtimeClient({ userId, onNewNotification }) {
   const centrifugeRef = useRef(null);
@@ -9,32 +9,36 @@ export default function RealtimeClient({ userId, onNewNotification }) {
   useEffect(() => {
     (async () => {
       try {
-        console.log("Connecting to realtime with userId:", userId);
-
+        // 1️⃣ Lấy connection token cho client
         const { token } = await getCentrifugoToken();
-        console.log("[Centrifugo] token:", token);
+        console.log("[Centrifugo] connection token:", token);
 
-        const centrifuge = new Centrifuge("ws://127.0.0.1:8080/connection/websocket", {
-          token,
-        });
-        console.log("[Centrifugo] centrifuge:", centrifuge);
+        const centrifuge = new Centrifuge("ws://127.0.0.1:8080/connection/websocket", { token });
 
-        centrifuge.on("connected", (ctx) => console.log("[Centrifugo] connected", ctx));
-        centrifuge.on("disconnected", (ctx) => console.log("[Centrifugo] disconnected", ctx));
-        centrifuge.on("error", (err) => console.error("[Centrifugo] error", err));
+        centrifuge.on("connected", (ctx) => console.log("[Centrifugo] connected ✅", ctx));
+        centrifuge.on("disconnected", (ctx) => console.warn("[Centrifugo] disconnected ❌", ctx));
+        centrifuge.on("error", (err) => console.error("[Centrifugo] error:", err));
 
-        // Đăng ký kênh theo user
-        const channel = `user#${userId}`;
-        const sub = centrifuge.newSubscription(channel);
+        centrifuge.connect();
 
+        // 2️⃣ Chuẩn bị channel và lấy sub token riêng
+        const channel = `user_${userId}#notifications`;
+        console.log(`[Centrifugo] subscribing to ${channel}`);
+
+        const { token: subtoken } = await getSubToken(userId, channel);
+        console.log("[Centrifugo] sub token:", subtoken);
+
+        // 3️⃣ Tạo subscription với subtoken
+        const sub = centrifuge.newSubscription(channel, { token: subtoken });
+
+        sub.on("subscribed", (ctx) => console.log(`🟢 Subscribed to ${channel}`, ctx));
+        sub.on("error", (err) => console.error(`❌ Subscription error on ${channel}`, err));
         sub.on("publication", (ctx) => {
-          console.log("Notification received:", ctx.data);
+          console.log("📩 Notification received:", ctx.data);
           if (onNewNotification) onNewNotification(ctx.data);
-          // Có thể cập nhật UI, hiển thị toast, badge, v.v.
         });
 
         await sub.subscribe();
-        centrifuge.connect();
 
         centrifugeRef.current = centrifuge;
       } catch (error) {
