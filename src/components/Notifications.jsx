@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
   Sheet,
   SheetContent,
@@ -7,26 +7,50 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {Button} from "@/components/ui/button";
+import {ScrollArea} from "@/components/ui/scroll-area";
 import bellIcon from "@/assets/notification.svg";
 import expandIcon from "@/assets/expand.svg";
-import { Badge } from "@/components/ui/badge";
+import {Badge} from "@/components/ui/badge";
 
-export default function NotificationsSheet({ notifications = [], onMarkAllRead }) {
+function timeAgo(dateString) {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diff = Math.floor((now - date) / 1000); // seconds difference
+
+  if (diff < 60) return `${diff} second${diff === 1 ? "" : "s"} ago`;
+  if (diff < 3600)
+    return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) === 1 ? "" : "s"} ago`;
+  if (diff < 86400)
+    return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) === 1 ? "" : "s"} ago`;
+  if (diff < 2592000)
+    return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) === 1 ? "" : "s"} ago`;
+  if (diff < 31536000)
+    return `${Math.floor(diff / 2592000)} month${Math.floor(diff / 2592000) === 1 ? "" : "s"} ago`;
+  return `${Math.floor(diff / 31536000)} year${Math.floor(diff / 31536000) === 1 ? "" : "s"} ago`;
+}
+
+export default function Notifications({notifications = [], onMarkRead, onMarkAllRead}) {
   const [activeTab, setActiveTab] = useState("all");
 
   const filtered = activeTab === "unread"
     ? notifications.filter((n) => !n.is_read)
     : notifications;
 
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60000); // every 1 min
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <img src={bellIcon} alt="bell" className="w-5 h-5" />
+          <img src={bellIcon} alt="bell" className="w-5 h-5"/>
           {notifications.some((n) => !n.is_read) && (
-            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
+            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500"/>
           )}
         </Button>
       </SheetTrigger>
@@ -43,7 +67,7 @@ export default function NotificationsSheet({ notifications = [], onMarkAllRead }
             size="icon"
             className="rounded-md bg-none hover:bg-white mr-1"
           >
-            <img src={expandIcon} alt="expand" className="w-4 h-4" />
+            <img src={expandIcon} alt="expand" className="w-4 h-4"/>
           </Button>
         </SheetHeader>
         <SheetDescription></SheetDescription>
@@ -92,32 +116,33 @@ export default function NotificationsSheet({ notifications = [], onMarkAllRead }
             filtered.map((n, index) => (
               <div
                 key={index}
-                className="p-4 mb-1 hover:bg-gray-50 transition border-b border-gray-300"
+                className="p-4 mb-1 hover:bg-gray-50 transition border-b border-gray-300 cursor-pointer"
+                onClick={() => onMarkRead(n.id)}
               >
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center mb-2 gap-2">
                     <Badge
                       className={`px-3 py-0.5 text-xs font-semibold rounded-md ${
-                        n.method === "GET"
+                        n.endpoint_method === "GET"
                           ? "bg-lime-200 text-black hover:bg-lime-300"
-                          : n.method === "POST"
+                          : n.endpoint_method === "POST"
                             ? "bg-sky-300 text-black hover:bg-sky-400"
-                            : n.method === "PUT"
+                            : n.endpoint_method === "PUT"
                               ? "bg-pink-300 text-black hover:bg-pink-400"
-                              : n.method === "DELETE"
+                              : n.endpoint_method === "DELETE"
                                 ? "bg-red-400 text-white hover:bg-red-500"
                                 : "bg-gray-200 text-black"
                       }`}
                     >
-                      {n.method}
+                      {n.endpoint_method}
                     </Badge>
                     <p className="font-medium text-sm">
-                      New request to {n.endpoint}
+                      New request to {n.endpoint_path}
                     </p>
                   </div>
 
                   {!n.is_read && (
-                    <span className="h-2 w-2 bg-red-500 rounded-full" />
+                    <span className="h-2 w-2 mr-2 bg-red-500 rounded-full"/>
                   )}
                 </div>
 
@@ -131,16 +156,16 @@ export default function NotificationsSheet({ notifications = [], onMarkAllRead }
                   </p>
                   <p>
                     <span className="font-semibold">Request:</span>{" "}
-                    <code>{n.request}</code>
+                    <code>{typeof n.request_body === "object" ? JSON.stringify(n.request_body, null, 2) : n.request_body}</code>
                   </p>
                   <p>
                     <span className="font-semibold">Response:</span>{" "}
-                    <code>{n.response}</code>
+                    <code>{typeof n.response_body === "object" ? JSON.stringify(n.response_body, null, 2) : n.response_body}</code>
                   </p>
                 </div>
 
                 <div className="text-xs text-gray-400 mt-2 text-right">
-                  {n.time} • {n.user}
+                  {timeAgo(n.created_at)} • {n.user_name}
                 </div>
               </div>
             ))
