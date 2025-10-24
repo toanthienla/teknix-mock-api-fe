@@ -339,12 +339,6 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption] = useState("Recently created");
 
-  const [openProjectsMap, setOpenProjectsMap] = useState(
-    () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
-  );
-  const [openEndpointsMap, setOpenEndpointsMap] = useState(
-    () => JSON.parse(localStorage.getItem("openEndpointsMap")) || {}
-  );
   // const [targetWsId, setTargetWsId] = useState(null);
   const [targetProjectId, setTargetProjectId] = useState(null);
 
@@ -454,27 +448,6 @@ export default function Dashboard() {
       setProjects([]);
     }
   }, [currentWsId]);
-
-  useEffect(() => {
-    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
-  }, [openProjectsMap]);
-
-  useEffect(() => {
-    localStorage.setItem("openEndpointsMap", JSON.stringify(openEndpointsMap));
-  }, [openEndpointsMap]);
-
-  // Keep sidebar expanded for selected project when navigating into project view
-  useEffect(() => {
-    if (!projectId || projects.length === 0) return;
-    const p = projects.find((proj) => String(proj.id) === String(projectId));
-    if (!p) return;
-
-    if (String(currentWsId) !== String(p.workspace_id)) {
-      setCurrentWsId(p.workspace_id);
-    }
-    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
-    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
-  }, [projectId, projects, currentWsId]);
 
   const fetchWorkspaces = () => {
     return fetch(`${API_ROOT}/workspaces`)
@@ -638,7 +611,7 @@ export default function Dashboard() {
     setNewFolderName(folder.name);
     setNewFolderDesc(folder.description || "");
     setEditingFolderId(folder.id);
-    setOpenNewFolder(true);
+    setEditDialogOpen(true);
   };
 
   const handleDeleteFolder = async (folderId) => {
@@ -918,6 +891,9 @@ export default function Dashboard() {
     try {
       const newEndpoint = {
         name: newEName.trim(),
+        folder_id: newEFolderId,
+        method: newEMethod.toUpperCase(),
+        path: newEPath
       };
 
       const res = await fetch(`${API_ROOT}/endpoints`, {
@@ -1051,7 +1027,6 @@ export default function Dashboard() {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({...prev, [createdWs.id]: true}));
         toast.success("Create workspace successfully!");
         setNewWsName("");
         setOpenNewWs(false);
