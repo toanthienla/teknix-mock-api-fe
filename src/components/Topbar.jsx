@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
-
-import logoIcon from "@/assets/logo.svg";
-import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,33 +17,30 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { logout } from "@/services/api.js";
+import {toast} from "react-toastify";
+import {useNavigate} from "react-router-dom";
+import {getCurrentUser, logout} from "@/services/api.js";
+import {API_ROOT} from "@/utils/constants.js";
 import avatar from "@/assets/user-avatar.svg";
-import { Button } from "@/components/ui/button.jsx";
-import NotificationsSheet from "../components/Notifications.jsx";
+import logoIcon from "@/assets/logo.svg";
+import Notifications from "../components/Notifications.jsx";
+import RealtimeClient from "@/services/centrifugo.jsx";
 
 export default function Topbar({
-  workspaces = [],
-  current,
-  setCurrent,
-  onWorkspaceChange,
-  onEditWorkspace,
-  onDeleteWorkspace,
-  setOpenNewWs,
-  breadcrumb = [],
-  username,
-}) {
+                                 workspaces = [],
+                                 current,
+                                 setCurrent,
+                                 onWorkspaceChange,
+                                 onEditWorkspace,
+                                 onDeleteWorkspace,
+                                 setOpenNewWs,
+                                 breadcrumb = [],
+                               }) {
   const navigate = useNavigate();
-  const userName = username;
+  const [username, setUsername] = useState(null);
+  const [userId, setUserId] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if (workspaces.length > 0 && !current) {
@@ -67,30 +62,180 @@ export default function Topbar({
     (ws) => String(ws.id) === String(current)
   );
 
-  const mockNotifications = [
-    {
-      method: "GET",
-      path: "/orders",
-      status: "200 OK",
-      is_stateful: true,
-      request: "{'dish_id': 5, 'quantity': 3}",
-      response: "{'message': 'order created successfully'}",
-      time: "2 min ago",
-      user: "hancontam",
-      is_read: false,
-    },
-    {
-      method: "POST",
-      path: "/orders",
-      status: "200 OK",
-      is_stateful: true,
-      request: "{'dish_id': 5, 'quantity': 3}",
-      response: "{'message': 'order created successfully'}",
-      time: "5 min ago",
-      user: "hancontam",
-      is_read: true,
-    },
-  ];
+  const checkUserLogin = async () => {
+    try {
+      const res = await getCurrentUser();
+
+      if (res?.data?.username) {
+        setUsername(res.data.username);
+        setUserId(res.data.id);
+      } else {
+        toast.error("Please log in to continue.");
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("User not logged in:", err);
+      toast.error("Session expired. Please log in again.");
+      navigate("/login");
+    } finally {
+      setAuthChecked(true);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (username && userId) {
+  //     console.log("✅ User updated:", username, userId);
+  //   }
+  // }, [username, userId]);
+
+  useEffect(() => {
+    checkUserLogin();
+  }, []);
+
+  // =============================
+  // 1️⃣ FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
+  // =============================
+  const fetchNotifications = async () => {
+    if (!username) return;
+    try {
+      const res = await fetch(`${API_ROOT}/notifications`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch notifications");
+      const data = await res.json();
+
+      // Lấy thêm dữ liệu chi tiết từ project_request_logs, users, và endpoints
+      const detailed = await Promise.all(
+        data.map(async (n) => {
+          let status = null;
+          let request_body = null;
+          let response_body = null;
+          let user_name = null;
+          let endpoint_method = null;
+          let endpoint_path = null;
+
+          // --- Lấy log chi tiết ---
+          try {
+            if (n.project_request_log_id) {
+              const logRes = await fetch(`${API_ROOT}/project_request_logs/${n.project_request_log_id}`, {
+                credentials: "include",
+              });
+              if (logRes.ok) {
+                const log = await logRes.json();
+                status = log.response_status_code;
+                request_body = log.request_body;
+                response_body = log.response_body.data;
+              }
+            }
+          } catch (e) {
+            console.warn("Cannot fetch log for notification", n.id, e);
+          }
+
+          // --- Lấy thông tin user ---
+          try {
+            if (n.user_id) {
+              const userRes = await fetch(`${API_ROOT}/auth/me`, {
+                credentials: "include",
+              });
+              if (userRes.ok) {
+                const user = await userRes.json();
+                user_name = user.username || `User #${n.user_id}`;
+              }
+            }
+          } catch (e) {
+            console.warn("Cannot fetch user info", n.user_id, e);
+          }
+
+          // --- Lấy thông tin endpoint ---
+          try {
+            if (n.endpoint_id) {
+              const epRes = await fetch(`${API_ROOT}/endpoints/${n.endpoint_id}`, {
+                credentials: "include",
+              });
+              if (epRes.ok) {
+                const ep = await epRes.json();
+                endpoint_method = ep.method;
+                endpoint_path = ep.path;
+              }
+            }
+          } catch (e) {
+            console.warn("Cannot fetch endpoint info", n.endpoint_id, e);
+          }
+
+          return {
+            ...n,
+            status,
+            request_body,
+            response_body,
+            user_name,
+            endpoint_method,
+            endpoint_path,
+          };
+        })
+      );
+
+      setNotifications(detailed);
+    } catch (e) {
+      console.error("Fetch notifications error:", e);
+      toast.error("Failed to fetch notifications");
+    }
+  };
+
+
+  // =============================
+  // 2️⃣ Đánh dấu đã đọc 1 notification
+  // =============================
+  const markAsRead = async (id) => {
+    try {
+      const res = await fetch(`${API_ROOT}/notifications/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({is_read: true}),
+      });
+      if (!res.ok) throw new Error("Failed to mark as read");
+      await fetchNotifications();
+    } catch (e) {
+      console.error("Mark as read error:", e);
+      toast.error("Failed to mark notification as read");
+    }
+  };
+
+  // =============================
+  // 3️⃣ Đánh dấu tất cả đã đọc
+  // =============================
+  const markAllRead = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/notifications/mark-all-read`, {
+        method: "PUT",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to mark all read");
+      await fetchNotifications();
+      toast.success("All notifications marked as read");
+    } catch (e) {
+      console.error("Mark all read error:", e);
+    }
+  };
+
+  // =============================
+  // 4️⃣ Xóa tất cả thông báo đã đọc
+  // =============================
+  const deleteReadNotifications = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/notifications/read`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete read notifications");
+      await fetchNotifications();
+      toast.success("Deleted read notifications");
+    } catch (e) {
+      console.error("Delete read notifications error:", e);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -107,6 +252,12 @@ export default function Topbar({
     }
   };
 
+  useEffect(() => {
+    if (authChecked && username) {
+      fetchNotifications();
+    }
+  }, [authChecked, username]);
+
   return (
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
       {/* Logo + Workspace Selector */}
@@ -115,15 +266,16 @@ export default function Topbar({
           className="flex items-center cursor-pointer select-none"
           onClick={() => (window.location.href = "/dashboard")}
         >
-          <img src={logoIcon} className="w-10 h-10" alt="Logo" />
+          <img src={logoIcon} className="w-10 h-10" alt="Logo"/>
         </div>
 
         {/* Workspace Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
+            <button
+              className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
               <span>{currentWorkspace?.name || "Select Workspace"}</span>
-              <ChevronDown className="w-4 h-4 text-slate-500" />
+              <ChevronDown className="w-4 h-4 text-slate-500"/>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
@@ -145,12 +297,12 @@ export default function Topbar({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-1 hover:bg-slate-100 rounded">
-                      <MoreHorizontal className="w-4 h-4 text-slate-500" />
+                      <MoreHorizontal className="w-4 h-4 text-slate-500"/>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-44">
                     <DropdownMenuItem onSelect={() => onEditWorkspace?.(ws)}>
-                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit" />
+                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/>
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -171,7 +323,7 @@ export default function Topbar({
               className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
               onClick={() => setOpenNewWs?.(true)}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4"/>
               <span>New workspace</span>
             </div>
           </DropdownMenuContent>
@@ -218,7 +370,7 @@ export default function Topbar({
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
-                      <BreadcrumbSeparator className="font-medium text-slate-400" />
+                      <BreadcrumbSeparator className="font-medium text-slate-400"/>
                     )}
                   </React.Fragment>
                 );
@@ -234,7 +386,12 @@ export default function Topbar({
       {/* User + Notification + Logout */}
       <div className="flex items-center gap-4">
         {/* Notification */}
-        <NotificationsSheet notifications={mockNotifications} />
+        <Notifications
+          notifications={notifications}
+          onMarkRead={markAsRead}
+          onMarkAllRead={markAllRead}
+          onDeleteRead={deleteReadNotifications}
+        />
 
         {/* Avatar + Name */}
         <div className="flex items-center gap-2">
@@ -243,14 +400,25 @@ export default function Topbar({
             alt="User avatar"
             className="w-8 h-8 rounded-full border"
           />
-          <span className="font-medium text-sm text-slate-900">{userName}</span>
+          <span className="font-medium text-sm text-slate-900">{username}</span>
         </div>
 
         {/* Logout Button */}
         <button onClick={handleLogout} className="relative">
-          <img src={logoutIcon} alt="Logout" className="w-4 h-4 mr-2" />
+          <img src={logoutIcon} alt="Logout" className="w-4 h-4 mr-2"/>
         </button>
       </div>
+
+      {userId > 0 && (
+        <RealtimeClient
+          userId={userId}
+          onNewNotification={() => {
+            console.log("🔔 New notification received via WebSocket.");
+            fetchNotifications();
+          }}
+        />
+      )}
+
     </div>
   );
 }

@@ -64,3 +64,26 @@ export const signup = (credentials) =>
 export const logout = () => API.post("/auth/logout"); // backend clear cookie
 
 export const getCurrentUser = () => API.get("/auth/me"); // check user hiện tại
+
+export async function getCentrifugoToken() {
+  const res = await fetch(`${API_ROOT}/centrifugo/conn-token`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Cannot get Centrifugo token");
+  return res.json();
+}
+
+export async function getSubToken(userId, channel) {
+  const res = await fetch(
+    `${API_ROOT}/centrifugo/sub-token?channel=${encodeURIComponent(channel)}`,
+    {
+      method: "GET",
+      credentials: "include", // gửi cookie để backend biết user nào
+    }
+  );
+
+  if (!res.ok) throw new Error("Cannot get sub token");
+  return await res.json(); // { token, user_id, channel, exp }
+}
+
+
