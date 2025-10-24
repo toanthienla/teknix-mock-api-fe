@@ -662,8 +662,8 @@ export default function Dashboard() {
       return "Folder name cannot be empty";
     }
 
-    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name)) {
-      return "Must start with a letter, only English, digits and underscores allowed (no spaces)";
+    if (!/^[A-Za-z][A-Za-z0-9_ ]*$/.test(name)) {
+      return "Must start with a letter, only English, digits and underscores allowed.";
     }
 
     if (name.trim().length > 20) {

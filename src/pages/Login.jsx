@@ -3,11 +3,11 @@ import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
 import logo from "@/assets/logo.svg";
-import {LoginForm} from "@/components/LoginForm.jsx";
+import { LoginForm } from "@/components/LoginForm.jsx";
 
 export default function LoginPage() {
   return (
-    <div className="h-screen w-full bg-pink-50 flex items-center justify-center">
+    <div className="min-h-screen w-full bg-pink-50 flex items-center justify-center p-2 sm:p-3 md:p-4">
       {/* Viền ngoài */}
       <div
         style={{
@@ -16,30 +16,31 @@ export default function LoginPage() {
           borderColor: "#f8fafc",
           borderRadius: "18px",
         }}
-        className="h-full w-full flex items-center justify-center bg-slate-50"
+        className="w-full max-w-7xl flex items-center justify-center bg-slate-50"
       >
         {/* Bố cục chính chia 2 cột */}
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-pink-100 shadow-lg overflow-hidden">
+
           {/* Cột trái: Hình ảnh và mô tả */}
-          <div className="relative flex flex-col justify-between p-10">
+          <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 bg-white lg:block">
             {/* Logo trên cùng */}
-            <div className="flex items-center ml-8 gap-2">
-              <img src={logo} alt="MockAPI logo" className="w-12 h-12"/>
-              <h1 className="text-5xl font-bold text-slate-900">MockAPI</h1>
+            <div className="flex items-center justify-center lg:justify-start gap-2">
+              <img src={logo} alt="MockAPI logo" className="w-10 h-10 sm:w-12 sm:h-12" />
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">MockAPI</h1>
             </div>
 
             {/* Ảnh minh họa */}
-            <div className="flex justify-center items-center mt-8">
+            <div className="flex justify-center items-center mt-6 sm:mt-8">
               <img
                 src={loginImage}
                 alt="Astronaut"
-                className="w-full max-w-md rounded-xl object-contain"
+                className="w-3/4 sm:w-full max-w-sm md:max-w-md rounded-xl object-contain hidden sm:block"
               />
             </div>
 
             {/* Mô tả ngắn */}
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold text-slate-900">
+            <div className="mt-4 sm:mt-6 text-center lg:text-left">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900">
                 The easiest way to mock REST APIs
               </h2>
               <p className="text-slate-400 text-sm font-semibold mt-2">
@@ -49,20 +50,20 @@ export default function LoginPage() {
           </div>
 
           {/* Cột phải: Phần login */}
-          <div className="flex flex-col items-center justify-center p-10 relative">
+          <div className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-10 relative bg-white">
             <div className="w-full max-w-sm">
-              <LoginForm/>
+              <LoginForm />
             </div>
 
             {/* Footer */}
-            <div className="absolute left-6 bottom-4 text-xs text-gray-500">
+            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs text-gray-500 text-center sm:text-left">
               © Teknix Corp. All rights reserved.
             </div>
 
-            <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-600">
-              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-              <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+            <div className="absolute right-4 sm:right-6 bottom-3 sm:bottom-4 flex items-center gap-2 sm:gap-3 text-xs text-gray-600">
+              <img src={tiktokIcon} alt="tiktok" className="w-3 h-3 sm:w-4 sm:h-4" />
+              <img src={fbIcon} alt="facebook" className="w-3 h-3 sm:w-4 sm:h-4" />
+              <img src={linkedinIcon} alt="linkedin" className="w-3 h-3 sm:w-4 sm:h-4" />
               <a className="hover:underline font-semibold" href="">
                 About
               </a>
