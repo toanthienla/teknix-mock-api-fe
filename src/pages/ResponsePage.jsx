@@ -2106,18 +2106,20 @@ const DashboardPage = () => {
               <div className="flex flex-col bg-white rounded-lg ">
                 <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
-                    <button
-                      className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
-                      onClick={handleNewResponse}
-                      disabled={isStateful}
-                      title={
-                        isStateful
-                          ? "Cannot add responses in stateful mode"
-                          : "Add new response"
-                      }
-                    >
-                      <Plus className="w-4 h-4 text-[#1C1C1C]" />
-                    </button>
+                    {!isStateful && (
+                      <button
+                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                        onClick={handleNewResponse}
+                        disabled={isStateful}
+                        title={
+                          isStateful
+                            ? "Cannot add responses in stateful mode"
+                            : "Add new response"
+                        }
+                      >
+                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                      </button>
+                    )}
                     <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <div className="w-[14.65px] h-[14.65px]">
