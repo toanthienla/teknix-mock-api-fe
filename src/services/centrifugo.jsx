@@ -11,7 +11,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
       try {
         // 1️⃣ Lấy connection token cho client
         const { token } = await getCentrifugoToken();
-        console.log("[Centrifugo] connection token:", token);
+        // console.log("[Centrifugo] connection token:", token);
 
         const centrifuge = new Centrifuge("ws://127.0.0.1:8080/connection/websocket", { token });
 
@@ -26,7 +26,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
         console.log(`[Centrifugo] subscribing to ${channel}`);
 
         const { token: subtoken } = await getSubToken(userId, channel);
-        console.log("[Centrifugo] sub token:", subtoken);
+        // console.log("[Centrifugo] sub token:", subtoken);
 
         // 3️⃣ Tạo subscription với subtoken
         const sub = centrifuge.newSubscription(channel, { token: subtoken });
