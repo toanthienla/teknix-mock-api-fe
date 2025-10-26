@@ -295,13 +295,6 @@ export const ApiCallEditor = ({
                           variant="outline"
                           size="sm"
                           className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                        >
-                          <Upload className="mr-1 h-4 w-4" /> Upload
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
                           onClick={(e) => {
                             e.stopPropagation();
                             try {

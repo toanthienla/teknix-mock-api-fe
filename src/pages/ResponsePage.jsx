@@ -2448,13 +2448,6 @@ const DashboardPage = () => {
                                       variant="outline"
                                       size="sm"
                                       className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                    >
-                                      <Upload className="mr-1 h-4 w-4" /> Upload
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const canEdit =
@@ -2847,6 +2840,16 @@ const DashboardPage = () => {
                                   <h2 className="text-2xl font-medium text-[#37352F]">
                                     Initial Value
                                   </h2>
+                                  <div className="flex justify-end mb-0">
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                      onClick={handleOpenInitialValueDialog}
+                                    >
+                                      <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                    </Button>
+                                  </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 items-start gap-1">
@@ -2862,12 +2865,6 @@ const DashboardPage = () => {
                                               )
                                             : "[]"}
                                         </pre>
-                                      </div>
-                                      <div
-                                        className="w-full h-[20px] text-right text-[14px] leading-[20px] text-[#2563EB] underline cursor-pointer mt-1"
-                                        onClick={handleOpenInitialValueDialog}
-                                      >
-                                        Update initial value
                                       </div>
                                     </div>
                                   </div>
@@ -2953,13 +2950,6 @@ const DashboardPage = () => {
 
                                   {/* JSON Editor controls */}
                                   <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                    >
-                                      <Upload className="mr-1 h-4 w-4" /> Upload
-                                    </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -3229,13 +3219,6 @@ const DashboardPage = () => {
 
                       {/* JSON Editor controls */}
                       <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                        >
-                          <Upload className="mr-1 h-4 w-4" /> Upload
-                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -3710,13 +3693,6 @@ const DashboardPage = () => {
                 />
                 {/* Nhóm nút trên cùng bên phải */}
                 <div className="absolute top-2 right-2 flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                  >
-                    <Upload className="mr-1 h-4 w-4" /> Upload
-                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
