@@ -1939,12 +1939,11 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full"`}>
-          {/* Container chung cho cả hai phần */}
-          <div className="flex justify-between items-center mb-6">
+        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full`}>
+          <div className="flex flex-col mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
-            <div className="flex items-center flex-shrink-0">
-              <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+            <div className="flex items-center flex-shrink-0 mb-2">
+              <h2 className="text-4xl font-bold text-[#37352F] mr-4">
                 {endpoints.find(
                   (ep) => String(ep.id) === String(currentEndpointId)
                 )?.name || "Endpoint"}
@@ -1968,24 +1967,12 @@ const DashboardPage = () => {
             </div>
 
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-4 flex-1">
-              {/*  reset state button */}
-              {isStateful && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={() => setShowResetConfirmDialog(true)}
-                >
-                  <img
-                    src={reset_icon}
-                    alt="Create Icon"
-                    className="w-4 h-4 object-contain"
-                  />
-                </Button>
-              )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] bg-white border border-[#D1D5DB] rounded-md flex-1 min-w-0">
-                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+            <div className="flex items-center gap-2 ml-1 flex-1">
+              <div className="text-[black] font-semibold text-[18px]">
+                #Path
+              </div>
+              <div className="flex flex-row items-center p-0 gap-2.5 w-[600px] h-[30px] bg-gray-100 border border-[#D1D5DB] rounded-md">
+                <div className="h-[20px] font-inter font-semibold text-[16px] leading-[19px] text-[black] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -2030,6 +2017,22 @@ const DashboardPage = () => {
                   )}
                 </div>
               </div>
+              {/* reset state button */}
+              {isStateful && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6 flex-shrink-0"
+                  onClick={() => setShowResetConfirmDialog(true)}
+                >
+                  <img
+                    src={reset_icon}
+                    alt="Create Icon"
+                    className="w-6 h-6 object-contain"
+                  />
+                </Button>
+              )}
+
               {/* State Mode Toggle - thay thế Select bằng toggle button */}
               <div className="ml-4 flex-shrink-0">
                 <div

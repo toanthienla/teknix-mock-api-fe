@@ -152,10 +152,11 @@ export const ApiCallEditor = ({
             <SaveIcon className="h-5 w-5 text-[#898883]" />
           </Button>
           <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            variant="outline"
             onClick={() => setIsNewApiCallDialogOpen(true)}
+            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
           >
-            New API Call
+            <Plus className="h-7 w-7" />
           </Button>
         </div>
       </div>
@@ -189,7 +190,7 @@ export const ApiCallEditor = ({
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleRemoveNextCall(index)}
                 >
-                  <X className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -715,6 +716,38 @@ export const Frame = ({
             >
               <SaveIcon className="h-5 w-5 text-[#898883]" />
             </Button>
+          </div>
+        </div>
+
+        {/* Header frame for parameters */}
+        <div className="relative w-[650.17px] h-[37.53px] mb-2">
+          <div className="absolute w-full h-full bg-[#F2F2F2] rounded-[5.49px]"></div>
+
+          {/* Parameter Type và Parameter Name */}
+          <div className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
+            <div className="w-[153.78px] pl-2 font-inter font-bold text-[14px] text-black">
+              Parameter Type
+            </div>
+            <div className="w-[200.04px] pl-10 border-[#CBD5E1] font-inter font-bold text-[14px] text-black">
+              Parameter Name
+            </div>
+          </div>
+          {/* Expected Value */}
+          <div className="absolute w-[270.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
+            <div className="font-inter font-bold text-[12px] text-black">
+              Equal
+            </div>
+          </div>
+          {/* Expected Value */}
+          <div className="absolute w-[150.47px] h-[27.46px] right-[80.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
+            <div className="font-inter font-bold text-[14px] text-black">
+              Expected Value
+            </div>
+          </div>
+          <div className="absolute w-[42.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
+            <div className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
+              ?
+            </div>
           </div>
         </div>
 
