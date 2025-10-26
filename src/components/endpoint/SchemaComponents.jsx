@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { API_ROOT } from "@/utils/constants";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, SaveIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Dialog,
@@ -31,7 +31,6 @@ export const SchemaBodyEditor = ({
 }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [availableFields, setAvailableFields] = useState([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Thêm state mới để lưu schema từ endpoints/{id}
   const [endpointSchema, setEndpointSchema] = useState(null);
   // Thêm state để trigger refresh
@@ -280,102 +279,106 @@ export const SchemaBodyEditor = ({
   return (
     <div>
       <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-        <div className="mb-6">
+        <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-[#37352F]">
             Schema Definition
           </h1>
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+            >
+              <SaveIcon className="h-10 w-10 text-[#898883]" />
+            </Button>
+          </div>
         </div>
 
-        {/* Thêm tiêu đề Fields Input */}
+        {/* Tiêu đề Fields Input */}
         <div className="mb-2">
           <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
             Fields Input
           </span>
         </div>
 
-        {/* Thêm nút dropdown cho tất cả các method */}
-        <div className="relative w-full h-[65px]">
+        {/* Bảng hiển thị các field */}
+        <div className="border border-[#CBD5E1] rounded-md p-2 mt-2 max-h-60 overflow-y-auto">
+          {/* Header bảng */}
           <div
-            className="w-full h-[35px] border border-[#CBD5E1] rounded-[6px] cursor-pointer"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className={`grid ${
+              method === "GET" ? "grid-cols-3" : "grid-cols-4"
+            } gap-4 font-semibold text-gray-700 border-b pb-2 mb-2`}
           >
-            <span className="absolute left-2 top-1.5 text-sm text-[#000000] font-inter">
-              {
-                schemaFields.filter((f) => f.name === "id" || !f.isDefault)
-                  .length
-              }{" "}
-              fields selected
-            </span>
-            <div className="absolute right-4 top-1/4 transform -translate-y-1/2 w-3 h-2.5 border-t border-r border-[black] rotate-135"></div>
+            <div>Select</div>
+            <div>Field Name</div>
+            <div>Type</div>
+            {method !== "GET" && <div>Required</div>}{" "}
+            {/* Ẩn cột Required nếu là GET */}
           </div>
 
-          {isDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-[#CBD5E1] rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {availableFields.map((field) => {
-                const fieldName = field.name;
-                const fieldType = field.type;
-                const fieldRequired =
-                  field.required !== undefined ? field.required : false;
+          {/* Dữ liệu từng field */}
+          {availableFields.map((field) => {
+            const fieldName = field.name;
+            const fieldType = field.type;
+            const fieldRequired =
+              field.required !== undefined ? field.required : false;
+            const isChecked = schemaFields.some(
+              (f) => f.name === fieldName && !f.isDefault
+            );
 
-                // Sửa logic checked: chỉ kiểm tra tên field, không kiểm tra isDefault
-                const isChecked =
-                  schemaFields.some(
-                    (f) => f.name === fieldName && !f.isDefault
-                  ) ||
-                  (fieldName === "id" &&
-                    schemaFields.some((f) => f.name === "id"));
+            return (
+              <div
+                key={fieldName}
+                className={`grid ${
+                  method === "GET" ? "grid-cols-3" : "grid-cols-4"
+                } gap-4 items-center py-2 hover:bg-gray-100`}
+              >
+                {/* Checkbox */}
+                <div>
+                  <input
+                    type="checkbox"
+                    checked={fieldName === "id" ? true : isChecked}
+                    disabled={fieldName === "id"}
+                    className={`cursor-pointer ${
+                      fieldName === "id" ? "opacity-50" : ""
+                    }`}
+                    onChange={() => handleFieldToggle(fieldName)}
+                  />
+                </div>
 
-                return (
-                  <div
-                    key={fieldName}
-                    className="flex items-center px-3 py-2 hover:bg-gray-100"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      disabled={fieldName === "id"} // Vô hiệu hóa checkbox cho field id
-                      className={`mr-2 cursor-pointer ${
-                        fieldName === "id" ? "opacity-50" : ""
-                      }`}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        if (fieldName !== "id") {
-                          handleFieldToggle(fieldName);
-                        }
-                      }}
-                    />
-                    <span
-                      className={`cursor-pointer flex-1 ${
-                        fieldName === "id" ? "text-gray-500" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (fieldName !== "id") {
-                          handleFieldToggle(fieldName);
-                        }
-                      }}
-                    >
-                      {fieldName}{" "}
-                      <span className="text-gray-500 text-xs">
-                        ({fieldType}){" "}
-                        {fieldRequired && (
-                          <span className="text-red-500">*</span>
-                        )}
-                      </span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                {/* Field Name */}
+                <div
+                  className={`cursor-pointer ${
+                    fieldName === "id" ? "text-gray-500" : ""
+                  }`}
+                  onClick={() => {
+                    if (fieldName !== "id") {
+                      handleFieldToggle(fieldName);
+                    }
+                  }}
+                >
+                  {fieldName}
+                </div>
+
+                {/* Type */}
+                <div>{fieldType}</div>
+
+                {/* Required (chỉ hiển thị nếu không phải GET) */}
+                {method !== "GET" && (
+                  <div>{fieldRequired ? "true" : "false"}</div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
+        {/* Phần hiển thị các field đã chọn dưới dạng tag vẫn giữ nguyên */}
         <div className="mb-2">
           <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
             Schema Fields
           </span>
         </div>
-        {/* Hiển thị các trường trong schema từ endpoints/{id} dưới dạng tag */}
         {getEndpointSchemaFields().length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {getEndpointSchemaFields().map((fieldName) => (
@@ -390,16 +393,6 @@ export const SchemaBodyEditor = ({
             ))}
           </div>
         )}
-
-        {/* Nút lưu */}
-        <div className="flex justify-end mt-4">
-          <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        </div>
       </Card>
     </div>
   );
