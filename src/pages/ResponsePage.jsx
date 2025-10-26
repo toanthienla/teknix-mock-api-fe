@@ -1939,12 +1939,11 @@ const DashboardPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full"`}>
-          {/* Container chung cho cả hai phần */}
-          <div className="flex justify-between items-center mb-6">
+        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full`}>
+          <div className="flex flex-col mb-6">
             {/* Phần bên trái - Display Endpoint Name and Method */}
-            <div className="flex items-center flex-shrink-0">
-              <h2 className="text-2xl font-bold text-[#37352F] mr-4">
+            <div className="flex items-center flex-shrink-0 mb-2">
+              <h2 className="text-4xl font-bold text-[#37352F] mr-4">
                 {endpoints.find(
                   (ep) => String(ep.id) === String(currentEndpointId)
                 )?.name || "Endpoint"}
@@ -1968,24 +1967,12 @@ const DashboardPage = () => {
             </div>
 
             {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-4 flex-1">
-              {/*  reset state button */}
-              {isStateful && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={() => setShowResetConfirmDialog(true)}
-                >
-                  <img
-                    src={reset_icon}
-                    alt="Create Icon"
-                    className="w-4 h-4 object-contain"
-                  />
-                </Button>
-              )}
-              <div className="flex flex-row items-center p-0 gap-2.5 w-full h-[20px] bg-white border border-[#D1D5DB] rounded-md flex-1 min-w-0">
-                <div className="h-[19px] font-inter font-semibold text-[16px] leading-[19px] text-[#777671] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+            <div className="flex items-center gap-2 ml-1 flex-1">
+              <div className="text-[black] font-semibold text-[18px]">
+                #Path
+              </div>
+              <div className="flex flex-row items-center p-0 gap-2.5 w-[600px] h-[30px] bg-gray-100 border border-[#D1D5DB] rounded-md">
+                <div className="h-[20px] font-inter font-semibold text-[16px] leading-[19px] text-[black] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
                   {endpoints.find(
                     (ep) => String(ep.id) === String(currentEndpointId)
                   )?.path || "-"}
@@ -2030,6 +2017,22 @@ const DashboardPage = () => {
                   )}
                 </div>
               </div>
+              {/* reset state button */}
+              {isStateful && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6 flex-shrink-0"
+                  onClick={() => setShowResetConfirmDialog(true)}
+                >
+                  <img
+                    src={reset_icon}
+                    alt="Create Icon"
+                    className="w-6 h-6 object-contain"
+                  />
+                </Button>
+              )}
+
               {/* State Mode Toggle - thay thế Select bằng toggle button */}
               <div className="ml-4 flex-shrink-0">
                 <div
@@ -2103,18 +2106,20 @@ const DashboardPage = () => {
               <div className="flex flex-col bg-white rounded-lg ">
                 <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
-                    <button
-                      className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
-                      onClick={handleNewResponse}
-                      disabled={isStateful}
-                      title={
-                        isStateful
-                          ? "Cannot add responses in stateful mode"
-                          : "Add new response"
-                      }
-                    >
-                      <Plus className="w-4 h-4 text-[#1C1C1C]" />
-                    </button>
+                    {!isStateful && (
+                      <button
+                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                        onClick={handleNewResponse}
+                        disabled={isStateful}
+                        title={
+                          isStateful
+                            ? "Cannot add responses in stateful mode"
+                            : "Add new response"
+                        }
+                      >
+                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                      </button>
+                    )}
                     <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <div className="w-[14.65px] h-[14.65px]">
@@ -2302,18 +2307,17 @@ const DashboardPage = () => {
                                   />
                                 </Button>
                               )}
-                              {!isStateful && (
-                                <div className="flex justify-end mb-0">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                    onClick={handleSaveResponse}
-                                  >
-                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                  </Button>
-                                </div>
-                              )}
+
+                              <div className="flex justify-end mb-0">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveResponse}
+                                >
+                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                           {/* Form */}
@@ -2442,13 +2446,6 @@ const DashboardPage = () => {
 
                                   {/* JSON Editor controls */}
                                   <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                    >
-                                      <Upload className="mr-1 h-4 w-4" /> Upload
-                                    </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -2758,59 +2755,55 @@ const DashboardPage = () => {
                         <TabsContent value="proxy" className="mt-0">
                           {selectedResponse ? (
                             <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                              <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-[#37352F]">
+                                  Forward Proxy URL
+                                </h2>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveResponse}
+                                >
+                                  <SaveIcon className="h-10 w-10 text-[#898883]" />
+                                </Button>
+                              </div>
                               <div className="space-y-6">
-                                <div className="flex flex-col items-start gap-.5">
-                                  <Label className="text-sm font-medium text-[#000000] font-inter">
-                                    Forward proxy URL
-                                  </Label>
-                                  <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                                    <div className="flex flex-row items-center gap-[16px] w-full">
-                                      <Select
-                                        value={proxyMethod}
-                                        onValueChange={setProxyMethod}
-                                      >
-                                        <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                          <SelectValue placeholder="Method" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="GET">
-                                            GET
-                                          </SelectItem>
-                                          <SelectItem value="POST">
-                                            POST
-                                          </SelectItem>
-                                          <SelectItem value="PUT">
-                                            PUT
-                                          </SelectItem>
-                                          <SelectItem value="DELETE">
-                                            DELETE
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Input
-                                        id="proxy-url"
-                                        name="proxy-url"
-                                        placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
-                                        value={proxyUrl}
-                                        onChange={(e) =>
-                                          setProxyUrl(e.target.value)
-                                        }
-                                        className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                      Use {"{{params.id}}"} for route parameters
-                                      (e.g. /users/:id)
-                                    </p>
+                                <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
+                                  <div className="flex flex-row items-center gap-[16px] w-full">
+                                    <Select
+                                      value={proxyMethod}
+                                      onValueChange={setProxyMethod}
+                                    >
+                                      <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
+                                        <SelectValue placeholder="Method" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="GET">GET</SelectItem>
+                                        <SelectItem value="POST">
+                                          POST
+                                        </SelectItem>
+                                        <SelectItem value="PUT">PUT</SelectItem>
+                                        <SelectItem value="DELETE">
+                                          DELETE
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      id="proxy-url"
+                                      name="proxy-url"
+                                      placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
+                                      value={proxyUrl}
+                                      onChange={(e) =>
+                                        setProxyUrl(e.target.value)
+                                      }
+                                      className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                    />
                                   </div>
-                                </div>
-                                <div className="flex justify-end">
-                                  <Button
-                                    className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-                                    onClick={handleSaveResponse}
-                                  >
-                                    Save Changes
-                                  </Button>
+                                  <p className="text-xs text-gray-500">
+                                    Use {"{{params.id}}"} for route parameters
+                                    (e.g. /users/:id)
+                                  </p>
                                 </div>
                               </div>
                             </Card>
@@ -2849,6 +2842,16 @@ const DashboardPage = () => {
                                   <h2 className="text-2xl font-medium text-[#37352F]">
                                     Initial Value
                                   </h2>
+                                  <div className="flex justify-end mb-0">
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                      onClick={handleOpenInitialValueDialog}
+                                    >
+                                      <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                    </Button>
+                                  </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 items-start gap-1">
@@ -2864,12 +2867,6 @@ const DashboardPage = () => {
                                               )
                                             : "[]"}
                                         </pre>
-                                      </div>
-                                      <div
-                                        className="w-full h-[20px] text-right text-[14px] leading-[20px] text-[#2563EB] underline cursor-pointer mt-1"
-                                        onClick={handleOpenInitialValueDialog}
-                                      >
-                                        Update initial value
                                       </div>
                                     </div>
                                   </div>
@@ -2955,13 +2952,6 @@ const DashboardPage = () => {
 
                                   {/* JSON Editor controls */}
                                   <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                    >
-                                      <Upload className="mr-1 h-4 w-4" /> Upload
-                                    </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -3231,13 +3221,6 @@ const DashboardPage = () => {
 
                       {/* JSON Editor controls */}
                       <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                        >
-                          <Upload className="mr-1 h-4 w-4" /> Upload
-                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -3712,13 +3695,6 @@ const DashboardPage = () => {
                 />
                 {/* Nhóm nút trên cùng bên phải */}
                 <div className="absolute top-2 right-2 flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                  >
-                    <Upload className="mr-1 h-4 w-4" /> Upload
-                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
