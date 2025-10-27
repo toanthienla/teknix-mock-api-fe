@@ -68,7 +68,7 @@ export default function Topbar({
 
       if (res?.data?.username) {
         setUsername(res.data.username);
-        setUserId(res.data.id);
+        setUserId(res.data.user_id);
       } else {
         toast.error("Please log in to continue.");
         navigate("/login");

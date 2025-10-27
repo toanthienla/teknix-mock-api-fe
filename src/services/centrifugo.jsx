@@ -9,7 +9,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
   useEffect(() => {
     (async () => {
       try {
-        // 1️⃣ Lấy connection token cho client
+        // Lấy connection token cho client
         const { token } = await getCentrifugoToken();
         // console.log("[Centrifugo] connection token:", token);
 
@@ -21,14 +21,14 @@ export default function RealtimeClient({ userId, onNewNotification }) {
 
         centrifuge.connect();
 
-        // 2️⃣ Chuẩn bị channel và lấy sub token riêng
+        // Chuẩn bị channel và lấy sub token riêng
         const channel = `user_${userId}#notifications`;
         console.log(`[Centrifugo] subscribing to ${channel}`);
 
         const { token: subtoken } = await getSubToken(userId, channel);
         // console.log("[Centrifugo] sub token:", subtoken);
 
-        // 3️⃣ Tạo subscription với subtoken
+        // Tạo subscription với subtoken
         const sub = centrifuge.newSubscription(channel, { token: subtoken });
 
         sub.on("subscribed", (ctx) => console.log(`🟢 Subscribed to ${channel}`, ctx));
