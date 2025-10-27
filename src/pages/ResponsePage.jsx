@@ -2694,7 +2694,6 @@ const DashboardPage = () => {
                           </TabsTrigger>
                         )}
                       </TabsList>
-
                       {/* TabsContent cho các tab còn lại */}
                       {/* Chỉ render tab Rules khi không phải stateful */}
                       {!isStateful && (
@@ -2719,7 +2718,6 @@ const DashboardPage = () => {
                           )}
                         </TabsContent>
                       )}
-
                       {/* Chỉ render tab Proxy khi không phải stateful */}
                       {!isStateful && (
                         <TabsContent value="proxy" className="mt-0">
@@ -2788,7 +2786,6 @@ const DashboardPage = () => {
                           )}
                         </TabsContent>
                       )}
-
                       {isStateful && method !== "DELETE" && (
                         <TabsContent value="schemaBody" className="mt-0">
                           <div className="mt-2">
@@ -2801,7 +2798,6 @@ const DashboardPage = () => {
                           </div>
                         </TabsContent>
                       )}
-
                       {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
                       {isStateful && (
                         <TabsContent value="dataDefault" className="mt-0">
@@ -3070,13 +3066,13 @@ const DashboardPage = () => {
                           </Dialog>
                         </TabsContent>
                       )}
-
                       {isStateful && (
                         <TabsContent value="advanced" className="mt-0">
                           <div className="mt-2">
                             <ApiCallEditor
                               endpointId={currentEndpointId}
-                              isStateful={isStateful}
+                              currentEndpoint={currentEndpoint} // Thêm prop này
+                              getFullPath={getFullPath}
                               nextCalls={nextCalls}
                               setNextCalls={setNextCalls}
                               isRequestBodyPopoverOpen={

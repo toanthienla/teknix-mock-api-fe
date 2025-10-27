@@ -34,10 +34,51 @@ export const ApiCallEditor = ({
   setNextCalls,
   setIsNewApiCallDialogOpen,
   onSave,
+  currentEndpoint, // Thêm prop này
+  getFullPath,
 }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
+
+  // Thêm state để lưu danh sách endpoints cho dropdown
+  const [availableEndpoints, setAvailableEndpoints] = useState([]);
+
+  // Fetch danh sách endpoints từ API mới
+  useEffect(() => {
+    if (!currentEndpoint) return;
+
+    fetch(`${API_ROOT}/endpoints/advanced/path/${currentEndpoint.id}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setAvailableEndpoints(data.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch available endpoints:", error);
+        toast.error("Failed to load available endpoints");
+      });
+  }, [currentEndpoint]);
+
+  // Cập nhật hàm để lấy full target endpoint
+  const getFullTargetEndpoint = (targetEndpoint) => {
+    if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
+
+    // Tìm endpoint được chọn từ availableEndpoints
+    const selectedEndpoint = availableEndpoints.find(
+      (ep) => ep.path === targetEndpoint
+    );
+
+    if (selectedEndpoint) {
+      // Sử dụng getFullPath để tạo full path
+      return getFullPath(selectedEndpoint.path);
+    }
+
+    return targetEndpoint;
+  };
 
   // Khởi tạo JSON strings từ nextCalls
   useEffect(() => {
@@ -111,9 +152,89 @@ export const ApiCallEditor = ({
       [field]: value,
     };
     setNextCalls(updatedCalls);
+
+    // Validate ngay khi thay đổi target_endpoint hoặc method
+    if (field === "target_endpoint" || field === "method") {
+      setTimeout(() => {
+        validateTargetEndpointsForDisplay(updatedCalls);
+      }, 0);
+    }
   };
 
-  // Thêm hàm kiểm tra JSON hợp lệ
+  // Thêm state để lưu trữ lỗi validation
+  const [endpointValidationErrors, setEndpointValidationErrors] = useState({});
+
+  // Thêm state để theo dõi các calls đã được save (original calls)
+  const [savedCalls, setSavedCalls] = useState([]);
+
+  // Cập nhật savedCalls khi component mount hoặc khi API calls được save thành công
+  useEffect(() => {
+    if (nextCalls.length > 0) {
+      // Kiểm tra xem có calls nào đã được save chưa (có id)
+      const callsWithIds = nextCalls.filter(
+        (call) => call.id && call.id <= 999999
+      ); // id từ DB thường là số
+      if (callsWithIds.length > 0) {
+        setSavedCalls(callsWithIds);
+      }
+    }
+  }, [nextCalls]);
+
+  // Hàm validate để hiển thị lỗi trên UI - CHỈ kiểm tra saved calls
+  const validateTargetEndpointsForDisplay = (currentCalls = nextCalls) => {
+    const newErrors = {};
+    const endpointGroups = {};
+
+    // CHỈ nhóm các calls đã được save (có id và id <= 999999 để phân biệt với temporary id)
+    currentCalls.forEach((call, index) => {
+      // Kiểm tra call đã được save: có id và id không phải temporary (lớn hơn 999999)
+      const isSavedCall =
+        call.id && (typeof call.id === "number" || call.id <= 999999);
+
+      if (!call.target_endpoint || !call.method || !isSavedCall) return;
+
+      if (!endpointGroups[call.target_endpoint]) {
+        endpointGroups[call.target_endpoint] = [];
+      }
+      endpointGroups[call.target_endpoint].push({
+        index,
+        method: call.method,
+        id: call.id,
+      });
+    });
+
+    // Kiểm tra trùng method trong cùng endpoint - CHỉ với saved calls
+    for (const [endpoint, calls] of Object.entries(endpointGroups)) {
+      const methods = calls.map((call) => call.method);
+      const uniqueMethods = [...new Set(methods)];
+
+      if (methods.length !== uniqueMethods.length) {
+        // Có method trùng nhau trong saved calls
+        const methodCounts = {};
+        methods.forEach((method) => {
+          methodCounts[method] = (methodCounts[method] || 0) + 1;
+        });
+
+        const duplicateMethods = Object.entries(methodCounts)
+          .filter(([, count]) => count > 1)
+          .map(([method]) => method);
+
+        const callNumbers = calls
+          .filter((call) => duplicateMethods.includes(call.method))
+          .map((call) => call.index);
+
+        callNumbers.forEach((index) => {
+          newErrors[
+            index
+          ] = `Duplicate method for endpoint "${endpoint}". Please use a different method.`;
+        });
+      }
+    }
+
+    setEndpointValidationErrors(newErrors);
+  };
+
+  // Cập nhật hàm validateAllJson
   const validateAllJson = () => {
     // Kiểm tra tất cả JSON trong nextCalls
     for (let i = 0; i < nextCalls.length; i++) {
@@ -141,11 +262,74 @@ export const ApiCallEditor = ({
     return true;
   };
 
+  // Thêm hàm validate target endpoints và methods - CHỈ kiểm tra saved calls
+  const validateTargetEndpoints = () => {
+    const endpointGroups = {};
+
+    // CHỈ nhóm các calls đã được save (có id và id không phải temporary)
+    nextCalls.forEach((call, index) => {
+      // Kiểm tra call đã được save: phải có id và id không phải temporary string
+      const isSavedCall =
+        call.id &&
+        typeof call.id !== "string" &&
+        !call.id.toString().startsWith("temp_");
+
+      if (!call.target_endpoint || !call.method || !isSavedCall) return;
+
+      if (!endpointGroups[call.target_endpoint]) {
+        endpointGroups[call.target_endpoint] = [];
+      }
+      endpointGroups[call.target_endpoint].push({
+        index,
+        method: call.method,
+        id: call.id,
+      });
+    });
+
+    // Kiểm tra trùng method trong cùng endpoint - CHỉ với saved calls
+    for (const [endpoint, calls] of Object.entries(endpointGroups)) {
+      const methods = calls.map((call) => call.method);
+      const uniqueMethods = [...new Set(methods)];
+
+      if (methods.length !== uniqueMethods.length) {
+        // Có method trùng nhau trong saved calls
+        const methodCounts = {};
+        methods.forEach((method) => {
+          methodCounts[method] = (methodCounts[method] || 0) + 1;
+        });
+
+        const duplicateMethods = Object.entries(methodCounts)
+          .filter(([, count]) => count > 1)
+          .map(([method]) => method);
+
+        const callNumbers = calls
+          .filter((call) => duplicateMethods.includes(call.method))
+          .map((call) => call.index + 1);
+
+        toast.error(
+          `Duplicate methods (${duplicateMethods.join(
+            ", "
+          )}) for endpoint "${endpoint}" in API Calls ${callNumbers.join(
+            ", "
+          )}. Each endpoint can only use each method once.`
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   // Cập nhật hàm handleSave
   const handleSave = () => {
     // Kiểm tra tất cả JSON trước khi lưu
     if (!validateAllJson()) {
-      return; // Không tiếp tục nếu có lỗi JSON
+      return; // Không tiếp tức nếu có lỗi JSON
+    }
+
+    // Kiểm tra target endpoints và methods
+    if (!validateTargetEndpoints()) {
+      return; // Không tiếp tục nếu có lỗi validate endpoint
     }
 
     // Chuẩn bị payload đúng định dạng
@@ -171,12 +355,21 @@ export const ApiCallEditor = ({
         if (!res.ok) throw new Error("Failed to save advanced configuration");
         toast.success("Advanced configuration saved successfully!");
         if (onSave) onSave();
+
+        // Cập nhật savedCalls sau khi save thành công
+        const successfullySavedCalls = nextCalls.filter((call) => call.id);
+        setSavedCalls(successfullySavedCalls);
       })
       .catch((error) => {
         console.error(error);
         toast.error(error.message);
       });
   };
+
+  // Cập nhật hàm validateTargetEndpoints khi nextCalls thay đổi
+  useEffect(() => {
+    validateTargetEndpointsForDisplay();
+  }, [nextCalls, savedCalls]);
 
   return (
     <Card className="p-6 border border-[#CBD5E1] rounded-lg">
@@ -246,26 +439,61 @@ export const ApiCallEditor = ({
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
                     <Select
-                      value={call.target_endpoint} // Sử dụng target_endpoint làm giá trị
+                      value={call.target_endpoint}
                       onValueChange={(value) => {
-                        // Cập nhật trực tiếp target_endpoint cho API call hiện tại
-                        handleNextCallChange(index, "target_endpoint", value);
+                        // Khi chọn từ dropdown, concat với full path hiện tại
+                        const fullTargetPath = getFullTargetEndpoint(value);
+                        handleNextCallChange(
+                          index,
+                          "target_endpoint",
+                          fullTargetPath
+                        );
                       }}
                     >
-                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                        <SelectValue placeholder="Select endpoint" />
+                      <SelectTrigger
+                        className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                          endpointValidationErrors[index]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      >
+                        <SelectValue placeholder="Select endpoint">
+                          {call.target_endpoint ? (
+                            <span className="font-medium text-sm">
+                              {availableEndpoints.find(
+                                (ep) => ep.path === call.target_endpoint
+                              )?.path || call.target_endpoint}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              Select endpoint
+                            </span>
+                          )}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Hiển thị danh sách các target_endpoint duy nhất */}
-                        {Array.from(
-                          new Set(nextCalls.map((c) => c.target_endpoint))
-                        ).map((endpoint) => (
-                          <SelectItem key={endpoint} value={endpoint}>
-                            {endpoint}
+                        {/* Hiển thị danh sách endpoints từ API */}
+                        {availableEndpoints.map((endpoint) => (
+                          <SelectItem key={endpoint.id} value={endpoint.path}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {endpoint.path}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {endpoint.method} - {endpoint.name}
+                              </span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+
+                    {/* Hiển thị lỗi validation */}
+                    {endpointValidationErrors[index] && (
+                      <div className="text-red-400 text-xs mt-1">
+                        {endpointValidationErrors[index]}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,7 +511,13 @@ export const ApiCallEditor = ({
                         handleNextCallChange(index, "method", value)
                       }
                     >
-                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                      <SelectTrigger
+                        className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                          endpointValidationErrors[index]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      >
                         <SelectValue placeholder="Select method" />
                       </SelectTrigger>
                       <SelectContent>
@@ -363,7 +597,6 @@ export const ApiCallEditor = ({
                   </div>
                 </div>
               </div>
-
               {/* Status condition */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
