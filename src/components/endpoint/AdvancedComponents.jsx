@@ -32,8 +32,6 @@ export const ApiCallEditor = ({
   endpointId,
   nextCalls,
   setNextCalls,
-  isRequestBodyPopoverOpen,
-  setIsRequestBodyPopoverOpen,
   setIsNewApiCallDialogOpen,
   onSave,
 }) => {
@@ -55,27 +53,35 @@ export const ApiCallEditor = ({
     setJsonStrings(initialJsonStrings);
   }, [nextCalls]);
 
+  // Cập nhật hàm handleJsonChange
   const handleJsonChange = (index, value) => {
-    setJsonStrings((prev) => ({
-      ...prev,
-      [index]: value,
-    }));
-
     // Validate JSON
     try {
-      JSON.parse(value);
+      const parsedJson = JSON.parse(value);
+      setJsonStrings((prev) => ({
+        ...prev,
+        [index]: value,
+      }));
+
       setJsonErrors((prev) => ({
         ...prev,
         [index]: null,
       }));
 
-      // Cập nhật body chỉ khi JSON hợp lệ
-      handleNextCallChange(index, "body", JSON.parse(value));
+      // Chỉ cập nhật body nếu JSON hợp lệ
+      handleNextCallChange(index, "body", parsedJson);
     } catch (e) {
+      setJsonStrings((prev) => ({
+        ...prev,
+        [index]: value,
+      }));
+
       setJsonErrors((prev) => ({
         ...prev,
         [index]: e.message,
       }));
+
+      // KHÔNG cập nhật body nếu JSON không hợp lệ
     }
   };
 
@@ -107,7 +113,41 @@ export const ApiCallEditor = ({
     setNextCalls(updatedCalls);
   };
 
+  // Thêm hàm kiểm tra JSON hợp lệ
+  const validateAllJson = () => {
+    // Kiểm tra tất cả JSON trong nextCalls
+    for (let i = 0; i < nextCalls.length; i++) {
+      const body = nextCalls[i].body;
+      try {
+        // Thử chuyển body thành chuỗi JSON để kiểm tra
+        JSON.stringify(body);
+      } catch {
+        // Nếu không thể stringify thì JSON không hợp lệ
+        toast.error(`Invalid JSON in API Call ${i + 1} - Request Body`);
+        return false;
+      }
+
+      // Kiểm tra JSON string từ jsonStrings
+      if (jsonStrings[i]) {
+        try {
+          JSON.parse(jsonStrings[i]);
+        } catch {
+          // Nếu không thể parse JSON string thì JSON không hợp lệ
+          toast.error(`Invalid JSON in API Call ${i + 1} - Request Body`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Cập nhật hàm handleSave
   const handleSave = () => {
+    // Kiểm tra tất cả JSON trước khi lưu
+    if (!validateAllJson()) {
+      return; // Không tiếp tục nếu có lỗi JSON
+    }
+
     // Chuẩn bị payload đúng định dạng
     const payload = {
       advanced_config: {
@@ -311,20 +351,6 @@ export const ApiCallEditor = ({
                         >
                           <Code className="mr-1 h-4 w-4" /> Format
                         </Button>
-                      </div>
-
-                      {/* Bottom right icon */}
-                      <div className="absolute bottom-2 right-2 flex space-x-2">
-                        <FileCode
-                          className="text-gray-400 cursor-pointer hover:text-gray-600"
-                          size={20}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsRequestBodyPopoverOpen(
-                              !isRequestBodyPopoverOpen
-                            );
-                          }}
-                        />
                       </div>
                     </div>
 
