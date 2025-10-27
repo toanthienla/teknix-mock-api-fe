@@ -53,7 +53,7 @@ import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
 import searchIcon from "@/assets/search.svg";
 import pDesc from "@/assets/project_desc.svg";
-import folderIcon from "@/assets/folder-icon.svg";
+import folderIcon from "@/assets/project-icon.svg";
 import dateIcon from "@/assets/date.svg";
 import statelessIcon from "@/assets/stateless.svg";
 import statefulIcon from "@/assets/stateful.svg";

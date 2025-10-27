@@ -82,12 +82,6 @@ export default function Topbar({
     }
   };
 
-  // useEffect(() => {
-  //   if (username && userId) {
-  //     console.log("✅ User updated:", username, userId);
-  //   }
-  // }, [username, userId]);
-
   useEffect(() => {
     checkUserLogin();
   }, []);
@@ -347,6 +341,9 @@ export default function Topbar({
                     >
                       {isLast || !item.href ? (
                         <BreadcrumbPage className="font-bold text-slate-900">
+                          {item.icon && (
+                            <img src={item.icon} alt="" className="w-4 h-4" />
+                          )}
                           {item.label}
                         </BreadcrumbPage>
                       ) : (

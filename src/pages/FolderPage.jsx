@@ -40,7 +40,7 @@ import refreshIcon from "@/assets/refresh.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
-import folderIcon from "@/assets/folder-icon.svg";
+import folderIcon from "@/assets/project-icon.svg";
 import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/search.svg";
