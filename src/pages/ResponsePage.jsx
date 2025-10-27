@@ -191,7 +191,27 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
-  // Sửa lại hoàn toàn hàm handleCreateNewApiCall
+  const fetchAdvancedConfig = () => {
+    return fetch(`${API_ROOT}/endpoints/advanced/${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch advanced data");
+        return res.json();
+      })
+      .then((data) => {
+        // Chỉ lấy nextCalls từ response
+        const advancedConfig = data.advanced_config || {};
+        setNextCalls(advancedConfig.nextCalls || []);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch advanced config:", error);
+        toast.error("Failed to load advanced configuration");
+        setNextCalls([]);
+      });
+  };
+
+  // Sửa lại hàm handleCreateNewApiCall
   const handleCreateNewApiCall = async () => {
     try {
       // Validate dữ liệu
@@ -199,23 +219,6 @@ const DashboardPage = () => {
         toast.error("Target endpoint is required");
         return;
       }
-
-      // Tạo ID tạm thời cho UI
-      const tempId = `temp-${Date.now()}`;
-      const creationTime = Date.now(); // Lưu thời gian tạo để xác định API call mới
-
-      // Tạo API Call mới với ID tạm thời
-      const newCallForUI = {
-        id: tempId,
-        target_endpoint: newApiCallTargetEndpoint,
-        method: newApiCallMethod,
-        body: JSON.parse(newApiCallRequestBody),
-        condition: newApiCallStatusCondition,
-        _creationTime: creationTime, // Thêm trường tạm để xác định API call mới
-      };
-
-      // Cập nhật UI ngay lập tức với ID tạm thời
-      setNextCalls([...nextCalls, newCallForUI]);
 
       // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
@@ -252,55 +255,22 @@ const DashboardPage = () => {
       );
 
       if (!putResponse.ok) {
-        // Nếu API thất bại, loại bỏ API call tạm thời
-        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
-
         const errorData = await putResponse.json().catch(() => ({}));
         throw new Error(
           errorData.message || "Failed to save advanced configuration"
         );
       }
 
-      // Lấy response từ server (chứa ID thực)
-      const updatedData = await putResponse.json();
-
-      // Tìm API call mới nhất từ response dựa trên thời gian tạo
-      const newCallFromServer = updatedData.advanced_config.nextCalls
-        .filter(
-          (call) =>
-            call.target_endpoint === newApiCallTargetEndpoint &&
-            call.method === newApiCallMethod &&
-            call.condition === newApiCallStatusCondition
-        )
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-
-      if (newCallFromServer) {
-        // Cập nhật ID tạm thời thành ID thực
-        setNextCalls((prev) =>
-          prev.map((call) =>
-            call._creationTime === creationTime
-              ? {
-                  ...call,
-                  id: newCallFromServer.id,
-                  _creationTime: undefined,
-                  created_at: newCallFromServer.created_at,
-                  updated_at: newCallFromServer.updated_at,
-                }
-              : call
-          )
-        );
-      } else {
-        // Nếu không tìm thấy, xóa API call tạm thời
-        setNextCalls((prev) => prev.filter((call) => call.id !== tempId));
-        throw new Error("Failed to get new API call ID from server");
-      }
-
+      // Hiển thị thông báo thành công và đóng dialog
       toast.success("API Call added successfully!");
       setIsNewApiCallDialogOpen(false);
 
       // Reset form
       setNewApiCallTargetEndpoint("");
       setNewApiCallRequestBody("{}");
+
+      // Gọi lại GET API để lấy dữ liệu mới nhất
+      await fetchAdvancedConfig();
     } catch (error) {
       console.error("Error creating new API call:", error);
       toast.error(error.message || "Failed to create API call");
@@ -2724,7 +2694,6 @@ const DashboardPage = () => {
                           </TabsTrigger>
                         )}
                       </TabsList>
-
                       {/* TabsContent cho các tab còn lại */}
                       {/* Chỉ render tab Rules khi không phải stateful */}
                       {!isStateful && (
@@ -2749,7 +2718,6 @@ const DashboardPage = () => {
                           )}
                         </TabsContent>
                       )}
-
                       {/* Chỉ render tab Proxy khi không phải stateful */}
                       {!isStateful && (
                         <TabsContent value="proxy" className="mt-0">
@@ -2818,7 +2786,6 @@ const DashboardPage = () => {
                           )}
                         </TabsContent>
                       )}
-
                       {isStateful && method !== "DELETE" && (
                         <TabsContent value="schemaBody" className="mt-0">
                           <div className="mt-2">
@@ -2831,7 +2798,6 @@ const DashboardPage = () => {
                           </div>
                         </TabsContent>
                       )}
-
                       {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
                       {isStateful && (
                         <TabsContent value="dataDefault" className="mt-0">
@@ -3100,13 +3066,13 @@ const DashboardPage = () => {
                           </Dialog>
                         </TabsContent>
                       )}
-
                       {isStateful && (
                         <TabsContent value="advanced" className="mt-0">
                           <div className="mt-2">
                             <ApiCallEditor
                               endpointId={currentEndpointId}
-                              isStateful={isStateful}
+                              currentEndpoint={currentEndpoint} // Thêm prop này
+                              getFullPath={getFullPath}
                               nextCalls={nextCalls}
                               setNextCalls={setNextCalls}
                               isRequestBodyPopoverOpen={
