@@ -211,14 +211,118 @@ const DashboardPage = () => {
       });
   };
 
+  // Thêm state cho available endpoints trong New API Call dialog
+  const [newApiCallAvailableEndpoints, setNewApiCallAvailableEndpoints] =
+    useState([]);
+
+  // Thêm state cho validation lỗi
+  const [newApiCallValidationErrors, setNewApiCallValidationErrors] = useState(
+    {}
+  );
+
+  // Thêm hàm fetch available endpoints cho New API Call dialog
+  useEffect(() => {
+    if (!currentEndpointId || !isStateful) return;
+
+    fetch(`${API_ROOT}/endpoints/advanced/path/${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setNewApiCallAvailableEndpoints(data.data);
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch available endpoints for New API Call:",
+          error
+        );
+      });
+  }, [currentEndpointId, isStateful]);
+
+  // Thêm hàm get full target endpoint cho New API Call
+  const getNewApiCallFullTargetEndpoint = (targetEndpoint) => {
+    if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
+
+    // Tìm endpoint được chọn từ available endpoints
+    const selectedEndpoint = newApiCallAvailableEndpoints.find(
+      (ep) => ep.path === targetEndpoint
+    );
+
+    if (selectedEndpoint) {
+      return getFullPath(selectedEndpoint.path);
+    }
+
+    return targetEndpoint;
+  };
+
+  // Thêm hàm validate New API Call
+  const validateNewApiCall = () => {
+    const errors = {};
+
+    if (!newApiCallTargetEndpoint.trim()) {
+      errors.targetEndpoint = "Target endpoint is required";
+    }
+
+    if (!newApiCallMethod) {
+      errors.method = "Method is required";
+    }
+
+    // Validate JSON request body
+    if (newApiCallRequestBody) {
+      try {
+        JSON.parse(newApiCallRequestBody);
+      } catch {
+        errors.requestBody = "Invalid JSON format";
+      }
+    }
+
+    // Validate trùng method cho cùng target_endpoint
+    // QUAN TRỌNG: So sánh full target endpoint với full target endpoint
+    if (newApiCallTargetEndpoint && newApiCallMethod) {
+      // Lấy full target endpoint mà user đang chọn
+      const selectedFullTargetEndpoint = getNewApiCallFullTargetEndpoint(
+        newApiCallTargetEndpoint
+      );
+
+      // Tìm các calls có cùng full target endpoint
+      const existingCallsWithSameEndpoint = nextCalls.filter(
+        (call) => call.target_endpoint === selectedFullTargetEndpoint
+      );
+
+      const duplicateMethod = existingCallsWithSameEndpoint.find(
+        (call) => call.method === newApiCallMethod
+      );
+
+      if (duplicateMethod) {
+        errors.method = `Method ${newApiCallMethod} already exists for endpoint "${selectedFullTargetEndpoint}"`;
+      }
+    }
+
+    setNewApiCallValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Reset validation errors khi các giá trị thay đổi
+  useEffect(() => {
+    if (newApiCallTargetEndpoint || newApiCallMethod || newApiCallRequestBody) {
+      setNewApiCallValidationErrors({});
+    }
+  }, [newApiCallTargetEndpoint, newApiCallMethod, newApiCallRequestBody]);
+
   // Sửa lại hàm handleCreateNewApiCall
   const handleCreateNewApiCall = async () => {
     try {
       // Validate dữ liệu
-      if (!newApiCallTargetEndpoint.trim()) {
-        toast.error("Target endpoint is required");
+      if (!validateNewApiCall()) {
         return;
       }
+
+      // Lấy full target endpoint
+      const fullTargetEndpoint = getNewApiCallFullTargetEndpoint(
+        newApiCallTargetEndpoint
+      );
 
       // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
@@ -234,9 +338,9 @@ const DashboardPage = () => {
             })),
             // Thêm API Call mới (không có id)
             {
-              target_endpoint: newApiCallTargetEndpoint,
+              target_endpoint: fullTargetEndpoint,
               method: newApiCallMethod,
-              body: JSON.parse(newApiCallRequestBody),
+              body: JSON.parse(newApiCallRequestBody || "{}"),
               condition: newApiCallStatusCondition,
             },
           ],
@@ -267,7 +371,10 @@ const DashboardPage = () => {
 
       // Reset form
       setNewApiCallTargetEndpoint("");
+      setNewApiCallMethod("GET");
       setNewApiCallRequestBody("{}");
+      setNewApiCallStatusCondition("");
+      setNewApiCallValidationErrors({});
 
       // Gọi lại GET API để lấy dữ liệu mới nhất
       await fetchAdvancedConfig();
@@ -3113,7 +3220,7 @@ const DashboardPage = () => {
                 </DialogHeader>
 
                 <div className="space-y-6 mt-4">
-                  {/* Target Endpoint - Sửa lại để hiển thị danh sách target_endpoint duy nhất */}
+                  {/* Target Endpoint */}
                   <div>
                     <Label htmlFor="target-endpoint">Target Endpoint</Label>
                     <div className="relative mt-1">
@@ -3121,20 +3228,37 @@ const DashboardPage = () => {
                         value={newApiCallTargetEndpoint}
                         onValueChange={setNewApiCallTargetEndpoint}
                       >
-                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                        <SelectTrigger
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                            newApiCallValidationErrors.targetEndpoint
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Select endpoint" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {/* Hiển thị danh sách các target_endpoint duy nhất */}
-                          {Array.from(
-                            new Set(nextCalls.map((c) => c.target_endpoint))
-                          ).map((endpoint) => (
-                            <SelectItem key={endpoint} value={endpoint}>
-                              {endpoint}
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {/* Hiển thị danh sách endpoints từ API */}
+                          {newApiCallAvailableEndpoints.map((endpoint) => (
+                            <SelectItem key={endpoint.id} value={endpoint.path}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {endpoint.path}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {endpoint.method} - {endpoint.name}
+                                </span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* Hiển thị lỗi validation */}
+                      {newApiCallValidationErrors.targetEndpoint && (
+                        <div className="text-red-400 text-xs mt-1 pl-2">
+                          {newApiCallValidationErrors.targetEndpoint}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -3146,7 +3270,13 @@ const DashboardPage = () => {
                         value={newApiCallMethod}
                         onValueChange={setNewApiCallMethod}
                       >
-                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                        <SelectTrigger
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                            newApiCallValidationErrors.method
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Select method" />
                         </SelectTrigger>
                         <SelectContent>
@@ -3156,6 +3286,12 @@ const DashboardPage = () => {
                           <SelectItem value="DELETE">DELETE</SelectItem>
                         </SelectContent>
                       </Select>
+                      {/* Hiển thị lỗi validation */}
+                      {newApiCallValidationErrors.method && (
+                        <div className="text-red-400 text-xs mt-1 pl-2">
+                          {newApiCallValidationErrors.method}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -3177,7 +3313,9 @@ const DashboardPage = () => {
                           minHeight: "124px",
                           maxHeight: "200px",
                           overflow: "auto",
-                          border: "1px solid #CBD5E1",
+                          border: newApiCallValidationErrors.requestBody
+                            ? "1px solid #ef4444"
+                            : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
                           backgroundColor: "#233554",
                           color: "white",
@@ -3222,6 +3360,13 @@ const DashboardPage = () => {
                           }}
                         />
                       </div>
+
+                      {/* Hiển thị lỗi validation cho JSON */}
+                      {newApiCallValidationErrors.requestBody && (
+                        <div className="text-red-400 text-xs mt-1 pl-2">
+                          {newApiCallValidationErrors.requestBody}
+                        </div>
+                      )}
 
                       {/* Popover cho Request Body */}
                       {isNewApiCallRequestBodyPopoverOpen && (
@@ -3334,7 +3479,15 @@ const DashboardPage = () => {
                 <DialogFooter className="flex justify-end gap-3 mt-6">
                   <Button
                     variant="outline"
-                    onClick={() => setIsNewApiCallDialogOpen(false)}
+                    onClick={() => {
+                      setIsNewApiCallDialogOpen(false);
+                      // Reset form khi đóng dialog
+                      setNewApiCallTargetEndpoint("");
+                      setNewApiCallMethod("GET");
+                      setNewApiCallRequestBody("{}");
+                      setNewApiCallStatusCondition("");
+                      setNewApiCallValidationErrors({});
+                    }}
                     className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
                   >
                     Cancel
