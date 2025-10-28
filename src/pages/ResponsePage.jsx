@@ -1291,8 +1291,7 @@ const DashboardPage = () => {
     if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
-        (w) =>
-          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
+        (w) => w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -1307,7 +1306,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1334,7 +1333,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1343,7 +1342,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1359,65 +1358,77 @@ const DashboardPage = () => {
       // 1. Get all projects in this workspace
       const projectsRes = await fetch(`${API_ROOT}/projects`);
       const allProjects = await projectsRes.json();
-      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
-      const projectIds = projectsToDelete.map(p => p.id);
+      const projectsToDelete = allProjects.filter(
+        (p) => String(p.workspace_id) === String(id)
+      );
+      const projectIds = projectsToDelete.map((p) => p.id);
 
       // 2. Get all folders in these projects
       const foldersRes = await fetch(`${API_ROOT}/folders`);
       const allFolders = await foldersRes.json();
       const foldersToDelete = allFolders.filter((f) =>
-        projectIds.some(pid => String(f.project_id) === String(pid))
+        projectIds.some((pid) => String(f.project_id) === String(pid))
       );
-      const folderIds = foldersToDelete.map(f => f.id);
+      const folderIds = foldersToDelete.map((f) => f.id);
 
       // 3. Get all endpoints in these projects/folders
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter((e) =>
-        projectIds.some(pid => String(e.project_id) === String(pid)) ||
-        folderIds.some(fid => String(e.folder_id) === String(fid))
+      const endpointsToDelete = allEndpoints.filter(
+        (e) =>
+          projectIds.some((pid) => String(e.project_id) === String(pid)) ||
+          folderIds.some((fid) => String(e.folder_id) === String(fid))
       );
 
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
-      setFolders((prev) => prev.filter((f) =>
-        !projectIds.some(pid => String(f.project_id) === String(pid))
-      ));
-      setEndpoints((prev) => prev.filter((e) =>
-        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
-        !folderIds.some(fid => String(e.folder_id) === String(fid))
-      ));
+      setProjects((prev) =>
+        prev.filter((p) => String(p.workspace_id) !== String(id))
+      );
+      setFolders((prev) =>
+        prev.filter(
+          (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
+        )
+      );
+      setEndpoints((prev) =>
+        prev.filter(
+          (e) =>
+            !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
+            !folderIds.some((fid) => String(e.folder_id) === String(fid))
+        )
+      );
 
       if (String(currentWsId) === String(id)) setCurrentWsId(null);
 
-      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+      toast.success(
+        `Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`
+      );
     } catch (error) {
-      console.error('Delete workspace error:', error);
+      console.error("Delete workspace error:", error);
       toast.error("Failed to delete workspace or its content");
     }
   };
@@ -2568,7 +2579,8 @@ const DashboardPage = () => {
                                     padding={10}
                                     className="custom-json-editor"
                                     style={{
-                                      fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
+                                      fontFamily:
+                                        '"Consolas", "Menlo", "Cascadia Code", monospace',
                                       fontSize: 12,
                                       minHeight: "200px",
                                       maxHeight: "400px",
@@ -2975,20 +2987,45 @@ const DashboardPage = () => {
                           <div className="mt-2">
                             <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                               <div className="space-y-6">
+                                {/* Đưa Current Value lên trên */}
+                                <div className="flex justify-end mb-0">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                    onClick={handleSaveInitialValue}
+                                  >
+                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                  </Button>
+                                </div>
+                                <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
+                                  Current Value
+                                </div>
+
+                                <div className="grid grid-cols-1 items-start gap-1">
+                                  <div className="col-span-3 space-y-2">
+                                    <div className="relative">
+                                      {/* Thay Textarea bằng div chỉ đọc */}
+                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                        <pre className="whitespace-pre-wrap break-words m-0">
+                                          {endpointData?.data_current
+                                            ? JSON.stringify(
+                                                endpointData.data_current,
+                                                null,
+                                                2
+                                              )
+                                            : "[]"}
+                                        </pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Đưa Initial Value xuống dưới */}
                                 <div className="flex justify-between items-center mb-1">
                                   <h2 className="text-2xl font-medium text-[#37352F]">
                                     Initial Value
                                   </h2>
-                                  <div className="flex justify-end mb-0">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                      onClick={handleSaveInitialValue}
-                                    >
-                                      <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                    </Button>
-                                  </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 items-start gap-1">
@@ -3015,17 +3052,17 @@ const DashboardPage = () => {
                                             highlight(code, languages.json)
                                           }
                                           padding={10}
-                                          className="custom-json-editor"
                                           style={{
-                                            fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
-                                            fontVariantLigatures: 'none',
+                                            fontFamily:
+                                              '"Fira code", "Fira Mono", monospace',
                                             fontSize: 12,
                                             minHeight: "200px",
                                             maxHeight: "400px",
                                             overflow: "auto",
                                             border: "1px solid #CBD5E1",
                                             borderRadius: "0.375rem",
-                                            backgroundColor: "#101728",
+                                            backgroundColor: "#233554",
+                                            color: "white",
                                             width: "100%",
                                             boxSizing: "border-box",
                                             wordBreak: "break-word",
@@ -3172,29 +3209,6 @@ const DashboardPage = () => {
                                             </div>
                                           </div>
                                         )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Sửa phần Current Value - chỉ hiển thị, không cho phép chỉnh sửa */}
-                                <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
-                                  Current Value
-                                </div>
-                                <div className="grid grid-cols-1 items-start gap-1">
-                                  <div className="col-span-3 space-y-2">
-                                    <div className="relative">
-                                      {/* Thay Textarea bằng div chỉ đọc */}
-                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                        <pre className="whitespace-pre-wrap break-words m-0">
-                                          {endpointData?.data_current
-                                            ? JSON.stringify(
-                                                endpointData.data_current,
-                                                null,
-                                                2
-                                              )
-                                            : "[]"}
-                                        </pre>
                                       </div>
                                     </div>
                                   </div>
