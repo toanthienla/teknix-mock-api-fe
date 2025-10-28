@@ -9,8 +9,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -130,3 +128,47 @@ button:hover,
 [role="tab"]:hover {
   cursor: pointer;
 }
+
+/* For json editor */
+.custom-json-editor .token.property {
+    color: #6CACE5 !important; /* key JSON */
+}
+
+.custom-json-editor .token.string {
+    color: #A5D6FF !important; /* value JSON */
+}
+
+.custom-json-editor .token.number,
+.custom-json-editor .token.boolean,
+.custom-json-editor .token.null {
+    color: #A5D6FF !important; /* các giá trị khác như số, true/false/null */
+}
+
+.custom-json-editor .token.punctuation {
+    color: #FFFFFF !important;
+    font-feature-settings: normal !important;
+    font-variant-ligatures: none !important;
+    content: none !important;
+}
+
+/* Tuỳ chọn: màu mặc định của text */
+.custom-json-editor {
+    color: #A5D6FF !important;
+}
+
+/* Ngăn jsoneditor.css can thiệp vào editor của bạn */
+.custom-json-editor .jsoneditor-field::before,
+.custom-json-editor .jsoneditor-field::after,
+.custom-json-editor .jsoneditor-value::before,
+.custom-json-editor .jsoneditor-value::after {
+    content: none !important;
+}
+
+/* Đảm bảo ký tự : thật hiển thị đúng */
+.custom-json-editor .token.punctuation {
+    color: #FFFFFF !important;
+    font-variant-ligatures: none !important;
+    font-feature-settings: normal !important;
+}
+
+

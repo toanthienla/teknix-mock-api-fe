@@ -83,7 +83,14 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
               }`}
               onClick={() => setActiveTab("all")}
             >
-              All <span className="text-black rounded-lg px-2.5 py-1 bg-yellow-300">{notifications.length}</span>
+              All
+              <span className={`rounded-lg px-2 py-1 ml-1 bg-yellow-100 ${
+                activeTab === "all"
+                  ? "bg-yellow-300 text-black"
+                  : "border-transparent text-gray-500"
+              }`}>
+                {notifications.length}
+              </span>
             </button>
 
             <button
@@ -95,6 +102,13 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
               onClick={() => setActiveTab("unread")}
             >
               Unread
+              <span className={`rounded-lg px-2 py-1 ml-1 bg-yellow-100 ${
+                activeTab === "unread"
+                  ? "bg-yellow-300 text-black"
+                  : "border-transparent text-gray-500"
+              }`}>
+                {notifications.filter((n) => !n.is_read).length}
+              </span>
             </button>
           </div>
 

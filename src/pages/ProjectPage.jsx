@@ -53,6 +53,7 @@ import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
 import searchIcon from "@/assets/search.svg";
 import pDesc from "@/assets/project_desc.svg";
+import workspaceIcon from "@/assets/workspace-icon.svg";
 import folderIcon from "@/assets/project-icon.svg";
 import dateIcon from "@/assets/date.svg";
 import statelessIcon from "@/assets/stateless.svg";
@@ -640,6 +641,7 @@ export default function ProjectPage() {
                   label: currentWorkspace.name,
                   WORKSPACE_ID: currentWorkspace.id,
                   href: "/dashboard",
+                  icon: workspaceIcon,
                 },
               ]
               : []

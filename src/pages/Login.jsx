@@ -7,7 +7,7 @@ import { LoginForm } from "@/components/LoginForm.jsx";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen w-full bg-pink-50 flex items-center justify-center p-2 sm:p-3 md:p-4">
+    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-2 sm:p-3 md:p-4">
       {/* Viền ngoài */}
       <div
         style={{
@@ -19,7 +19,7 @@ export default function LoginPage() {
         className="w-full max-w-7xl flex items-center justify-center bg-slate-50"
       >
         {/* Bố cục chính chia 2 cột */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-pink-100 shadow-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 shadow-lg overflow-hidden">
 
           {/* Cột trái: Hình ảnh và mô tả */}
           <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 bg-white lg:block">

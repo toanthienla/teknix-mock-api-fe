@@ -5,7 +5,6 @@ import WelcomePage from "@/pages/WelcomePage.jsx";
 // import AuthPage from "./pages/AuthPage";
 import ProjectPage from "./pages/ProjectPage.jsx";
 import ProjectDetail from "./pages/FolderPage.jsx";
-import ProjectEndpoints from "./pages/FolderDetail.jsx";
 import EndpointDetail from "@/pages/ResponsePage.jsx";
 import {ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -28,7 +27,6 @@ export default function App() {
         <Route path="/dashboard" element={<ProjectPage/>}/>
 
         <Route path="/dashboard/:projectId" element={<ProjectDetail/>}/>
-        <Route path="/dashboard/:projectId/folder/:folderId" element={<ProjectEndpoints/>}/>
 
         <Route
           path="/dashboard/:projectId/endpoint/:endpointId" element={<EndpointDetail/>}

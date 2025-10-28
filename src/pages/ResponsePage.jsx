@@ -57,10 +57,14 @@ import Request_Response_icon from "../assets/Request_Response_icon.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
+import workspaceIcon from "@/assets/workspace-icon.svg";
+import projectIcon from "@/assets/project-icon.svg";
+import folderIcon from "@/assets/folder-icon.svg";
+import endpointIcon from "@/assets/endpoint.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
-import "prismjs/themes/prism.css";
+import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
 
@@ -186,7 +190,6 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error("Failed to fetch advanced config:", error);
-        toast.error("Failed to load advanced configuration");
         setNextCalls([]);
       });
   }, [currentEndpointId, isStateful]);
@@ -1280,15 +1283,14 @@ const DashboardPage = () => {
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (!name.trim()) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
+      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+    if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
         (w) =>
-          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -1303,7 +1305,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1314,8 +1316,10 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Create workspace successfully!");
+        setNewWsName("");
+        setOpenNewWs(false);
+        fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
@@ -1328,7 +1332,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1337,7 +1341,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1350,25 +1354,69 @@ const DashboardPage = () => {
 
   const handleDeleteWorkspace = async (id) => {
     try {
-      const res = await fetch(`${API_ROOT}/projects`);
-      const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
+      // 1. Get all projects in this workspace
+      const projectsRes = await fetch(`${API_ROOT}/projects`);
+      const allProjects = await projectsRes.json();
+      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
+      const projectIds = projectsToDelete.map(p => p.id);
 
+      // 2. Get all folders in these projects
+      const foldersRes = await fetch(`${API_ROOT}/folders`);
+      const allFolders = await foldersRes.json();
+      const foldersToDelete = allFolders.filter((f) =>
+        projectIds.some(pid => String(f.project_id) === String(pid))
+      );
+      const folderIds = foldersToDelete.map(f => f.id);
+
+      // 3. Get all endpoints in these projects/folders
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter((e) =>
+        projectIds.some(pid => String(e.project_id) === String(pid)) ||
+        folderIds.some(fid => String(e.folder_id) === String(fid))
+      );
+
+      // 4. Delete all endpoints first
       await Promise.all(
-        projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      // 5. Delete all folders
+      await Promise.all(
+        foldersToDelete.map((f) =>
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+        )
+      );
 
+      // 6. Delete all projects
+      await Promise.all(
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+        )
+      );
+
+      // 7. Finally delete the workspace
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+
+      // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
-      if (currentWsId === id) setCurrentWsId(null);
+      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
+      setFolders((prev) => prev.filter((f) =>
+        !projectIds.some(pid => String(f.project_id) === String(pid))
+      ));
+      setEndpoints((prev) => prev.filter((e) =>
+        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
+        !folderIds.some(fid => String(e.folder_id) === String(fid))
+      ));
 
-      toast.success("Delete workspace successfully!");
-    } catch {
-      toast.error("Failed to delete workspace!");
+      if (String(currentWsId) === String(id)) setCurrentWsId(null);
+
+      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+    } catch (error) {
+      console.error('Delete workspace error:', error);
+      toast.error("Failed to delete workspace or its content");
     }
   };
 
@@ -1950,15 +1998,18 @@ const DashboardPage = () => {
                           label: currentWorkspace.name,
                           WORKSPACE_ID: currentWorkspace.id,
                           href: "/dashboard",
+                          icon: workspaceIcon,
                         },
                         {
                           label: currentProject.name,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
                         },
                         {
                           label: currentFolder.name,
                           folder_id: currentFolder.id,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
                         },
                         {
                           label:
@@ -1967,6 +2018,7 @@ const DashboardPage = () => {
                                 String(ep.id) === String(currentEndpointId)
                             )?.name || "Endpoint",
                           href: null,
+                          icon: endpointIcon,
                         },
                       ]
                     : [
@@ -1974,15 +2026,18 @@ const DashboardPage = () => {
                           label: currentWorkspace.name,
                           WORKSPACE_ID: currentWorkspace.id,
                           href: "/dashboard",
+                          icon: workspaceIcon,
                         },
                         {
                           label: currentProject.name,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
                         },
                         {
                           label: currentFolder.name,
                           folder_id: currentFolder.id,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
                         },
                       ]
                   : [
@@ -1990,10 +2045,12 @@ const DashboardPage = () => {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard",
+                        icon: workspaceIcon,
                       },
                       {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
+                        icon: projectIcon,
                       },
                     ]
                 : [
@@ -2001,6 +2058,7 @@ const DashboardPage = () => {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
+                      icon: workspaceIcon,
                     },
                   ]
               : []
@@ -2501,17 +2559,16 @@ const DashboardPage = () => {
                                       highlight(code, languages.json)
                                     }
                                     padding={10}
+                                    className="custom-json-editor"
                                     style={{
-                                      fontFamily:
-                                        '"Fira code", "Fira Mono", monospace',
+                                      fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
                                       fontSize: 12,
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",
                                       border: "1px solid #CBD5E1",
                                       borderRadius: "0.375rem",
-                                      backgroundColor: "#233554",
-                                      color: "white",
+                                      backgroundColor: "#101728",
                                     }}
                                     textareaClassName="focus:outline-none"
                                     disabled={
@@ -2976,7 +3033,7 @@ const DashboardPage = () => {
                             open={isInitialValueDialogOpen}
                             onOpenChange={setIsInitialValueDialogOpen}
                           >
-                            <DialogContent className="max-w-[512px] max-h-[80vh] overflow-y-auto p-8 rounded-2xl shadow-lg">
+                            <DialogContent className="overflow-y-auto p-4 rounded-2xl shadow-lg">
                               <DialogHeader className="flex justify-between items-start mb-4">
                                 <DialogTitle className="text-xl font-bold text-slate-800">
                                   Update Initial Value
@@ -3003,17 +3060,17 @@ const DashboardPage = () => {
                                       highlight(code, languages.json)
                                     }
                                     padding={10}
+                                    className="custom-json-editor"
                                     style={{
-                                      fontFamily:
-                                        '"Fira code", "Fira Mono", monospace',
+                                      fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
+                                      fontVariantLigatures: 'none',
                                       fontSize: 12,
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",
                                       border: "1px solid #CBD5E1",
                                       borderRadius: "0.375rem",
-                                      backgroundColor: "#233554",
-                                      color: "white",
+                                      backgroundColor: "#101728",
                                       width: "100%",
                                       boxSizing: "border-box",
                                       wordBreak: "break-word",
@@ -3307,6 +3364,7 @@ const DashboardPage = () => {
                         onValueChange={(code) => setNewApiCallRequestBody(code)}
                         highlight={(code) => highlight(code, languages.json)}
                         padding={10}
+                        className="custom-json-editor"
                         style={{
                           fontFamily: '"Fira code", "Fira Mono", monospace',
                           fontSize: 12,
@@ -3317,8 +3375,7 @@ const DashboardPage = () => {
                             ? "1px solid #ef4444"
                             : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
-                          backgroundColor: "#233554",
-                          color: "white",
+                          backgroundColor: "#101728",
                         }}
                         textareaClassName="focus:outline-none"
                       />
