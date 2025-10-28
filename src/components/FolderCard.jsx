@@ -214,7 +214,7 @@ export default function FolderCard({
           <div className="mt-4 flex justify-end">
             <Button
               variant="outline"
-              className="border-dashed border-2 border-gray-400 text-gray-600 hover:bg-yellow-50"
+              className="border-dashed border-2 border-gray-400 text-gray-600 bg-yellow-200 hover:bg-yellow-300"
               onClick={() => onAddEndpoint(folder)}
             >
               New Endpoint

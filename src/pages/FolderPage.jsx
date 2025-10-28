@@ -44,6 +44,8 @@ import folderIcon from "@/assets/project-icon.svg";
 import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/search.svg";
+import workspaceIcon from "@/assets/workspace-icon.svg";
+import projectIcon from "@/assets/project-icon.svg";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -666,10 +668,6 @@ export default function Dashboard() {
       return "Must start with a letter, only English, digits and underscores allowed.";
     }
 
-    if (name.trim().length > 20) {
-      return "Folder name max 20 chars";
-    }
-
     // Check for duplicate folder names in the current project (exclude current folder when editing)
     const projectFolders = folders.filter(f =>
       String(f.project_id) === String(projectId) &&
@@ -1065,25 +1063,69 @@ export default function Dashboard() {
 
   const handleDeleteWorkspace = async (id) => {
     try {
-      const res = await fetch(`${API_ROOT}/projects`);
-      const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
+      // 1. Get all projects in this workspace
+      const projectsRes = await fetch(`${API_ROOT}/projects`);
+      const allProjects = await projectsRes.json();
+      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
+      const projectIds = projectsToDelete.map(p => p.id);
 
+      // 2. Get all folders in these projects
+      const foldersRes = await fetch(`${API_ROOT}/folders`);
+      const allFolders = await foldersRes.json();
+      const foldersToDelete = allFolders.filter((f) =>
+        projectIds.some(pid => String(f.project_id) === String(pid))
+      );
+      const folderIds = foldersToDelete.map(f => f.id);
+
+      // 3. Get all endpoints in these projects/folders
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter((e) =>
+        projectIds.some(pid => String(e.project_id) === String(pid)) ||
+        folderIds.some(fid => String(e.folder_id) === String(fid))
+      );
+
+      // 4. Delete all endpoints first
       await Promise.all(
-        projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE" , credentials: "include",})
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE", credentials: "include",});
+      // 5. Delete all folders
+      await Promise.all(
+        foldersToDelete.map((f) =>
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+        )
+      );
 
+      // 6. Delete all projects
+      await Promise.all(
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+        )
+      );
+
+      // 7. Finally delete the workspace
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+
+      // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
-      if (currentWsId === id) setCurrentWsId(null);
+      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
+      setFolders((prev) => prev.filter((f) =>
+        !projectIds.some(pid => String(f.project_id) === String(pid))
+      ));
+      setEndpoints((prev) => prev.filter((e) =>
+        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
+        !folderIds.some(fid => String(e.folder_id) === String(fid))
+      ));
 
-      toast.success("Delete workspace successfully!");
-    } catch {
-      toast.error("Failed to delete workspace!");
+      if (String(currentWsId) === String(id)) setCurrentWsId(null);
+
+      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+    } catch (error) {
+      console.error('Delete workspace error:', error);
+      toast.error("Failed to delete workspace or its content");
     }
   };
 
@@ -1213,10 +1255,12 @@ export default function Dashboard() {
                     label: currentWorkspace.name,
                     WORKSPACE_ID: currentWorkspace.id,
                     href: "/dashboard",
+                    icon: workspaceIcon,
                   },
                   {
                     label: currentProject.name,
                     href: `/dashboard/${currentProject.id}`,
+                    icon: projectIcon,
                   },
                 ]
                 : [
@@ -1224,6 +1268,7 @@ export default function Dashboard() {
                     label: currentWorkspace.name,
                     WORKSPACE_ID: currentWorkspace.id,
                     href: "/dashboard",
+                    icon: workspaceIcon,
                   },
                 ]
               : []
@@ -1235,7 +1280,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex justify-center items-center bg-white transition-all duration-300">
         <div className="w-full px-2 pt-2 pb-4">
-          <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white mb-4">
+          <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
             <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
               <button
                 // variant="ghost"

@@ -57,10 +57,14 @@ import Request_Response_icon from "../assets/Request_Response_icon.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
+import workspaceIcon from "@/assets/workspace-icon.svg";
+import projectIcon from "@/assets/project-icon.svg";
+import folderIcon from "@/assets/folder-icon.svg";
+import endpointIcon from "@/assets/endpoint.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
-import "prismjs/themes/prism.css";
+import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
 
@@ -74,7 +78,6 @@ import { statusCodes } from "@/components/endpoint/constants";
 const DashboardPage = () => {
   const navigate = useNavigate();
   // Thêm state để quản lý data default
-  const [dataDefault, setDataDefault] = useState([]);
   const [endpointData, setEndpointData] = useState(null);
   const [endpointDefinition, setEndpointDefinition] = useState(null);
   // Thêm state để quản lý loading
@@ -96,8 +99,6 @@ const DashboardPage = () => {
   const [currentWsId, setCurrentWsId] = useState(null);
   const [isStateful, setIsStateful] = useState(false);
   const [isActive, setIsActive] = useState(true);
-  const [isInitialValueDialogOpen, setIsInitialValueDialogOpen] =
-    useState(false);
   const [tempDataDefault, setTempDataDefault] = useState([]);
   const [tempDataDefaultString, setTempDataDefaultString] = useState("");
 
@@ -186,7 +187,6 @@ const DashboardPage = () => {
       })
       .catch((error) => {
         console.error("Failed to fetch advanced config:", error);
-        toast.error("Failed to load advanced configuration");
         setNextCalls([]);
       });
   }, [currentEndpointId, isStateful]);
@@ -515,7 +515,6 @@ const DashboardPage = () => {
 
   // Hàm xử lý reset current values
   const handleResetCurrentValues = () => {
-    // Lấy path từ currentEndpoint thay vì endpointData
     const path = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     )?.path;
@@ -543,13 +542,11 @@ const DashboardPage = () => {
         return res.json();
       })
       .then(() => {
-        // Fetch lại endpoint data sau khi cập nhật
         return fetchEndpointDataByPath(path);
       })
       .then((finalData) => {
         if (finalData) {
           setEndpointData(finalData);
-          setDataDefault(finalData.data_default || []);
           toast.success("Current values reset successfully!");
           setShowResetConfirmDialog(false);
         }
@@ -1151,26 +1148,35 @@ const DashboardPage = () => {
     )
       .then((res) => {
         if (!res.ok) {
-          // Nếu không tìm thấy endpoint data, trả về null thay vì lỗi
           if (res.status === 404) return null;
           throw new Error("Failed to fetch endpoint data");
         }
         return res.json();
       })
       .then((data) => {
-        setEndpointData(data);
         if (data) {
-          setDataDefault(data.data_default || []);
+          // Endpoint data exists, use it
+          setEndpointData(data);
+          // Cập nhật temp states cho Initial Value editor
+          const initialValueString = JSON.stringify(
+            data.data_default || [],
+            null,
+            2
+          );
+          setTempDataDefaultString(initialValueString);
+          setTempDataDefault(data.data_default || []);
         } else {
-          // Nếu không có data, khởi tạo với mảng rỗng
-          setDataDefault([]);
-          setEndpointData({
+          // Endpoint doesn't exist yet, create default structure
+          const defaultEndpointData = {
             path: path,
             data_default: [],
             data_current: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          };
+          setEndpointData(defaultEndpointData);
+          setTempDataDefaultString("[]");
+          setTempDataDefault([]);
         }
         return data;
       })
@@ -1199,7 +1205,6 @@ const DashboardPage = () => {
     } else if (!isStateful && isEndpointsLoaded && !isSwitchingMode) {
       // Clear endpoint data when in stateless mode
       setEndpointData(null);
-      setDataDefault([]);
     }
   }, [
     currentEndpointId,
@@ -1280,15 +1285,14 @@ const DashboardPage = () => {
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
-    const trimmed = name.trim();
-    if (!trimmed) return "Workspace name cannot be empty";
-    if (!/^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9]*( [A-Za-zÀ-ỹ0-9]+)*$/.test(trimmed))
-      return "Must start with a letter, no special chars, single spaces allowed";
-    if (trimmed.length > 20) return "Workspace name max 20 chars";
+    if (!name.trim()) return "Workspace name cannot be empty";
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name))
+      return "Must start with a letter, only English letters, digits, '-' and '_' allowed (no spaces)";
+    if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
         (w) =>
-          w.name.toLowerCase() === trimmed.toLowerCase() && w.id !== excludeId
+          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -1303,7 +1307,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1314,8 +1318,10 @@ const DashboardPage = () => {
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(createdWs.id);
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
         toast.success("Create workspace successfully!");
+        setNewWsName("");
+        setOpenNewWs(false);
+        fetchWorkspaces();
       })
       .catch(() => toast.error("Failed to create workspace"));
   };
@@ -1328,7 +1334,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1337,7 +1343,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1350,25 +1356,69 @@ const DashboardPage = () => {
 
   const handleDeleteWorkspace = async (id) => {
     try {
-      const res = await fetch(`${API_ROOT}/projects`);
-      const allProjects = await res.json();
-      const projectsToDelete = allProjects.filter((p) => p.workspace_id === id);
+      // 1. Get all projects in this workspace
+      const projectsRes = await fetch(`${API_ROOT}/projects`);
+      const allProjects = await projectsRes.json();
+      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
+      const projectIds = projectsToDelete.map(p => p.id);
 
+      // 2. Get all folders in these projects
+      const foldersRes = await fetch(`${API_ROOT}/folders`);
+      const allFolders = await foldersRes.json();
+      const foldersToDelete = allFolders.filter((f) =>
+        projectIds.some(pid => String(f.project_id) === String(pid))
+      );
+      const folderIds = foldersToDelete.map(f => f.id);
+
+      // 3. Get all endpoints in these projects/folders
+      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
+      const allEndpoints = await endpointsRes.json();
+      const endpointsToDelete = allEndpoints.filter((e) =>
+        projectIds.some(pid => String(e.project_id) === String(pid)) ||
+        folderIds.some(fid => String(e.folder_id) === String(fid))
+      );
+
+      // 4. Delete all endpoints first
       await Promise.all(
-        projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      // 5. Delete all folders
+      await Promise.all(
+        foldersToDelete.map((f) =>
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+        )
+      );
 
+      // 6. Delete all projects
+      await Promise.all(
+        projectsToDelete.map((p) =>
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+        )
+      );
+
+      // 7. Finally delete the workspace
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+
+      // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => p.workspace_id !== id));
-      if (currentWsId === id) setCurrentWsId(null);
+      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
+      setFolders((prev) => prev.filter((f) =>
+        !projectIds.some(pid => String(f.project_id) === String(pid))
+      ));
+      setEndpoints((prev) => prev.filter((e) =>
+        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
+        !folderIds.some(fid => String(e.folder_id) === String(fid))
+      ));
 
-      toast.success("Delete workspace successfully!");
-    } catch {
-      toast.error("Failed to delete workspace!");
+      if (String(currentWsId) === String(id)) setCurrentWsId(null);
+
+      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+    } catch (error) {
+      console.error('Delete workspace error:', error);
+      toast.error("Failed to delete workspace or its content");
     }
   };
 
@@ -1842,15 +1892,8 @@ const DashboardPage = () => {
     }
   }, [selectedResponse]);
 
-  const handleOpenInitialValueDialog = () => {
-    // Sao chép dataDefault hiện tại để chỉnh sửa tạm thời
-    setTempDataDefault(JSON.parse(JSON.stringify(dataDefault)));
-    setIsInitialValueDialogOpen(true);
-  };
-
   // Hàm xử lý khi lưu initial value
   const handleSaveInitialValue = () => {
-    // Lấy path từ currentEndpoint thay vì endpointData
     const path = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     )?.path;
@@ -1880,14 +1923,11 @@ const DashboardPage = () => {
           return res.json();
         })
         .then(() => {
-          // Fetch lại endpoint data sau khi cập nhật
           return fetchEndpointDataByPath(path);
         })
         .then((finalData) => {
           if (finalData) {
             setEndpointData(finalData);
-            setDataDefault(finalData.data_default || []);
-            setIsInitialValueDialogOpen(false);
             toast.success("Initial value updated successfully!");
           }
         })
@@ -1907,6 +1947,21 @@ const DashboardPage = () => {
     setTempDataDefaultString(JSON.stringify(tempDataDefault, null, 2));
   }, [tempDataDefault]);
 
+  // Thêm useEffect để cập nhật tempDataDefaultString từ endpointData.data_default
+  useEffect(() => {
+    if (endpointData && endpointData.data_default) {
+      const initialValueString = JSON.stringify(
+        endpointData.data_default,
+        null,
+        2
+      );
+      setTempDataDefaultString(initialValueString);
+      setTempDataDefault(endpointData.data_default);
+    } else if (endpointData && !endpointData.data_default) {
+      setTempDataDefaultString("[]");
+      setTempDataDefault([]);
+    }
+  }, [endpointData]);
   // Thêm UI loading
   if (isLoading) {
     return (
@@ -1950,15 +2005,18 @@ const DashboardPage = () => {
                           label: currentWorkspace.name,
                           WORKSPACE_ID: currentWorkspace.id,
                           href: "/dashboard",
+                          icon: workspaceIcon,
                         },
                         {
                           label: currentProject.name,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
                         },
                         {
                           label: currentFolder.name,
                           folder_id: currentFolder.id,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
                         },
                         {
                           label:
@@ -1967,6 +2025,7 @@ const DashboardPage = () => {
                                 String(ep.id) === String(currentEndpointId)
                             )?.name || "Endpoint",
                           href: null,
+                          icon: endpointIcon,
                         },
                       ]
                     : [
@@ -1974,15 +2033,18 @@ const DashboardPage = () => {
                           label: currentWorkspace.name,
                           WORKSPACE_ID: currentWorkspace.id,
                           href: "/dashboard",
+                          icon: workspaceIcon,
                         },
                         {
                           label: currentProject.name,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
                         },
                         {
                           label: currentFolder.name,
                           folder_id: currentFolder.id,
                           href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
                         },
                       ]
                   : [
@@ -1990,10 +2052,12 @@ const DashboardPage = () => {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard",
+                        icon: workspaceIcon,
                       },
                       {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
+                        icon: projectIcon,
                       },
                     ]
                 : [
@@ -2001,6 +2065,7 @@ const DashboardPage = () => {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
+                      icon: workspaceIcon,
                     },
                   ]
               : []
@@ -2501,17 +2566,16 @@ const DashboardPage = () => {
                                       highlight(code, languages.json)
                                     }
                                     padding={10}
+                                    className="custom-json-editor"
                                     style={{
-                                      fontFamily:
-                                        '"Fira code", "Fira Mono", monospace',
+                                      fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
                                       fontSize: 12,
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",
                                       border: "1px solid #CBD5E1",
                                       borderRadius: "0.375rem",
-                                      backgroundColor: "#233554",
-                                      color: "white",
+                                      backgroundColor: "#101728",
                                     }}
                                     textareaClassName="focus:outline-none"
                                     disabled={
@@ -2920,7 +2984,7 @@ const DashboardPage = () => {
                                       variant="outline"
                                       size="icon"
                                       className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                      onClick={handleOpenInitialValueDialog}
+                                      onClick={handleSaveInitialValue}
                                     >
                                       <SaveIcon className="h-5 w-5 text-[#898883]" />
                                     </Button>
@@ -2930,16 +2994,184 @@ const DashboardPage = () => {
                                 <div className="grid grid-cols-1 items-start gap-1">
                                   <div className="col-span-3 space-y-2">
                                     <div className="relative">
-                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                        <pre className="whitespace-pre-wrap break-words m-0">
-                                          {dataDefault && dataDefault.length > 0
-                                            ? JSON.stringify(
-                                                dataDefault,
-                                                null,
-                                                2
-                                              )
-                                            : "[]"}
-                                        </pre>
+                                      <div
+                                        className="relative w-full"
+                                        ref={initialValueEditorRef}
+                                      >
+                                        <Editor
+                                          value={tempDataDefaultString}
+                                          onValueChange={(code) => {
+                                            setTempDataDefaultString(code);
+                                            try {
+                                              // Chỉ cập nhật state khi JSON hợp lệ
+                                              setTempDataDefault(
+                                                JSON.parse(code)
+                                              );
+                                            } catch {
+                                              // Giữ nguyên state cũ nếu JSON không hợp lệ
+                                            }
+                                          }}
+                                          highlight={(code) =>
+                                            highlight(code, languages.json)
+                                          }
+                                          padding={10}
+                                          className="custom-json-editor"
+                                          style={{
+                                            fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
+                                            fontVariantLigatures: 'none',
+                                            fontSize: 12,
+                                            minHeight: "200px",
+                                            maxHeight: "400px",
+                                            overflow: "auto",
+                                            border: "1px solid #CBD5E1",
+                                            borderRadius: "0.375rem",
+                                            backgroundColor: "#101728",
+                                            width: "100%",
+                                            boxSizing: "border-box",
+                                            wordBreak: "break-word",
+                                            whiteSpace: "pre-wrap",
+                                            overflowWrap: "break-word",
+                                          }}
+                                          textareaClassName="focus:outline-none w-full"
+                                        />
+
+                                        {/* JSON Editor controls */}
+                                        <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                            onClick={() => {
+                                              try {
+                                                const formatted =
+                                                  JSON.stringify(
+                                                    JSON.parse(
+                                                      tempDataDefaultString
+                                                    ),
+                                                    null,
+                                                    2
+                                                  );
+                                                setTempDataDefaultString(
+                                                  formatted
+                                                );
+                                                setTempDataDefault(
+                                                  JSON.parse(formatted)
+                                                );
+                                              } catch {
+                                                toast.error(
+                                                  "Invalid JSON format"
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            <Code className="mr-1 h-4 w-4" />{" "}
+                                            Format
+                                          </Button>
+                                        </div>
+
+                                        {/* Bottom right icon */}
+                                        <div className="absolute bottom-2 right-2 flex space-x-2">
+                                          <FileCode
+                                            className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                            size={26}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setIsInitialValuePopoverOpen(
+                                                !isInitialValuePopoverOpen
+                                              );
+                                            }}
+                                          />
+                                        </div>
+
+                                        {/* Popover cho Initial Value */}
+                                        {isInitialValuePopoverOpen && (
+                                          <div
+                                            ref={initialValuePopoverRef}
+                                            className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                          >
+                                            <div className="flex flex-col items-center gap-2 p-3.5">
+                                              <div className="w-full flex justify-between items-center">
+                                                <div className="font-semibold text-sm text-gray-800">
+                                                  Variable Picker
+                                                </div>
+                                                <X
+                                                  className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsInitialValuePopoverOpen(
+                                                      false
+                                                    );
+                                                  }}
+                                                />
+                                              </div>
+
+                                              <div className="w-full flex justify-between">
+                                                <div
+                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                                    selectedSection === "url"
+                                                      ? "bg-[#EDEDEC] text-[#374151]"
+                                                      : "text-[#374151] hover:bg-gray-100"
+                                                  }`}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedSection("url");
+                                                  }}
+                                                >
+                                                  URL Parameters
+                                                </div>
+                                                <div
+                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                                    selectedSection === "query"
+                                                      ? "bg-[#EDEDEC] text-[#374151]"
+                                                      : "text-[#374151] hover:bg-gray-100"
+                                                  }`}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedSection("query");
+                                                  }}
+                                                >
+                                                  Query Parameters
+                                                </div>
+                                                <div
+                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                                    selectedSection === "state"
+                                                      ? "bg-[#EDEDEC] text-[#374151]"
+                                                      : "text-[#374151] hover:bg-gray-100"
+                                                  }`}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedSection("state");
+                                                  }}
+                                                >
+                                                  Project State
+                                                </div>
+                                              </div>
+
+                                              <div
+                                                className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  // Đảm bảo sử dụng selectedSection hiện tại
+                                                  const templateText =
+                                                    getTemplateText().template;
+                                                  insertInitialValueTemplate(
+                                                    templateText
+                                                  );
+                                                }}
+                                              >
+                                                <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                                  {getTemplateText().template}
+                                                </div>
+                                                <div className="text-[12px] text-gray-500">
+                                                  {
+                                                    getTemplateText()
+                                                      .description
+                                                  }
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -2970,209 +3202,9 @@ const DashboardPage = () => {
                               </div>
                             </Card>
                           </div>
-
-                          {/* Dialog Update Initial Value */}
-                          <Dialog
-                            open={isInitialValueDialogOpen}
-                            onOpenChange={setIsInitialValueDialogOpen}
-                          >
-                            <DialogContent className="max-w-[512px] max-h-[80vh] overflow-y-auto p-8 rounded-2xl shadow-lg">
-                              <DialogHeader className="flex justify-between items-start mb-4">
-                                <DialogTitle className="text-xl font-bold text-slate-800">
-                                  Update Initial Value
-                                </DialogTitle>
-                              </DialogHeader>
-
-                              <div className="mb-6">
-                                <div
-                                  className="relative w-full"
-                                  ref={initialValueEditorRef}
-                                >
-                                  <Editor
-                                    value={tempDataDefaultString}
-                                    onValueChange={(code) => {
-                                      setTempDataDefaultString(code);
-                                      try {
-                                        // Chỉ cập nhật state khi JSON hợp lệ
-                                        setTempDataDefault(JSON.parse(code));
-                                      } catch {
-                                        // Giữ nguyên state cũ nếu JSON không hợp lệ
-                                      }
-                                    }}
-                                    highlight={(code) =>
-                                      highlight(code, languages.json)
-                                    }
-                                    padding={10}
-                                    style={{
-                                      fontFamily:
-                                        '"Fira code", "Fira Mono", monospace',
-                                      fontSize: 12,
-                                      minHeight: "200px",
-                                      maxHeight: "400px",
-                                      overflow: "auto",
-                                      border: "1px solid #CBD5E1",
-                                      borderRadius: "0.375rem",
-                                      backgroundColor: "#233554",
-                                      color: "white",
-                                      width: "100%",
-                                      boxSizing: "border-box",
-                                      wordBreak: "break-word",
-                                      whiteSpace: "pre-wrap",
-                                      overflowWrap: "break-word",
-                                    }}
-                                    textareaClassName="focus:outline-none w-full"
-                                  />
-
-                                  {/* JSON Editor controls */}
-                                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                      onClick={() => {
-                                        try {
-                                          const formatted = JSON.stringify(
-                                            JSON.parse(tempDataDefaultString),
-                                            null,
-                                            2
-                                          );
-                                          setTempDataDefaultString(formatted);
-                                          setTempDataDefault(
-                                            JSON.parse(formatted)
-                                          );
-                                        } catch {
-                                          toast.error("Invalid JSON format");
-                                        }
-                                      }}
-                                    >
-                                      <Code className="mr-1 h-4 w-4" /> Format
-                                    </Button>
-                                  </div>
-
-                                  {/* Bottom right icon */}
-                                  <div className="absolute bottom-2 right-2 flex space-x-2">
-                                    <FileCode
-                                      className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                      size={26}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsInitialValuePopoverOpen(
-                                          !isInitialValuePopoverOpen
-                                        );
-                                      }}
-                                    />
-                                  </div>
-
-                                  {/* Popover cho Initial Value */}
-                                  {isInitialValuePopoverOpen && (
-                                    <div
-                                      ref={initialValuePopoverRef}
-                                      className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                                    >
-                                      <div className="flex flex-col items-center gap-2 p-3.5">
-                                        <div className="w-full flex justify-between items-center">
-                                          <div className="font-semibold text-sm text-gray-800">
-                                            Variable Picker
-                                          </div>
-                                          <X
-                                            className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setIsInitialValuePopoverOpen(
-                                                false
-                                              );
-                                            }}
-                                          />
-                                        </div>
-
-                                        <div className="w-full flex justify-between">
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "url"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("url");
-                                            }}
-                                          >
-                                            URL Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "query"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("query");
-                                            }}
-                                          >
-                                            Query Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "state"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("state");
-                                            }}
-                                          >
-                                            Project State
-                                          </div>
-                                        </div>
-
-                                        <div
-                                          className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Đảm bảo sử dụng selectedSection hiện tại
-                                            const templateText =
-                                              getTemplateText().template;
-                                            insertInitialValueTemplate(
-                                              templateText
-                                            );
-                                          }}
-                                        >
-                                          <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                            {getTemplateText().template}
-                                          </div>
-                                          <div className="text-[12px] text-gray-500">
-                                            {getTemplateText().description}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              <DialogFooter className="flex justify-end gap-3">
-                                <Button
-                                  variant="outline"
-                                  onClick={() =>
-                                    setIsInitialValueDialogOpen(false)
-                                  }
-                                  className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
-                                  onClick={handleSaveInitialValue}
-                                >
-                                  Update
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
                         </TabsContent>
                       )}
+
                       {isStateful && (
                         <TabsContent value="advanced" className="mt-0">
                           <div className="mt-2">
@@ -3307,6 +3339,7 @@ const DashboardPage = () => {
                         onValueChange={(code) => setNewApiCallRequestBody(code)}
                         highlight={(code) => highlight(code, languages.json)}
                         padding={10}
+                        className="custom-json-editor"
                         style={{
                           fontFamily: '"Fira code", "Fira Mono", monospace',
                           fontSize: 12,
@@ -3317,8 +3350,7 @@ const DashboardPage = () => {
                             ? "1px solid #ef4444"
                             : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
-                          backgroundColor: "#233554",
-                          color: "white",
+                          backgroundColor: "#101728",
                         }}
                         textareaClassName="focus:outline-none"
                       />

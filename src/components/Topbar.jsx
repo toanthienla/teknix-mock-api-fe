@@ -1,14 +1,11 @@
 import React, {useEffect, useState} from "react";
-import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
+import {ChevronDown, MoreHorizontal, Plus, SlashIcon} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
-import logoutIcon from "@/assets/logout.svg";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,6 +20,11 @@ import {getCurrentUser, logout} from "@/services/api.js";
 import {API_ROOT} from "@/utils/constants.js";
 import avatar from "@/assets/user-avatar.svg";
 import logoIcon from "@/assets/logo.svg";
+import editIcon from "@/assets/Edit Icon.svg";
+import deleteIcon from "@/assets/Trash Icon.svg";
+import logoutIcon from "@/assets/logout.svg";
+import arrowIcon from "@/assets/arrow.svg";
+import breadcrumbIcon from "@/assets/breadcrumb-arrow.svg";
 import Notifications from "../components/Notifications.jsx";
 import RealtimeClient from "@/services/centrifugo.jsx";
 
@@ -62,27 +64,27 @@ export default function Topbar({
     (ws) => String(ws.id) === String(current)
   );
 
-  const checkUserLogin = async () => {
-    try {
-      const res = await getCurrentUser();
+  useEffect(() => {
+    const checkUserLogin = async () => {
+      try {
+        const res = await getCurrentUser();
 
-      if (res?.data?.username) {
-        setUsername(res.data.username);
-        setUserId(res.data.user_id);
-      } else {
-        toast.error("Please log in to continue.");
+        if (res?.data?.username) {
+          setAuthChecked(true);
+          setUsername(res.data.username); // lưu toàn bộ thông tin user
+          setUserId(res.data.user_id);
+          console.log("Logged in user:", res.data.username);
+        } else {
+          toast.error("Please log in to continue.");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("User not logged in:", err);
+        toast.error("Session expired. Please log in again.");
         navigate("/login");
       }
-    } catch (err) {
-      console.error("User not logged in:", err);
-      toast.error("Session expired. Please log in again.");
-      navigate("/login");
-    } finally {
-      setAuthChecked(true);
-    }
-  };
+    };
 
-  useEffect(() => {
     checkUserLogin();
   }, []);
 
@@ -90,8 +92,8 @@ export default function Topbar({
   // 1️⃣ FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
   // =============================
   const fetchNotifications = async () => {
-    if (!username) return;
     try {
+      console.log("Fetching notifications...");
       const res = await fetch(`${API_ROOT}/notifications`, {
         credentials: "include",
       });
@@ -99,6 +101,7 @@ export default function Topbar({
       const data = await res.json();
 
       // Lấy thêm dữ liệu chi tiết từ project_request_logs, users, và endpoints
+      const endpointCache = {};
       const detailed = await Promise.all(
         data.map(async (n) => {
           let status = null;
@@ -143,14 +146,18 @@ export default function Topbar({
           // --- Lấy thông tin endpoint ---
           try {
             if (n.endpoint_id) {
-              const epRes = await fetch(`${API_ROOT}/endpoints/${n.endpoint_id}`, {
-                credentials: "include",
-              });
-              if (epRes.ok) {
-                const ep = await epRes.json();
-                endpoint_method = ep.method;
-                endpoint_path = ep.path;
+              if (!endpointCache[n.endpoint_id]) {
+                const epRes = await fetch(`${API_ROOT}/endpoints/${n.endpoint_id}`, {
+                  credentials: "include",
+                });
+                if (epRes.ok) {
+                  const ep = await epRes.json();
+                  endpointCache[n.endpoint_id] = ep;
+                }
               }
+              const ep = endpointCache[n.endpoint_id];
+              endpoint_method = ep?.method;
+              endpoint_path = ep?.path;
             }
           } catch (e) {
             console.warn("Cannot fetch endpoint info", n.endpoint_id, e);
@@ -327,6 +334,29 @@ export default function Topbar({
       {/* Breadcrumb */}
       {breadcrumb.length > 0 && (
         <div className="px-4 py-2 rounded-md inline-flex overflow-hidden">
+          {/* Nút điều hướng trái/phải */}
+          <div className="flex items-center gap-2 border-r-2 border-slate-500 pr-3">
+            <button
+              className="p-1 rounded hover:bg-slate-100 transition"
+              onClick={() => window.history.back()}
+            >
+              <img src={arrowIcon} alt="Back" className="w-4 h-4"/>
+            </button>
+            <button
+              className="p-1 rounded hover:bg-slate-100 transition"
+              onClick={() => window.history.forward()}
+            >
+              <img src={arrowIcon} alt="Forward" className="w-4 h-4 rotate-180"/>
+            </button>
+          </div>
+
+          {/* Icon breadcrumb */}
+          <img
+            src={breadcrumbIcon}
+            alt="Breadcrumb icon"
+            className="w-6 h-6 mx-3"
+          />
+
           <Breadcrumb>
             <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
               {breadcrumb.map((item, idx) => {
@@ -340,9 +370,9 @@ export default function Topbar({
                       title={item.label}
                     >
                       {isLast || !item.href ? (
-                        <BreadcrumbPage className="font-bold text-slate-900">
+                        <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
                           {item.icon && (
-                            <img src={item.icon} alt="" className="w-4 h-4" />
+                            <img src={item.icon} alt="" className="w-4 h-4 mr-1 brightness-0"/>
                           )}
                           {item.label}
                         </BreadcrumbPage>
@@ -360,14 +390,19 @@ export default function Topbar({
                               localStorage.setItem("openFolders", JSON.stringify(savedFolders));
                             }
                           }}
-                          className="font-bold text-slate-400"
+                          className="flex items-center gap-1 font-bold text-slate-400"
                         >
+                          {item.icon && (
+                            <img src={item.icon} alt="" className="w-4 h-4 mr-1"/>
+                          )}
                           {item.label}
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
-                      <BreadcrumbSeparator className="font-medium text-slate-400"/>
+                      <BreadcrumbSeparator>
+                        <SlashIcon/>
+                      </BreadcrumbSeparator>
                     )}
                   </React.Fragment>
                 );

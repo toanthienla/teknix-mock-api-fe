@@ -7,7 +7,7 @@ import { SignupForm } from "@/components/SignupForm.jsx";
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen w-full bg-pink-50 flex items-center justify-center p-2 sm:p-3 md:p-4">
+    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-2 sm:p-3 md:p-4">
       {/* Viền ngoài */}
       <div
         style={{
@@ -19,7 +19,7 @@ export default function SignupPage() {
         className="w-full max-w-7xl flex items-center justify-center bg-slate-50"
       >
         {/* Bố cục chính chia 2 cột */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-pink-100 shadow-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 shadow-lg overflow-hidden">
 
           {/* Cột trái: Phần signup */}
           <div className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-10 relative bg-white">
