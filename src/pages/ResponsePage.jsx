@@ -3186,7 +3186,7 @@ const DashboardPage = () => {
               open={isNewApiCallDialogOpen}
               onOpenChange={setIsNewApiCallDialogOpen}
             >
-              <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+              <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-slate-800">
                     New API Call
@@ -3203,23 +3203,36 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallTargetEndpoint}
                       >
                         <SelectTrigger
-                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[400px] ${
                             newApiCallValidationErrors.targetEndpoint
                               ? "border-red-500"
                               : ""
                           }`}
                         >
-                          <SelectValue placeholder="Select endpoint" />
+                          <SelectValue
+                            placeholder="Select endpoint"
+                            className="truncate text-left"
+                          />
                         </SelectTrigger>
-                        <SelectContent className="max-h-60 overflow-y-auto">
+                        <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
                           {/* Hiển thị danh sách endpoints từ API */}
                           {newApiCallAvailableEndpoints.map((endpoint) => (
-                            <SelectItem key={endpoint.id} value={endpoint.path}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">
+                            <SelectItem
+                              key={endpoint.id}
+                              value={endpoint.path}
+                              className="max-w-[430px]"
+                            >
+                              <div className="flex flex-col min-w-0 w-full">
+                                <span
+                                  className="font-medium truncate text-left"
+                                  title={endpoint.path}
+                                >
                                   {endpoint.path}
                                 </span>
-                                <span className="text-xs text-gray-500">
+                                <span
+                                  className="text-xs text-gray-500 truncate text-left"
+                                  title={`${endpoint.method} - ${endpoint.name}`}
+                                >
                                   {endpoint.method} - {endpoint.name}
                                 </span>
                               </div>
@@ -3245,15 +3258,18 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallMethod}
                       >
                         <SelectTrigger
-                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
                             newApiCallValidationErrors.method
                               ? "border-red-500"
                               : ""
                           }`}
                         >
-                          <SelectValue placeholder="Select method" />
+                          <SelectValue
+                            placeholder="Select method"
+                            className="truncate"
+                          />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="w-[450px]">
                           <SelectItem value="GET">GET</SelectItem>
                           <SelectItem value="POST">POST</SelectItem>
                           <SelectItem value="PUT">PUT</SelectItem>
@@ -3286,15 +3302,21 @@ const DashboardPage = () => {
                           fontSize: 12,
                           minHeight: "124px",
                           maxHeight: "200px",
-                          overflow: "auto",
+                          overflowX: "auto",
+                          overflowY: "auto",
                           border: newApiCallValidationErrors.requestBody
                             ? "1px solid #ef4444"
                             : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
                           backgroundColor: "#233554",
                           color: "white",
+                          width: "100%",
+                          maxWidth: "100%",
+                          boxSizing: "border-box",
+                          whiteSpace: "pre", // Giữ nguyên format, không wrap
+                          wordBreak: "normal", // Không break word
                         }}
-                        textareaClassName="focus:outline-none"
+                        textareaClassName="focus:outline-none w-full"
                       />
 
                       {/* JSON Editor controls */}
@@ -3435,10 +3457,13 @@ const DashboardPage = () => {
                         value={newApiCallStatusCondition}
                         onValueChange={setNewApiCallStatusCondition}
                       >
-                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                          <SelectValue placeholder="Select condition" />
+                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px]">
+                          <SelectValue
+                            placeholder="Select condition"
+                            className="truncate"
+                          />
                         </SelectTrigger>
-                        <SelectContent className="max-h-60 overflow-y-auto">
+                        <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
                           {statusCodes.map((status) => (
                             <SelectItem key={status.code} value={status.code}>
                               {status.code} - {status.description.split("–")[0]}
