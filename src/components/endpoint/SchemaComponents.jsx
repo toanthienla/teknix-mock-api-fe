@@ -57,23 +57,15 @@ export const SchemaBodyEditor = ({
     }
   }, [endpointId, refreshTrigger]); // Thêm refreshTrigger vào dependency
 
-  // Hàm lấy tất cả các trường từ schema của endpoint (dùng cho tag name)
-  const getEndpointSchemaFields = () => {
-    if (!endpointSchema?.schema) return [];
+  // Hàm kiểm tra field có được tick hay không dựa trên schemaFields internal state
+  const isFieldChecked = (fieldName) => {
+    // "id" luôn được tick
+    if (fieldName === "id") return true;
 
-    // Xử lý riêng cho GET method
-    if (method === "GET" && endpointSchema.schema.fields) {
-      // Với GET, schema.fields là mảng tên field
-      return endpointSchema.schema.fields;
-    } else if (
-      (method === "POST" || method === "PUT") &&
-      endpointSchema.schema
-    ) {
-      // Với POST/PUT, schema là object với key là tên field
-      return Object.keys(endpointSchema.schema);
-    }
-
-    return [];
+    // Kiểm tra field có tồn tại trong schemaFields và không phải default field
+    return schemaFields.some(
+      (field) => field.name === fieldName && !field.isDefault
+    );
   };
 
   // Khởi tạo schema fields từ endpointData với field "id" mặc định
@@ -128,6 +120,48 @@ export const SchemaBodyEditor = ({
       setSchemaFields(fieldsConfig);
     }
   }, [endpointData, method, availableFields]);
+
+  // Sync schemaFields với endpointSchema khi endpointSchema thay đổi
+  useEffect(() => {
+    if (endpointSchema?.schema) {
+      let fieldsConfig = [];
+
+      // Xác định danh sách field từ endpointSchema
+      let fieldNames = [];
+
+      if (method === "GET" && endpointSchema.schema.fields) {
+        // Với GET, schema.fields là mảng tên field
+        fieldNames = [...endpointSchema.schema.fields];
+      } else if (
+        (method === "POST" || method === "PUT") &&
+        endpointSchema.schema
+      ) {
+        // Với POST/PUT, schema là object với key là tên field
+        fieldNames = Object.keys(endpointSchema.schema);
+      }
+
+      // Đảm bảo "id" luôn được bao gồm
+      if (!fieldNames.includes("id")) {
+        fieldNames = ["id", ...fieldNames];
+      }
+
+      // Map các field thành cấu trúc internal
+      fieldsConfig = fieldNames.map((name, index) => {
+        // Tìm config từ availableFields (base schema)
+        const fieldConfig = availableFields.find((f) => f.name === name);
+
+        return {
+          id: `field-${index}`,
+          name,
+          type: fieldConfig ? fieldConfig.type : "string",
+          required: fieldConfig ? fieldConfig.required : false,
+          isDefault: name === "id",
+        };
+      });
+
+      setSchemaFields(fieldsConfig);
+    }
+  }, [endpointSchema, method, availableFields]);
 
   // Fetch available fields for GET method
   useEffect(() => {
@@ -316,16 +350,12 @@ export const SchemaBodyEditor = ({
             {method !== "GET" && <div>Required</div>}{" "}
             {/* Ẩn cột Required nếu là GET */}
           </div>
-
-          {/* Dữ liệu từng field */}
           {availableFields.map((field) => {
             const fieldName = field.name;
             const fieldType = field.type;
             const fieldRequired =
               field.required !== undefined ? field.required : false;
-            const isChecked = schemaFields.some(
-              (f) => f.name === fieldName && !f.isDefault
-            );
+            const isChecked = isFieldChecked(fieldName);
 
             return (
               <div
@@ -338,7 +368,7 @@ export const SchemaBodyEditor = ({
                 <div>
                   <input
                     type="checkbox"
-                    checked={fieldName === "id" ? true : isChecked}
+                    checked={isChecked}
                     disabled={fieldName === "id"}
                     className={`cursor-pointer ${
                       fieldName === "id" ? "opacity-50" : ""
@@ -372,27 +402,6 @@ export const SchemaBodyEditor = ({
             );
           })}
         </div>
-
-        {/* Phần hiển thị các field đã chọn dưới dạng tag vẫn giữ nguyên */}
-        <div className="mb-2">
-          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-            Schema Fields
-          </span>
-        </div>
-        {getEndpointSchemaFields().length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {getEndpointSchemaFields().map((fieldName) => (
-              <div
-                key={fieldName}
-                className="flex items-center bg-[rgba(37,99,235,0.2)] rounded-[21.4359px] px-[7.1453px] py-[3.57265px]"
-              >
-                <span className="text-[#2563EB] text-[10.0034px] leading-[17px]">
-                  {fieldName}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </Card>
     </div>
   );
