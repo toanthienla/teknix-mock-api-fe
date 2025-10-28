@@ -964,7 +964,13 @@ const DashboardPage = () => {
   // Thêm state để lưu condition
   const [responseCondition, setResponseCondition] = useState({});
 
-  const [setSearchTerm] = useState("");
+  // Thêm state cho search functionality
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter statusData dựa trên search term
+  const filteredStatusData = statusData.filter((status) =>
+    status.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -2314,7 +2320,7 @@ const DashboardPage = () => {
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgba(28,28,28,0.2)] bg-transparent border-none focus:outline-none"
+                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgb(28,28,28)] bg-transparent border-none focus:outline-none"
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
@@ -2326,101 +2332,123 @@ const DashboardPage = () => {
               {/* Response Configuration Table */}
               <div className="square-lg border border-[#EDEFF1] bg-white overflow-hidden">
                 <div className="overflow-y-auto max-h-[400px]">
-                  {statusData.map((status, index) => {
-                    // Xác định màu sắc dựa trên status code
-                    let statusColor = "#1C1C1C";
-                    const statusCode = status.code.toString();
+                  {filteredStatusData.length > 0 ? (
+                    filteredStatusData.map((status, index) => {
+                      // Xác định màu sắc dựa trên status code
+                      let statusColor = "#1C1C1C";
+                      const statusCode = status.code.toString();
 
-                    if (statusCode.startsWith("1")) {
-                      statusColor = "#ff6bfa";
-                    } else if (statusCode.startsWith("2")) {
-                      statusColor = "#328F4F";
-                    } else if (statusCode.startsWith("3")) {
-                      statusColor = "#3e70dd";
-                    } else if (statusCode.startsWith("4")) {
-                      statusColor = "#ed4245";
-                    } else if (statusCode.startsWith("5")) {
-                      statusColor = "#ef8843";
-                    }
+                      if (statusCode.startsWith("1")) {
+                        statusColor = "#ff6bfa";
+                      } else if (statusCode.startsWith("2")) {
+                        statusColor = "#328F4F";
+                      } else if (statusCode.startsWith("3")) {
+                        statusColor = "#3e70dd";
+                      } else if (statusCode.startsWith("4")) {
+                        statusColor = "#ed4245";
+                      } else if (statusCode.startsWith("5")) {
+                        statusColor = "#ef8843";
+                      }
 
-                    return (
-                      <div
-                        key={status.id || status.code}
-                        className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
-                          selectedResponse?.id === status.id
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50"
-                        } ${
-                          index === statusData.length - 1 ? "border-b-0" : ""
-                        }`}
-                        draggable={!isStateful}
-                        onDragStart={
-                          !isStateful
-                            ? (e) => handleDragStart(e, index)
-                            : undefined
-                        }
-                        onDragOver={!isStateful ? handleDragOver : undefined}
-                        onDragEnd={
-                          !isStateful ? () => setDraggedItem(null) : undefined
-                        }
-                        onDrop={
-                          !isStateful ? (e) => handleDrop(e, index) : undefined
-                        }
-                        onClick={() => {
-                          const response = endpointResponses.find(
-                            (r) => r.id === status.id
-                          );
-                          if (response) handleResponseSelect(response);
-                        }}
-                      >
-                        <div className="flex items-center gap-1">
-                          {!isStateful && (
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                          )}
+                      return (
+                        <div
+                          key={status.id || status.code}
+                          className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
+                            selectedResponse?.id === status.id
+                              ? "bg-gray-100"
+                              : "hover:bg-gray-50"
+                          } ${
+                            index === filteredStatusData.length - 1
+                              ? "border-b-0"
+                              : ""
+                          }`}
+                          // Disable drag & drop khi đang search
+                          draggable={!isStateful && !searchTerm}
+                          onDragStart={
+                            !isStateful && !searchTerm
+                              ? (e) => handleDragStart(e, index)
+                              : undefined
+                          }
+                          onDragOver={
+                            !isStateful && !searchTerm
+                              ? handleDragOver
+                              : undefined
+                          }
+                          onDragEnd={
+                            !isStateful && !searchTerm
+                              ? () => setDraggedItem(null)
+                              : undefined
+                          }
+                          onDrop={
+                            !isStateful && !searchTerm
+                              ? (e) => handleDrop(e, index)
+                              : undefined
+                          }
+                          onClick={() => {
+                            const response = endpointResponses.find(
+                              (r) => r.id === status.id
+                            );
+                            if (response) handleResponseSelect(response);
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {/* Disable GripVertical icon khi đang search */}
+                            {!isStateful && !searchTerm && (
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[12px] font-medium"
+                                style={{ color: statusColor }}
+                              >
+                                {status.code}
+                              </span>
+                              <span className="text-[12px] text-[#212121]">
+                                {status.name}
+                              </span>
+                            </div>
+                          </div>
                           <div className="flex items-center gap-2">
-                            <span
-                              className="text-[12px] font-medium"
-                              style={{ color: statusColor }}
-                            >
-                              {status.code}
-                            </span>
-                            <span className="text-[12px] text-[#212121]">
-                              {status.name}
-                            </span>
+                            {!isStateful && status.isDefault && (
+                              <span className="text-gray-500 text-xs">
+                                Default
+                              </span>
+                            )}
+                            {/* Thêm icon thùng rác */}
+                            {!isStateful && !status.isDefault && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-gray-400 hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Chọn response trước khi xóa
+                                  const response = endpointResponses.find(
+                                    (r) => r.id === status.id
+                                  );
+                                  if (response) {
+                                    handleResponseSelect(response);
+                                    handleDeleteResponse();
+                                  }
+                                }}
+                                title="Delete response"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {!isStateful && status.isDefault && (
-                            <span className="text-gray-500 text-xs">
-                              Default
-                            </span>
-                          )}
-                          {/* Thêm icon thùng rác */}
-                          {!isStateful && !status.isDefault && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-gray-400 hover:text-red-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Chọn response trước khi xóa
-                                const response = endpointResponses.find(
-                                  (r) => r.id === status.id
-                                );
-                                if (response) {
-                                  handleResponseSelect(response);
-                                  handleDeleteResponse();
-                                }
-                              }}
-                              title="Delete response"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+                      <div className="text-sm">
+                        {searchTerm
+                          ? "No responses found matching your search"
+                          : "No responses available"}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2618,7 +2646,7 @@ const DashboardPage = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                      className="border-[#E5E5E1] px-1 rounded-sm"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const canEdit =
@@ -2639,7 +2667,7 @@ const DashboardPage = () => {
                                         }
                                       }}
                                     >
-                                      <Code className="mr-1 h-4 w-4" /> Format
+                                      <Code className="h-4 w-4" /> Format
                                     </Button>
                                   </div>
 
