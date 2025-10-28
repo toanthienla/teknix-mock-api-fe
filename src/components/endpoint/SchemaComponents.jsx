@@ -35,6 +35,31 @@ export const SchemaBodyEditor = ({
   const [endpointSchema, setEndpointSchema] = useState(null);
   // Thêm state để trigger refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Tạo danh sách fields đã được filter theo search term
+  const getFilteredFields = () => {
+    if (!searchTerm.trim()) {
+      return availableFields;
+    }
+
+    const term = searchTerm.toLowerCase();
+
+    // Chia availableFields thành 2 nhóm: matches và non-matches
+    const matches = [];
+    const nonMatches = [];
+
+    availableFields.forEach((field) => {
+      if (field.name.toLowerCase().includes(term)) {
+        matches.push(field);
+      } else {
+        nonMatches.push(field);
+      }
+    });
+
+    // Trả về matches trước, sau đó là non-matches
+    return [...matches, ...nonMatches];
+  };
 
   // Fetch schema từ endpoints/{id} cho phần tag name
   useEffect(() => {
@@ -345,12 +370,26 @@ export const SchemaBodyEditor = ({
             } gap-4 font-semibold text-gray-700 border-b pb-2 mb-2`}
           >
             <div>Select</div>
-            <div>Field Name</div>
+            <div className="flex flex-col">
+              <div>Field Name</div>
+              {/* Search input */}
+              <div className="mt-2">
+                <input
+                  type="text"
+                  placeholder="Search fields..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-45 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
             <div>Type</div>
             {method !== "GET" && <div>Required</div>}{" "}
             {/* Ẩn cột Required nếu là GET */}
           </div>
-          {availableFields.map((field) => {
+
+          {/* Dữ liệu từng field */}
+          {getFilteredFields().map((field) => {
             const fieldName = field.name;
             const fieldType = field.type;
             const fieldRequired =
@@ -362,7 +401,12 @@ export const SchemaBodyEditor = ({
                 key={fieldName}
                 className={`grid ${
                   method === "GET" ? "grid-cols-3" : "grid-cols-4"
-                } gap-4 items-center py-2 hover:bg-gray-100`}
+                } gap-4 items-center py-2 hover:bg-gray-100 ${
+                  searchTerm &&
+                  !fieldName.toLowerCase().includes(searchTerm.toLowerCase())
+                    ? "opacity-50"
+                    : ""
+                }`}
               >
                 {/* Checkbox */}
                 <div>
@@ -370,7 +414,7 @@ export const SchemaBodyEditor = ({
                     type="checkbox"
                     checked={isChecked}
                     disabled={fieldName === "id"}
-                    className={`cursor-pointer ${
+                    className={`w-5 h-5 accent-black cursor-pointer ${
                       fieldName === "id" ? "opacity-50" : ""
                     }`}
                     onChange={() => handleFieldToggle(fieldName)}
@@ -401,6 +445,13 @@ export const SchemaBodyEditor = ({
               </div>
             );
           })}
+
+          {/* Hiển thị thông báo khi không có kết quả search */}
+          {searchTerm && getFilteredFields().length === 0 && (
+            <div className="text-center py-4 text-gray-500">
+              No fields found matching "{searchTerm}"
+            </div>
+          )}
         </div>
       </Card>
     </div>
