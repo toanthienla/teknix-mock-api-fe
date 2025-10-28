@@ -152,6 +152,9 @@ const DashboardPage = () => {
 
   const [isNewApiCallDialogOpen, setIsNewApiCallDialogOpen] = useState(false);
   const [newApiCallTargetEndpoint, setNewApiCallTargetEndpoint] = useState("");
+  // Thêm state để lưu display text
+  const [newApiCallTargetEndpointDisplay, setNewApiCallTargetEndpointDisplay] =
+    useState("");
   const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
   const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
   const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
@@ -230,7 +233,21 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
-          setNewApiCallAvailableEndpoints(data.data);
+          // Chỉ lấy unique paths, bỏ duplicate
+          const uniquePaths = [
+            ...new Set(data.data.map((endpoint) => endpoint.path)),
+          ];
+
+          // Transform data để chỉ có path và id (lấy id đầu tiên của mỗi path)
+          const transformedEndpoints = uniquePaths.map((path) => {
+            const firstEndpoint = data.data.find((ep) => ep.path === path);
+            return {
+              id: firstEndpoint.id, // Lấy id đầu tiên của path này
+              path: path,
+            };
+          });
+
+          setNewApiCallAvailableEndpoints(transformedEndpoints);
         }
       })
       .catch((error) => {
@@ -245,7 +262,7 @@ const DashboardPage = () => {
   const getNewApiCallFullTargetEndpoint = (targetEndpoint) => {
     if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
 
-    // Tìm endpoint được chọn từ available endpoints
+    // Tìm endpoint đầu tiên có path này từ available endpoints
     const selectedEndpoint = newApiCallAvailableEndpoints.find(
       (ep) => ep.path === targetEndpoint
     );
@@ -279,7 +296,6 @@ const DashboardPage = () => {
     }
 
     // Validate trùng method cho cùng target_endpoint
-    // QUAN TRỌNG: So sánh full target endpoint với full target endpoint
     if (newApiCallTargetEndpoint && newApiCallMethod) {
       // Lấy full target endpoint mà user đang chọn
       const selectedFullTargetEndpoint = getNewApiCallFullTargetEndpoint(
@@ -3036,6 +3052,7 @@ const DashboardPage = () => {
                                         ref={initialValueEditorRef}
                                       >
                                         <Editor
+                                          className="custom-json-editor"
                                           value={tempDataDefaultString}
                                           onValueChange={(code) => {
                                             setTempDataDefaultString(code);
@@ -3061,7 +3078,7 @@ const DashboardPage = () => {
                                             overflow: "auto",
                                             border: "1px solid #CBD5E1",
                                             borderRadius: "0.375rem",
-                                            backgroundColor: "#233554",
+                                            backgroundColor: "#101728",
                                             color: "white",
                                             width: "100%",
                                             boxSizing: "border-box",
@@ -3272,7 +3289,12 @@ const DashboardPage = () => {
                     <div className="relative mt-1">
                       <Select
                         value={newApiCallTargetEndpoint}
-                        onValueChange={setNewApiCallTargetEndpoint}
+                        onValueChange={(value) => {
+                          setNewApiCallTargetEndpoint(value);
+
+                          // Chỉ cần set display text là path
+                          setNewApiCallTargetEndpointDisplay(value);
+                        }}
                       >
                         <SelectTrigger
                           className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[400px] ${
@@ -3284,14 +3306,17 @@ const DashboardPage = () => {
                           <SelectValue
                             placeholder="Select endpoint"
                             className="truncate text-left"
-                          />
+                          >
+                            {newApiCallTargetEndpointDisplay ||
+                              "Select endpoint"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {/* Hiển thị danh sách endpoints từ API */}
+                          {/* Hiển thị danh sách endpoints từ API - chỉ hiển thị path */}
                           {newApiCallAvailableEndpoints.map((endpoint) => (
                             <SelectItem
-                              key={endpoint.id}
-                              value={endpoint.path}
+                              key={endpoint.id} // Sử dụng id làm key
+                              value={endpoint.path} // Sử dụng path làm value
                               className="max-w-[430px]"
                             >
                               <div className="flex flex-col min-w-0 w-full">
@@ -3300,12 +3325,6 @@ const DashboardPage = () => {
                                   title={endpoint.path}
                                 >
                                   {endpoint.path}
-                                </span>
-                                <span
-                                  className="text-xs text-gray-500 truncate text-left"
-                                  title={`${endpoint.method} - ${endpoint.name}`}
-                                >
-                                  {endpoint.method} - {endpoint.name}
                                 </span>
                               </div>
                             </SelectItem>
@@ -3554,6 +3573,7 @@ const DashboardPage = () => {
                       setIsNewApiCallDialogOpen(false);
                       // Reset form khi đóng dialog
                       setNewApiCallTargetEndpoint("");
+                      setNewApiCallTargetEndpointDisplay("");
                       setNewApiCallMethod("GET");
                       setNewApiCallRequestBody("{}");
                       setNewApiCallStatusCondition("");

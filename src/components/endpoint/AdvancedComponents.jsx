@@ -54,7 +54,21 @@ export const ApiCallEditor = ({
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
-          setAvailableEndpoints(data.data);
+          // Chỉ lấy unique paths, bỏ duplicate
+          const uniquePaths = [
+            ...new Set(data.data.map((endpoint) => endpoint.path)),
+          ];
+
+          // Transform data để chỉ có path và id (lấy id đầu tiên của mỗi path)
+          const transformedEndpoints = uniquePaths.map((path) => {
+            const firstEndpoint = data.data.find((ep) => ep.path === path);
+            return {
+              id: firstEndpoint.id, // Lấy id đầu tiên của path này
+              path: path,
+            };
+          });
+
+          setAvailableEndpoints(transformedEndpoints);
         }
       })
       .catch((error) => {
@@ -472,16 +486,14 @@ export const ApiCallEditor = ({
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Hiển thị danh sách endpoints từ API */}
+                        {/* Hiển thị danh sách endpoints từ API - chỉ hiển thị path */}
                         {availableEndpoints.map((endpoint) => (
                           <SelectItem key={endpoint.id} value={endpoint.path}>
                             <div className="flex flex-col">
                               <span className="font-medium">
                                 {endpoint.path}
                               </span>
-                              <span className="text-xs text-gray-500">
-                                {endpoint.method} - {endpoint.name}
-                              </span>
+                              {/* Bỏ hiển thị method và name */}
                             </div>
                           </SelectItem>
                         ))}
@@ -558,7 +570,7 @@ export const ApiCallEditor = ({
                             ? "1px solid #ef4444"
                             : "1px solid #CBD5E1",
                           borderRadius: "0.375rem",
-                          backgroundColor: "#233554",
+                          backgroundColor: "#101728",
                           color: "white",
                         }}
                         textareaClassName="focus:outline-none"
