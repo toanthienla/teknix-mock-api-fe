@@ -547,6 +547,7 @@ export const ApiCallEditor = ({
                         onValueChange={(code) => handleJsonChange(index, code)}
                         highlight={(code) => highlight(code, languages.json)}
                         padding={10}
+                        className="custom-json-editor"
                         style={{
                           fontFamily: '"Fira code", "Fira Mono", monospace',
                           fontSize: 12,
