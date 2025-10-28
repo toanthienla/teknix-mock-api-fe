@@ -324,7 +324,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const {projectId, folderId} = useParams();
+  const {projectId} = useParams();
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
@@ -379,14 +379,14 @@ export default function Dashboard() {
   const [newEName, setNewEName] = useState("");
   const [newEPath, setNewEPath] = useState("");
   const [newEMethod, setNewEMethod] = useState("");
-  const [newEFolderId, setNewEFolderId] = useState(folderId || "");
+  const [newEFolderId, setNewEFolderId] = useState("");
   const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
 
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
   const [editEPath, setEditEPath] = useState("");
-  const [editEFolderId, setEditEFolderId] = useState(folderId || "");
+  const [editEFolderId, setEditEFolderId] = useState("");
   const [editEMethod, setEditEMethod] = useState("");
 
   // dialogs
@@ -646,11 +646,6 @@ export default function Dashboard() {
       toast.dismiss();
       toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
 
-      // If currently viewing the deleted folder, navigate back to project view
-      if (folderId === deleteFolderId) {
-        navigate(`/projects/${projectId}`);
-      }
-
       setOpenDeleteFolder(false);
       setDeleteFolderId(null);
     } catch (error) {
@@ -799,7 +794,7 @@ export default function Dashboard() {
     }
     const duplicateName = endpoints.some(
       (ep) =>
-        String(ep.folder_id) === String(folderId) &&
+        String(ep.folder_id) === String(selectedFolder?.id) &&
         ep.name.toLowerCase() === name.toLowerCase()
     );
     if (duplicateName) {
@@ -868,14 +863,15 @@ export default function Dashboard() {
       );
       return false;
     }
+
     const duplicateName = endpoints.find(
       (ep) =>
         ep.id !== id &&
-        String(ep.folder_id) === String(folderId) &&
+        String(ep.folder_id) === String(selectedFolder?.id) &&
         ep.name.toLowerCase() === name.toLowerCase()
     );
     if (duplicateName) {
-      toast.warning("Name already exists");
+      toast.warning("Name already exists in this folder");
       return false;
     }
 
@@ -933,6 +929,9 @@ export default function Dashboard() {
     setEditEPath(e.path);
     setEditEFolderId(e.folder_id);
     setEditEMethod(e.method);
+
+    const folderOfEndpoint = folders.find((f) => String(f.id) === String(e.folder_id));
+    setSelectedFolder(folderOfEndpoint);
 
     setCurrentEndpoint(e);
     setOpenEdit(true);
@@ -1172,11 +1171,11 @@ export default function Dashboard() {
   );
 
   // Nếu có folderId → chỉ lấy folder đó
-  if (folderId) {
-    filteredEndpoints = filteredEndpoints.filter(
-      (e) => String(e.folder_id) === String(folderId)
-    );
-  }
+  // if (folderId) {
+  //   filteredEndpoints = filteredEndpoints.filter(
+  //     (e) => String(e.folder_id) === String(folderId)
+  //   );
+  // }
 
   // sort endpoints based on sortOption
   let sortedEndpoints = [...filteredEndpoints];
@@ -2064,7 +2063,7 @@ export default function Dashboard() {
                 setNewEName("");
                 setNewEPath("");
                 setNewEMethod("");
-                setNewEFolderId(folderId || "");
+                setNewEFolderId("");
                 setNewEType(false);
               }}
             >
