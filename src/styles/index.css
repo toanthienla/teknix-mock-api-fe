@@ -144,14 +144,46 @@ button:hover,
     color: #A5D6FF !important; /* các giá trị khác như số, true/false/null */
 }
 
-.custom-json-editor .token.punctuation {
+/* Đảm bảo dấu : luôn có màu trắng */
+.custom-json-editor .token.punctuation,
+.custom-json-editor .token.operator,
+.custom-json-editor span[style*=":"],
+.custom-json-editor .token.punctuation:has(+ .token.string),
+.custom-json-editor .token.string + .token.punctuation {
     color: #FFFFFF !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    text-shadow: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
 }
 
-/* Tuỳ chọn: màu mặc định của text */
+/* Tổng quát: đảm bảo tất cả dấu punctuation trong JSON editor có màu trắng */
+.custom-json-editor,
+.custom-json-editor *,
+.custom-json-editor .token,
+.custom-json-editor .token * {
+    --json-punctuation-color: #FFFFFF !important;
+}
+
+.custom-json-editor .token.punctuation,
+.custom-json-editor .jsoneditor-punctuation,
+.custom-json-editor .jsoneditor-separator {
+    color: #FFFFFF !important;
+}
+
+/* Ngăn bất kỳ style nào có thể override màu trắng */
+.custom-json-editor [style*="color:"],
+.custom-json-editor [class*="colon"],
+.custom-json-editor [class*="operator"] {
+    color: inherit !important;
+}
+
+/* Tuỳ chỉnh: màu mặc định của text */
 .custom-json-editor {
     color: #A5D6FF !important;
 }
@@ -164,8 +196,9 @@ button:hover,
     content: none !important;
 }
 
-/* Đảm bảo ký tự : thật hiển thị đúng */
-.custom-json-editor .token.punctuation {
+/* Đảm bảo ký tự : thật hiển thị đúng màu trắng */
+.custom-json-editor .token.punctuation,
+.custom-json-editor .jsoneditor-colon {
     color: #FFFFFF !important;
     font-variant-ligatures: none !important;
     font-feature-settings: normal !important;

@@ -152,6 +152,9 @@ const DashboardPage = () => {
 
   const [isNewApiCallDialogOpen, setIsNewApiCallDialogOpen] = useState(false);
   const [newApiCallTargetEndpoint, setNewApiCallTargetEndpoint] = useState("");
+  // Thêm state để lưu display text
+  const [newApiCallTargetEndpointDisplay, setNewApiCallTargetEndpointDisplay] =
+    useState("");
   const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
   const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
   const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
@@ -230,7 +233,21 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
-          setNewApiCallAvailableEndpoints(data.data);
+          // Chỉ lấy unique paths, bỏ duplicate
+          const uniquePaths = [
+            ...new Set(data.data.map((endpoint) => endpoint.path)),
+          ];
+
+          // Transform data để chỉ có path và id (lấy id đầu tiên của mỗi path)
+          const transformedEndpoints = uniquePaths.map((path) => {
+            const firstEndpoint = data.data.find((ep) => ep.path === path);
+            return {
+              id: firstEndpoint.id, // Lấy id đầu tiên của path này
+              path: path,
+            };
+          });
+
+          setNewApiCallAvailableEndpoints(transformedEndpoints);
         }
       })
       .catch((error) => {
@@ -245,7 +262,7 @@ const DashboardPage = () => {
   const getNewApiCallFullTargetEndpoint = (targetEndpoint) => {
     if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
 
-    // Tìm endpoint được chọn từ available endpoints
+    // Tìm endpoint đầu tiên có path này từ available endpoints
     const selectedEndpoint = newApiCallAvailableEndpoints.find(
       (ep) => ep.path === targetEndpoint
     );
@@ -279,7 +296,6 @@ const DashboardPage = () => {
     }
 
     // Validate trùng method cho cùng target_endpoint
-    // QUAN TRỌNG: So sánh full target endpoint với full target endpoint
     if (newApiCallTargetEndpoint && newApiCallMethod) {
       // Lấy full target endpoint mà user đang chọn
       const selectedFullTargetEndpoint = getNewApiCallFullTargetEndpoint(
@@ -948,7 +964,13 @@ const DashboardPage = () => {
   // Thêm state để lưu condition
   const [responseCondition, setResponseCondition] = useState({});
 
-  const [setSearchTerm] = useState("");
+  // Thêm state cho search functionality
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter statusData dựa trên search term
+  const filteredStatusData = statusData.filter((status) =>
+    status.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -1291,8 +1313,7 @@ const DashboardPage = () => {
     if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
-        (w) =>
-          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
+        (w) => w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -1307,7 +1328,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1334,7 +1355,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1343,7 +1364,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1359,65 +1380,77 @@ const DashboardPage = () => {
       // 1. Get all projects in this workspace
       const projectsRes = await fetch(`${API_ROOT}/projects`);
       const allProjects = await projectsRes.json();
-      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
-      const projectIds = projectsToDelete.map(p => p.id);
+      const projectsToDelete = allProjects.filter(
+        (p) => String(p.workspace_id) === String(id)
+      );
+      const projectIds = projectsToDelete.map((p) => p.id);
 
       // 2. Get all folders in these projects
       const foldersRes = await fetch(`${API_ROOT}/folders`);
       const allFolders = await foldersRes.json();
       const foldersToDelete = allFolders.filter((f) =>
-        projectIds.some(pid => String(f.project_id) === String(pid))
+        projectIds.some((pid) => String(f.project_id) === String(pid))
       );
-      const folderIds = foldersToDelete.map(f => f.id);
+      const folderIds = foldersToDelete.map((f) => f.id);
 
       // 3. Get all endpoints in these projects/folders
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter((e) =>
-        projectIds.some(pid => String(e.project_id) === String(pid)) ||
-        folderIds.some(fid => String(e.folder_id) === String(fid))
+      const endpointsToDelete = allEndpoints.filter(
+        (e) =>
+          projectIds.some((pid) => String(e.project_id) === String(pid)) ||
+          folderIds.some((fid) => String(e.folder_id) === String(fid))
       );
 
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
-      setFolders((prev) => prev.filter((f) =>
-        !projectIds.some(pid => String(f.project_id) === String(pid))
-      ));
-      setEndpoints((prev) => prev.filter((e) =>
-        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
-        !folderIds.some(fid => String(e.folder_id) === String(fid))
-      ));
+      setProjects((prev) =>
+        prev.filter((p) => String(p.workspace_id) !== String(id))
+      );
+      setFolders((prev) =>
+        prev.filter(
+          (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
+        )
+      );
+      setEndpoints((prev) =>
+        prev.filter(
+          (e) =>
+            !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
+            !folderIds.some((fid) => String(e.folder_id) === String(fid))
+        )
+      );
 
       if (String(currentWsId) === String(id)) setCurrentWsId(null);
 
-      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+      toast.success(
+        `Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`
+      );
     } catch (error) {
-      console.error('Delete workspace error:', error);
+      console.error("Delete workspace error:", error);
       toast.error("Failed to delete workspace or its content");
     }
   };
@@ -2287,7 +2320,7 @@ const DashboardPage = () => {
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgba(28,28,28,0.2)] bg-transparent border-none focus:outline-none"
+                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgb(28,28,28)] bg-transparent border-none focus:outline-none"
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
@@ -2299,101 +2332,123 @@ const DashboardPage = () => {
               {/* Response Configuration Table */}
               <div className="square-lg border border-[#EDEFF1] bg-white overflow-hidden">
                 <div className="overflow-y-auto max-h-[400px]">
-                  {statusData.map((status, index) => {
-                    // Xác định màu sắc dựa trên status code
-                    let statusColor = "#1C1C1C";
-                    const statusCode = status.code.toString();
+                  {filteredStatusData.length > 0 ? (
+                    filteredStatusData.map((status, index) => {
+                      // Xác định màu sắc dựa trên status code
+                      let statusColor = "#1C1C1C";
+                      const statusCode = status.code.toString();
 
-                    if (statusCode.startsWith("1")) {
-                      statusColor = "#ff6bfa";
-                    } else if (statusCode.startsWith("2")) {
-                      statusColor = "#328F4F";
-                    } else if (statusCode.startsWith("3")) {
-                      statusColor = "#3e70dd";
-                    } else if (statusCode.startsWith("4")) {
-                      statusColor = "#ed4245";
-                    } else if (statusCode.startsWith("5")) {
-                      statusColor = "#ef8843";
-                    }
+                      if (statusCode.startsWith("1")) {
+                        statusColor = "#ff6bfa";
+                      } else if (statusCode.startsWith("2")) {
+                        statusColor = "#328F4F";
+                      } else if (statusCode.startsWith("3")) {
+                        statusColor = "#3e70dd";
+                      } else if (statusCode.startsWith("4")) {
+                        statusColor = "#ed4245";
+                      } else if (statusCode.startsWith("5")) {
+                        statusColor = "#ef8843";
+                      }
 
-                    return (
-                      <div
-                        key={status.id || status.code}
-                        className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
-                          selectedResponse?.id === status.id
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50"
-                        } ${
-                          index === statusData.length - 1 ? "border-b-0" : ""
-                        }`}
-                        draggable={!isStateful}
-                        onDragStart={
-                          !isStateful
-                            ? (e) => handleDragStart(e, index)
-                            : undefined
-                        }
-                        onDragOver={!isStateful ? handleDragOver : undefined}
-                        onDragEnd={
-                          !isStateful ? () => setDraggedItem(null) : undefined
-                        }
-                        onDrop={
-                          !isStateful ? (e) => handleDrop(e, index) : undefined
-                        }
-                        onClick={() => {
-                          const response = endpointResponses.find(
-                            (r) => r.id === status.id
-                          );
-                          if (response) handleResponseSelect(response);
-                        }}
-                      >
-                        <div className="flex items-center gap-1">
-                          {!isStateful && (
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                          )}
+                      return (
+                        <div
+                          key={status.id || status.code}
+                          className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
+                            selectedResponse?.id === status.id
+                              ? "bg-gray-100"
+                              : "hover:bg-gray-50"
+                          } ${
+                            index === filteredStatusData.length - 1
+                              ? "border-b-0"
+                              : ""
+                          }`}
+                          // Disable drag & drop khi đang search
+                          draggable={!isStateful && !searchTerm}
+                          onDragStart={
+                            !isStateful && !searchTerm
+                              ? (e) => handleDragStart(e, index)
+                              : undefined
+                          }
+                          onDragOver={
+                            !isStateful && !searchTerm
+                              ? handleDragOver
+                              : undefined
+                          }
+                          onDragEnd={
+                            !isStateful && !searchTerm
+                              ? () => setDraggedItem(null)
+                              : undefined
+                          }
+                          onDrop={
+                            !isStateful && !searchTerm
+                              ? (e) => handleDrop(e, index)
+                              : undefined
+                          }
+                          onClick={() => {
+                            const response = endpointResponses.find(
+                              (r) => r.id === status.id
+                            );
+                            if (response) handleResponseSelect(response);
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            {/* Disable GripVertical icon khi đang search */}
+                            {!isStateful && !searchTerm && (
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-[12px] font-medium"
+                                style={{ color: statusColor }}
+                              >
+                                {status.code}
+                              </span>
+                              <span className="text-[12px] text-[#212121]">
+                                {status.name}
+                              </span>
+                            </div>
+                          </div>
                           <div className="flex items-center gap-2">
-                            <span
-                              className="text-[12px] font-medium"
-                              style={{ color: statusColor }}
-                            >
-                              {status.code}
-                            </span>
-                            <span className="text-[12px] text-[#212121]">
-                              {status.name}
-                            </span>
+                            {!isStateful && status.isDefault && (
+                              <span className="text-gray-500 text-xs">
+                                Default
+                              </span>
+                            )}
+                            {/* Thêm icon thùng rác */}
+                            {!isStateful && !status.isDefault && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-gray-400 hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Chọn response trước khi xóa
+                                  const response = endpointResponses.find(
+                                    (r) => r.id === status.id
+                                  );
+                                  if (response) {
+                                    handleResponseSelect(response);
+                                    handleDeleteResponse();
+                                  }
+                                }}
+                                title="Delete response"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {!isStateful && status.isDefault && (
-                            <span className="text-gray-500 text-xs">
-                              Default
-                            </span>
-                          )}
-                          {/* Thêm icon thùng rác */}
-                          {!isStateful && !status.isDefault && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-gray-400 hover:text-red-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Chọn response trước khi xóa
-                                const response = endpointResponses.find(
-                                  (r) => r.id === status.id
-                                );
-                                if (response) {
-                                  handleResponseSelect(response);
-                                  handleDeleteResponse();
-                                }
-                              }}
-                              title="Delete response"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+                      <div className="text-sm">
+                        {searchTerm
+                          ? "No responses found matching your search"
+                          : "No responses available"}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2568,7 +2623,8 @@ const DashboardPage = () => {
                                     padding={10}
                                     className="custom-json-editor"
                                     style={{
-                                      fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
+                                      fontFamily:
+                                        '"Consolas", "Menlo", "Cascadia Code", monospace',
                                       fontSize: 12,
                                       minHeight: "200px",
                                       maxHeight: "400px",
@@ -2590,7 +2646,7 @@ const DashboardPage = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                      className="border-[#E5E5E1] px-1 rounded-sm"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const canEdit =
@@ -2611,7 +2667,7 @@ const DashboardPage = () => {
                                         }
                                       }}
                                     >
-                                      <Code className="mr-1 h-4 w-4" /> Format
+                                      <Code className="h-4 w-4" /> Format
                                     </Button>
                                   </div>
 
@@ -2975,20 +3031,45 @@ const DashboardPage = () => {
                           <div className="mt-2">
                             <Card className="p-6 border border-[#CBD5E1] rounded-lg">
                               <div className="space-y-6">
+                                {/* Đưa Current Value lên trên */}
+                                <div className="flex justify-end mb-0">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                    onClick={handleSaveInitialValue}
+                                  >
+                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                  </Button>
+                                </div>
+                                <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
+                                  Current Value
+                                </div>
+
+                                <div className="grid grid-cols-1 items-start gap-1">
+                                  <div className="col-span-3 space-y-2">
+                                    <div className="relative">
+                                      {/* Thay Textarea bằng div chỉ đọc */}
+                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                        <pre className="whitespace-pre-wrap break-words m-0">
+                                          {endpointData?.data_current
+                                            ? JSON.stringify(
+                                                endpointData.data_current,
+                                                null,
+                                                2
+                                              )
+                                            : "[]"}
+                                        </pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Đưa Initial Value xuống dưới */}
                                 <div className="flex justify-between items-center mb-1">
                                   <h2 className="text-2xl font-medium text-[#37352F]">
                                     Initial Value
                                   </h2>
-                                  <div className="flex justify-end mb-0">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                      onClick={handleSaveInitialValue}
-                                    >
-                                      <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                    </Button>
-                                  </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 items-start gap-1">
@@ -2999,6 +3080,7 @@ const DashboardPage = () => {
                                         ref={initialValueEditorRef}
                                       >
                                         <Editor
+                                          className="custom-json-editor"
                                           value={tempDataDefaultString}
                                           onValueChange={(code) => {
                                             setTempDataDefaultString(code);
@@ -3015,10 +3097,9 @@ const DashboardPage = () => {
                                             highlight(code, languages.json)
                                           }
                                           padding={10}
-                                          className="custom-json-editor"
                                           style={{
-                                            fontFamily: '"Consolas", "Menlo", "Cascadia Code", monospace',
-                                            fontVariantLigatures: 'none',
+                                            fontFamily:
+                                              '"Fira code", "Fira Mono", monospace',
                                             fontSize: 12,
                                             minHeight: "200px",
                                             maxHeight: "400px",
@@ -3026,6 +3107,7 @@ const DashboardPage = () => {
                                             border: "1px solid #CBD5E1",
                                             borderRadius: "0.375rem",
                                             backgroundColor: "#101728",
+                                            color: "white",
                                             width: "100%",
                                             boxSizing: "border-box",
                                             wordBreak: "break-word",
@@ -3176,29 +3258,6 @@ const DashboardPage = () => {
                                     </div>
                                   </div>
                                 </div>
-
-                                {/* Sửa phần Current Value - chỉ hiển thị, không cho phép chỉnh sửa */}
-                                <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
-                                  Current Value
-                                </div>
-                                <div className="grid grid-cols-1 items-start gap-1">
-                                  <div className="col-span-3 space-y-2">
-                                    <div className="relative">
-                                      {/* Thay Textarea bằng div chỉ đọc */}
-                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                        <pre className="whitespace-pre-wrap break-words m-0">
-                                          {endpointData?.data_current
-                                            ? JSON.stringify(
-                                                endpointData.data_current,
-                                                null,
-                                                2
-                                              )
-                                            : "[]"}
-                                        </pre>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
                               </div>
                             </Card>
                           </div>
@@ -3258,7 +3317,12 @@ const DashboardPage = () => {
                     <div className="relative mt-1">
                       <Select
                         value={newApiCallTargetEndpoint}
-                        onValueChange={setNewApiCallTargetEndpoint}
+                        onValueChange={(value) => {
+                          setNewApiCallTargetEndpoint(value);
+
+                          // Chỉ cần set display text là path
+                          setNewApiCallTargetEndpointDisplay(value);
+                        }}
                       >
                         <SelectTrigger
                           className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[400px] ${
@@ -3270,14 +3334,17 @@ const DashboardPage = () => {
                           <SelectValue
                             placeholder="Select endpoint"
                             className="truncate text-left"
-                          />
+                          >
+                            {newApiCallTargetEndpointDisplay ||
+                              "Select endpoint"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {/* Hiển thị danh sách endpoints từ API */}
+                          {/* Hiển thị danh sách endpoints từ API - chỉ hiển thị path */}
                           {newApiCallAvailableEndpoints.map((endpoint) => (
                             <SelectItem
-                              key={endpoint.id}
-                              value={endpoint.path}
+                              key={endpoint.id} // Sử dụng id làm key
+                              value={endpoint.path} // Sử dụng path làm value
                               className="max-w-[430px]"
                             >
                               <div className="flex flex-col min-w-0 w-full">
@@ -3286,12 +3353,6 @@ const DashboardPage = () => {
                                   title={endpoint.path}
                                 >
                                   {endpoint.path}
-                                </span>
-                                <span
-                                  className="text-xs text-gray-500 truncate text-left"
-                                  title={`${endpoint.method} - ${endpoint.name}`}
-                                >
-                                  {endpoint.method} - {endpoint.name}
                                 </span>
                               </div>
                             </SelectItem>
@@ -3540,6 +3601,7 @@ const DashboardPage = () => {
                       setIsNewApiCallDialogOpen(false);
                       // Reset form khi đóng dialog
                       setNewApiCallTargetEndpoint("");
+                      setNewApiCallTargetEndpointDisplay("");
                       setNewApiCallMethod("GET");
                       setNewApiCallRequestBody("{}");
                       setNewApiCallStatusCondition("");
