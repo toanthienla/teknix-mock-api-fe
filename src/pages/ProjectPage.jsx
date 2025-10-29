@@ -58,6 +58,7 @@ import folderIcon from "@/assets/project-icon.svg";
 import dateIcon from "@/assets/date.svg";
 import statelessIcon from "@/assets/stateless.svg";
 import statefulIcon from "@/assets/stateful.svg";
+import trashIcon from "@/assets/Trash Icon.svg";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
@@ -595,6 +596,7 @@ export default function ProjectPage() {
 
       setDeleteProjectId(null);
       setOpenDeleteProject(false);
+      setOpenDetail(false);
 
       toast.success(`Project and all its content (${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
     } catch (error) {
@@ -745,8 +747,6 @@ export default function ProjectPage() {
                           folders={folders}
                           endpoints={endpoints}
                           onClick={() => navigate(`/dashboard/${p.id}`)}
-                          onEdit={() => openEditProjectDialog(p)}
-                          onDelete={() => openDeleteProjectDialog(p.id)}
                           onView={() => {
                             setSelectedProject(p);
                             setOpenDetail(true);
@@ -1200,9 +1200,16 @@ export default function ProjectPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button
+                    className="bg-white hover:bg-red-400 text-indigo-950"
+                    onClick={() => {
+                      openDeleteProjectDialog(selectedProject?.id);
+                    }}
+                  >
+                    <img src={trashIcon} alt="trash" className="w-5 h-5 brightness-0"/>
+                  </Button>
+                  <Button
                     className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                     onClick={() => {
-                      setOpenDetail(false);
                       openEditProjectDialog(selectedProject);
                     }}
                   >
