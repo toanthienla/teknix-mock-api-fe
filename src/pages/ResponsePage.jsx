@@ -48,7 +48,7 @@ import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
 import chain_icon from "../assets/Chain.svg";
 import no_response from "../assets/no_response.svg";
-import Adavanced_icon from "../assets/Adavanced_icon.svg";
+import Advanced_icon from "../assets/Adavanced_icon.svg";
 import Data_default from "../assets/Data_default.svg";
 import Proxy_icon from "../assets/Proxy_icon.svg";
 import Rules_icon from "../assets/Rules_icon.svg";
@@ -61,12 +61,14 @@ import workspaceIcon from "@/assets/workspace-icon.svg";
 import projectIcon from "@/assets/project-icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import endpointIcon from "@/assets/endpoint.svg";
+import dot_background from "@/assets/dot_rows.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
+import { Switch } from "@/components/ui/switch.jsx";
 
 import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
 import {
@@ -2113,136 +2115,107 @@ const DashboardPage = () => {
           username={currentUsername}
         />
 
-        {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full`}>
-          <div className="flex flex-col mb-6">
-            {/* Phần bên trái - Display Endpoint Name and Method */}
-            <div className="flex items-center flex-shrink-0 mb-2">
-              <h2 className="text-4xl font-bold text-[#37352F] mr-4">
-                {endpoints.find(
-                  (ep) => String(ep.id) === String(currentEndpointId)
-                )?.name || "Endpoint"}
-              </h2>
+        <div
+          className="flex flex-col px-16 py-4"
+          style={{
+            backgroundImage: `url(${dot_background})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+          }}
+        >
+          {/* Phần bên trái - Display Endpoint Name and Method */}
+          <div className="flex items-center flex-shrink-0 mb-2">
+            <h2 className="text-4xl font-bold text-[#37352F] mr-4">
+              {endpoints.find(
+                (ep) => String(ep.id) === String(currentEndpointId)
+              )?.name || "Endpoint"}
+            </h2>
+          </div>
+
+          {/* Phần bên phải - Form Status Info */}
+          <div className="flex items-center gap-2 ml-1 flex-1 flex-wrap">
+            <div className="text-black bg-white font-semibold text-lg"># Path</div>
+
+            <div className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                    : method === "PUT"
-                    ? "bg-orange-400 text-black hover:bg-orange-500"
-                    : method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                      : method === "PUT"
+                        ? "bg-orange-400 text-black hover:bg-orange-500"
+                        : method === "DELETE"
+                          ? "bg-red-400 text-black hover:bg-red-500"
+                          : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
               </Badge>
+
+              <div className="flex-1 text-black font-semibold text-base truncate min-w-0">
+                {endpoints.find(
+                  (ep) => String(ep.id) === String(currentEndpointId)
+                )?.path || "-"}
+              </div>
+
+              {/* Icon chain */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 flex-shrink-0"
+                onClick={handleCopyPath}
+                title="Copy path"
+              >
+                <img
+                  src={chain_icon}
+                  alt="Copy path"
+                  className="w-5 h-5 object-contain"
+                />
+              </Button>
             </div>
 
-            {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-1 flex-1">
-              <div className="text-[black] font-semibold text-[18px]">
-                #Path
-              </div>
-              <div className="flex flex-row items-center p-0 gap-2.5 w-[600px] h-[30px] bg-gray-100 border border-[#D1D5DB] rounded-md">
-                <div className="h-[20px] font-inter font-semibold text-[16px] leading-[19px] text-[black] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                  {endpoints.find(
-                    (ep) => String(ep.id) === String(currentEndpointId)
-                  )?.path || "-"}
-                </div>
-                {/* Icon chain */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={handleCopyPath}
-                  title="Copy path"
-                >
-                  <img
-                    src={chain_icon}
-                    alt="Copy path"
-                    className="w-6 h-6 object-contain"
-                  />
-                </Button>
+            {/* reset state button */}
+            {isStateful && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 flex-shrink-0"
+                onClick={() => setShowResetConfirmDialog(true)}
+              >
+                <img
+                  src={reset_icon}
+                  alt="Reset state"
+                  className="w-5 h-5 object-contain"
+                />
+              </Button>
+            )}
 
-                {/* Hiển thị trạng thái Active/Inactive (chỉ đọc) */}
-                <div className="flex flex-row items-center w-[20px] h-[10px] flex-shrink-0">
-                  {isActive ? (
-                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
-                      <polygon
-                        points="15,8 0,0 0,16"
-                        fill="#96FFC1"
-                        stroke="#777671"
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <rect
-                        x="0.5"
-                        y="0.5"
-                        width="13"
-                        height="13"
-                        fill="#FF0000"
-                        stroke="#777671"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </div>
-              {/* reset state button */}
-              {isStateful && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={() => setShowResetConfirmDialog(true)}
-                >
-                  <img
-                    src={reset_icon}
-                    alt="Create Icon"
-                    className="w-6 h-6 object-contain"
-                  />
-                </Button>
-              )}
+            {/* State Mode Toggle */}
+            <div className="ml-4 flex items-center gap-2">
+              <span className="font-inter font-semibold text-base text-black select-none">
+                {isStateful ? "Stateful" : "Stateless"}
+              </span>
 
-              {/* State Mode Toggle - thay thế Select bằng toggle button */}
-              <div className="ml-4 flex-shrink-0">
-                <div
-                  className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
-                  onClick={handleStateModeChange}
-                >
-                  <div className="flex flex-row items-center w-[60px] h-[30px]">
-                    <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
-                      {isStateful ? "Stateful" : "Stateless"}
-                    </span>
-                  </div>
-                  <div className="relative w-[60px] h-[30px]">
-                    <div
-                      className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-                        isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-                      }`}
-                    >
-                      <div
-                        className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-                          isStateful ? "left-[32px]" : "left-[3px]"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Switch
+                checked={isStateful}
+                onCheckedChange={handleStateModeChange}
+                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+              />
             </div>
           </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className={`transition-all duration-300 px-16 pt-4 pb-8 w-full`}>
 
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
             onOpenChange={setShowResetConfirmDialog}
           >
-            <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+            <DialogContent className="p-8 rounded-2xl shadow-lg">
               <DialogHeader className="flex justify-between items-start mb-4">
                 <DialogTitle className="text-xl font-bold text-slate-800">
                   Reset Current Values
@@ -2913,7 +2886,7 @@ const DashboardPage = () => {
                             className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
                           >
                             <img
-                              src={Adavanced_icon}
+                              src={Advanced_icon}
                               alt="Advanced"
                               className="w-4 h-4 mr-2"
                             />
