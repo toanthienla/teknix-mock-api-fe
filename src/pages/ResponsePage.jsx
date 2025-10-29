@@ -46,9 +46,9 @@ import {
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
-import chain_icon from "../assets/Chain.svg";
+import chainIcon from "../assets/Chain.svg";
 import no_response from "../assets/no_response.svg";
-import Adavanced_icon from "../assets/Adavanced_icon.svg";
+import Advanced_icon from "../assets/Adavanced_icon.svg";
 import Data_default from "../assets/Data_default.svg";
 import Proxy_icon from "../assets/Proxy_icon.svg";
 import Rules_icon from "../assets/Rules_icon.svg";
@@ -61,12 +61,14 @@ import workspaceIcon from "@/assets/workspace-icon.svg";
 import projectIcon from "@/assets/project-icon.svg";
 import folderIcon from "@/assets/folder-icon.svg";
 import endpointIcon from "@/assets/endpoint.svg";
+import dot_background from "@/assets/dot_rows.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
 import { getCurrentUser } from "@/services/api.js";
+import { Switch } from "@/components/ui/switch.jsx";
 
 import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
 import {
@@ -723,6 +725,13 @@ const DashboardPage = () => {
 
   // Hàm xử lý xác nhận chuyển sang stateful
   const handleConfirmStateful = () => {
+    const path = currentEndpoint?.path || "";
+
+    // Kiểm tra nếu path có chứa param động
+    if (/:[a-zA-Z0-9\-_]+/.test(path)) {
+      toast.warning("Endpoint path has param, can not convert to stateful!");
+      return; // Dừng quá trình chuyển đổi
+    }
     setIsSwitchingMode(true);
     setShowStatefulConfirmDialog(false);
 
@@ -2113,16 +2122,30 @@ const DashboardPage = () => {
           username={currentUsername}
         />
 
-        {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-8 pt-4 pb-8 w-full`}>
-          <div className="flex flex-col mb-6">
-            {/* Phần bên trái - Display Endpoint Name and Method */}
-            <div className="flex items-center flex-shrink-0 mb-2">
-              <h2 className="text-4xl font-bold text-[#37352F] mr-4">
-                {endpoints.find(
-                  (ep) => String(ep.id) === String(currentEndpointId)
-                )?.name || "Endpoint"}
-              </h2>
+        <div
+          className="flex flex-col px-16 py-4"
+          style={{
+            backgroundImage: `url(${dot_background})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+          }}
+        >
+          {/* Phần bên trái - Display Endpoint Name and Method */}
+          <div className="flex items-center flex-shrink-0 mb-2">
+            <h2 className="text-4xl font-bold text-[#37352F] mr-4">
+              {endpoints.find(
+                (ep) => String(ep.id) === String(currentEndpointId)
+              )?.name || "Endpoint"}
+            </h2>
+          </div>
+
+          {/* Phần bên phải - Form Status Info */}
+          <div className="flex items-center gap-2 ml-1 flex-1 flex-wrap">
+            <div className="text-black bg-white font-semibold text-lg">
+              # Path
+            </div>
+
+            <div className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
@@ -2139,110 +2162,68 @@ const DashboardPage = () => {
               >
                 {method}
               </Badge>
+
+              <div className="flex-1 text-black font-semibold text-base truncate min-w-0">
+                {endpoints.find(
+                  (ep) => String(ep.id) === String(currentEndpointId)
+                )?.path || "-"}
+              </div>
+
+              {/* Icon chain */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 flex-shrink-0"
+                onClick={handleCopyPath}
+                title="Copy path"
+              >
+                <img
+                  src={chainIcon}
+                  alt="Copy path"
+                  className="w-5 h-5 object-contain"
+                />
+              </Button>
             </div>
 
-            {/* Phần bên phải - Form Status Info */}
-            <div className="flex items-center gap-2 ml-1 flex-1">
-              <div className="text-[black] font-semibold text-[18px]">
-                #Path
-              </div>
-              <div className="flex flex-row items-center p-0 gap-2.5 w-[600px] h-[30px] bg-gray-100 border border-[#D1D5DB] rounded-md">
-                <div className="h-[20px] font-inter font-semibold text-[16px] leading-[19px] text-[black] flex-1 ml-1.5 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                  {endpoints.find(
-                    (ep) => String(ep.id) === String(currentEndpointId)
-                  )?.path || "-"}
-                </div>
-                {/* Icon chain */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={handleCopyPath}
-                  title="Copy path"
-                >
-                  <img
-                    src={chain_icon}
-                    alt="Copy path"
-                    className="w-6 h-6 object-contain"
-                  />
-                </Button>
+            {/* reset state button */}
+            {isStateful && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 flex-shrink-0"
+                onClick={() => setShowResetConfirmDialog(true)}
+              >
+                <img
+                  src={reset_icon}
+                  alt="Reset state"
+                  className="w-5 h-5 object-contain"
+                />
+              </Button>
+            )}
 
-                {/* Hiển thị trạng thái Active/Inactive (chỉ đọc) */}
-                <div className="flex flex-row items-center w-[20px] h-[10px] flex-shrink-0">
-                  {isActive ? (
-                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
-                      <polygon
-                        points="15,8 0,0 0,16"
-                        fill="#96FFC1"
-                        stroke="#777671"
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <rect
-                        x="0.5"
-                        y="0.5"
-                        width="13"
-                        height="13"
-                        fill="#FF0000"
-                        stroke="#777671"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </div>
-              {/* reset state button */}
-              {isStateful && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 flex-shrink-0"
-                  onClick={() => setShowResetConfirmDialog(true)}
-                >
-                  <img
-                    src={reset_icon}
-                    alt="Create Icon"
-                    className="w-6 h-6 object-contain"
-                  />
-                </Button>
-              )}
+            {/* State Mode Toggle */}
+            <div className="ml-4 flex items-center gap-2">
+              <span className="font-inter font-semibold text-base text-black select-none">
+                {isStateful ? "Stateful" : "Stateless"}
+              </span>
 
-              {/* State Mode Toggle - thay thế Select bằng toggle button */}
-              <div className="ml-4 flex-shrink-0">
-                <div
-                  className="flex flex-row items-center gap-2 w-[122px] h-[30px] cursor-pointer"
-                  onClick={handleStateModeChange}
-                >
-                  <div className="flex flex-row items-center w-[60px] h-[30px]">
-                    <span className="w-[60px] h-[30px] font-inter font-semibold text-[16px] leading-[19px] text-black">
-                      {isStateful ? "Stateful" : "Stateless"}
-                    </span>
-                  </div>
-                  <div className="relative w-[60px] h-[30px]">
-                    <div
-                      className={`flex flex-row items-center px-[4px] gap-[10px] w-[60px] h-[30px] rounded-[16px] transition-colors ${
-                        isStateful ? "bg-[#2563EB]" : "bg-[#D1D5DB]"
-                      }`}
-                    >
-                      <div
-                        className={`absolute w-[24px] h-[24px] top-[3px] rounded-full bg-white transition-all ${
-                          isStateful ? "left-[32px]" : "left-[3px]"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Switch
+                checked={isStateful}
+                onCheckedChange={handleStateModeChange}
+                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+              />
             </div>
           </div>
+        </div>
 
+        {/* Navigation Tabs */}
+        <div className={`transition-all duration-300 px-16 pt-4 pb-8 w-full`}>
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
             onOpenChange={setShowResetConfirmDialog}
           >
-            <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
+            <DialogContent className="p-8 rounded-2xl shadow-lg">
               <DialogHeader className="flex justify-between items-start mb-4">
                 <DialogTitle className="text-xl font-bold text-slate-800">
                   Reset Current Values
@@ -2320,7 +2301,7 @@ const DashboardPage = () => {
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgba(28,28,28,0.2)] bg-transparent border-none focus:outline-none"
+                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgb(28,28,28)] bg-transparent border-none focus:outline-none"
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
@@ -2447,14 +2428,6 @@ const DashboardPage = () => {
                           ? "No responses found matching your search"
                           : "No responses available"}
                       </div>
-                      {searchTerm && (
-                        <button
-                          onClick={() => setSearchTerm("")}
-                          className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
-                        >
-                          Clear search
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -2464,371 +2437,351 @@ const DashboardPage = () => {
             {/* Cột phải - Navigation và Content */}
             <div className="w-3/4 flex flex-col gap-6">
               {/* Phần trên - Header & Body */}
-              <div className="flex flex-col">
-                <Tabs defaultValue="Header&Body" className="w-full">
-                  {/* TabsList cho Header & Body */}
-                  <TabsList className="flex w-fit justify-start bg-white mb-4 px-6">
-                    <TabsTrigger
-                      value="Header&Body"
-                      className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
+              <div className="flex flex-col w-full">
+                {/* Nội dung phần Header & Body */}
+                <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
+                  {/* Thanh tiêu đề thay cho TabsList */}
+                  <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
+                    <button
+                      // onClick={() => setActiveTab("folders")}
+                      className={`flex rounded-tl-lg px-4 py-2 -mb-px bg-white text-stone-900`}
                     >
-                      <img
-                        src={Header_Body}
-                        alt="Header & Body"
-                        className="w-4 h-4 mr-2"
-                      />
-                      Header & Body
-                    </TabsTrigger>
-                  </TabsList>
+                      <div className="flex items-center">
+                        <img
+                          src={Header_Body}
+                          alt="folder"
+                          className="w-4 h-4 mr-2"
+                        />
+                        <span className="text-md font-semibold">
+                          Response Detail
+                        </span>
+                      </div>
+                    </button>
+                  </div>
 
-                  {/* TabsContent cho Header & Body */}
-                  <TabsContent value="Header&Body" className="mt-0">
-                    {selectedResponse ? (
-                      <div className="mt-2">
-                        <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-                          <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-[#37352F] mr-4">
-                              {selectedResponse?.name || "No Response Selected"}
-                            </h2>
-                            <div className="flex items-center space-x-2">
-                              {/* Nút Default - ẩn khi stateful */}
-                              {!isStateful && (
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="border-[#E5E5E1]"
-                                  onClick={() => {
-                                    if (selectedResponse) {
-                                      setDefaultResponse(selectedResponse.id);
-                                    }
-                                  }}
-                                >
-                                  <Star
-                                    className={`h-4 w-4 ${
-                                      selectedResponse?.is_default
-                                        ? "text-yellow-500 fill-yellow-500"
-                                        : "text-[#898883]"
-                                    }`}
-                                  />
-                                </Button>
-                              )}
+                  {selectedResponse ? (
+                    <div className="">
+                      <Card className="p-4 rounded-none border-none">
+                        <div className="flex justify-between items-center mb-6">
+                          {/*<h2 className="text-2xl font-bold text-[#37352F] mr-4">*/}
+                          {/*  {selectedResponse?.name || "No Response Selected"}*/}
+                          {/*</h2>*/}
+                          <div className="flex items-center space-x-2">
+                            {/* Nút Default - ẩn khi stateful */}
+                            {!isStateful && (
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="border-[#E5E5E1]"
+                                onClick={() => {
+                                  if (selectedResponse) {
+                                    setDefaultResponse(selectedResponse.id);
+                                  }
+                                }}
+                              >
+                                <Star
+                                  className={`h-4 w-4 ${
+                                    selectedResponse?.is_default
+                                      ? "text-yellow-500 fill-yellow-500"
+                                      : "text-[#898883]"
+                                  }`}
+                                />
+                              </Button>
+                            )}
 
-                              <div className="flex justify-end mb-0">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                  onClick={handleSaveResponse}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="absolute ml-auto right-24 h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={handleSaveResponse}
+                            >
+                              <SaveIcon className="h-5 w-5 text-[#898883]" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Form nội dung */}
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                              htmlFor="response-name"
+                              className="text-right text-sm font-medium text-[#000000]"
+                            >
+                              Response Name
+                            </Label>
+                            <Input
+                              id="response-name"
+                              value={responseName}
+                              onChange={(e) => setResponseName(e.target.value)}
+                              className="col-span-3 border-[#CBD5E1] rounded-md"
+                              placeholder="Enter response name"
+                            />
+                          </div>
+
+                          {/* Status Code */}
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                              htmlFor="status-code"
+                              className="text-right text-sm font-medium text-[#000000]"
+                            >
+                              Status Code
+                            </Label>
+                            <div className="col-span-3">
+                              <Select
+                                value={statusCode}
+                                onValueChange={(value) =>
+                                  !isStateful && setStatusCode(value)
+                                }
+                                disabled={isStateful}
+                              >
+                                <SelectTrigger
+                                  id="status-code"
+                                  className={`border-[#CBD5E1] rounded-md ${
+                                    isStateful
+                                      ? "bg-gray-100 cursor-not-allowed"
+                                      : ""
+                                  }`}
                                 >
-                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                </Button>
-                              </div>
+                                  <SelectValue placeholder="Select status code" />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                                  {statusCodes.map((status) => (
+                                    <SelectItem
+                                      key={status.code}
+                                      value={status.code}
+                                    >
+                                      {status.code} -{" "}
+                                      {status.description.split("–")[0]}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
-                          {/* Form */}
-                          <div className="space-y-6">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="response-name"
-                                className="text-right text-sm font-medium text-[#000000]"
-                              >
-                                Response Name
-                              </Label>
-                              <Input
-                                id="response-name"
-                                value={responseName}
-                                onChange={(e) =>
-                                  setResponseName(e.target.value)
-                                }
-                                className="col-span-3 border-[#CBD5E1] rounded-md"
-                                placeholder="Enter response name"
-                              />
-                            </div>
 
-                            {/* Sửa phần Status Code */}
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="status-code"
-                                className="text-right text-sm font-medium text-[#000000]"
-                              >
-                                Status Code
-                              </Label>
-                              <div className="col-span-3">
-                                <Select
-                                  value={statusCode}
-                                  onValueChange={(value) =>
-                                    !isStateful && setStatusCode(value)
+                          {/* Response Header */}
+                          <div className="grid grid-cols-4 items-start gap-4">
+                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
+                              Response Header
+                            </div>
+                            <div className="col-span-3"></div>
+                          </div>
+
+                          <div className="grid grid-cols-2 items-start gap-4">
+                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
+                              Content-Type:
+                            </div>
+                            <div className="col-span-1 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                              application/json
+                            </div>
+                          </div>
+
+                          {/* Response Body */}
+                          <div className="grid grid-cols-4 gap-4">
+                            <Label
+                              htmlFor="response-body"
+                              className="text-right pt-2 text-sm font-medium text-[#000000]"
+                            >
+                              Response Body
+                            </Label>
+                            <div className="col-span-3 space-y-2">
+                              <div className="relative" ref={responseEditorRef}>
+                                <Editor
+                                  value={responseBody}
+                                  onValueChange={(code) => {
+                                    const canEdit =
+                                      !isStateful ||
+                                      statusCode !== "200" ||
+                                      method !== "GET";
+                                    if (canEdit) {
+                                      setResponseBody(code);
+                                    }
+                                  }}
+                                  highlight={(code) =>
+                                    highlight(code, languages.json)
                                   }
-                                  disabled={isStateful}
-                                >
-                                  <SelectTrigger
-                                    id="status-code"
-                                    className={`border-[#CBD5E1] rounded-md ${
-                                      isStateful
-                                        ? "bg-gray-100 cursor-not-allowed"
-                                        : ""
-                                    }`}
-                                  >
-                                    <SelectValue placeholder="Select status code" />
-                                  </SelectTrigger>
-                                  <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
-                                    {statusCodes.map((status) => (
-                                      <SelectItem
-                                        key={status.code}
-                                        value={status.code}
-                                      >
-                                        {status.code} -{" "}
-                                        {status.description.split("–")[0]}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
+                                  padding={10}
+                                  className="custom-json-editor"
+                                  style={{
+                                    fontFamily:
+                                      '"Consolas", "Menlo", "Cascadia Code", monospace',
+                                    fontSize: 12,
+                                    minHeight: "200px",
+                                    maxHeight: "400px",
+                                    overflow: "auto",
+                                    border: "1px solid #CBD5E1",
+                                    borderRadius: "0.375rem",
+                                    backgroundColor: "#101728",
+                                  }}
+                                  textareaClassName="focus:outline-none"
+                                  disabled={
+                                    isStateful &&
+                                    statusCode === "200" &&
+                                    method === "GET"
+                                  }
+                                />
 
-                            <div className="grid grid-cols-4 items-start gap-4">
-                              <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                                Response Header
-                              </div>
-                              <div className="col-span-3"></div>
-                            </div>
-
-                            <div className="grid grid-cols-2 items-start gap-4">
-                              <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                                Content-Type:
-                              </div>
-                              <div className="col-span-1 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
-                                application/json
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-4">
-                              <Label
-                                htmlFor="response-body"
-                                className="text-right pt-2 text-sm font-medium text-[#000000]"
-                              >
-                                Response Body
-                              </Label>
-                              <div className="col-span-3 space-y-2">
-                                <div
-                                  className="relative"
-                                  ref={responseEditorRef}
-                                >
-                                  <Editor
-                                    value={responseBody}
-                                    onValueChange={(code) => {
+                                {/* Format button */}
+                                <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-[#E5E5E1] px-1 rounded-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       const canEdit =
                                         !isStateful ||
                                         statusCode !== "200" ||
                                         method !== "GET";
                                       if (canEdit) {
-                                        setResponseBody(code);
+                                        try {
+                                          const formatted = JSON.stringify(
+                                            JSON.parse(responseBody),
+                                            null,
+                                            2
+                                          );
+                                          setResponseBody(formatted);
+                                        } catch {
+                                          toast.error("Invalid JSON format");
+                                        }
                                       }
                                     }}
-                                    highlight={(code) =>
-                                      highlight(code, languages.json)
-                                    }
-                                    padding={10}
-                                    className="custom-json-editor"
-                                    style={{
-                                      fontFamily:
-                                        '"Consolas", "Menlo", "Cascadia Code", monospace',
-                                      fontSize: 12,
-                                      minHeight: "200px",
-                                      maxHeight: "400px",
-                                      overflow: "auto",
-                                      border: "1px solid #CBD5E1",
-                                      borderRadius: "0.375rem",
-                                      backgroundColor: "#101728",
+                                  >
+                                    <Code className="h-4 w-4" /> Format
+                                  </Button>
+                                </div>
+
+                                {/* Popover trigger */}
+                                <div className="absolute bottom-2 right-2 flex space-x-2">
+                                  <FileCode
+                                    className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                    size={26}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const canEdit =
+                                        !isStateful ||
+                                        statusCode !== "200" ||
+                                        method !== "GET";
+                                      if (canEdit) {
+                                        setIsPopoverOpen(!isPopoverOpen);
+                                      }
                                     }}
-                                    textareaClassName="focus:outline-none"
-                                    disabled={
-                                      isStateful &&
-                                      statusCode === "200" &&
-                                      method === "GET"
-                                    }
                                   />
+                                </div>
 
-                                  {/* JSON Editor controls */}
-                                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const canEdit =
-                                          !isStateful ||
-                                          statusCode !== "200" ||
-                                          method !== "GET";
-                                        if (canEdit) {
-                                          try {
-                                            const formatted = JSON.stringify(
-                                              JSON.parse(responseBody),
-                                              null,
-                                              2
-                                            );
-                                            setResponseBody(formatted);
-                                          } catch {
-                                            toast.error("Invalid JSON format");
-                                          }
-                                        }
-                                      }}
-                                    >
-                                      <Code className="mr-1 h-4 w-4" /> Format
-                                    </Button>
-                                  </div>
-
-                                  {/* Nhóm nút dưới cùng bên phải */}
-                                  <div className="absolute bottom-2 right-2 flex space-x-2">
-                                    <FileCode
-                                      className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                      size={26}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const canEdit =
-                                          !isStateful ||
-                                          statusCode !== "200" ||
-                                          method !== "GET";
-                                        if (canEdit) {
-                                          setIsPopoverOpen(!isPopoverOpen);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-
-                                  {/* Popover */}
-                                  {isPopoverOpen && (
-                                    <div
-                                      ref={popoverRef}
-                                      className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                                    >
-                                      <div className="flex flex-col items-center gap-2 p-3.5">
-                                        <div className="w-full flex justify-between items-center">
-                                          <div className="font-semibold text-sm text-gray-800">
-                                            Variable Picker
-                                          </div>
-                                          <X
-                                            className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setIsPopoverOpen(false);
-                                            }}
-                                          />
+                                {/* Popover */}
+                                {isPopoverOpen && (
+                                  <div
+                                    ref={popoverRef}
+                                    className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  >
+                                    <div className="flex flex-col items-center gap-2 p-3.5">
+                                      <div className="w-full flex justify-between items-center">
+                                        <div className="font-semibold text-sm text-gray-800">
+                                          Variable Picker
                                         </div>
-
-                                        <div className="w-full flex justify-between">
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "url"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("url");
-                                            }}
-                                          >
-                                            URL Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "query"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("query");
-                                            }}
-                                          >
-                                            Query Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "state"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("state");
-                                            }}
-                                          >
-                                            Project State
-                                          </div>
-                                        </div>
-
-                                        <div
-                                          className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                        <X
+                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            // Đảm bảo sử dụng selectedSection hiện tại
-                                            const templateText =
-                                              getTemplateText().template;
-                                            insertTemplate(templateText);
+                                            setIsPopoverOpen(false);
                                           }}
-                                        >
-                                          <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                            {getTemplateText().template}
-                                          </div>
-                                          <div className="text-[12px] text-gray-500">
-                                            {getTemplateText().description}
-                                          </div>
+                                        />
+                                      </div>
+
+                                      <div className="w-full flex justify-between">
+                                        {["url", "query", "state"].map(
+                                          (section) => (
+                                            <div
+                                              key={section}
+                                              className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                                selectedSection === section
+                                                  ? "bg-[#EDEDEC] text-[#374151]"
+                                                  : "text-[#374151] hover:bg-gray-100"
+                                              }`}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedSection(section);
+                                              }}
+                                            >
+                                              {section === "url"
+                                                ? "URL Parameters"
+                                                : section === "query"
+                                                ? "Query Parameters"
+                                                : "Project State"}
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+
+                                      <div
+                                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const templateText =
+                                            getTemplateText().template;
+                                          insertTemplate(templateText);
+                                        }}
+                                      >
+                                        <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                          {getTemplateText().template}
+                                        </div>
+                                        <div className="text-[12px] text-gray-500">
+                                          {getTemplateText().description}
                                         </div>
                                       </div>
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="delay"
-                                className="text-right text-sm font-medium text-[#000000]"
-                              >
-                                Delay (ms)
-                              </Label>
-                              <div className="col-span-3">
-                                <Input
-                                  id="delay"
-                                  value={delay}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    // Chỉ cho phép nhập số
-                                    if (/^\d*$/.test(value) || value === "") {
-                                      setDelay(value);
-                                      const error = validateDelay(value);
-                                      setDelayError(error);
-                                    }
-                                  }}
-                                  className={`border-[#CBD5E1] rounded-md ${
-                                    delayError ? "border-red-500" : ""
-                                  }`}
-                                  placeholder="0"
-                                />
-                                {delayError && (
-                                  <div className="text-red-500 text-xs mt-1 pl-2">
-                                    {delayError}
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
-                        </Card>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-[400px]">
-                        <img
-                          src={no_response}
-                          alt="No response selected"
-                          className="mb-4"
-                        />
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
+
+                          {/* Delay */}
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label
+                              htmlFor="delay"
+                              className="text-right text-sm font-medium text-[#000000]"
+                            >
+                              Delay (ms)
+                            </Label>
+                            <div className="col-span-3">
+                              <Input
+                                id="delay"
+                                value={delay}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (/^\d*$/.test(value) || value === "") {
+                                    setDelay(value);
+                                    const error = validateDelay(value);
+                                    setDelayError(error);
+                                  }
+                                }}
+                                className={`border-[#CBD5E1] rounded-md ${
+                                  delayError ? "border-red-500" : ""
+                                }`}
+                                placeholder="0"
+                              />
+                              {delayError && (
+                                <div className="text-red-500 text-xs mt-1 pl-2">
+                                  {delayError}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[400px]">
+                      <img
+                        src={no_response}
+                        alt="No response selected"
+                        className="mb-4"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Phần dưới - Các tab còn lại */}
@@ -2921,7 +2874,7 @@ const DashboardPage = () => {
                             className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
                           >
                             <img
-                              src={Adavanced_icon}
+                              src={Advanced_icon}
                               alt="Advanced"
                               className="w-4 h-4 mr-2"
                             />

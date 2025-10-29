@@ -372,7 +372,7 @@ export default function Topbar({
                       {isLast || !item.href ? (
                         <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
                           {item.icon && (
-                            <img src={item.icon} alt="" className="w-4 h-4 mr-1 brightness-0"/>
+                            <img src={item.icon} alt="" className="w-5 h-5 mr-1 brightness-0"/>
                           )}
                           {item.label}
                         </BreadcrumbPage>
@@ -393,7 +393,7 @@ export default function Topbar({
                           className="flex items-center gap-1 font-bold text-slate-400"
                         >
                           {item.icon && (
-                            <img src={item.icon} alt="" className="w-4 h-4 mr-1"/>
+                            <img src={item.icon} alt="" className="w-5 h-5 mr-1"/>
                           )}
                           {item.label}
                         </BreadcrumbLink>
@@ -416,7 +416,7 @@ export default function Topbar({
       <div className="flex items-center gap-4 ml-auto relative"></div>
 
       {/* User + Notification + Logout */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         {/* Notification */}
         <Notifications
           notifications={notifications}
@@ -426,7 +426,7 @@ export default function Topbar({
         />
 
         {/* Avatar + Name */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-4 border-l-2 border-slate-500">
           <img
             src={avatar}
             alt="User avatar"
