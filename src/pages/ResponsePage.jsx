@@ -276,7 +276,7 @@ const DashboardPage = () => {
     return targetEndpoint;
   };
 
-  // Thêm hàm validate New API Call
+  // Trong ResponsePage.jsx - sửa hàm validateNewApiCall
   const validateNewApiCall = () => {
     const errors = {};
 
@@ -297,26 +297,8 @@ const DashboardPage = () => {
       }
     }
 
-    // Validate trùng method cho cùng target_endpoint
-    if (newApiCallTargetEndpoint && newApiCallMethod) {
-      // Lấy full target endpoint mà user đang chọn
-      const selectedFullTargetEndpoint = getNewApiCallFullTargetEndpoint(
-        newApiCallTargetEndpoint
-      );
-
-      // Tìm các calls có cùng full target endpoint
-      const existingCallsWithSameEndpoint = nextCalls.filter(
-        (call) => call.target_endpoint === selectedFullTargetEndpoint
-      );
-
-      const duplicateMethod = existingCallsWithSameEndpoint.find(
-        (call) => call.method === newApiCallMethod
-      );
-
-      if (duplicateMethod) {
-        errors.method = `Method ${newApiCallMethod} already exists for endpoint "${selectedFullTargetEndpoint}"`;
-      }
-    }
+    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate method cho cùng endpoint nữa
+    // Người dùng có thể tạo nhiều API calls với cùng method cho cùng endpoint
 
     setNewApiCallValidationErrors(errors);
     return Object.keys(errors).length === 0;
