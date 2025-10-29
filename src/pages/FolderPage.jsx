@@ -331,7 +331,6 @@ export default function FolderPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
-  const [statefulEndpoints, setStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -357,8 +356,10 @@ export default function FolderPage() {
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDesc, setNewFolderDesc] = useState("");
-  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+
   const [editingFolderId, setEditingFolderId] = useState(null);
+  const [editFolderName, setEditFolderName] = useState("");
+
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
 
@@ -366,8 +367,8 @@ export default function FolderPage() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("All time");
 
-  const [newFolderMode, setNewFolderMode] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [newFolderMode, setNewFolderMode] = useState(false);
+  const [openEditFolder, setOpenEditFolder] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [selectedFolder, setSelectedFolder] = useState(null);
@@ -602,19 +603,6 @@ export default function FolderPage() {
   };
 
   // -------------------- Folder --------------------
-  const handleAddFolder = (targetProjectId = null) => {
-    // Nếu có targetProjectId từ sidebar, dùng nó, nếu không dùng projectId hiện tại
-    setTargetProjectId(targetProjectId || projectId);
-    setOpenNewFolder(true);
-  };
-
-  const handleEditFolder = (folder) => {
-    setNewFolderName(folder.name);
-    setNewFolderDesc(folder.description || "");
-    setEditingFolderId(folder.id);
-    setEditDialogOpen(true);
-  };
-
   const handleDeleteFolder = async (folderId) => {
     setDeleteFolderId(folderId);
     setOpenDeleteFolder(true);
@@ -675,45 +663,18 @@ export default function FolderPage() {
   };
 
   const hasChanges = () => {
-    if (!editingFolderId) return true; // Always allow create
-
+    if (!editingFolderId) return true;
     const originalFolder = folders.find(f => f.id === editingFolderId);
-    if (!originalFolder) return true;
-
-    return newFolderName.trim() !== originalFolder.name ||
-      newFolderDesc.trim() !== (originalFolder.description || "");
+    if (!originalFolder) return false;
+    return (
+      editFolderName.trim() !== originalFolder.name
+    );
   };
 
+
   const handleCreateFolder = async () => {
-    // Clear any existing toasts first
-    toast.dismiss();
-
-    // Check if no changes when editing
-    if (editingFolderId) {
-      const originalFolder = folders.find(f => f.id === editingFolderId);
-      if (originalFolder &&
-        newFolderName.trim() === originalFolder.name &&
-        newFolderDesc.trim() === (originalFolder.description || "")) {
-        // No changes, just close dialog
-        setOpenNewFolder(false);
-        setNewFolderName("");
-        setNewFolderDesc("");
-        setEditingFolderId(null);
-        return;
-      }
-    }
-
     const validationError = validateFolderName(newFolderName);
-    if (validationError) {
-      toast.warning(validationError);
-      return;
-    }
-
-    if (isCreatingFolder) {
-      return; // Prevent double submission
-    }
-
-    setIsCreatingFolder(true);
+    if (validationError) return toast.warning(validationError);
 
     try {
       const folderData = {
@@ -721,55 +682,56 @@ export default function FolderPage() {
         description: newFolderDesc.trim(),
         project_id: targetProjectId || projectId,
         is_public: newFolderMode,
-        created_at: editingFolderId ? undefined : new Date().toISOString(),
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      let response;
-      if (editingFolderId) {
-        // Update existing folder
-        response = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
-          method: "PUT",
-          credentials: "include",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({id: editingFolderId, ...folderData}),
-        });
-      } else {
-        // Create new folder
-        response = await fetch(`${API_ROOT}/folders`, {
-          method: "POST",
-          credentials: "include",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(folderData),
-        });
-      }
+      const res = await fetch(`${API_ROOT}/folders`, {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(folderData),
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to save folder');
-      }
+      if (!res.ok) throw new Error("Failed to create folder");
+      const saved = await res.json();
 
-      const savedFolder = await response.json();
-
-      if (editingFolderId) {
-        setFolders((prev) => prev.map(f => f.id === editingFolderId ? savedFolder : f));
-        toast.success(`Folder "${savedFolder.name}" updated successfully!`);
-      } else {
-        setFolders((prev) => [...prev, savedFolder]);
-        toast.success(`Folder "${savedFolder.name}" created successfully!`);
-        // Không auto navigate, để user ở project page
-      }
-
+      setFolders(prev => [...prev, saved]);
+      toast.success(`Folder "${saved.name}" created successfully`);
+      setOpenNewFolder(false);
       setNewFolderName("");
       setNewFolderDesc("");
-      setNewFolderMode(true);
-      setEditingFolderId(null);
-      setTargetProjectId(null);
-      setOpenNewFolder(false);
-    } catch (error) {
-      console.error('Error saving folder:', error);
-      toast.error('Failed to save folder. Please try again.');
-    } finally {
-      setIsCreatingFolder(false);
+    } catch (err) {
+      console.error("Error creating folder:", err);
+      toast.error("Failed to create folder");
+    }
+  };
+
+  const handleUpdateFolder = async () => {
+    const validationError = validateFolderName(editFolderName);
+    if (validationError) return toast.warning(validationError);
+
+    try {
+      const res = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          name: editFolderName.trim(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update folder");
+      const updated = await res.json();
+
+      setFolders(prev =>
+        prev.map(f => (f.id === editingFolderId ? updated : f))
+      );
+      toast.success("Folder updated successfully!");
+      setOpenEditFolder(false);
+    } catch (err) {
+      console.error("Error updating folder:", err);
+      toast.error("Failed to update folder");
     }
   };
 
@@ -1303,7 +1265,6 @@ export default function FolderPage() {
           <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
             <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
               <button
-                // variant="ghost"
                 onClick={() => setActiveTab("folders")}
                 className={`flex rounded-tl-lg px-4 py-2 -mb-px ${activeTab === "folders"
                   ? "bg-white text-stone-900"
@@ -1316,7 +1277,6 @@ export default function FolderPage() {
                 </div>
               </button>
               <button
-                // variant="ghost"
                 onClick={() => {
                   setActiveTab("logs");
                   fetchLogs(projectId);
@@ -1344,7 +1304,12 @@ export default function FolderPage() {
 
                       <Button
                         className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
-                        onClick={() => handleAddFolder()}
+                        onClick={() => {
+                          setOpenNewFolder(true);
+                          setNewFolderName("");
+                          setNewFolderMode(false);
+                          setNewFolderDesc("");
+                        }}
                       >
                         New Folder
                       </Button>
@@ -1365,7 +1330,9 @@ export default function FolderPage() {
                               folder={folder}
                               endpoints={endpoints}
                               onEditName={(f) => {
-                                handleEditFolder(f);
+                                setEditFolderName(f.name);
+                                setEditingFolderId(f.id);
+                                setOpenEditFolder(true);
                               }}
                               onEditSchema={(f) => {
                                 setSelectedFolder(f);
@@ -1721,159 +1688,39 @@ export default function FolderPage() {
 
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent
-          className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0"
-        >
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
-              {editingFolderId ? "Edit Folder" : "New Folder"}
-            </DialogTitle>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {/* Folder Name */}
-            <div className="space-y-2">
-              <Label htmlFor="folder-name" className="text-sm font-medium text-gray-700">
-                Name
-              </Label>
-              <Input
-                id="folder-name"
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newFolderName.trim() && !isCreatingFolder) {
-                    e.preventDefault();
-                    if (hasChanges()) {
-                      handleCreateFolder();
-                    } else {
-                      // No changes, just close dialog
-                      setOpenNewFolder(false);
-                      setNewFolderName("");
-                      setNewFolderDesc("");
-                      setNewFolderMode(false);
-                      setEditingFolderId(null);
-                    }
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setOpenNewFolder(false);
-                    setNewFolderName("");
-                    setNewFolderDesc("");
-                    setNewFolderMode(false);
-                    setEditingFolderId(null);
-                  }
-                }}
-              />
-            </div>
-
-            {/* Folder Mode */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Folder Mode</Label>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="folderMode"
-                    value="public"
-                    checked={newFolderMode === true}
-                    onChange={() => setNewFolderMode(true)}
-                    className="accent-blue-600"
-                  />
-                  <span>Public</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="folderMode"
-                    value="private"
-                    checked={newFolderMode === false}
-                    onChange={() => setNewFolderMode(false)}
-                    className="accent-blue-600"
-                  />
-                  <span>Private</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="pt-4 flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setOpenNewFolder(false);
-                setNewFolderName("");
-                setNewFolderDesc("");
-                setNewFolderMode(false);
-                setEditingFolderId(null);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </Button>
-
-            <Button
-              onClick={handleCreateFolder}
-              disabled={!newFolderName.trim() || !hasChanges() || isCreatingFolder}
-              className="px-4 py-2 bg-yellow-300 hover:bg-yellow-400 text-indigo-950 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors font-medium"
-            >
-              {isCreatingFolder
-                ? (editingFolderId ? "Updating..." : "Creating...")
-                : (editingFolderId ? "Update" : "Create")}
-            </Button>
+          <Input
+            placeholder="Folder name"
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+          />
+          <DialogFooter>
+            <Button onClick={() => setOpenNewFolder(false)}>Cancel</Button>
+            <Button onClick={handleCreateFolder}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* === Edit Folder Dialog === */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={openEditFolder} onOpenChange={setOpenEditFolder}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Folder</DialogTitle>
           </DialogHeader>
-
-          <div className="mt-4 space-y-2">
-            <Label htmlFor="folderName">Name</Label>
-            <Input
-              id="folderName"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name..."
-            />
-          </div>
-
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
+          <Input
+            placeholder="Folder name"
+            value={editFolderName}
+            onChange={(e) => setEditFolderName(e.target.value)}
+          />
+          <DialogFooter>
+            <Button onClick={() => setOpenEditFolder(false)}>Cancel</Button>
             <Button
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
-              onClick={async () => {
-                try {
-                  const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                    method: "PUT",
-                    credentials: "include",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({name: newFolderName}),
-                  });
-
-                  if (!res.ok) throw new Error("Failed to update folder");
-
-                  setFolders((prev) =>
-                    prev.map((f) =>
-                      f.id === selectedFolder.id ? {...f, name: newFolderName} : f
-                    )
-                  );
-
-                  toast.success("Folder updated successfully!");
-                  setEditDialogOpen(false);
-                } catch (err) {
-                  toast.error("Failed to update folder!");
-                  console.error(err);
-                }
-              }}
+              onClick={handleUpdateFolder}
+              disabled={!hasChanges()}
+              className={`bg-yellow-300 hover:bg-yellow-400 text-indigo-950 ${!hasChanges() ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Update
             </Button>

@@ -116,6 +116,27 @@
     --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+.text-outline {
+    color: white;
+    -webkit-text-stroke: 4px black;
+    paint-order: stroke fill;
+    letter-spacing: 0.02em;
+}
+
+
+/* responsive stroke weight */
+@media (max-width: 768px) {
+    .text-outline {
+        -webkit-text-stroke: 1.5px black;
+    }
+}
+
+@media (max-width: 480px) {
+    .text-outline {
+        -webkit-text-stroke: 1px black;
+    }
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;
