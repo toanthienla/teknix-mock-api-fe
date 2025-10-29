@@ -1,12 +1,12 @@
-import React, {useState, useEffect, useRef} from "react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Card} from "@/components/ui/card";
-import {Textarea} from "@/components/ui/textarea";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {Badge} from "@/components/ui/badge";
-import {API_ROOT} from "../utils/constants";
+import React, { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { API_ROOT } from "../utils/constants";
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   X,
   SaveIcon,
 } from "lucide-react";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import {useNavigate, useParams} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -63,19 +63,19 @@ import folderIcon from "@/assets/folder-icon.svg";
 import endpointIcon from "@/assets/endpoint.svg";
 import dot_background from "@/assets/dot_rows.svg";
 import Editor from "react-simple-code-editor";
-import {highlight, languages} from "prismjs/components/prism-core";
+import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
-import {getCurrentUser} from "@/services/api.js";
-import {Switch} from "@/components/ui/switch.jsx";
+import { getCurrentUser } from "@/services/api.js";
+import { Switch } from "@/components/ui/switch.jsx";
 
-import {ApiCallEditor, Frame} from "@/components/endpoint/AdvancedComponents";
+import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
 import {
   SchemaBodyEditor,
   BaseSchemaEditor,
 } from "@/components/endpoint/SchemaComponents";
-import {statusCodes} from "@/components/endpoint/constants";
+import { statusCodes } from "@/components/endpoint/constants";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const DashboardPage = () => {
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
-  const {projectId, endpointId} = useParams();
+  const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -276,7 +276,7 @@ const DashboardPage = () => {
     return targetEndpoint;
   };
 
-  // Thêm hàm validate New API Call
+  // Trong ResponsePage.jsx - sửa hàm validateNewApiCall
   const validateNewApiCall = () => {
     const errors = {};
 
@@ -297,26 +297,8 @@ const DashboardPage = () => {
       }
     }
 
-    // Validate trùng method cho cùng target_endpoint
-    if (newApiCallTargetEndpoint && newApiCallMethod) {
-      // Lấy full target endpoint mà user đang chọn
-      const selectedFullTargetEndpoint = getNewApiCallFullTargetEndpoint(
-        newApiCallTargetEndpoint
-      );
-
-      // Tìm các calls có cùng full target endpoint
-      const existingCallsWithSameEndpoint = nextCalls.filter(
-        (call) => call.target_endpoint === selectedFullTargetEndpoint
-      );
-
-      const duplicateMethod = existingCallsWithSameEndpoint.find(
-        (call) => call.method === newApiCallMethod
-      );
-
-      if (duplicateMethod) {
-        errors.method = `Method ${newApiCallMethod} already exists for endpoint "${selectedFullTargetEndpoint}"`;
-      }
-    }
+    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate method cho cùng endpoint nữa
+    // Người dùng có thể tạo nhiều API calls với cùng method cho cùng endpoint
 
     setNewApiCallValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -371,7 +353,7 @@ const DashboardPage = () => {
         {
           method: "PUT",
           credentials: "include",
-          headers: {"Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
@@ -552,7 +534,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
       method: "PUT",
       credentials: "include",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -581,12 +563,12 @@ const DashboardPage = () => {
       return Promise.reject(new Error("Endpoint not found"));
     }
 
-    const payload = method === "GET" ? newSchema : {schema: newSchema};
+    const payload = method === "GET" ? newSchema : { schema: newSchema };
 
     return fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       credentials: "include",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -743,10 +725,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -755,7 +737,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
       credentials: "include",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -775,7 +757,7 @@ const DashboardPage = () => {
             setEndpoints((prev) =>
               prev.map((ep) =>
                 String(ep.id) === String(currentEndpointId)
-                  ? {...ep, is_stateful: previousState}
+                  ? { ...ep, is_stateful: previousState }
                   : ep
               )
             );
@@ -826,7 +808,7 @@ const DashboardPage = () => {
     if (!currentFolder?.id || !openSchemaDialog) return;
 
     // Fetch base_schema từ folder
-    fetch(`${API_ROOT}/folders/${currentFolder.id}`, {credentials: "include"})
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch folder schema");
         return res.json();
@@ -847,8 +829,8 @@ const DashboardPage = () => {
       const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({base_schema: newSchema}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -874,10 +856,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -887,7 +869,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
       credentials: "include",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     })
       .then((res) => {
         if (!res.ok) {
@@ -895,7 +877,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? {...ep, is_stateful: previousState}
+                ? { ...ep, is_stateful: previousState }
                 : ep
             )
           );
@@ -987,8 +969,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-      (w) => String(w.id) === String(currentProject.workspace_id)
-    )
+        (w) => String(w.id) === String(currentProject.workspace_id)
+      )
     : null;
 
   const method =
@@ -1051,7 +1033,7 @@ const DashboardPage = () => {
 
     return fetch(
       `${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`,
-      {credentials: "include"}
+      { credentials: "include" }
     )
       .then((res) => res.json())
       .then((data) => {
@@ -1175,7 +1157,7 @@ const DashboardPage = () => {
 
     return fetch(
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`,
-      {credentials: "include"}
+      { credentials: "include" }
     )
       .then((res) => {
         if (!res.ok) {
@@ -1310,8 +1292,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
-    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
+    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
+    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -1337,7 +1319,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1364,7 +1346,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1373,7 +1355,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1414,26 +1396,26 @@ const DashboardPage = () => {
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -1550,7 +1532,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? {...response, priority: updated.priority}
+              ? { ...response, priority: updated.priority }
               : response;
           })
         );
@@ -1561,7 +1543,7 @@ const DashboardPage = () => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? {...status, priority: updated.priority} : status;
+            return updated ? { ...status, priority: updated.priority } : status;
           })
         );
 
@@ -1604,7 +1586,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? {...response, is_default: updated.is_default}
+              ? { ...response, is_default: updated.is_default }
               : response;
           })
         );
@@ -1616,7 +1598,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? {...status, isDefault: updated.is_default}
+              ? { ...status, isDefault: updated.is_default }
               : status;
           })
         );
@@ -1661,7 +1643,7 @@ const DashboardPage = () => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = {...newStatusData[draggedItem]};
+      const draggedItemContent = { ...newStatusData[draggedItem] };
 
       newStatusData.splice(draggedItem, 1);
 
@@ -1687,7 +1669,7 @@ const DashboardPage = () => {
       ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
       : `${API_ROOT}/endpoint_responses/${response.id}`;
 
-    fetch(url, {credentials: "include"})
+    fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (isStateful) {
@@ -1802,7 +1784,7 @@ const DashboardPage = () => {
     fetch(url, {
       method,
       credentials: "include",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -1837,8 +1819,8 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                r.id === statefulResponse.id ? statefulResponse : r
-              )
+                  r.id === statefulResponse.id ? statefulResponse : r
+                )
               : [...prev, statefulResponse]
           );
 
@@ -1846,22 +1828,22 @@ const DashboardPage = () => {
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                s.id === statefulResponse.id
-                  ? {
-                    ...s,
+                  s.id === statefulResponse.id
+                    ? {
+                        ...s,
+                        code: statefulResponse.status_code.toString(),
+                        name: statefulResponse.name,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: statefulResponse.id,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  }
-                  : s
-              )
-              : [
-                ...prev,
-                {
-                  id: statefulResponse.id,
-                  code: statefulResponse.status_code.toString(),
-                  name: statefulResponse.name,
-                },
-              ]
+                  },
+                ]
           );
 
           if (selectedResponse) {
@@ -1872,32 +1854,32 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                r.id === updatedResponse.id ? updatedResponse : r
-              )
+                  r.id === updatedResponse.id ? updatedResponse : r
+                )
               : [...prev, updatedResponse]
           );
 
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                s.id === updatedResponse.id
-                  ? {
-                    ...s,
+                  s.id === updatedResponse.id
+                    ? {
+                        ...s,
+                        code: updatedResponse.status_code.toString(),
+                        name: updatedResponse.name,
+                        isDefault: updatedResponse.is_default,
+                      }
+                    : s
+                )
+              : [
+                  ...prev,
+                  {
+                    id: updatedResponse.id,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  }
-                  : s
-              )
-              : [
-                ...prev,
-                {
-                  id: updatedResponse.id,
-                  code: updatedResponse.status_code.toString(),
-                  name: updatedResponse.name,
-                  isDefault: updatedResponse.is_default,
-                },
-              ]
+                  },
+                ]
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
@@ -1957,7 +1939,7 @@ const DashboardPage = () => {
       fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
         .then((res) => {
@@ -2009,7 +1991,7 @@ const DashboardPage = () => {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4"/>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
           <p className="text-lg font-medium text-gray-700">
             Loading endpoint data...
           </p>
@@ -2043,34 +2025,53 @@ const DashboardPage = () => {
                 ? currentFolder
                   ? currentEndpointId
                     ? [
-                      {
-                        label: currentWorkspace.name,
-                        WORKSPACE_ID: currentWorkspace.id,
-                        href: "/dashboard",
-                        icon: workspaceIcon,
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                        icon: projectIcon,
-                      },
-                      {
-                        label: currentFolder.name,
-                        folder_id: currentFolder.id,
-                        href: `/dashboard/${currentProject.id}`,
-                        icon: folderIcon,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) =>
-                              String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null,
-                        icon: endpointIcon,
-                      },
-                    ]
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                          icon: workspaceIcon,
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
+                        },
+                        {
+                          label: currentFolder.name,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
+                        },
+                        {
+                          label:
+                            endpoints.find(
+                              (ep) =>
+                                String(ep.id) === String(currentEndpointId)
+                            )?.name || "Endpoint",
+                          href: null,
+                          icon: endpointIcon,
+                        },
+                      ]
                     : [
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                          icon: workspaceIcon,
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                          icon: projectIcon,
+                        },
+                        {
+                          label: currentFolder.name,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
+                          icon: folderIcon,
+                        },
+                      ]
+                  : [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2082,34 +2083,15 @@ const DashboardPage = () => {
                         href: `/dashboard/${currentProject.id}`,
                         icon: projectIcon,
                       },
-                      {
-                        label: currentFolder.name,
-                        folder_id: currentFolder.id,
-                        href: `/dashboard/${currentProject.id}`,
-                        icon: folderIcon,
-                      },
                     ]
-                  : [
+                : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                       icon: workspaceIcon,
                     },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                      icon: projectIcon,
-                    },
                   ]
-                : [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                    icon: workspaceIcon,
-                  },
-                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -2141,22 +2123,23 @@ const DashboardPage = () => {
 
           {/* Phần bên phải - Form Status Info */}
           <div className="flex items-center gap-2 ml-1 flex-1 flex-wrap">
-            <div className="text-black bg-white font-semibold text-lg"># Path</div>
+            <div className="text-black bg-white font-semibold text-lg">
+              # Path
+            </div>
 
-            <div
-              className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
+            <div className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                      : method === "PUT"
-                        ? "bg-orange-400 text-black hover:bg-orange-500"
-                        : method === "DELETE"
-                          ? "bg-red-400 text-black hover:bg-red-500"
-                          : "bg-gray-100 text-black hover:bg-gray-200"
+                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                    : method === "PUT"
+                    ? "bg-orange-400 text-black hover:bg-orange-500"
+                    : method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -2217,7 +2200,6 @@ const DashboardPage = () => {
 
         {/* Navigation Tabs */}
         <div className={`transition-all duration-300 px-16 pt-4 pb-8 w-full`}>
-
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
@@ -2260,8 +2242,7 @@ const DashboardPage = () => {
             <div className="w-1/4">
               {/* Header với nút Add và Search */}
               <div className="flex flex-col bg-white rounded-lg ">
-                <div
-                  className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
+                <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
                     {!isStateful && (
                       <button
@@ -2274,11 +2255,10 @@ const DashboardPage = () => {
                             : "Add new response"
                         }
                       >
-                        <Plus className="w-4 h-4 text-[#1C1C1C]"/>
+                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
                       </button>
                     )}
-                    <div
-                      className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
+                    <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <div className="w-[14.65px] h-[14.65px]">
                           <svg
@@ -2377,12 +2357,12 @@ const DashboardPage = () => {
                           <div className="flex items-center gap-1">
                             {/* Disable GripVertical icon khi đang search */}
                             {!isStateful && !searchTerm && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                             )}
                             <div className="flex items-center gap-2">
                               <span
                                 className="text-[12px] font-medium"
-                                style={{color: statusColor}}
+                                style={{ color: statusColor }}
                               >
                                 {status.code}
                               </span>
@@ -2416,7 +2396,7 @@ const DashboardPage = () => {
                                 }}
                                 title="Delete response"
                               >
-                                <Trash2 className="h-4 w-4"/>
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
                           </div>
@@ -2449,8 +2429,14 @@ const DashboardPage = () => {
                       className={`flex rounded-tl-lg px-4 py-2 -mb-px bg-white text-stone-900`}
                     >
                       <div className="flex items-center">
-                        <img src={Header_Body} alt="folder" className="w-4 h-4 mr-2"/>
-                        <span className="text-md font-semibold">Response Detail</span>
+                        <img
+                          src={Header_Body}
+                          alt="folder"
+                          className="w-4 h-4 mr-2"
+                        />
+                        <span className="text-md font-semibold">
+                          Response Detail
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -2491,7 +2477,7 @@ const DashboardPage = () => {
                               className="absolute ml-auto right-20 h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
                               onClick={handleSaveResponse}
                             >
-                              <SaveIcon className="h-5 w-5 text-[#898883]"/>
+                              <SaveIcon className="h-5 w-5 text-[#898883]" />
                             </Button>
                           </div>
                         </div>
@@ -2525,21 +2511,29 @@ const DashboardPage = () => {
                             <div className="col-span-3">
                               <Select
                                 value={statusCode}
-                                onValueChange={(value) => !isStateful && setStatusCode(value)}
+                                onValueChange={(value) =>
+                                  !isStateful && setStatusCode(value)
+                                }
                                 disabled={isStateful}
                               >
                                 <SelectTrigger
                                   id="status-code"
                                   className={`border-[#CBD5E1] rounded-md ${
-                                    isStateful ? "bg-gray-100 cursor-not-allowed" : ""
+                                    isStateful
+                                      ? "bg-gray-100 cursor-not-allowed"
+                                      : ""
                                   }`}
                                 >
-                                  <SelectValue placeholder="Select status code"/>
+                                  <SelectValue placeholder="Select status code" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                   {statusCodes.map((status) => (
-                                    <SelectItem key={status.code} value={status.code}>
-                                      {status.code} - {status.description.split("–")[0]}
+                                    <SelectItem
+                                      key={status.code}
+                                      value={status.code}
+                                    >
+                                      {status.code} -{" "}
+                                      {status.description.split("–")[0]}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -2585,7 +2579,9 @@ const DashboardPage = () => {
                                       setResponseBody(code);
                                     }
                                   }}
-                                  highlight={(code) => highlight(code, languages.json)}
+                                  highlight={(code) =>
+                                    highlight(code, languages.json)
+                                  }
                                   padding={10}
                                   className="custom-json-editor"
                                   style={{
@@ -2601,7 +2597,9 @@ const DashboardPage = () => {
                                   }}
                                   textareaClassName="focus:outline-none"
                                   disabled={
-                                    isStateful && statusCode === "200" && method === "GET"
+                                    isStateful &&
+                                    statusCode === "200" &&
+                                    method === "GET"
                                   }
                                 />
 
@@ -2631,7 +2629,7 @@ const DashboardPage = () => {
                                       }
                                     }}
                                   >
-                                    <Code className="h-4 w-4"/> Format
+                                    <Code className="h-4 w-4" /> Format
                                   </Button>
                                 </div>
 
@@ -2674,33 +2672,36 @@ const DashboardPage = () => {
                                       </div>
 
                                       <div className="w-full flex justify-between">
-                                        {["url", "query", "state"].map((section) => (
-                                          <div
-                                            key={section}
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === section
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection(section);
-                                            }}
-                                          >
-                                            {section === "url"
-                                              ? "URL Parameters"
-                                              : section === "query"
+                                        {["url", "query", "state"].map(
+                                          (section) => (
+                                            <div
+                                              key={section}
+                                              className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                                selectedSection === section
+                                                  ? "bg-[#EDEDEC] text-[#374151]"
+                                                  : "text-[#374151] hover:bg-gray-100"
+                                              }`}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedSection(section);
+                                              }}
+                                            >
+                                              {section === "url"
+                                                ? "URL Parameters"
+                                                : section === "query"
                                                 ? "Query Parameters"
                                                 : "Project State"}
-                                          </div>
-                                        ))}
+                                            </div>
+                                          )
+                                        )}
                                       </div>
 
                                       <div
                                         className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const templateText = getTemplateText().template;
+                                          const templateText =
+                                            getTemplateText().template;
                                           insertTemplate(templateText);
                                         }}
                                       >
@@ -2755,7 +2756,11 @@ const DashboardPage = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[400px]">
-                      <img src={no_response} alt="No response selected" className="mb-4"/>
+                      <img
+                        src={no_response}
+                        alt="No response selected"
+                        className="mb-4"
+                      />
                     </div>
                   )}
                 </div>
@@ -2898,7 +2903,7 @@ const DashboardPage = () => {
                                   className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
                                   onClick={handleSaveResponse}
                                 >
-                                  <SaveIcon className="h-10 w-10 text-[#898883]"/>
+                                  <SaveIcon className="h-10 w-10 text-[#898883]" />
                                 </Button>
                               </div>
                               <div className="space-y-6">
@@ -2909,7 +2914,7 @@ const DashboardPage = () => {
                                       onValueChange={setProxyMethod}
                                     >
                                       <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                        <SelectValue placeholder="Method"/>
+                                        <SelectValue placeholder="Method" />
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="GET">GET</SelectItem>
@@ -2977,7 +2982,7 @@ const DashboardPage = () => {
                                     className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
                                     onClick={handleSaveInitialValue}
                                   >
-                                    <SaveIcon className="h-5 w-5 text-[#898883]"/>
+                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
                                   </Button>
                                 </div>
                                 <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
@@ -2988,15 +2993,14 @@ const DashboardPage = () => {
                                   <div className="col-span-3 space-y-2">
                                     <div className="relative">
                                       {/* Thay Textarea bằng div chỉ đọc */}
-                                      <div
-                                        className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
                                         <pre className="whitespace-pre-wrap break-words m-0">
                                           {endpointData?.data_current
                                             ? JSON.stringify(
-                                              endpointData.data_current,
-                                              null,
-                                              2
-                                            )
+                                                endpointData.data_current,
+                                                null,
+                                                2
+                                              )
                                             : "[]"}
                                         </pre>
                                       </div>
@@ -3085,7 +3089,7 @@ const DashboardPage = () => {
                                               }
                                             }}
                                           >
-                                            <Code className="mr-1 h-4 w-4"/>{" "}
+                                            <Code className="mr-1 h-4 w-4" />{" "}
                                             Format
                                           </Button>
                                         </div>
@@ -3397,7 +3401,7 @@ const DashboardPage = () => {
                             }
                           }}
                         >
-                          <Code className="mr-1 h-4 w-4"/> Format
+                          <Code className="mr-1 h-4 w-4" /> Format
                         </Button>
                       </div>
 
@@ -3562,13 +3566,12 @@ const DashboardPage = () => {
           </div>
         </div>
         {/* footer */}
-        <footer
-          className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
           <span>© Teknix Corp. All rights reserved.</span>
           <div className="flex items-center gap-3 text-gray-700">
-            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
-            <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
-            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
+            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+            <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
             <a className="hover:underline font-semibold" href="">
               About
             </a>
@@ -3628,7 +3631,7 @@ const DashboardPage = () => {
 
           {folderSchema ? (
             <BaseSchemaEditor
-              folderData={{schema: folderSchema}}
+              folderData={{ schema: folderSchema }}
               folderId={currentFolder?.id}
               onSave={handleSaveFolderSchema}
               method={"PUT"}
@@ -3834,7 +3837,7 @@ const DashboardPage = () => {
                     id="new-status-code"
                     className="border-[#CBD5E1] rounded-md"
                   >
-                    <SelectValue placeholder="Select status code"/>
+                    <SelectValue placeholder="Select status code" />
                   </SelectTrigger>
                   <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                     {statusCodes.map((status) => (
@@ -3891,7 +3894,7 @@ const DashboardPage = () => {
                       }
                     }}
                   >
-                    <Code className="mr-1 h-4 w-4"/> Format
+                    <Code className="mr-1 h-4 w-4" /> Format
                   </Button>
                 </div>
               </div>
