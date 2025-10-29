@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { API_ROOT } from "../utils/constants";
+import React, {useState, useEffect, useRef} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Card} from "@/components/ui/card";
+import {Textarea} from "@/components/ui/textarea";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {Badge} from "@/components/ui/badge";
+import {API_ROOT} from "../utils/constants";
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   X,
   SaveIcon,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.jsx";
-import { useNavigate, useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -63,19 +63,19 @@ import folderIcon from "@/assets/folder-icon.svg";
 import endpointIcon from "@/assets/endpoint.svg";
 import dot_background from "@/assets/dot_rows.svg";
 import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs/components/prism-core";
+import {highlight, languages} from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
-import { getCurrentUser } from "@/services/api.js";
-import { Switch } from "@/components/ui/switch.jsx";
+import {getCurrentUser} from "@/services/api.js";
+import {Switch} from "@/components/ui/switch.jsx";
 
-import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
+import {ApiCallEditor, Frame} from "@/components/endpoint/AdvancedComponents";
 import {
   SchemaBodyEditor,
   BaseSchemaEditor,
 } from "@/components/endpoint/SchemaComponents";
-import { statusCodes } from "@/components/endpoint/constants";
+import {statusCodes} from "@/components/endpoint/constants";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const DashboardPage = () => {
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
   const [responseNameError, setResponseNameError] = useState("");
-  const { projectId, endpointId } = useParams();
+  const {projectId, endpointId} = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [responseName, setResponseName] = useState("");
@@ -276,7 +276,7 @@ const DashboardPage = () => {
     return targetEndpoint;
   };
 
-  // Trong ResponsePage.jsx - sửa hàm validateNewApiCall
+  // Thêm hàm validate New API Call
   const validateNewApiCall = () => {
     const errors = {};
 
@@ -334,7 +334,7 @@ const DashboardPage = () => {
               target_endpoint: call.target_endpoint,
               method: call.method,
               body: call.body,
-              condition: call.condition,
+              condition: Number(call.condition),
             })),
             // Thêm API Call mới (không có id)
             {
@@ -353,7 +353,7 @@ const DashboardPage = () => {
         {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload),
         }
       );
@@ -505,9 +505,24 @@ const DashboardPage = () => {
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
-  const currentEndpoint = endpoints.find(
-    (ep) => String(ep.id) === String(currentEndpointId)
-  );
+  const [currentEndpoint, setCurrentEndpoint] = useState(null);
+
+  useEffect(() => {
+    const found = endpoints.find(
+      (ep) => String(ep.id) === String(currentEndpointId)
+    );
+
+    // Nếu endpoint có trong danh sách nhưng không có send_notification → fetch chi tiết
+    if (found) {
+      setCurrentEndpoint(found);
+      if (found.send_notification === undefined && currentEndpointId) {
+        fetchEndpoint(currentEndpointId);
+      }
+    } else if (currentEndpointId) {
+      // Nếu không có trong danh sách → fetch riêng
+      fetchEndpoint(currentEndpointId);
+    }
+  }, [endpoints, currentEndpointId]);
 
   const currentFolder = currentEndpoint
     ? folders.find((f) => String(f.id) === String(currentEndpoint.folder_id))
@@ -534,7 +549,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
       method: "PUT",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -563,12 +578,12 @@ const DashboardPage = () => {
       return Promise.reject(new Error("Endpoint not found"));
     }
 
-    const payload = method === "GET" ? newSchema : { schema: newSchema };
+    const payload = method === "GET" ? newSchema : {schema: newSchema};
 
     return fetch(`${API_ROOT}/endpoints/${currentEndpointId}`, {
       method: "PUT",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -725,10 +740,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -737,7 +752,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateful`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -757,7 +772,7 @@ const DashboardPage = () => {
             setEndpoints((prev) =>
               prev.map((ep) =>
                 String(ep.id) === String(currentEndpointId)
-                  ? { ...ep, is_stateful: previousState }
+                  ? {...ep, is_stateful: previousState}
                   : ep
               )
             );
@@ -808,7 +823,7 @@ const DashboardPage = () => {
     if (!currentFolder?.id || !openSchemaDialog) return;
 
     // Fetch base_schema từ folder
-    fetch(`${API_ROOT}/folders/${currentFolder.id}`, { credentials: "include" })
+    fetch(`${API_ROOT}/folders/${currentFolder.id}`, {credentials: "include"})
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch folder schema");
         return res.json();
@@ -829,8 +844,8 @@ const DashboardPage = () => {
       const res = await fetch(`${API_ROOT}/folders/${currentFolder.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base_schema: newSchema }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({base_schema: newSchema}),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -856,10 +871,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-              ...ep,
-              is_stateful: newIsStateful,
-              updated_at: new Date().toISOString(),
-            }
+            ...ep,
+            is_stateful: newIsStateful,
+            updated_at: new Date().toISOString(),
+          }
           : ep
       )
     );
@@ -869,7 +884,7 @@ const DashboardPage = () => {
     fetch(`${API_ROOT}/endpoints/${currentEndpointId}/convert-to-stateless`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
     })
       .then((res) => {
         if (!res.ok) {
@@ -877,7 +892,7 @@ const DashboardPage = () => {
           setEndpoints((prev) =>
             prev.map((ep) =>
               String(ep.id) === String(currentEndpointId)
-                ? { ...ep, is_stateful: previousState }
+                ? {...ep, is_stateful: previousState}
                 : ep
             )
           );
@@ -969,8 +984,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-        (w) => String(w.id) === String(currentProject.workspace_id)
-      )
+      (w) => String(w.id) === String(currentProject.workspace_id)
+    )
     : null;
 
   const method =
@@ -1017,6 +1032,21 @@ const DashboardPage = () => {
       });
   };
 
+  const fetchEndpoint = async (id) => {
+    if (!id) return;
+    try {
+      const response = await fetch(`${API_ROOT}/endpoints/${id}`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch endpoint");
+      const data = await response.json();
+      setCurrentEndpoint(data);
+      console.log("Current endpoint:", data);
+    } catch (error) {
+      console.error("Error fetching endpoint:", error);
+    }
+  };
+
   const fetchFolders = () => {
     return fetch(`${API_ROOT}/folders`)
       .then((res) => res.json())
@@ -1033,7 +1063,7 @@ const DashboardPage = () => {
 
     return fetch(
       `${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`,
-      { credentials: "include" }
+      {credentials: "include"}
     )
       .then((res) => res.json())
       .then((data) => {
@@ -1157,7 +1187,7 @@ const DashboardPage = () => {
 
     return fetch(
       `${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`,
-      { credentials: "include" }
+      {credentials: "include"}
     )
       .then((res) => {
         if (!res.ok) {
@@ -1292,8 +1322,8 @@ const DashboardPage = () => {
     if (String(currentWsId) !== String(p.workspace_id)) {
       setCurrentWsId(p.workspace_id);
     }
-    setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
-    setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
+    setOpenProjectsMap((prev) => ({...prev, [p.workspace_id]: true}));
+    setOpenEndpointsMap((prev) => ({...prev, [p.id]: true}));
   }, [projectId, projects, currentWsId]);
 
   // -------------------- Workspace --------------------
@@ -1319,7 +1349,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1346,7 +1376,7 @@ const DashboardPage = () => {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1355,7 +1385,7 @@ const DashboardPage = () => {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1396,26 +1426,26 @@ const DashboardPage = () => {
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -1532,7 +1562,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, priority: updated.priority }
+              ? {...response, priority: updated.priority}
               : response;
           })
         );
@@ -1543,7 +1573,7 @@ const DashboardPage = () => {
             const updated = updatedResponses.find(
               (r) => String(r.id) === String(status.id)
             );
-            return updated ? { ...status, priority: updated.priority } : status;
+            return updated ? {...status, priority: updated.priority} : status;
           })
         );
 
@@ -1586,7 +1616,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(response.id)
             );
             return updated
-              ? { ...response, is_default: updated.is_default }
+              ? {...response, is_default: updated.is_default}
               : response;
           })
         );
@@ -1598,7 +1628,7 @@ const DashboardPage = () => {
               (r) => String(r.id) === String(status.id)
             );
             return updated
-              ? { ...status, isDefault: updated.is_default }
+              ? {...status, isDefault: updated.is_default}
               : status;
           })
         );
@@ -1643,7 +1673,7 @@ const DashboardPage = () => {
 
     if (draggedItem !== null && draggedItem !== dropIndex) {
       const newStatusData = [...statusData];
-      const draggedItemContent = { ...newStatusData[draggedItem] };
+      const draggedItemContent = {...newStatusData[draggedItem]};
 
       newStatusData.splice(draggedItem, 1);
 
@@ -1669,7 +1699,7 @@ const DashboardPage = () => {
       ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
       : `${API_ROOT}/endpoint_responses/${response.id}`;
 
-    fetch(url, { credentials: "include" })
+    fetch(url, {credentials: "include"})
       .then((res) => res.json())
       .then((data) => {
         if (isStateful) {
@@ -1784,7 +1814,7 @@ const DashboardPage = () => {
     fetch(url, {
       method,
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -1819,8 +1849,8 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === statefulResponse.id ? statefulResponse : r
-                )
+                r.id === statefulResponse.id ? statefulResponse : r
+              )
               : [...prev, statefulResponse]
           );
 
@@ -1828,22 +1858,22 @@ const DashboardPage = () => {
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === statefulResponse.id
-                    ? {
-                        ...s,
-                        code: statefulResponse.status_code.toString(),
-                        name: statefulResponse.name,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: statefulResponse.id,
+                s.id === statefulResponse.id
+                  ? {
+                    ...s,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: statefulResponse.id,
+                  code: statefulResponse.status_code.toString(),
+                  name: statefulResponse.name,
+                },
+              ]
           );
 
           if (selectedResponse) {
@@ -1854,32 +1884,32 @@ const DashboardPage = () => {
           setEndpointResponses((prev) =>
             selectedResponse
               ? prev.map((r) =>
-                  r.id === updatedResponse.id ? updatedResponse : r
-                )
+                r.id === updatedResponse.id ? updatedResponse : r
+              )
               : [...prev, updatedResponse]
           );
 
           setStatusData((prev) =>
             selectedResponse
               ? prev.map((s) =>
-                  s.id === updatedResponse.id
-                    ? {
-                        ...s,
-                        code: updatedResponse.status_code.toString(),
-                        name: updatedResponse.name,
-                        isDefault: updatedResponse.is_default,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: updatedResponse.id,
+                s.id === updatedResponse.id
+                  ? {
+                    ...s,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  },
-                ]
+                  }
+                  : s
+              )
+              : [
+                ...prev,
+                {
+                  id: updatedResponse.id,
+                  code: updatedResponse.status_code.toString(),
+                  name: updatedResponse.name,
+                  isDefault: updatedResponse.is_default,
+                },
+              ]
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
@@ -1907,6 +1937,38 @@ const DashboardPage = () => {
         toast.error(error.message);
       });
   };
+
+  const availableTabs = [];
+  if (!isStateful) availableTabs.push("Rules", "proxy");
+  if (isStateful) availableTabs.push("dataDefault");
+  if (isStateful && method !== "DELETE") availableTabs.push("schemaBody");
+  if (isStateful) availableTabs.push("advanced");
+
+  const defaultTab = availableTabs[0] || "Rules";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  const renderTabButton = (value, label, icon) => (
+    <div
+      onClick={() => setActiveTab(value)}
+      className={`text-lg border-b-2 px-4 py-2 cursor-pointer flex items-center rounded-none
+        ${
+        activeTab === value
+          ? "border-[#37352F]"
+          : "border-stone-200 hover:border-[#aaa]"
+      }`}
+    >
+      <img src={icon} alt={label} className="w-4 h-4 mr-2"/>
+      {label}
+    </div>
+  );
+
+  // khi isStateful/method/availableTabs thay đổi, đảm bảo activeTab vẫn hợp lệ
+  useEffect(() => {
+    if (!availableTabs.includes(activeTab)) {
+      setActiveTab(availableTabs[0] || "Rules");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStateful, method, availableTabs.join(",")]);
 
   useEffect(() => {
     if (selectedResponse) {
@@ -1939,7 +2001,7 @@ const DashboardPage = () => {
       fetch(`${API_ROOT}/endpoint_data?path=${encodeURIComponent(fullPath)}`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
       })
         .then((res) => {
@@ -1991,7 +2053,7 @@ const DashboardPage = () => {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4"/>
           <p className="text-lg font-medium text-gray-700">
             Loading endpoint data...
           </p>
@@ -2025,53 +2087,6 @@ const DashboardPage = () => {
                 ? currentFolder
                   ? currentEndpointId
                     ? [
-                        {
-                          label: currentWorkspace.name,
-                          WORKSPACE_ID: currentWorkspace.id,
-                          href: "/dashboard",
-                          icon: workspaceIcon,
-                        },
-                        {
-                          label: currentProject.name,
-                          href: `/dashboard/${currentProject.id}`,
-                          icon: projectIcon,
-                        },
-                        {
-                          label: currentFolder.name,
-                          folder_id: currentFolder.id,
-                          href: `/dashboard/${currentProject.id}`,
-                          icon: folderIcon,
-                        },
-                        {
-                          label:
-                            endpoints.find(
-                              (ep) =>
-                                String(ep.id) === String(currentEndpointId)
-                            )?.name || "Endpoint",
-                          href: null,
-                          icon: endpointIcon,
-                        },
-                      ]
-                    : [
-                        {
-                          label: currentWorkspace.name,
-                          WORKSPACE_ID: currentWorkspace.id,
-                          href: "/dashboard",
-                          icon: workspaceIcon,
-                        },
-                        {
-                          label: currentProject.name,
-                          href: `/dashboard/${currentProject.id}`,
-                          icon: projectIcon,
-                        },
-                        {
-                          label: currentFolder.name,
-                          folder_id: currentFolder.id,
-                          href: `/dashboard/${currentProject.id}`,
-                          icon: folderIcon,
-                        },
-                      ]
-                  : [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2083,15 +2098,62 @@ const DashboardPage = () => {
                         href: `/dashboard/${currentProject.id}`,
                         icon: projectIcon,
                       },
+                      {
+                        label: currentFolder.name,
+                        folder_id: currentFolder.id,
+                        href: `/dashboard/${currentProject.id}`,
+                        icon: folderIcon,
+                      },
+                      {
+                        label:
+                          endpoints.find(
+                            (ep) =>
+                              String(ep.id) === String(currentEndpointId)
+                          )?.name || "Endpoint",
+                        href: null,
+                        icon: endpointIcon,
+                      },
                     ]
-                : [
+                    : [
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                        icon: workspaceIcon,
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                        icon: projectIcon,
+                      },
+                      {
+                        label: currentFolder.name,
+                        folder_id: currentFolder.id,
+                        href: `/dashboard/${currentProject.id}`,
+                        icon: folderIcon,
+                      },
+                    ]
+                  : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                       icon: workspaceIcon,
                     },
+                    {
+                      label: currentProject.name,
+                      href: `/dashboard/${currentProject.id}`,
+                      icon: projectIcon,
+                    },
                   ]
+                : [
+                  {
+                    label: currentWorkspace.name,
+                    WORKSPACE_ID: currentWorkspace.id,
+                    href: "/dashboard",
+                    icon: workspaceIcon,
+                  },
+                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -2123,23 +2185,22 @@ const DashboardPage = () => {
 
           {/* Phần bên phải - Form Status Info */}
           <div className="flex items-center gap-2 ml-1 flex-1 flex-wrap">
-            <div className="text-black bg-white font-semibold text-lg">
-              # Path
-            </div>
+            <div className="text-black bg-white font-semibold text-lg"># Path</div>
 
-            <div className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
+            <div
+              className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
                   method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                    : method === "PUT"
-                    ? "bg-orange-400 text-black hover:bg-orange-500"
-                    : method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                      : method === "PUT"
+                        ? "bg-orange-400 text-black hover:bg-orange-500"
+                        : method === "DELETE"
+                          ? "bg-red-400 text-black hover:bg-red-500"
+                          : "bg-gray-100 text-black hover:bg-gray-200"
                 }`}
               >
                 {method}
@@ -2195,11 +2256,50 @@ const DashboardPage = () => {
                 className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
               />
             </div>
+
+            <div className="ml-4 flex items-center gap-2">
+              <span className="font-inter font-semibold text-base text-black select-none">Notification</span>
+              <Switch
+                checked={!!currentEndpoint?.send_notification}
+                onCheckedChange={async (val) => {
+                  try {
+                    const response = await fetch(
+                      `${API_ROOT}/endpoints/${currentEndpointId}/notification`,
+                      {
+                        method: "PUT",
+                        credentials: "include",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ send_notification: val }),
+                      }
+                    );
+
+                    if (!response.ok) throw new Error("Failed to update notification setting");
+
+                    toast.success(
+                      val
+                        ? "Notification has been enabled for this endpoint!"
+                        : "Notification has been disabled for this endpoint!"
+                    );
+
+                    // Fetch lại endpoint để đảm bảo state chính xác
+                    await fetchEndpoint(currentEndpointId);
+                  } catch (error) {
+                    console.error("Error updating notification setting:", error);
+                    toast.error("Unable to update notification setting!");
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+              />
+            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
         <div className={`transition-all duration-300 px-16 pt-4 pb-8 w-full`}>
+
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
@@ -2242,7 +2342,8 @@ const DashboardPage = () => {
             <div className="w-1/4">
               {/* Header với nút Add và Search */}
               <div className="flex flex-col bg-white rounded-lg ">
-                <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
+                <div
+                  className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
                     {!isStateful && (
                       <button
@@ -2255,10 +2356,11 @@ const DashboardPage = () => {
                             : "Add new response"
                         }
                       >
-                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                        <Plus className="w-4 h-4 text-[#1C1C1C]"/>
                       </button>
                     )}
-                    <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
+                    <div
+                      className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <div className="w-[14.65px] h-[14.65px]">
                           <svg
@@ -2357,12 +2459,12 @@ const DashboardPage = () => {
                           <div className="flex items-center gap-1">
                             {/* Disable GripVertical icon khi đang search */}
                             {!isStateful && !searchTerm && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move"/>
                             )}
                             <div className="flex items-center gap-2">
                               <span
                                 className="text-[12px] font-medium"
-                                style={{ color: statusColor }}
+                                style={{color: statusColor}}
                               >
                                 {status.code}
                               </span>
@@ -2396,7 +2498,7 @@ const DashboardPage = () => {
                                 }}
                                 title="Delete response"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4"/>
                               </Button>
                             )}
                           </div>
@@ -2429,14 +2531,8 @@ const DashboardPage = () => {
                       className={`flex rounded-tl-lg px-4 py-2 -mb-px bg-white text-stone-900`}
                     >
                       <div className="flex items-center">
-                        <img
-                          src={Header_Body}
-                          alt="folder"
-                          className="w-4 h-4 mr-2"
-                        />
-                        <span className="text-md font-semibold">
-                          Response Detail
-                        </span>
+                        <img src={Header_Body} alt="folder" className="w-4 h-4 mr-2"/>
+                        <span className="text-md font-semibold">Response Detail</span>
                       </div>
                     </button>
                   </div>
@@ -2477,7 +2573,7 @@ const DashboardPage = () => {
                               className="absolute ml-auto right-20 h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
                               onClick={handleSaveResponse}
                             >
-                              <SaveIcon className="h-5 w-5 text-[#898883]" />
+                              <SaveIcon className="h-5 w-5 text-[#898883]"/>
                             </Button>
                           </div>
                         </div>
@@ -2511,29 +2607,21 @@ const DashboardPage = () => {
                             <div className="col-span-3">
                               <Select
                                 value={statusCode}
-                                onValueChange={(value) =>
-                                  !isStateful && setStatusCode(value)
-                                }
+                                onValueChange={(value) => !isStateful && setStatusCode(value)}
                                 disabled={isStateful}
                               >
                                 <SelectTrigger
                                   id="status-code"
                                   className={`border-[#CBD5E1] rounded-md ${
-                                    isStateful
-                                      ? "bg-gray-100 cursor-not-allowed"
-                                      : ""
+                                    isStateful ? "bg-gray-100 cursor-not-allowed" : ""
                                   }`}
                                 >
-                                  <SelectValue placeholder="Select status code" />
+                                  <SelectValue placeholder="Select status code"/>
                                 </SelectTrigger>
                                 <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                                   {statusCodes.map((status) => (
-                                    <SelectItem
-                                      key={status.code}
-                                      value={status.code}
-                                    >
-                                      {status.code} -{" "}
-                                      {status.description.split("–")[0]}
+                                    <SelectItem key={status.code} value={status.code}>
+                                      {status.code} - {status.description.split("–")[0]}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -2579,9 +2667,7 @@ const DashboardPage = () => {
                                       setResponseBody(code);
                                     }
                                   }}
-                                  highlight={(code) =>
-                                    highlight(code, languages.json)
-                                  }
+                                  highlight={(code) => highlight(code, languages.json)}
                                   padding={10}
                                   className="custom-json-editor"
                                   style={{
@@ -2597,9 +2683,7 @@ const DashboardPage = () => {
                                   }}
                                   textareaClassName="focus:outline-none"
                                   disabled={
-                                    isStateful &&
-                                    statusCode === "200" &&
-                                    method === "GET"
+                                    isStateful && statusCode === "200" && method === "GET"
                                   }
                                 />
 
@@ -2629,7 +2713,7 @@ const DashboardPage = () => {
                                       }
                                     }}
                                   >
-                                    <Code className="h-4 w-4" /> Format
+                                    <Code className="h-4 w-4"/> Format
                                   </Button>
                                 </div>
 
@@ -2672,36 +2756,33 @@ const DashboardPage = () => {
                                       </div>
 
                                       <div className="w-full flex justify-between">
-                                        {["url", "query", "state"].map(
-                                          (section) => (
-                                            <div
-                                              key={section}
-                                              className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                selectedSection === section
-                                                  ? "bg-[#EDEDEC] text-[#374151]"
-                                                  : "text-[#374151] hover:bg-gray-100"
-                                              }`}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedSection(section);
-                                              }}
-                                            >
-                                              {section === "url"
-                                                ? "URL Parameters"
-                                                : section === "query"
+                                        {["url", "query", "state"].map((section) => (
+                                          <div
+                                            key={section}
+                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === section
+                                                ? "bg-[#EDEDEC] text-[#374151]"
+                                                : "text-[#374151] hover:bg-gray-100"
+                                            }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSection(section);
+                                            }}
+                                          >
+                                            {section === "url"
+                                              ? "URL Parameters"
+                                              : section === "query"
                                                 ? "Query Parameters"
                                                 : "Project State"}
-                                            </div>
-                                          )
-                                        )}
+                                          </div>
+                                        ))}
                                       </div>
 
                                       <div
                                         className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const templateText =
-                                            getTemplateText().template;
+                                          const templateText = getTemplateText().template;
                                           insertTemplate(templateText);
                                         }}
                                       >
@@ -2756,489 +2837,371 @@ const DashboardPage = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[400px]">
-                      <img
-                        src={no_response}
-                        alt="No response selected"
-                        className="mb-4"
-                      />
+                      <img src={no_response} alt="No response selected" className="mb-4"/>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Phần dưới - Các tab còn lại */}
-              <div className="flex flex-col">
-                {/* Xác định tab mặc định dựa trên trạng thái */}
-                {(() => {
-                  const availableTabs = [];
-                  if (!isStateful) availableTabs.push("Rules", "proxy");
-                  if (isStateful) availableTabs.push("dataDefault");
-                  if (isStateful && method !== "DELETE")
-                    availableTabs.push("schemaBody");
-                  if (isStateful) availableTabs.push("advanced");
+              <div className="flex flex-col w-full">
+                {/* Danh sách nút tab */}
+                <div className="flex w-fit justify-start bg-white mb-4 px-6 border-b">
+                  {!isStateful && renderTabButton("Rules", "Rules", Rules_icon)}
+                  {!isStateful && renderTabButton("proxy", "Proxy", Proxy_icon)}
+                  {isStateful && renderTabButton("dataDefault", "Data Default", Data_default)}
+                  {isStateful && method !== "DELETE" &&
+                    renderTabButton(
+                      "schemaBody",
+                      method === "GET" ? "Response Body" : "Request Body",
+                      Request_Response_icon
+                    )}
+                  {isStateful && renderTabButton("advanced", "Advanced", Advanced_icon)}
+                </div>
 
-                  const defaultTab = availableTabs[0] || "Header&Body";
-
-                  return (
-                    <Tabs defaultValue={defaultTab} className="w-full">
-                      {/* TabsList cho các tab còn lại */}
-                      <TabsList className="flex w-fit justify-start bg-white mb-4 px-6">
-                        {/* Chỉ render tab Rules khi không phải stateful */}
-                        {!isStateful && (
-                          <TabsTrigger
-                            value="Rules"
-                            className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
-                          >
-                            <img
-                              src={Rules_icon}
-                              alt="Rules"
-                              className="w-4 h-4 mr-2"
-                            />
-                            Rules
-                          </TabsTrigger>
-                        )}
-
-                        {/* Chỉ render tab Proxy khi không phải stateful */}
-                        {!isStateful && (
-                          <TabsTrigger
-                            value="proxy"
-                            className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
-                          >
-                            <img
-                              src={Proxy_icon}
-                              alt="Proxy"
-                              className="w-4 h-4 mr-2"
-                            />
-                            Proxy
-                          </TabsTrigger>
-                        )}
-
-                        {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
-                        {isStateful && (
-                          <TabsTrigger
-                            value="dataDefault"
-                            className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
-                          >
-                            <img
-                              src={Data_default}
-                              alt="Data Default"
-                              className="w-4 h-4 mr-2"
-                            />
-                            Data Default
-                          </TabsTrigger>
-                        )}
-
-                        {/* Thêm tab Schema Body chỉ khi ở chế độ stateful */}
-                        {isStateful && method !== "DELETE" && (
-                          <TabsTrigger
-                            value="schemaBody"
-                            className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
-                          >
-                            <img
-                              src={Request_Response_icon}
-                              alt={
-                                method === "GET"
-                                  ? "Response Body"
-                                  : "Request Body"
-                              }
-                              className="w-4 h-4 mr-2"
-                            />
-                            {method === "GET"
-                              ? "Response Body"
-                              : "Request Body"}
-                          </TabsTrigger>
-                        )}
-
-                        {/* Thêm tab Advanced chỉ khi ở chế độ stateful */}
-                        {isStateful && (
-                          <TabsTrigger
-                            value="advanced"
-                            className="text-lg border-b-2 border-stone-200 data-[state=active]:border-b-2 data-[state=active]:border-[#37352F] data-[state=active]:shadow-none rounded-none flex items-center"
-                          >
-                            <img
-                              src={Advanced_icon}
-                              alt="Advanced"
-                              className="w-4 h-4 mr-2"
-                            />
-                            Advanced
-                          </TabsTrigger>
-                        )}
-                      </TabsList>
-                      {/* TabsContent cho các tab còn lại */}
-                      {/* Chỉ render tab Rules khi không phải stateful */}
-                      {!isStateful && (
-                        <TabsContent value="Rules" className="mt-0">
-                          {selectedResponse ? (
-                            <div className="mt-2">
-                              <Frame
-                                responseName={selectedResponse?.name}
-                                selectedResponse={selectedResponse}
-                                onUpdateRules={setResponseCondition}
-                                onSave={handleSaveResponse}
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-[400px]">
-                              <img
-                                src={no_response}
-                                alt="No response selected"
-                                className="mb-4"
-                              />
-                            </div>
-                          )}
-                        </TabsContent>
+                {/* Nội dung tab */}
+                <div className="w-full">
+                  {/* Rules */}
+                  {!isStateful && activeTab === "Rules" && (
+                    <div className="mt-2">
+                      {selectedResponse ? (
+                        <Frame
+                          responseName={selectedResponse?.name}
+                          selectedResponse={selectedResponse}
+                          onUpdateRules={setResponseCondition}
+                          onSave={handleSaveResponse}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-[400px]">
+                          <img src={no_response} alt="No response selected" className="mb-4"/>
+                        </div>
                       )}
-                      {/* Chỉ render tab Proxy khi không phải stateful */}
-                      {!isStateful && (
-                        <TabsContent value="proxy" className="mt-0">
-                          {selectedResponse ? (
-                            <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-                              <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-[#37352F]">
-                                  Forward Proxy URL
-                                </h2>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                  onClick={handleSaveResponse}
-                                >
-                                  <SaveIcon className="h-10 w-10 text-[#898883]" />
-                                </Button>
+                    </div>
+                  )}
+
+                  {/* Proxy */}
+                  {!isStateful && activeTab === "proxy" && (
+                    <div className="mt-2">
+                      {selectedResponse ? (
+                        <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                          <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-[#37352F]">Forward Proxy URL</h2>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={handleSaveResponse}
+                            >
+                              <SaveIcon className="h-10 w-10 text-[#898883]"/>
+                            </Button>
+                          </div>
+                          <div className="space-y-6">
+                            <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
+                              <div className="flex flex-row items-center gap-[16px] w-full">
+                                <Select value={proxyMethod} onValueChange={setProxyMethod}>
+                                  <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
+                                    <SelectValue placeholder="Method"/>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="GET">GET</SelectItem>
+                                    <SelectItem value="POST">POST</SelectItem>
+                                    <SelectItem value="PUT">PUT</SelectItem>
+                                    <SelectItem value="DELETE">DELETE</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  id="proxy-url"
+                                  name="proxy-url"
+                                  placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
+                                  value={proxyUrl}
+                                  onChange={(e) => setProxyUrl(e.target.value)}
+                                  className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                />
                               </div>
-                              <div className="space-y-6">
-                                <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                                  <div className="flex flex-row items-center gap-[16px] w-full">
-                                    <Select
-                                      value={proxyMethod}
-                                      onValueChange={setProxyMethod}
-                                    >
-                                      <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
-                                        <SelectValue placeholder="Method" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="GET">GET</SelectItem>
-                                        <SelectItem value="POST">
-                                          POST
-                                        </SelectItem>
-                                        <SelectItem value="PUT">PUT</SelectItem>
-                                        <SelectItem value="DELETE">
-                                          DELETE
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <Input
-                                      id="proxy-url"
-                                      name="proxy-url"
-                                      placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}})"
-                                      value={proxyUrl}
-                                      onChange={(e) =>
-                                        setProxyUrl(e.target.value)
+                              <p className="text-xs text-gray-500">
+                                Use {"{{params.id}}"} for route parameters (e.g. /users/:id)
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-[400px]">
+                          <img src={no_response} alt="No response selected" className="mb-4"/>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Schema Body */}
+                  {isStateful && activeTab === "schemaBody" && method !== "DELETE" && (
+                    <div className="mt-2">
+                      <SchemaBodyEditor
+                        endpointData={endpointDefinition}
+                        endpointId={currentEndpointId}
+                        onSave={handleSaveSchema}
+                        method={method}
+                      />
+                    </div>
+                  )}
+
+                  {/* Data Default */}
+                  {isStateful && activeTab === "dataDefault" && (
+                    <div className="mt-2">
+                      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+                        <div className="space-y-6">
+                          {/* Đưa Current Value lên trên */}
+                          <div className="flex justify-end mb-0">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={handleSaveInitialValue}
+                            >
+                              <SaveIcon className="h-5 w-5 text-[#898883]"/>
+                            </Button>
+                          </div>
+                          <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
+                            Current Value
+                          </div>
+
+                          <div className="grid grid-cols-1 items-start gap-1">
+                            <div className="col-span-3 space-y-2">
+                              <div className="relative">
+                                {/* Thay Textarea bằng div chỉ đọc */}
+                                <div
+                                  className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
+                                    <pre className="whitespace-pre-wrap break-words m-0">
+                                      {endpointData?.data_current
+                                        ? JSON.stringify(
+                                          endpointData.data_current,
+                                          null,
+                                          2
+                                        )
+                                        : "[]"}
+                                    </pre>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Đưa Initial Value xuống dưới */}
+                          <div className="flex justify-between items-center mb-1">
+                            <h2 className="text-2xl font-medium text-[#37352F]">
+                              Initial Value
+                            </h2>
+                          </div>
+
+                          <div className="grid grid-cols-1 items-start gap-1">
+                            <div className="col-span-3 space-y-2">
+                              <div className="relative">
+                                <div
+                                  className="relative w-full"
+                                  ref={initialValueEditorRef}
+                                >
+                                  <Editor
+                                    className="custom-json-editor"
+                                    value={tempDataDefaultString}
+                                    onValueChange={(code) => {
+                                      setTempDataDefaultString(code);
+                                      try {
+                                        // Chỉ cập nhật state khi JSON hợp lệ
+                                        setTempDataDefault(
+                                          JSON.parse(code)
+                                        );
+                                      } catch {
+                                        // Giữ nguyên state cũ nếu JSON không hợp lệ
                                       }
-                                      className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                    }}
+                                    highlight={(code) =>
+                                      highlight(code, languages.json)
+                                    }
+                                    padding={10}
+                                    style={{
+                                      fontFamily:
+                                        '"Fira code", "Fira Mono", monospace',
+                                      fontSize: 12,
+                                      minHeight: "200px",
+                                      maxHeight: "400px",
+                                      overflow: "auto",
+                                      border: "1px solid #CBD5E1",
+                                      borderRadius: "0.375rem",
+                                      backgroundColor: "#101728",
+                                      color: "white",
+                                      width: "100%",
+                                      boxSizing: "border-box",
+                                      wordBreak: "break-word",
+                                      whiteSpace: "pre-wrap",
+                                      overflowWrap: "break-word",
+                                    }}
+                                    textareaClassName="focus:outline-none w-full"
+                                  />
+
+                                  {/* JSON Editor controls */}
+                                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                      onClick={() => {
+                                        try {
+                                          const formatted =
+                                            JSON.stringify(
+                                              JSON.parse(
+                                                tempDataDefaultString
+                                              ),
+                                              null,
+                                              2
+                                            );
+                                          setTempDataDefaultString(
+                                            formatted
+                                          );
+                                          setTempDataDefault(
+                                            JSON.parse(formatted)
+                                          );
+                                        } catch {
+                                          toast.error(
+                                            "Invalid JSON format"
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <Code className="mr-1 h-4 w-4"/>{" "}
+                                      Format
+                                    </Button>
+                                  </div>
+
+                                  {/* Bottom right icon */}
+                                  <div className="absolute bottom-2 right-2 flex space-x-2">
+                                    <FileCode
+                                      className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                      size={26}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsInitialValuePopoverOpen(
+                                          !isInitialValuePopoverOpen
+                                        );
+                                      }}
                                     />
                                   </div>
-                                  <p className="text-xs text-gray-500">
-                                    Use {"{{params.id}}"} for route parameters
-                                    (e.g. /users/:id)
-                                  </p>
-                                </div>
-                              </div>
-                            </Card>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-[400px]">
-                              <img
-                                src={no_response}
-                                alt="No response selected"
-                                className="mb-4"
-                              />
-                            </div>
-                          )}
-                        </TabsContent>
-                      )}
-                      {isStateful && method !== "DELETE" && (
-                        <TabsContent value="schemaBody" className="mt-0">
-                          <div className="mt-2">
-                            <SchemaBodyEditor
-                              endpointData={endpointDefinition}
-                              endpointId={currentEndpointId}
-                              onSave={handleSaveSchema}
-                              method={method}
-                            />
-                          </div>
-                        </TabsContent>
-                      )}
-                      {/* Thêm tab Data Default chỉ khi ở chế độ stateful */}
-                      {isStateful && (
-                        <TabsContent value="dataDefault" className="mt-0">
-                          <div className="mt-2">
-                            <Card className="p-6 border border-[#CBD5E1] rounded-lg">
-                              <div className="space-y-6">
-                                {/* Đưa Current Value lên trên */}
-                                <div className="flex justify-end mb-0">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                    onClick={handleSaveInitialValue}
-                                  >
-                                    <SaveIcon className="h-5 w-5 text-[#898883]" />
-                                  </Button>
-                                </div>
-                                <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
-                                  Current Value
-                                </div>
 
-                                <div className="grid grid-cols-1 items-start gap-1">
-                                  <div className="col-span-3 space-y-2">
-                                    <div className="relative">
-                                      {/* Thay Textarea bằng div chỉ đọc */}
-                                      <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                        <pre className="whitespace-pre-wrap break-words m-0">
-                                          {endpointData?.data_current
-                                            ? JSON.stringify(
-                                                endpointData.data_current,
-                                                null,
-                                                2
-                                              )
-                                            : "[]"}
-                                        </pre>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Đưa Initial Value xuống dưới */}
-                                <div className="flex justify-between items-center mb-1">
-                                  <h2 className="text-2xl font-medium text-[#37352F]">
-                                    Initial Value
-                                  </h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 items-start gap-1">
-                                  <div className="col-span-3 space-y-2">
-                                    <div className="relative">
-                                      <div
-                                        className="relative w-full"
-                                        ref={initialValueEditorRef}
-                                      >
-                                        <Editor
-                                          className="custom-json-editor"
-                                          value={tempDataDefaultString}
-                                          onValueChange={(code) => {
-                                            setTempDataDefaultString(code);
-                                            try {
-                                              // Chỉ cập nhật state khi JSON hợp lệ
-                                              setTempDataDefault(
-                                                JSON.parse(code)
-                                              );
-                                            } catch {
-                                              // Giữ nguyên state cũ nếu JSON không hợp lệ
-                                            }
-                                          }}
-                                          highlight={(code) =>
-                                            highlight(code, languages.json)
-                                          }
-                                          padding={10}
-                                          style={{
-                                            fontFamily:
-                                              '"Fira code", "Fira Mono", monospace',
-                                            fontSize: 12,
-                                            minHeight: "200px",
-                                            maxHeight: "400px",
-                                            overflow: "auto",
-                                            border: "1px solid #CBD5E1",
-                                            borderRadius: "0.375rem",
-                                            backgroundColor: "#101728",
-                                            color: "white",
-                                            width: "100%",
-                                            boxSizing: "border-box",
-                                            wordBreak: "break-word",
-                                            whiteSpace: "pre-wrap",
-                                            overflowWrap: "break-word",
-                                          }}
-                                          textareaClassName="focus:outline-none w-full"
-                                        />
-
-                                        {/* JSON Editor controls */}
-                                        <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
-                                            onClick={() => {
-                                              try {
-                                                const formatted =
-                                                  JSON.stringify(
-                                                    JSON.parse(
-                                                      tempDataDefaultString
-                                                    ),
-                                                    null,
-                                                    2
-                                                  );
-                                                setTempDataDefaultString(
-                                                  formatted
-                                                );
-                                                setTempDataDefault(
-                                                  JSON.parse(formatted)
-                                                );
-                                              } catch {
-                                                toast.error(
-                                                  "Invalid JSON format"
-                                                );
-                                              }
-                                            }}
-                                          >
-                                            <Code className="mr-1 h-4 w-4" />{" "}
-                                            Format
-                                          </Button>
-                                        </div>
-
-                                        {/* Bottom right icon */}
-                                        <div className="absolute bottom-2 right-2 flex space-x-2">
-                                          <FileCode
-                                            className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                            size={26}
+                                  {/* Popover cho Initial Value */}
+                                  {isInitialValuePopoverOpen && (
+                                    <div
+                                      ref={initialValuePopoverRef}
+                                      className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                    >
+                                      <div className="flex flex-col items-center gap-2 p-3.5">
+                                        <div className="w-full flex justify-between items-center">
+                                          <div className="font-semibold text-sm text-gray-800">
+                                            Variable Picker
+                                          </div>
+                                          <X
+                                            className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setIsInitialValuePopoverOpen(
-                                                !isInitialValuePopoverOpen
+                                                false
                                               );
                                             }}
                                           />
                                         </div>
 
-                                        {/* Popover cho Initial Value */}
-                                        {isInitialValuePopoverOpen && (
+                                        <div className="w-full flex justify-between">
                                           <div
-                                            ref={initialValuePopoverRef}
-                                            className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === "url"
+                                                ? "bg-[#EDEDEC] text-[#374151]"
+                                                : "text-[#374151] hover:bg-gray-100"
+                                            }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSection("url");
+                                            }}
                                           >
-                                            <div className="flex flex-col items-center gap-2 p-3.5">
-                                              <div className="w-full flex justify-between items-center">
-                                                <div className="font-semibold text-sm text-gray-800">
-                                                  Variable Picker
-                                                </div>
-                                                <X
-                                                  className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsInitialValuePopoverOpen(
-                                                      false
-                                                    );
-                                                  }}
-                                                />
-                                              </div>
-
-                                              <div className="w-full flex justify-between">
-                                                <div
-                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                    selectedSection === "url"
-                                                      ? "bg-[#EDEDEC] text-[#374151]"
-                                                      : "text-[#374151] hover:bg-gray-100"
-                                                  }`}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedSection("url");
-                                                  }}
-                                                >
-                                                  URL Parameters
-                                                </div>
-                                                <div
-                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                    selectedSection === "query"
-                                                      ? "bg-[#EDEDEC] text-[#374151]"
-                                                      : "text-[#374151] hover:bg-gray-100"
-                                                  }`}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedSection("query");
-                                                  }}
-                                                >
-                                                  Query Parameters
-                                                </div>
-                                                <div
-                                                  className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                    selectedSection === "state"
-                                                      ? "bg-[#EDEDEC] text-[#374151]"
-                                                      : "text-[#374151] hover:bg-gray-100"
-                                                  }`}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedSection("state");
-                                                  }}
-                                                >
-                                                  Project State
-                                                </div>
-                                              </div>
-
-                                              <div
-                                                className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  // Đảm bảo sử dụng selectedSection hiện tại
-                                                  const templateText =
-                                                    getTemplateText().template;
-                                                  insertInitialValueTemplate(
-                                                    templateText
-                                                  );
-                                                }}
-                                              >
-                                                <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                                  {getTemplateText().template}
-                                                </div>
-                                                <div className="text-[12px] text-gray-500">
-                                                  {
-                                                    getTemplateText()
-                                                      .description
-                                                  }
-                                                </div>
-                                              </div>
-                                            </div>
+                                            URL Parameters
                                           </div>
-                                        )}
+                                          <div
+                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === "query"
+                                                ? "bg-[#EDEDEC] text-[#374151]"
+                                                : "text-[#374151] hover:bg-gray-100"
+                                            }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSection("query");
+                                            }}
+                                          >
+                                            Query Parameters
+                                          </div>
+                                          <div
+                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === "state"
+                                                ? "bg-[#EDEDEC] text-[#374151]"
+                                                : "text-[#374151] hover:bg-gray-100"
+                                            }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSection("state");
+                                            }}
+                                          >
+                                            Project State
+                                          </div>
+                                        </div>
+
+                                        <div
+                                          className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Đảm bảo sử dụng selectedSection hiện tại
+                                            const templateText =
+                                              getTemplateText().template;
+                                            insertInitialValueTemplate(
+                                              templateText
+                                            );
+                                          }}
+                                        >
+                                          <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                            {getTemplateText().template}
+                                          </div>
+                                          <div className="text-[12px] text-gray-500">
+                                            {
+                                              getTemplateText()
+                                                .description
+                                            }
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
+                                  )}
                                 </div>
                               </div>
-                            </Card>
+                            </div>
                           </div>
-                        </TabsContent>
-                      )}
+                        </div>
+                      </Card>
+                    </div>
+                  )}
 
-                      {isStateful && (
-                        <TabsContent value="advanced" className="mt-0">
-                          <div className="mt-2">
-                            <ApiCallEditor
-                              endpointId={currentEndpointId}
-                              currentEndpoint={currentEndpoint} // Thêm prop này
-                              getFullPath={getFullPath}
-                              nextCalls={nextCalls}
-                              setNextCalls={setNextCalls}
-                              isRequestBodyPopoverOpen={
-                                isRequestBodyPopoverOpen
-                              }
-                              setIsRequestBodyPopoverOpen={
-                                setIsRequestBodyPopoverOpen
-                              }
-                              selectedSection={selectedSection}
-                              setSelectedSection={setSelectedSection}
-                              getTemplateText={getTemplateText}
-                              insertRequestBodyTemplate={
-                                insertRequestBodyTemplate
-                              }
-                              setIsNewApiCallDialogOpen={
-                                setIsNewApiCallDialogOpen
-                              }
-                              onSave={() => fetchEndpointResponses(isStateful)}
-                            />
-                          </div>
-                        </TabsContent>
-                      )}
-                    </Tabs>
-                  );
-                })()}
+                  {/* Advanced */}
+                  {isStateful && activeTab === "advanced" && (
+                    <div className="mt-2">
+                      <ApiCallEditor
+                        endpointId={currentEndpointId}
+                        currentEndpoint={currentEndpoint}
+                        getFullPath={getFullPath}
+                        nextCalls={nextCalls}
+                        setNextCalls={setNextCalls}
+                        isRequestBodyPopoverOpen={isRequestBodyPopoverOpen}
+                        setIsRequestBodyPopoverOpen={setIsRequestBodyPopoverOpen}
+                        selectedSection={selectedSection}
+                        setSelectedSection={setSelectedSection}
+                        getTemplateText={getTemplateText}
+                        insertRequestBodyTemplate={insertRequestBodyTemplate}
+                        setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
+                        onSave={() => fetchEndpointResponses(isStateful)}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             {/* Dialog New API Call */}
@@ -3401,7 +3364,7 @@ const DashboardPage = () => {
                             }
                           }}
                         >
-                          <Code className="mr-1 h-4 w-4" /> Format
+                          <Code className="mr-1 h-4 w-4"/> Format
                         </Button>
                       </div>
 
@@ -3566,12 +3529,13 @@ const DashboardPage = () => {
           </div>
         </div>
         {/* footer */}
-        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+        <footer
+          className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
           <span>© Teknix Corp. All rights reserved.</span>
           <div className="flex items-center gap-3 text-gray-700">
-            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-            <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+            <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
             <a className="hover:underline font-semibold" href="">
               About
             </a>
@@ -3631,7 +3595,7 @@ const DashboardPage = () => {
 
           {folderSchema ? (
             <BaseSchemaEditor
-              folderData={{ schema: folderSchema }}
+              folderData={{schema: folderSchema}}
               folderId={currentFolder?.id}
               onSave={handleSaveFolderSchema}
               method={"PUT"}
@@ -3837,7 +3801,7 @@ const DashboardPage = () => {
                     id="new-status-code"
                     className="border-[#CBD5E1] rounded-md"
                   >
-                    <SelectValue placeholder="Select status code" />
+                    <SelectValue placeholder="Select status code"/>
                   </SelectTrigger>
                   <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
                     {statusCodes.map((status) => (
@@ -3894,7 +3858,7 @@ const DashboardPage = () => {
                       }
                     }}
                   >
-                    <Code className="mr-1 h-4 w-4" /> Format
+                    <Code className="mr-1 h-4 w-4"/> Format
                   </Button>
                 </div>
               </div>
