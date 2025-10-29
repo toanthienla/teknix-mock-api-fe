@@ -725,6 +725,13 @@ const DashboardPage = () => {
 
   // Hàm xử lý xác nhận chuyển sang stateful
   const handleConfirmStateful = () => {
+    const path = currentEndpoint?.path || "";
+
+    // Kiểm tra nếu path có chứa param động
+    if (/:[a-zA-Z0-9\-_]+/.test(path)) {
+      toast.warning("Endpoint path has param, can not convert to stateful!");
+      return; // Dừng quá trình chuyển đổi
+    }
     setIsSwitchingMode(true);
     setShowStatefulConfirmDialog(false);
 
