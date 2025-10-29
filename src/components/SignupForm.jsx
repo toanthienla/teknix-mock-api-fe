@@ -118,7 +118,7 @@ export function SignupForm({className, ...props}) {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-violet-300 hover:bg-violet-400 text-indigo-950"
+                  className="w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Creating..." : "Create Account"}
@@ -128,7 +128,7 @@ export function SignupForm({className, ...props}) {
                   <button
                     type="button"
                     onClick={() => navigate("/login")}
-                    className="font-semibold underline underline-offset-4 text-yellow-400"
+                    className="font-semibold underline underline-offset-4 text-yellow-500"
                   >
                     Login
                   </button>

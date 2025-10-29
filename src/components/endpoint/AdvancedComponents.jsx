@@ -354,7 +354,7 @@ export const ApiCallEditor = ({
           target_endpoint: call.target_endpoint,
           method: call.method,
           body: call.body,
-          condition: call.condition,
+          condition: Number(call.condition),
         })),
       },
     };
@@ -618,7 +618,7 @@ export const ApiCallEditor = ({
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
                     <Select
-                      value={call.condition}
+                      value={String(call.condition)}
                       onValueChange={(value) =>
                         handleNextCallChange(index, "condition", value)
                       }
