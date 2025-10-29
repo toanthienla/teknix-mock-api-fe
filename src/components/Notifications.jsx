@@ -12,6 +12,9 @@ import {ScrollArea} from "@/components/ui/scroll-area";
 import bellIcon from "@/assets/notification.svg";
 import expandIcon from "@/assets/expand.svg";
 import {Badge} from "@/components/ui/badge";
+import deleteIcon from "@/assets/Trash Icon.svg";
+import {toast} from "react-toastify";
+import {API_ROOT} from "@/utils/constants.js";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -32,24 +35,44 @@ function timeAgo(dateString) {
 
 export default function Notifications({notifications = [], onMarkRead, onMarkAllRead}) {
   const [activeTab, setActiveTab] = useState("all");
+  const [localNoti, setLocalNoti] = useState(notifications);
 
-  const filtered = activeTab === "unread"
-    ? notifications.filter((n) => !n.is_read)
-    : notifications;
+  const filtered =
+    activeTab === "unread"
+      ? localNoti.filter((n) => !n.is_read)
+      : localNoti;
 
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60000); // every 1 min
+    setLocalNoti(notifications);
+  }, [notifications]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Hàm xoá notification
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`${API_ROOT}/notifications/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Failed to delete notification");
+
+      setLocalNoti((prev) => prev.filter((n) => n.id !== id));
+      toast.success("Notification deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete notification");
+    }
+  };
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <img src={bellIcon} alt="bell" className="w-5 h-5"/>
-          {notifications.some((n) => !n.is_read) && (
+          {localNoti.some((n) => !n.is_read) && (
             <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500"/>
           )}
         </Button>
@@ -89,7 +112,7 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
                   ? "bg-yellow-300 text-black"
                   : "border-transparent text-gray-500"
               }`}>
-                {notifications.length}
+                {localNoti.length}
               </span>
             </button>
 
@@ -107,7 +130,7 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
                   ? "bg-yellow-300 text-black"
                   : "border-transparent text-gray-500"
               }`}>
-                {notifications.filter((n) => !n.is_read).length}
+                {localNoti.filter((n) => !n.is_read).length}
               </span>
             </button>
           </div>
@@ -153,6 +176,18 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
                     <p className="font-medium text-sm">
                       New request to {n.endpoint_path}
                     </p>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-gray-500 hover:text-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(n.id);
+                      }}
+                    >
+                      <img src={deleteIcon} alt="delete" className="w-4 h-4" />
+                    </Button>
                   </div>
 
                   {!n.is_read && (
