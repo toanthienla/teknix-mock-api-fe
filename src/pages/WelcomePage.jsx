@@ -31,8 +31,8 @@ export default function WelcomePage() {
               {/* Dòng 1 */}
               <div className="flex items-center justify-center gap-4 mb-1">
                 <span>Hello<span className="text-yellow-300">!</span></span>
-                <span className="inline-flex items-center justify-center rounded-full bg-violet-200">
-                  <img src={helloIcon} alt="hello" className="w-22 h-22" />
+                <span className="inline-flex items-center justify-center rounded-full">
+                  <img src={helloIcon} alt="hello" className="w-28 h-28" />
                 </span>
                 <span>Welcome</span>
               </div>
@@ -43,12 +43,14 @@ export default function WelcomePage() {
                 <span className="inline-flex items-center justify-center bg-yellow-300 rounded-md shadow-sm">
                   <img src={yellowLogo} alt="Yellow logo" className="w-22 h-22" />
                 </span>
-                <span className="text-violet-300">MockAPI</span>
+                <span className="text-outline font-extrabold text-[clamp(2rem,6vw,4.5rem)]">
+                  MockAPI
+                </span>
               </div>
 
               {/* Dòng 3 */}
               <div className="mt-2">
-                <span>Platform<span className="text-violet-300">.</span></span>
+                <span>Platform</span>
               </div>
             </h1>
 
