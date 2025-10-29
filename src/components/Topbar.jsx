@@ -416,7 +416,7 @@ export default function Topbar({
       <div className="flex items-center gap-4 ml-auto relative"></div>
 
       {/* User + Notification + Logout */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         {/* Notification */}
         <Notifications
           notifications={notifications}
@@ -426,7 +426,7 @@ export default function Topbar({
         />
 
         {/* Avatar + Name */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-4 border-l-2 border-slate-500">
           <img
             src={avatar}
             alt="User avatar"
