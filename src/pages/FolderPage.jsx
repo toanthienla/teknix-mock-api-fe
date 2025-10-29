@@ -322,7 +322,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   );
 };
 
-export default function Dashboard() {
+export default function FolderPage() {
   const navigate = useNavigate();
   const {projectId} = useParams();
   const [activeTab, setActiveTab] = useState("folders");
@@ -331,6 +331,7 @@ export default function Dashboard() {
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
+  const [statefulEndpoints, setStatefulEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -385,9 +386,7 @@ export default function Dashboard() {
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
-  const [editEPath, setEditEPath] = useState("");
-  const [editEFolderId, setEditEFolderId] = useState("");
-  const [editEMethod, setEditEMethod] = useState("");
+  const [editEState, setEditEState] = useState(false);
 
   // dialogs
   const [openNew, setOpenNew] = useState(false);
@@ -777,7 +776,7 @@ export default function Dashboard() {
   // --- Endpoint Handlers ---
   // Regex
   const validPath =
-    /^\/[a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]*)*(\/:[a-zA-Z0-9\-_]+)*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
+    /^\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+)(?:\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+))*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
 
   // validation helpers (unchanged)...
@@ -852,7 +851,7 @@ export default function Dashboard() {
     return true;
   };
 
-  const validateEditEndpoint = (id, name) => {
+  const validateEditEndpoint = async (id, name, state) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -864,15 +863,43 @@ export default function Dashboard() {
       return false;
     }
 
-    const duplicateName = endpoints.find(
-      (ep) =>
-        ep.id !== id &&
-        String(ep.folder_id) === String(selectedFolder?.id) &&
-        ep.name.toLowerCase() === name.toLowerCase()
-    );
-    if (duplicateName) {
-      toast.warning("Name already exists in this folder");
-      return false;
+    if (state) {
+      // Stateful
+      try {
+        const res = await fetch(`${API_ROOT}/endpoints_ful?folder_id=${selectedFolder?.id}`, {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to fetch stateful endpoints");
+        const data = await res.json();
+        const statefulArr = Array.isArray(data) ? data : data.data || [];
+
+        const duplicateSF = statefulArr.find(
+          (ep) =>
+            ep.origin_id !== id &&
+            String(ep.folder_id) === String(selectedFolder?.id) &&
+            ep.name.toLowerCase() === name.toLowerCase()
+        );
+        if (duplicateSF) {
+          toast.warning("Name already exists in this folder (stateful)");
+          return false;
+        }
+      } catch (err) {
+        console.error("Error checking stateful endpoints:", err);
+        toast.error("Failed to validate stateful endpoint name");
+        return false;
+      }
+    } else {
+      // Stateless
+      const duplicateSL = endpoints.find(
+        (ep) =>
+          ep.id !== id &&
+          String(ep.folder_id) === String(selectedFolder?.id) &&
+          ep.name.toLowerCase() === name.toLowerCase()
+      );
+      if (duplicateSL) {
+        toast.warning("Name already exists in this folder");
+        return false;
+      }
     }
 
     return true;
@@ -926,9 +953,7 @@ export default function Dashboard() {
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
-    setEditEPath(e.path);
-    setEditEFolderId(e.folder_id);
-    setEditEMethod(e.method);
+    setEditEState(e.is_stateful);
 
     const folderOfEndpoint = folders.find((f) => String(f.id) === String(e.folder_id));
     setSelectedFolder(folderOfEndpoint);
@@ -940,40 +965,36 @@ export default function Dashboard() {
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
     return (
-      editEName !== currentEndpoint.name ||
-      editEFolderId !== currentEndpoint.folder_id ||
-      editEPath !== currentEndpoint.path ||
-      editEMethod !== currentEndpoint.method
+      editEName !== currentEndpoint.name
     );
-  }, [editEName, editEFolderId, editEPath, editEMethod, currentEndpoint]);
+  }, [editEName, currentEndpoint]);
 
-  const handleUpdateEndpoint = () => {
-    if (!validateEditEndpoint(editId, editEName, editEPath, editEMethod)) return;
-    const updated = {
-      name: editEName,
-    };
+  const handleUpdateEndpoint = async () => {
+    const isValid = await validateEditEndpoint(editId, editEName, editEState);
+    if (!isValid) return;
 
-    fetch(`${API_ROOT}/endpoints/${editId}`, {
-      method: "PUT",
-      credentials: "include",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(updated),
-    })
-      .then(() => {
-        // Cập nhật danh sách endpoints trong bảng
-        setEndpoints((prev) =>
-          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
-        );
+    const updated = { name: editEName };
 
-        // Cập nhật danh sách allEndpoints để Sidebar nhận đúng folder mới
-        setEndpoints((prev) =>
-          prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
-        );
+    try {
+      const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
 
-        setOpenEdit(false);
-        toast.success("Update endpoint successfully!");
-      })
-      .catch(() => toast.error("Failed to update endpoint!"));
+      if (!res.ok) throw new Error("Failed to update endpoint");
+
+      setEndpoints((prev) =>
+        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+      );
+
+      setOpenEdit(false);
+      toast.success("Update endpoint successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update endpoint!");
+    }
   };
 
   // delete endpoint stateless

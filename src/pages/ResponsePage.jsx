@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "../assets/reset_state_button.svg";
-import chain_icon from "../assets/Chain.svg";
+import chainIcon from "../assets/Chain.svg";
 import no_response from "../assets/no_response.svg";
 import Advanced_icon from "../assets/Adavanced_icon.svg";
 import Data_default from "../assets/Data_default.svg";
@@ -2169,7 +2169,7 @@ const DashboardPage = () => {
                 title="Copy path"
               >
                 <img
-                  src={chain_icon}
+                  src={chainIcon}
                   alt="Copy path"
                   className="w-5 h-5 object-contain"
                 />
