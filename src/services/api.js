@@ -35,7 +35,7 @@ API.interceptors.response.use(
 
       try {
         // Gọi endpoint refresh token (cookie tự gửi kèm)
-        await axios.post(`${API_ROOT}/auth/refresh`, {}, {withCredentials: true});
+        await API.post("/auth/refresh");
         isRefreshing = false;
         onRefreshed(); // gọi lại các request đang chờ
         return API(originalRequest); // retry request cũ

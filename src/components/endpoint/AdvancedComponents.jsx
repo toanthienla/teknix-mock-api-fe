@@ -194,16 +194,15 @@ export const ApiCallEditor = ({
     }
   }, [nextCalls]);
 
-  // Hàm validate để hiển thị lỗi trên UI - CHỈ kiểm tra saved calls
+  // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpointsForDisplay
   const validateTargetEndpointsForDisplay = (currentCalls = nextCalls) => {
     const newErrors = {};
     const endpointGroups = {};
 
-    // CHỈ nhóm các calls đã được save (có id và id <= 999999 để phân biệt với temporary id)
+    // Chỉ nhóm các calls đã được save (có id và id <= 999999 để phân biệt với temporary id)
     currentCalls.forEach((call, index) => {
-      // Kiểm tra call đã được save: có id và id không phải temporary (lớn hơn 999999)
       const isSavedCall =
-        call.id && (typeof call.id === "number" || call.id <= 999999);
+        call.id && (typeof call.id === "number" || call.id <= 999999); // id từ DB thường là số
 
       if (!call.target_endpoint || !call.method || !isSavedCall) return;
 
@@ -217,33 +216,8 @@ export const ApiCallEditor = ({
       });
     });
 
-    // Kiểm tra trùng method trong cùng endpoint - CHỉ với saved calls
-    for (const [endpoint, calls] of Object.entries(endpointGroups)) {
-      const methods = calls.map((call) => call.method);
-      const uniqueMethods = [...new Set(methods)];
-
-      if (methods.length !== uniqueMethods.length) {
-        // Có method trùng nhau trong saved calls
-        const methodCounts = {};
-        methods.forEach((method) => {
-          methodCounts[method] = (methodCounts[method] || 0) + 1;
-        });
-
-        const duplicateMethods = Object.entries(methodCounts)
-          .filter(([, count]) => count > 1)
-          .map(([method]) => method);
-
-        const callNumbers = calls
-          .filter((call) => duplicateMethods.includes(call.method))
-          .map((call) => call.index);
-
-        callNumbers.forEach((index) => {
-          newErrors[
-            index
-          ] = `Duplicate method for endpoint "${endpoint}". Please use a different method.`;
-        });
-      }
-    }
+    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate methods nữa
+    // Mỗi endpoint có thể có nhiều calls với cùng method
 
     setEndpointValidationErrors(newErrors);
   };
@@ -276,13 +250,12 @@ export const ApiCallEditor = ({
     return true;
   };
 
-  // Thêm hàm validate target endpoints và methods - CHỈ kiểm tra saved calls
+  // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpoints
   const validateTargetEndpoints = () => {
     const endpointGroups = {};
 
-    // CHỈ nhóm các calls đã được save (có id và id không phải temporary)
+    // Chỉ nhóm các calls đã được save (có id và id không phải temporary)
     nextCalls.forEach((call, index) => {
-      // Kiểm tra call đã được save: phải có id và id không phải temporary string
       const isSavedCall =
         call.id &&
         typeof call.id !== "string" &&
@@ -300,36 +273,8 @@ export const ApiCallEditor = ({
       });
     });
 
-    // Kiểm tra trùng method trong cùng endpoint - CHỉ với saved calls
-    for (const [endpoint, calls] of Object.entries(endpointGroups)) {
-      const methods = calls.map((call) => call.method);
-      const uniqueMethods = [...new Set(methods)];
-
-      if (methods.length !== uniqueMethods.length) {
-        // Có method trùng nhau trong saved calls
-        const methodCounts = {};
-        methods.forEach((method) => {
-          methodCounts[method] = (methodCounts[method] || 0) + 1;
-        });
-
-        const duplicateMethods = Object.entries(methodCounts)
-          .filter(([, count]) => count > 1)
-          .map(([method]) => method);
-
-        const callNumbers = calls
-          .filter((call) => duplicateMethods.includes(call.method))
-          .map((call) => call.index + 1);
-
-        toast.error(
-          `Duplicate methods (${duplicateMethods.join(
-            ", "
-          )}) for endpoint "${endpoint}" in API Calls ${callNumbers.join(
-            ", "
-          )}. Each endpoint can only use each method once.`
-        );
-        return false;
-      }
-    }
+    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate methods nữa
+    // Mỗi endpoint có thể có nhiều calls với cùng method
 
     return true;
   };
@@ -354,7 +299,7 @@ export const ApiCallEditor = ({
           target_endpoint: call.target_endpoint,
           method: call.method,
           body: call.body,
-          condition: call.condition,
+          condition: Number(call.condition),
         })),
       },
     };
@@ -618,7 +563,7 @@ export const ApiCallEditor = ({
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
                     <Select
-                      value={call.condition}
+                      value={String(call.condition)}
                       onValueChange={(value) =>
                         handleNextCallChange(index, "condition", value)
                       }
