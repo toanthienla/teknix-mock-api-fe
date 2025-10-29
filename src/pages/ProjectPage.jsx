@@ -677,7 +677,7 @@ export default function ProjectPage() {
             <div className="flex items-center justify-between mb-6">
               {currentWorkspace && (
                 <h2 className="text-3xl font-bold text-black">
-                  {currentWorkspace.name} - {sortedProjects.length}
+                  {currentWorkspace.name} - {sortedProjects.length} projects
                 </h2>
               )}
               <Button
