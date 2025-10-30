@@ -2022,21 +2022,26 @@ const DashboardPage = () => {
   const defaultTab = availableTabs[0] || "Rules";
   const [activeTab, setActiveTab] = useState(defaultTab);
 
-  const renderTabButton = (value, label, icon) => (
-    <button
-      onClick={() => setActiveTab(value)}
-      className={`flex rounded-tl-lg px-4 py-2 -mb-px ${
-        activeTab === value
-          ? "bg-white text-stone-900 border-l border-t border-r border-[#EDEFF1]"
-          : "bg-gray-200 text-stone-500 hover:bg-gray-100"
-      }`}
-    >
-      <div className="flex items-center">
-        <img src={icon} alt={label} className="w-4 h-4 mr-2" />
-        <span className="text-md font-semibold">{label}</span>
-      </div>
-    </button>
-  );
+  const renderTabButton = (value, label, icon) => {
+    const isActive = activeTab === value;
+    const isDataDefault = label === "Data Default";
+
+    return (
+      <button
+        onClick={() => setActiveTab(value)}
+        className={`flex px-4 py-2 -mb-px ${
+          isActive
+            ? "bg-white text-stone-900 border-l border-t border-r border-[#EDEFF1]"
+            : "bg-gray-200 text-stone-500 hover:bg-gray-100"
+        } ${isDataDefault ? "rounded-tl-md" : ""}`}
+      >
+        <div className="flex items-center">
+          <img src={icon} alt={label} className="w-4 h-4 mr-2" />
+          <span className="text-md font-semibold">{label}</span>
+        </div>
+      </button>
+    );
+  };
 
   // khi isStateful/method/availableTabs thay đổi, đảm bảo activeTab vẫn hợp lệ
   useEffect(() => {
@@ -2679,8 +2684,8 @@ const DashboardPage = () => {
                   </div>
 
                   {selectedResponse ? (
-                    <div className="">
-                      <Card className="p-4 rounded-none border-none">
+                    <div className="flex items-center justify-center w-full">
+                      <Card className="p-4 shadow-none rounded-none border-none w-[85%]">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <div className="relative">
@@ -2833,32 +2838,33 @@ const DashboardPage = () => {
                         </div>
 
                         {/* Form nội dung */}
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="w-full">
+                          {/* Name */}
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="response-name"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
-                              Response Name
+                              Name
                             </Label>
                             <Input
                               id="response-name"
                               value={responseName}
                               onChange={(e) => setResponseName(e.target.value)}
-                              className="col-span-3 border-[#CBD5E1] rounded-md"
+                              className="col-span-5 border-[#CBD5E1] rounded-md"
                               placeholder="Enter response name"
                             />
                           </div>
 
                           {/* Status Code */}
-                          <div className="grid grid-cols-4 items-center gap-4">
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="status-code"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
-                              Status Code
+                              Code
                             </Label>
-                            <div className="col-span-3">
+                            <div className="col-span-5">
                               <Select
                                 value={statusCode}
                                 onValueChange={(value) =>
@@ -2892,31 +2898,31 @@ const DashboardPage = () => {
                           </div>
 
                           {/* Response Header */}
-                          <div className="grid grid-cols-4 items-start gap-4">
-                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                              Response Header
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
+                            <div className="text-sm font-medium text-[#000000] py-2">
+                              Header
                             </div>
-                            <div className="col-span-3"></div>
-                          </div>
-
-                          <div className="grid grid-cols-2 items-start gap-4">
-                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                              Content-Type:
+                            <div className="col-span-1 px-2 pl-2 text-sm text-[#000000]">
+                              Content-Type
                             </div>
-                            <div className="col-span-1 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                            <div className="col-span-4 border border-[#CBD5E1] rounded-md p-2 bg-gray-100">
                               application/json
                             </div>
                           </div>
 
-                          {/* Response Body */}
-                          <div className="grid grid-cols-4 gap-4">
+                          {/* Body */}
+                          <div className="grid grid-cols-6 gap-4 my-2">
                             <Label
                               htmlFor="response-body"
-                              className="text-right pt-2 text-sm font-medium text-[#000000]"
+                              className="pt-2 text-sm font-medium text-[#000000]"
                             >
-                              Response Body
+                              Body
                             </Label>
-                            <div className="col-span-3 space-y-2">
+                          </div>
+
+                          {/* Response */}
+                          <div className="grid grid-cols-6 gap-4 my-2">
+                            <div className="col-span-6">
                               <div className="relative" ref={responseEditorRef}>
                                 <Editor
                                   value={responseBody}
@@ -2987,14 +2993,14 @@ const DashboardPage = () => {
                           </div>
 
                           {/* Delay */}
-                          <div className="grid grid-cols-4 items-center gap-4">
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="delay"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
                               Delay (ms)
                             </Label>
-                            <div className="col-span-3">
+                            <div className="col-span-5">
                               <Input
                                 id="delay"
                                 value={delay}
@@ -3039,7 +3045,7 @@ const DashboardPage = () => {
                 <div className="flex rounded-t-lg bg-gray-200 mb-0 text-stone-500">
                   {!isStateful ? (
                     <div className="flex justify-between items-center bg-gray-200 w-full">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
                       </div>
@@ -3092,7 +3098,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                       {renderTabButton(
                         "dataDefault",
                         "Data Default",
@@ -3113,7 +3119,7 @@ const DashboardPage = () => {
                 <div className="w-full">
                   {/* Rules */}
                   {!isStateful && activeTab === "Rules" && (
-                    <div className="mt-0">
+                    <div className="flex justify-center items-center w-full">
                       {selectedResponse ? (
                         <Frame
                           responseName={selectedResponse?.name}
@@ -3226,12 +3232,12 @@ const DashboardPage = () => {
 
                   {/* Data Default */}
                   {isStateful && activeTab === "dataDefault" && (
-                    <div className="mt-0">
-                      <Card className="p-6 border-0 rounded-none">
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
                         <div className="space-y-6">
                           {/* Đưa Current Value lên trên */}
                           <div className="flex justify-between items-center mb-0">
-                            <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
+                            <div className="text-xl font-medium text-[#000000] self-start pt-1 mb-1">
                               Current Value
                             </div>
 
@@ -3368,24 +3374,34 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                {/* Thay Textarea bằng div chỉ đọc */}
-                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                  <pre className="whitespace-pre-wrap break-words m-0">
-                                    {endpointData?.data_current
-                                      ? JSON.stringify(
-                                          endpointData.data_current,
-                                          null,
-                                          2
-                                        )
-                                      : "[]"}
-                                  </pre>
-                                </div>
+                                {/* JSON Viewer (read-only, có highlight + format) */}
+                                <div
+                                  className="custom-initial-value font-mono text-sm h-60 border border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto text-white"
+                                  dangerouslySetInnerHTML={{
+                                    __html: (() => {
+                                      try {
+                                        const formatted =
+                                          endpointData?.data_current &&
+                                          Object.keys(endpointData.data_current).length > 0
+                                            ? JSON.stringify(endpointData.data_current, null, 2)
+                                            : "[]";
+
+                                        // Prism highlight có format giữ nguyên
+                                        const highlighted = highlight(formatted, languages.json, "json");
+                                        return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
+                                      } catch (err) {
+                                        console.error("JSON format error:", err);
+                                        return "<pre style='color:red'>Invalid JSON</pre>";
+                                      }
+                                    })(),
+                                  }}
+                                />
                               </div>
                             </div>
                           </div>
                           {/* Đưa Initial Value xuống dưới */}
                           <div className="flex justify-between items-center mb-1">
-                            <h2 className="text-2xl font-medium text-[#37352F]">
+                            <h2 className="text-xl font-medium text-[#37352F]">
                               Initial Value
                             </h2>
                           </div>
@@ -3415,7 +3431,7 @@ const DashboardPage = () => {
                                     style={{
                                       fontFamily:
                                         '"Fira code", "Fira Mono", monospace',
-                                      fontSize: 12,
+                                      fontSize: 14,
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",

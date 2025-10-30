@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { API_ROOT } from "@/utils/constants";
+import React, {useState, useEffect, useRef} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Card} from "@/components/ui/card";
+import {API_ROOT} from "@/utils/constants";
 import {
   Plus,
   Trash2,
@@ -13,7 +13,7 @@ import {
   X,
   SaveIcon,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {
   Select,
   SelectContent,
@@ -22,21 +22,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs/components/prism-core";
+import {highlight, languages} from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
-import { statusCodes } from "@/components/endpoint/constants.js";
+import {statusCodes} from "@/components/endpoint/constants.js";
 
 export const ApiCallEditor = ({
-  endpointId,
-  nextCalls,
-  setNextCalls,
-  setIsNewApiCallDialogOpen,
-  onSave,
-  currentEndpoint,
-  getFullPath,
-}) => {
+                                endpointId,
+                                nextCalls,
+                                setNextCalls,
+                                setIsNewApiCallDialogOpen,
+                                onSave,
+                                currentEndpoint,
+                                getFullPath,
+                              }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
@@ -56,7 +56,7 @@ export const ApiCallEditor = ({
   const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
 
   // Component Tooltip (thêm vào đầu file)
-  const Tooltip = ({ visible, children, className = "" }) => {
+  const Tooltip = ({visible, children, className = ""}) => {
     if (!visible) return null;
 
     return (
@@ -65,7 +65,8 @@ export const ApiCallEditor = ({
       >
         {children}
         {/* Mũi tên tooltip */}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+        <div
+          className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
       </div>
     );
   };
@@ -228,13 +229,13 @@ export const ApiCallEditor = ({
 
     // Xóa JSON string tương ứng
     setJsonStrings((prev) => {
-      const newStrings = { ...prev };
+      const newStrings = {...prev};
       delete newStrings[index];
       return newStrings;
     });
 
     setJsonErrors((prev) => {
-      const newErrors = { ...prev };
+      const newErrors = {...prev};
       delete newErrors[index];
       return newErrors;
     });
@@ -388,7 +389,7 @@ export const ApiCallEditor = ({
     fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
       credentials: "include",
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -429,7 +430,7 @@ export const ApiCallEditor = ({
                 onMouseEnter={() => setTemplateTooltipVisible(true)}
                 onMouseLeave={() => setTemplateTooltipVisible(false)}
               >
-                <FileCode className="h-5 w-5 text-[#898883]" />
+                <FileCode className="h-5 w-5 text-[#898883]"/>
               </Button>
               <Tooltip
                 visible={templateTooltipVisible}
@@ -441,7 +442,8 @@ export const ApiCallEditor = ({
 
             {/* Popover */}
             {isRequestBodyPopoverOpen && (
-              <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+              <div
+                className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
                 <div className="flex flex-col items-center gap-2 p-3.5">
                   <div className="w-full flex justify-between items-center">
                     <div className="font-semibold text-sm text-gray-800">
@@ -527,7 +529,7 @@ export const ApiCallEditor = ({
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
             >
-              <SaveIcon className="h-5 w-5 text-[#898883]" />
+              <SaveIcon className="h-5 w-5 text-[#898883]"/>
             </Button>
             <Tooltip
               visible={saveTooltipVisible}
@@ -544,7 +546,7 @@ export const ApiCallEditor = ({
               onMouseEnter={() => setAddTooltipVisible(true)}
               onMouseLeave={() => setAddTooltipVisible(false)}
             >
-              <Plus className="h-7 w-7" />
+              <Plus className="h-7 w-7"/>
             </Button>
             <Tooltip
               visible={addTooltipVisible}
@@ -574,7 +576,8 @@ export const ApiCallEditor = ({
                 <span className="font-bold text-[#37352F] mr-2">
                   Next API Call
                 </span>
-                <span className="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
+                <span
+                  className="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
                   {index + 1}
                 </span>
               </div>
@@ -585,7 +588,7 @@ export const ApiCallEditor = ({
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleRemoveNextCall(index)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4"/>
                 </Button>
               )}
             </div>
@@ -678,7 +681,7 @@ export const ApiCallEditor = ({
                             : ""
                         }`}
                       >
-                        <SelectValue placeholder="Select method" />
+                        <SelectValue placeholder="Select method"/>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="GET">GET</SelectItem>
@@ -744,7 +747,7 @@ export const ApiCallEditor = ({
                             }
                           }}
                         >
-                          <Code className="mr-1 h-4 w-4" /> Format
+                          <Code className="mr-1 h-4 w-4"/> Format
                         </Button>
                       </div>
                     </div>
@@ -772,7 +775,7 @@ export const ApiCallEditor = ({
                       }
                     >
                       <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                        <SelectValue placeholder="Select condition" />
+                        <SelectValue placeholder="Select condition"/>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {statusCodes.map((status) => (
@@ -794,11 +797,11 @@ export const ApiCallEditor = ({
 };
 
 export const Frame = ({
-  responseName,
-  selectedResponse,
-  onUpdateRules,
-  onSave,
-}) => {
+                        responseName,
+                        selectedResponse,
+                        onUpdateRules,
+                        onSave,
+                      }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   const [errors, setErrors] = useState({});
@@ -808,7 +811,7 @@ export const Frame = ({
   const [frameAddTooltipVisible, setFrameAddTooltipVisible] = useState(false);
 
   // Component Tooltip (thêm vào đầu file)
-  const Tooltip = ({ visible, children, className = "" }) => {
+  const Tooltip = ({visible, children, className = ""}) => {
     if (!visible) return null;
 
     return (
@@ -817,7 +820,8 @@ export const Frame = ({
       >
         {children}
         {/* Mũi tên tooltip */}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+        <div
+          className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
       </div>
     );
   };
@@ -961,13 +965,13 @@ export const Frame = ({
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -1015,7 +1019,7 @@ export const Frame = ({
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -1034,14 +1038,14 @@ export const Frame = ({
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -1052,14 +1056,14 @@ export const Frame = ({
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -1125,48 +1129,43 @@ export const Frame = ({
   };
 
   return (
-    <div>
-      <Card className="p-6 border-0 rounded-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-[#37352F]">
-            {responseName || "No Response Selected"}
-          </h1>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Button
-                variant="outline"
-                onClick={handleAddRule}
-                className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-                onMouseEnter={() => setFrameAddTooltipVisible(true)}
-                onMouseLeave={() => setFrameAddTooltipVisible(false)}
-              >
-                <Plus className="h-7 w-7" />
-              </Button>
-              <Tooltip
-                visible={frameAddTooltipVisible}
-                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-              >
-                Add New Rule
-              </Tooltip>
-            </div>
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                onClick={handleSave}
-                onMouseEnter={() => setFrameSaveTooltipVisible(true)}
-                onMouseLeave={() => setFrameSaveTooltipVisible(false)}
-              >
-                <SaveIcon className="h-5 w-5 text-[#898883]" />
-              </Button>
-              <Tooltip
-                visible={frameSaveTooltipVisible}
-                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-              >
-                Save Rules
-              </Tooltip>
-            </div>
+    <div className="relative">
+      <Card className="p-6 border-0 rounded-lg shadow-none relative">
+        <div className="absolute top-3 right-3 z-[9999] flex items-center gap-2">
+          <div className="relative">
+            <Button
+              variant="outline"
+              onClick={handleAddRule}
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+              onMouseEnter={() => setFrameAddTooltipVisible(true)}
+              onMouseLeave={() => setFrameAddTooltipVisible(false)}
+            >
+              <Plus className="h-7 w-7"/>
+            </Button>
+            <Tooltip
+              visible={frameAddTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Add New Rule
+            </Tooltip>
+          </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+              onMouseEnter={() => setFrameSaveTooltipVisible(true)}
+              onMouseLeave={() => setFrameSaveTooltipVisible(false)}
+            >
+              <SaveIcon className="h-5 w-5 text-[#898883]"/>
+            </Button>
+            <Tooltip
+              visible={frameSaveTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Save Rules
+            </Tooltip>
           </div>
         </div>
 
@@ -1175,7 +1174,8 @@ export const Frame = ({
           <div className="absolute w-full h-full bg-[#F2F2F2] rounded-[5.49px]"></div>
 
           {/* Parameter Type và Parameter Name */}
-          <div className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
+          <div
+            className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
             <div className="w-[153.78px] pl-2 font-inter font-bold text-[14px] text-black">
               Parameter Type
             </div>
@@ -1190,13 +1190,15 @@ export const Frame = ({
             </div>
           </div>
           {/* Expected Value */}
-          <div className="absolute w-[150.47px] h-[27.46px] right-[80.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
+          <div
+            className="absolute w-[150.47px] h-[27.46px] right-[80.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
             <div className="font-inter font-bold text-[14px] text-black">
               Expected Value
             </div>
           </div>
           <div className="absolute w-[42.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
-            <div className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
+            <div
+              className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
               ?
             </div>
           </div>
@@ -1220,7 +1222,7 @@ export const Frame = ({
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -1245,7 +1247,8 @@ export const Frame = ({
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                <div
+                  className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
                   <span
                     className="text-[32px] text-black"
                     style={{
@@ -1271,7 +1274,7 @@ export const Frame = ({
                 />
 
                 {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch"/>
 
                 <Button
                   variant="ghost"
@@ -1281,7 +1284,7 @@ export const Frame = ({
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 
