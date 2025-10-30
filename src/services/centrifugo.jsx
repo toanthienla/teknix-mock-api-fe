@@ -13,7 +13,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
         const { token } = await getCentrifugoToken();
         // console.log("[Centrifugo] connection token:", token);
 
-        const centrifuge = new Centrifuge("ws://127.0.0.1:8080/connection/websocket", { token });
+        const centrifuge = new Centrifuge("ws://127.0.0.1:18080/connection/websocket", { token });
 
         centrifuge.on("connected", (ctx) => console.log("[Centrifugo] connected ✅", ctx));
         centrifuge.on("disconnected", (ctx) => console.warn("[Centrifugo] disconnected ❌", ctx));

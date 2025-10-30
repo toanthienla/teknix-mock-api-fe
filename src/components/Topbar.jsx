@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {ChevronDown, MoreHorizontal, Plus, SlashIcon} from "lucide-react";
+import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -371,9 +371,6 @@ export default function Topbar({
                     >
                       {isLast || !item.href ? (
                         <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
-                          {item.icon && (
-                            <img src={item.icon} alt="" className="w-5 h-5 mr-1 brightness-0"/>
-                          )}
                           {item.label}
                         </BreadcrumbPage>
                       ) : (
@@ -392,16 +389,13 @@ export default function Topbar({
                           }}
                           className="flex items-center gap-1 font-bold text-slate-400"
                         >
-                          {item.icon && (
-                            <img src={item.icon} alt="" className="w-5 h-5 mr-1"/>
-                          )}
                           {item.label}
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
                       <BreadcrumbSeparator>
-                        <SlashIcon/>
+                        <span className="text-lg font-semibold">/</span>
                       </BreadcrumbSeparator>
                     )}
                   </React.Fragment>

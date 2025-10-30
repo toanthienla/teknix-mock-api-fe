@@ -25,8 +25,8 @@ export default function LoginPage() {
           <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 bg-white lg:block">
             {/* Logo trên cùng */}
             <div className="flex items-center justify-center lg:justify-start gap-2">
-              <img src={logo} alt="MockAPI logo" className="w-10 h-10 sm:w-12 sm:h-12" />
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">MockAPI</h1>
+              <img src={logo} alt="MockAPI logo" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">MockAPI</h1>
             </div>
 
             {/* Ảnh minh họa */}
