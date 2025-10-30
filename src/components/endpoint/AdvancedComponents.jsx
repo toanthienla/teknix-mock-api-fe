@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -34,7 +34,7 @@ export const ApiCallEditor = ({
   setNextCalls,
   setIsNewApiCallDialogOpen,
   onSave,
-  currentEndpoint, // Thêm prop này
+  currentEndpoint,
   getFullPath,
 }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
@@ -43,6 +43,67 @@ export const ApiCallEditor = ({
 
   // Thêm state để lưu danh sách endpoints cho dropdown
   const [availableEndpoints, setAvailableEndpoints] = useState([]);
+
+  // Thêm state cho popover
+  const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
+    useState(false);
+  const [selectedSection, setSelectedSection] = useState("url");
+  const requestBodyPopoverRef = useRef(null);
+
+  // Cập nhật useEffect để handle click outside popover
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        requestBodyPopoverRef.current &&
+        !requestBodyPopoverRef.current.contains(event.target)
+      ) {
+        setIsRequestBodyPopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Hàm lấy text mẫu dựa trên section được chọn
+  const getTemplateText = () => {
+    switch (selectedSection) {
+      case "url":
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+      case "query":
+        return {
+          template: "{{query.<param>}}",
+          description: "Get values from query string parameters",
+        };
+      case "state":
+        return {
+          template: "{{state.<param>}}",
+          description: "Get values from project state",
+        };
+      default:
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+    }
+  };
+
+  // Thêm hàm chèn template cho Request Body (copy to clipboard)
+  const insertRequestBodyTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsRequestBodyPopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
+  };
 
   // Fetch danh sách endpoints từ API mới
   useEffect(() => {
@@ -335,6 +396,98 @@ export const ApiCallEditor = ({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
         <div className="flex items-center gap-2">
+          {/* Thêm nút popover bên cạnh nút save */}
+          <div className="relative" ref={requestBodyPopoverRef}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={() =>
+                setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
+              }
+            >
+              <FileCode className="h-5 w-5 text-[#898883]" />
+            </Button>
+
+            {/* Popover */}
+            {isRequestBodyPopoverOpen && (
+              <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                <div className="flex flex-col items-center gap-2 p-3.5">
+                  <div className="w-full flex justify-between items-center">
+                    <div className="font-semibold text-sm text-gray-800">
+                      Variable Picker
+                    </div>
+                    <X
+                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsRequestBodyPopoverOpen(false);
+                      }}
+                    />
+                  </div>
+
+                  <div className="w-full flex justify-between">
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "url"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("url");
+                      }}
+                    >
+                      URL Parameters
+                    </div>
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "query"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("query");
+                      }}
+                    >
+                      Query Parameters
+                    </div>
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "state"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("state");
+                      }}
+                    >
+                      Project State
+                    </div>
+                  </div>
+
+                  <div
+                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const templateText = getTemplateText().template;
+                      insertRequestBodyTemplate(templateText);
+                    }}
+                  >
+                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                      {getTemplateText().template}
+                    </div>
+                    <div className="text-[12px] text-gray-500">
+                      {getTemplateText().description}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <Button
             variant="outline"
             size="icon"
@@ -905,7 +1058,7 @@ export const Frame = ({
 
   return (
     <div>
-            <Card className="p-6 border-0 rounded-lg"> 
+      <Card className="p-6 border-0 rounded-lg">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
             {responseName || "No Response Selected"}
