@@ -295,7 +295,7 @@ export const ApiCallEditor = ({
     const payload = {
       advanced_config: {
         nextCalls: nextCalls.map((call) => ({
-          id: call.id,
+          id: Number(call.id),
           target_endpoint: call.target_endpoint,
           method: call.method,
           body: call.body,
@@ -331,7 +331,7 @@ export const ApiCallEditor = ({
   }, [nextCalls, savedCalls]);
 
   return (
-    <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+    <Card className="p-6 border-0 rounded-lg">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
         <div className="flex items-center gap-2">
@@ -905,7 +905,7 @@ export const Frame = ({
 
   return (
     <div>
-      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+            <Card className="p-6 border-0 rounded-lg"> 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-[#37352F]">
             {responseName || "No Response Selected"}

@@ -20,7 +20,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {Input} from "@/components/ui/input.jsx";
-import {Label} from "@/components/ui/label.jsx";
 import {
   Select,
   SelectContent, SelectGroup,
@@ -44,8 +43,6 @@ import folderIcon from "@/assets/project-icon.svg";
 import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/search.svg";
-import workspaceIcon from "@/assets/workspace-icon.svg";
-import projectIcon from "@/assets/project-icon.svg";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -1237,12 +1234,10 @@ export default function FolderPage() {
                     label: currentWorkspace.name,
                     WORKSPACE_ID: currentWorkspace.id,
                     href: "/dashboard",
-                    icon: workspaceIcon,
                   },
                   {
                     label: currentProject.name,
                     href: `/dashboard/${currentProject.id}`,
-                    icon: projectIcon,
                   },
                 ]
                 : [
@@ -1250,7 +1245,6 @@ export default function FolderPage() {
                     label: currentWorkspace.name,
                     WORKSPACE_ID: currentWorkspace.id,
                     href: "/dashboard",
-                    icon: workspaceIcon,
                   },
                 ]
               : []
