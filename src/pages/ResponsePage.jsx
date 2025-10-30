@@ -219,15 +219,6 @@ const DashboardPage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (endpointResponses.length > 0 && !selectedResponse) {
-      const defaultResponse =
-        endpointResponses.find((r) => r.is_default) || endpointResponses[0];
-      setSelectedResponse(defaultResponse);
-      handleResponseSelect(defaultResponse);
-    }
-  }, [endpointResponses, selectedResponse]);
-
   // Sửa lại useEffect để cập nhật nextCalls khi endpointId thay đổi
   useEffect(() => {
     if (!currentEndpointId || !isStateful) {
@@ -1768,12 +1759,18 @@ const DashboardPage = () => {
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
-    setResponseBody("");
+    setResponseBody("{}");
     setDelay("0");
     setIsDialogOpen(true);
   };
 
   const handleSaveResponse = () => {
+    // Chỉ cho phép cập nhật response đã có sẵn
+    if (!selectedResponse) {
+      toast.error("Please select a response to save");
+      return;
+    }
+
     const delayValidationError = validateDelay(delay);
     if (delayValidationError) {
       setDelayError(delayValidationError);
@@ -1801,8 +1798,6 @@ const DashboardPage = () => {
     // Reset lỗi nếu có
     setResponseNameError("");
 
-    const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
-
     // Payload khác nhau cho stateful và stateless
     let payload;
     if (isStateful) {
@@ -1819,34 +1814,30 @@ const DashboardPage = () => {
         status_code: parseInt(statusCode),
         response_body: responseBodyObj,
         condition: responseCondition,
-        is_default: selectedResponse
-          ? selectedResponse.is_default
-          : isFirstResponse,
+        is_default: selectedResponse.is_default, // Giữ nguyên is_default hiện tại
         delay_ms: parseInt(delay) || 0,
         proxy_url: proxyUrl.trim() ? proxyUrl : null,
         proxy_method: proxyUrl.trim() ? proxyMethod : null,
       };
     }
 
-    const method = selectedResponse ? "PUT" : "POST";
-    // Sửa URL API cho chế độ stateful
+    // Chỉ sử dụng PUT method để cập nhật
     const url = selectedResponse
       ? isStateful
         ? `${API_ROOT}/endpoint_responses_ful/${selectedResponse.id}`
         : `${API_ROOT}/endpoint_responses/${selectedResponse.id}`
-      : `${API_ROOT}/endpoint_responses`;
+      : null; // Không bao giờ null vì đã validate ở đầu
 
     fetch(url, {
-      method,
+      method: "PUT", // Chỉ PUT, không còn POST nữa
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
-        if (!res.ok)
-          throw new Error(
-            `Failed to ${selectedResponse ? "update" : "create"} response`
-          );
+        if (!res.ok) {
+          throw new Error("Failed to update response");
+        }
         return res.json();
       })
       .then((updatedResponse) => {
@@ -1872,90 +1863,149 @@ const DashboardPage = () => {
 
           // Cập nhật state với response stateful
           setEndpointResponses((prev) =>
-            selectedResponse
-              ? prev.map((r) =>
-                  r.id === statefulResponse.id ? statefulResponse : r
-                )
-              : [...prev, statefulResponse]
+            prev.map((r) =>
+              r.id === statefulResponse.id ? statefulResponse : r
+            )
           );
 
           // Cập nhật statusData
           setStatusData((prev) =>
-            selectedResponse
-              ? prev.map((s) =>
-                  s.id === statefulResponse.id
-                    ? {
-                        ...s,
-                        code: statefulResponse.status_code.toString(),
-                        name: statefulResponse.name,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: statefulResponse.id,
+            prev.map((s) =>
+              s.id === statefulResponse.id
+                ? {
+                    ...s,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  },
-                ]
+                  }
+                : s
+            )
           );
 
-          if (selectedResponse) {
-            setSelectedResponse(statefulResponse);
-          }
+          setSelectedResponse(statefulResponse);
         } else {
           // Xử lý như hiện tại cho stateless
           setEndpointResponses((prev) =>
-            selectedResponse
-              ? prev.map((r) =>
-                  r.id === updatedResponse.id ? updatedResponse : r
-                )
-              : [...prev, updatedResponse]
+            prev.map((r) => (r.id === updatedResponse.id ? updatedResponse : r))
           );
 
           setStatusData((prev) =>
-            selectedResponse
-              ? prev.map((s) =>
-                  s.id === updatedResponse.id
-                    ? {
-                        ...s,
-                        code: updatedResponse.status_code.toString(),
-                        name: updatedResponse.name,
-                        isDefault: updatedResponse.is_default,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: updatedResponse.id,
+            prev.map((s) =>
+              s.id === updatedResponse.id
+                ? {
+                    ...s,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  },
-                ]
+                  }
+                : s
+            )
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
           setProxyMethod(updatedResponse.proxy_method || "GET");
 
-          if (selectedResponse) {
-            setSelectedResponse(updatedResponse);
-          }
+          setSelectedResponse(updatedResponse);
         }
 
-        if (selectedResponse) {
-          toast.success("Response updated successfully!");
-        } else {
-          toast.success("New response created successfully!");
-          setIsDialogOpen(false);
-          setSelectedResponse(null);
-          setResponseName("");
-          setStatusCode("200");
-          setResponseBody("");
-          setDelay("0");
-        }
+        toast.success("Response updated successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  // Tạo hàm riêng chỉ để tạo response mới
+  const handleCreateResponse = () => {
+    const delayValidationError = validateDelay(delay);
+    if (delayValidationError) {
+      setDelayError(delayValidationError);
+      toast.error(delayValidationError);
+      return;
+    }
+
+    // Parse response body
+    let responseBodyObj = {};
+    try {
+      responseBodyObj = JSON.parse(responseBody);
+    } catch {
+      toast.error("Invalid JSON in response body");
+      return;
+    }
+
+    // Validate response name
+    const trimmedName = responseName.trim();
+    if (!trimmedName) {
+      setResponseNameError("Name cannot be empty");
+      toast.error("Response name cannot be empty");
+      return;
+    }
+
+    // Reset lỗi nếu có
+    setResponseNameError("");
+
+    // Chỉ cho stateless mode
+    if (isStateful) {
+      toast.error("Cannot create new responses in stateful mode");
+      return;
+    }
+
+    // Payload cho tạo mới response (stateless only)
+    const payload = {
+      endpoint_id: currentEndpointId,
+      name: responseName,
+      status_code: parseInt(statusCode),
+      response_body: responseBodyObj,
+      condition: {},
+      is_default: endpointResponses.length === 0, // Nếu là response đầu tiên thì là default
+      delay_ms: parseInt(delay) || 0,
+      proxy_url: null,
+      proxy_method: null,
+    };
+
+    fetch(`${API_ROOT}/endpoint_responses`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create response");
+        return res.json();
+      })
+      .then((newResponse) => {
+        // Thêm response mới vào danh sách
+        setEndpointResponses((prev) => [...prev, newResponse]);
+
+        // Cập nhật statusData
+        setStatusData((prev) => [
+          ...prev,
+          {
+            id: newResponse.id,
+            code: newResponse.status_code.toString(),
+            name: newResponse.name,
+            isDefault: newResponse.is_default,
+          },
+        ]);
+
+        // Tự động chọn response mới tạo
+        setSelectedResponse(newResponse);
+        setResponseName(newResponse.name);
+        setStatusCode(newResponse.status_code.toString());
+        setResponseBody(JSON.stringify(newResponse.response_body, null, 2));
+        setDelay(newResponse.delay_ms?.toString() || "0");
+
+        // Đóng dialog và reset form
+        setIsDialogOpen(false);
+        setSelectedResponse(null);
+        setResponseName("");
+        setStatusCode("200");
+        setResponseBody("");
+        setDelay("0");
+        setResponseNameError("");
+        setDelayError("");
+
+        toast.success("New response created successfully!");
       })
       .catch((error) => {
         console.error(error);
@@ -4002,9 +4052,7 @@ const DashboardPage = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle>
-              {selectedResponse ? "Edit Response" : "Create New Response"}
-            </DialogTitle>
+            <DialogTitle>Create New Response</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -4014,7 +4062,10 @@ const DashboardPage = () => {
                 id="new-response-name"
                 placeholder="Enter response name"
                 value={responseName}
-                onChange={(e) => setResponseName(e.target.value)}
+                onChange={(e) => {
+                  setResponseName(e.target.value);
+                  if (responseNameError) setResponseNameError("");
+                }}
                 className={`w-full ${
                   responseNameError ? "border-red-500" : ""
                 }`}
@@ -4084,7 +4135,7 @@ const DashboardPage = () => {
                       e.stopPropagation();
                       try {
                         const formatted = JSON.stringify(
-                          JSON.parse(responseBody),
+                          JSON.parse(responseBody || "{}"),
                           null,
                           2
                         );
@@ -4129,13 +4180,23 @@ const DashboardPage = () => {
                 variant="outline"
                 onClick={() => {
                   setIsDialogOpen(false);
+                  // Reset form khi hủy
                   setSelectedResponse(null);
+                  setResponseName("");
+                  setStatusCode("200");
+                  setResponseBody("");
+                  setDelay("0");
+                  setResponseNameError("");
+                  setDelayError("");
                 }}
               >
                 Cancel
               </Button>
-              <Button onClick={handleSaveResponse}>
-                {selectedResponse ? "Update" : "Create"}
+              <Button
+                onClick={handleCreateResponse}
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              >
+                Create
               </Button>
             </DialogFooter>
           </div>
