@@ -14,6 +14,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
@@ -64,27 +70,30 @@ export default function Topbar({
     (ws) => String(ws.id) === String(current)
   );
 
-  useEffect(() => {
-    const checkUserLogin = async () => {
-      try {
-        const res = await getCurrentUser();
+  const checkUserLogin = async () => {
+    try {
+      const res = await getCurrentUser();
 
-        if (res?.data?.username) {
-          setAuthChecked(true);
-          setUsername(res.data.username); // lưu toàn bộ thông tin user
-          setUserId(res.data.user_id);
-          console.log("Logged in user:", res.data.username);
-        } else {
-          toast.error("Please log in to continue.");
-          navigate("/login");
-        }
-      } catch (err) {
-        console.error("User not logged in:", err);
-        toast.error("Session expired. Please log in again.");
+      if (res?.data?.username) {
+        setAuthChecked(true);
+        setUsername(res.data.username); // lưu toàn bộ thông tin user
+        setUserId(res.data.user_id);
+        console.log("Logged in user:", res.data.username);
+        return true;
+      } else {
+        toast.error("Please log in to continue.");
         navigate("/login");
+        return false;
       }
-    };
+    } catch (err) {
+      console.error("User not logged in:", err);
+      toast.error("Session expired. Please log in again.");
+      navigate("/login");
+      return false;
+    }
+  };
 
+  useEffect(() => {
     checkUserLogin();
   }, []);
 
@@ -361,6 +370,11 @@ export default function Topbar({
             <BreadcrumbList className="flex flex-nowrap items-center space-x-2 overflow-hidden">
               {breadcrumb.map((item, idx) => {
                 const isLast = idx === breadcrumb.length - 1;
+
+                // Gán tooltip theo cấp
+                const tooltipLabels = ["Workspace", "Project", "Folder", "Endpoint"];
+                const tooltipText = tooltipLabels[idx] || "Item";
+
                 return (
                   <React.Fragment key={idx}>
                     <BreadcrumbItem
@@ -369,30 +383,40 @@ export default function Topbar({
                       }`}
                       title={item.label}
                     >
-                      {isLast || !item.href ? (
-                        <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
-                          {item.label}
-                        </BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink
-                          href={item.href}
-                          onClick={() => {
-                            if (item.WORKSPACE_ID) {
-                              localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
-                            }
-                            if (item.folder_id) {
-                              let savedFolders;
-                              savedFolders = [];
-                              savedFolders.push(String(item.folder_id));
-                              localStorage.setItem("openFolders", JSON.stringify(savedFolders));
-                            }
-                          }}
-                          className="flex items-center gap-1 font-bold text-slate-400"
-                        >
-                          {item.label}
-                        </BreadcrumbLink>
-                      )}
+                      <TooltipProvider delayDuration={100} >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {isLast || !item.href ? (
+                              <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
+                                {item.label}
+                              </BreadcrumbPage>
+                            ) : (
+                              <BreadcrumbLink
+                                href={item.href}
+                                onClick={() => {
+                                  if (item.WORKSPACE_ID) {
+                                    localStorage.setItem("currentWorkspace", item.WORKSPACE_ID);
+                                  }
+                                  if (item.folder_id) {
+                                    let savedFolders;
+                                    savedFolders = [];
+                                    savedFolders.push(String(item.folder_id));
+                                    localStorage.setItem("openFolders", JSON.stringify(savedFolders));
+                                  }
+                                }}
+                                className="flex items-center gap-1 font-bold text-slate-400"
+                              >
+                                {item.label}
+                              </BreadcrumbLink>
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="bg-black text-white text-xs px-2 py-1 rounded">
+                            {tooltipText}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </BreadcrumbItem>
+
                     {!isLast && (
                       <BreadcrumbSeparator>
                         <span className="text-lg font-semibold">/</span>
@@ -438,13 +462,18 @@ export default function Topbar({
       {userId > 0 && (
         <RealtimeClient
           userId={userId}
-          onNewNotification={() => {
+          onNewNotification={async () => {
             console.log("🔔 New notification received via WebSocket.");
-            fetchNotifications();
+
+            const valid = await checkUserLogin();
+            if (valid) {
+              await fetchNotifications();
+            } else {
+              console.warn("⚠️ Session expired.");
+            }
           }}
         />
       )}
-
     </div>
   );
 }
