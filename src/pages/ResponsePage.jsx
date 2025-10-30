@@ -170,6 +170,26 @@ const DashboardPage = () => {
     setIsNewApiCallRequestBodyPopoverOpen,
   ] = useState(false);
 
+  // Thêm state để control tooltip visibility
+  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
+  const [starTooltipVisible, setStarTooltipVisible] = useState(false);
+  const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+
+  // Component Tooltip
+  const Tooltip = ({ visible, children, className = "" }) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
+
   // Thêm ref cho editor
   const newApiCallRequestBodyEditorRef = useRef(null);
   const newApiCallRequestBodyPopoverRef = useRef(null);
@@ -2358,18 +2378,28 @@ const DashboardPage = () => {
                 <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
                     {!isStateful && (
-                      <button
-                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
-                        onClick={handleNewResponse}
-                        disabled={isStateful}
-                        title={
-                          isStateful
-                            ? "Cannot add responses in stateful mode"
-                            : "Add new response"
-                        }
-                      >
-                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                          onClick={handleNewResponse}
+                          disabled={isStateful}
+                          title={
+                            isStateful
+                              ? "Cannot add responses in stateful mode"
+                              : "Add new response"
+                          }
+                          onMouseEnter={() => setAddTooltipVisible(true)}
+                          onMouseLeave={() => setAddTooltipVisible(false)}
+                        >
+                          <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                        </button>
+                        <Tooltip
+                          visible={addTooltipVisible}
+                          className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                        >
+                          Add New Response
+                        </Tooltip>
+                      </div>
                     )}
                     <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
@@ -2603,34 +2633,151 @@ const DashboardPage = () => {
                       <Card className="p-4 rounded-none border-none">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveResponse}
-                            >
-                              <SaveIcon className="h-5 w-5 text-[#898883]" />
-                            </Button>
-                            {/* Nút Default - ẩn khi stateful */}
-                            {!isStateful && (
+                            <div className="relative">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="border-[#E5E5E1]"
-                                onClick={() => {
-                                  if (selectedResponse) {
-                                    setDefaultResponse(selectedResponse.id);
-                                  }
-                                }}
+                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                onClick={handleSaveResponse}
+                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseLeave={() =>
+                                  setSaveTooltipVisible(false)
+                                }
                               >
-                                <Star
-                                  className={`h-4 w-4 ${
-                                    selectedResponse?.is_default
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-[#898883]"
-                                  }`}
-                                />
+                                <SaveIcon className="h-5 w-5 text-[#898883]" />
                               </Button>
+                              <Tooltip
+                                visible={saveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
+                            </div>
+                            {/* Nút Default - ẩn khi stateful */}
+                            {!isStateful && (
+                              <div className="relative ml-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="border-[#E5E5E1]"
+                                  onClick={() => {
+                                    if (selectedResponse) {
+                                      setDefaultResponse(selectedResponse.id);
+                                    }
+                                  }}
+                                  onMouseEnter={() =>
+                                    setStarTooltipVisible(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setStarTooltipVisible(false)
+                                  }
+                                >
+                                  <Star
+                                    className={`h-4 w-4 ${
+                                      selectedResponse?.is_default
+                                        ? "text-yellow-500 fill-yellow-500"
+                                        : "text-[#898883]"
+                                    }`}
+                                  />
+                                </Button>
+                                <Tooltip
+                                  visible={starTooltipVisible}
+                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                                >
+                                  Set Default
+                                </Tooltip>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Nút Popover - di chuyển từ trong editor ra đây */}
+                          <div className="relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={() => {
+                                const canEdit =
+                                  !isStateful ||
+                                  statusCode !== "200" ||
+                                  method !== "GET";
+                                if (canEdit) {
+                                  setIsPopoverOpen(!isPopoverOpen);
+                                }
+                              }}
+                              disabled={
+                                isStateful &&
+                                statusCode === "200" &&
+                                method === "GET"
+                              }
+                              title="Variable Picker"
+                            >
+                              <FileCode className="h-5 w-5 text-[#898883]" />
+                            </Button>
+
+                            {/* Popover */}
+                            {isPopoverOpen && (
+                              <div
+                                ref={popoverRef}
+                                className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                              >
+                                <div className="flex flex-col items-center gap-2 p-3.5">
+                                  <div className="w-full flex justify-between items-center">
+                                    <div className="font-semibold text-sm text-gray-800">
+                                      Variable Picker
+                                    </div>
+                                    <X
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsPopoverOpen(false);
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="w-full flex justify-between">
+                                    {["url", "query", "state"].map(
+                                      (section) => (
+                                        <div
+                                          key={section}
+                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            selectedSection === section
+                                              ? "bg-[#EDEDEC] text-[#374151]"
+                                              : "text-[#374151] hover:bg-gray-100"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSection(section);
+                                          }}
+                                        >
+                                          {section === "url"
+                                            ? "URL Parameters"
+                                            : section === "query"
+                                            ? "Query Parameters"
+                                            : "Project State"}
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+
+                                  <div
+                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const templateText =
+                                        getTemplateText().template;
+                                      insertTemplate(templateText);
+                                    }}
+                                  >
+                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      {getTemplateText().template}
+                                    </div>
+                                    <div className="text-[12px] text-gray-500">
+                                      {getTemplateText().description}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -2785,89 +2932,6 @@ const DashboardPage = () => {
                                     <Code className="h-4 w-4" /> Format
                                   </Button>
                                 </div>
-
-                                {/* Popover trigger */}
-                                <div className="absolute bottom-2 right-2 flex space-x-2">
-                                  <FileCode
-                                    className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                    size={26}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const canEdit =
-                                        !isStateful ||
-                                        statusCode !== "200" ||
-                                        method !== "GET";
-                                      if (canEdit) {
-                                        setIsPopoverOpen(!isPopoverOpen);
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Popover */}
-                                {isPopoverOpen && (
-                                  <div
-                                    ref={popoverRef}
-                                    className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                                  >
-                                    <div className="flex flex-col items-center gap-2 p-3.5">
-                                      <div className="w-full flex justify-between items-center">
-                                        <div className="font-semibold text-sm text-gray-800">
-                                          Variable Picker
-                                        </div>
-                                        <X
-                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsPopoverOpen(false);
-                                          }}
-                                        />
-                                      </div>
-
-                                      <div className="w-full flex justify-between">
-                                        {["url", "query", "state"].map(
-                                          (section) => (
-                                            <div
-                                              key={section}
-                                              className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                selectedSection === section
-                                                  ? "bg-[#EDEDEC] text-[#374151]"
-                                                  : "text-[#374151] hover:bg-gray-100"
-                                              }`}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedSection(section);
-                                              }}
-                                            >
-                                              {section === "url"
-                                                ? "URL Parameters"
-                                                : section === "query"
-                                                ? "Query Parameters"
-                                                : "Project State"}
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-
-                                      <div
-                                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const templateText =
-                                            getTemplateText().template;
-                                          insertTemplate(templateText);
-                                        }}
-                                      >
-                                        <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                          {getTemplateText().template}
-                                        </div>
-                                        <div className="text-[12px] text-gray-500">
-                                          {getTemplateText().description}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -3028,14 +3092,26 @@ const DashboardPage = () => {
                             <h2 className="text-xl font-bold text-[#37352F]">
                               Forward Proxy URL
                             </h2>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveResponse}
-                            >
-                              <SaveIcon className="h-10 w-10 text-[#898883]" />
-                            </Button>
+                            <div className="relative">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                onClick={handleSaveResponse}
+                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseLeave={() =>
+                                  setSaveTooltipVisible(false)
+                                }
+                              >
+                                <SaveIcon className="h-5 w-5 text-[#898883]" />
+                              </Button>
+                              <Tooltip
+                                visible={saveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
+                            </div>
                           </div>
                           <div className="space-y-6">
                             <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
@@ -3214,14 +3290,28 @@ const DashboardPage = () => {
                               </div>
 
                               {/* Nút Save */}
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                                onClick={handleSaveInitialValue}
-                              >
-                                <SaveIcon className="h-5 w-5 text-[#898883]" />
-                              </Button>
+                              <div className="relative">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveInitialValue}
+                                  onMouseEnter={() =>
+                                    setSaveTooltipVisible(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setSaveTooltipVisible(false)
+                                  }
+                                >
+                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                </Button>
+                                <Tooltip
+                                  visible={saveTooltipVisible}
+                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                                >
+                                  Save button
+                                </Tooltip>
+                              </div>
                             </div>
                           </div>
 
@@ -3243,14 +3333,12 @@ const DashboardPage = () => {
                               </div>
                             </div>
                           </div>
-
                           {/* Đưa Initial Value xuống dưới */}
                           <div className="flex justify-between items-center mb-1">
                             <h2 className="text-2xl font-medium text-[#37352F]">
                               Initial Value
                             </h2>
                           </div>
-
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">

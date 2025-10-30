@@ -50,6 +50,26 @@ export const ApiCallEditor = ({
   const [selectedSection, setSelectedSection] = useState("url");
   const requestBodyPopoverRef = useRef(null);
 
+  // Thêm state để control tooltip visibility trong ApiCallEditor
+  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
+  const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+  const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
+
+  // Component Tooltip (thêm vào đầu file)
+  const Tooltip = ({ visible, children, className = "" }) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
+
   // Cập nhật useEffect để handle click outside popover
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -398,16 +418,26 @@ export const ApiCallEditor = ({
         <div className="flex items-center gap-2">
           {/* Thêm nút popover bên cạnh nút save */}
           <div className="relative" ref={requestBodyPopoverRef}>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-              onClick={() =>
-                setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
-              }
-            >
-              <FileCode className="h-5 w-5 text-[#898883]" />
-            </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                onClick={() =>
+                  setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
+                }
+                onMouseEnter={() => setTemplateTooltipVisible(true)}
+                onMouseLeave={() => setTemplateTooltipVisible(false)}
+              >
+                <FileCode className="h-5 w-5 text-[#898883]" />
+              </Button>
+              <Tooltip
+                visible={templateTooltipVisible}
+                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+              >
+                Variable Picker
+              </Tooltip>
+            </div>
 
             {/* Popover */}
             {isRequestBodyPopoverOpen && (
@@ -488,21 +518,41 @@ export const ApiCallEditor = ({
             )}
           </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-            onClick={handleSave}
-          >
-            <SaveIcon className="h-5 w-5 text-[#898883]" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setIsNewApiCallDialogOpen(true)}
-            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-          >
-            <Plus className="h-7 w-7" />
-          </Button>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+              onMouseEnter={() => setSaveTooltipVisible(true)}
+              onMouseLeave={() => setSaveTooltipVisible(false)}
+            >
+              <SaveIcon className="h-5 w-5 text-[#898883]" />
+            </Button>
+            <Tooltip
+              visible={saveTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Save API Calls
+            </Tooltip>
+          </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              onClick={() => setIsNewApiCallDialogOpen(true)}
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+              onMouseEnter={() => setAddTooltipVisible(true)}
+              onMouseLeave={() => setAddTooltipVisible(false)}
+            >
+              <Plus className="h-7 w-7" />
+            </Button>
+            <Tooltip
+              visible={addTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Add New API Call
+            </Tooltip>
+          </div>
         </div>
       </div>
 
@@ -753,6 +803,24 @@ export const Frame = ({
 
   const [errors, setErrors] = useState({});
   const [selectedRuleId, setSelectedRuleId] = useState(null);
+  // Thêm state để control tooltip visibility trong Frame
+  const [frameSaveTooltipVisible, setFrameSaveTooltipVisible] = useState(false);
+  const [frameAddTooltipVisible, setFrameAddTooltipVisible] = useState(false);
+
+  // Component Tooltip (thêm vào đầu file)
+  const Tooltip = ({ visible, children, className = "" }) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
 
   const validateRule = (row) => {
     const newErrors = {};
@@ -1064,21 +1132,41 @@ export const Frame = ({
             {responseName || "No Response Selected"}
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleAddRule}
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-            >
-              <Plus className="h-7 w-7" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-              onClick={handleSave}
-            >
-              <SaveIcon className="h-5 w-5 text-[#898883]" />
-            </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                onClick={handleAddRule}
+                className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+                onMouseEnter={() => setFrameAddTooltipVisible(true)}
+                onMouseLeave={() => setFrameAddTooltipVisible(false)}
+              >
+                <Plus className="h-7 w-7" />
+              </Button>
+              <Tooltip
+                visible={frameAddTooltipVisible}
+                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+              >
+                Add New Rule
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                onClick={handleSave}
+                onMouseEnter={() => setFrameSaveTooltipVisible(true)}
+                onMouseLeave={() => setFrameSaveTooltipVisible(false)}
+              >
+                <SaveIcon className="h-5 w-5 text-[#898883]" />
+              </Button>
+              <Tooltip
+                visible={frameSaveTooltipVisible}
+                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+              >
+                Save Rules
+              </Tooltip>
+            </div>
           </div>
         </div>
 
