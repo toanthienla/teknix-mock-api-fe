@@ -337,7 +337,7 @@ export const SchemaBodyEditor = ({
 
   return (
     <div>
-      <Card className="p-6 border border-[#CBD5E1] rounded-lg">
+      <Card className="p-6 border-0 rounded-lg">
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-[#37352F]">
             Schema Definition

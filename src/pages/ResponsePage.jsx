@@ -161,7 +161,7 @@ const DashboardPage = () => {
   const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
   const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
   const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
-    useState("");
+    useState("200");
   const [
     isNewApiCallRequestBodyPopoverOpen,
     setIsNewApiCallRequestBodyPopoverOpen,
@@ -331,7 +331,7 @@ const DashboardPage = () => {
           nextCalls: [
             // Giữ nguyên các API Call hiện có (bao gồm id)
             ...nextCalls.map((call) => ({
-              id: call.id,
+              id: Number(call.id),
               target_endpoint: call.target_endpoint,
               method: call.method,
               body: call.body,
@@ -342,7 +342,7 @@ const DashboardPage = () => {
               target_endpoint: fullTargetEndpoint,
               method: newApiCallMethod,
               body: JSON.parse(newApiCallRequestBody || "{}"),
-              condition: newApiCallStatusCondition,
+              condition: Number(newApiCallStatusCondition),
             },
           ],
         },
@@ -374,7 +374,7 @@ const DashboardPage = () => {
       setNewApiCallTargetEndpoint("");
       setNewApiCallMethod("GET");
       setNewApiCallRequestBody("{}");
-      setNewApiCallStatusCondition("");
+      setNewApiCallStatusCondition("200");
       setNewApiCallValidationErrors({});
 
       // Gọi lại GET API để lấy dữ liệu mới nhất
@@ -2554,10 +2554,15 @@ const DashboardPage = () => {
                     <div className="">
                       <Card className="p-4 rounded-none border-none">
                         <div className="flex justify-between items-center">
-                          {/*<h2 className="text-2xl font-bold text-[#37352F] mr-4">*/}
-                          {/*  {selectedResponse?.name || "No Response Selected"}*/}
-                          {/*</h2>*/}
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={handleSaveResponse}
+                            >
+                              <SaveIcon className="h-5 w-5 text-[#898883]" />
+                            </Button>
                             {/* Nút Default - ẩn khi stateful */}
                             {!isStateful && (
                               <Button
@@ -2579,15 +2584,6 @@ const DashboardPage = () => {
                                 />
                               </Button>
                             )}
-
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="absolute ml-auto right-20 h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveResponse}
-                            >
-                              <SaveIcon className="h-5 w-5 text-[#898883]" />
-                            </Button>
                           </div>
                         </div>
 
