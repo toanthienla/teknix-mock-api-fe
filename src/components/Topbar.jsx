@@ -89,7 +89,7 @@ export default function Topbar({
   }, []);
 
   // =============================
-  // 1️⃣ FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
+  // FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
   // =============================
   const fetchNotifications = async () => {
     try {
@@ -184,7 +184,7 @@ export default function Topbar({
 
 
   // =============================
-  // 2️⃣ Đánh dấu đã đọc 1 notification
+  // Đánh dấu đã đọc 1 notification
   // =============================
   const markAsRead = async (id) => {
     try {
@@ -205,7 +205,7 @@ export default function Topbar({
   };
 
   // =============================
-  // 3️⃣ Đánh dấu tất cả đã đọc
+  // Đánh dấu tất cả đã đọc
   // =============================
   const markAllRead = async () => {
     try {
@@ -222,7 +222,7 @@ export default function Topbar({
   };
 
   // =============================
-  // 4️⃣ Xóa tất cả thông báo đã đọc
+  // Xóa tất cả thông báo đã đọc
   // =============================
   const deleteReadNotifications = async () => {
     try {

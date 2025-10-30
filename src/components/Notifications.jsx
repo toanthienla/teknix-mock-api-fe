@@ -36,6 +36,7 @@ function timeAgo(dateString) {
 export default function Notifications({notifications = [], onMarkRead, onMarkAllRead}) {
   const [activeTab, setActiveTab] = useState("all");
   const [localNoti, setLocalNoti] = useState(notifications);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const filtered =
     activeTab === "unread"
@@ -150,7 +151,8 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
               No notifications
             </p>
           ) : (
-            filtered.map((n, index) => (
+            <>
+              {filtered.slice(0, visibleCount).map((n, index) => (
               <div
                 key={index}
                 className="p-4 mb-1 hover:bg-gray-50 transition border-b border-gray-300 cursor-pointer"
@@ -217,7 +219,20 @@ export default function Notifications({notifications = [], onMarkRead, onMarkAll
                   {timeAgo(n.created_at)} • {n.user_name}
                 </div>
               </div>
-            ))
+              ))}
+
+              {/* Nút Show more */}
+              {visibleCount < filtered.length && (
+                <div className="text-center py-3">
+                  <Button
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                    className="bg-white hover:bg-yellow-200 text-black hover:underline font-medium"
+                  >
+                    Show more...
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </ScrollArea>
       </SheetContent>
