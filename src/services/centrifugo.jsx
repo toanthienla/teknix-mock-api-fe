@@ -1,7 +1,7 @@
-// src/realtime.jsx
 import { useEffect, useRef } from "react";
 import { Centrifuge } from "centrifuge";
 import { getCentrifugoToken, getSubToken } from "@/services/api.js";
+import { API_WS_ROOT } from "@/utils/constants.js";
 
 export default function RealtimeClient({ userId, onNewNotification }) {
   const centrifugeRef = useRef(null);
@@ -13,7 +13,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
         const { token } = await getCentrifugoToken();
         // console.log("[Centrifugo] connection token:", token);
 
-        const centrifuge = new Centrifuge("ws://127.0.0.1:18080/connection/websocket", { token });
+        const centrifuge = new Centrifuge(API_WS_ROOT, { token });
 
         centrifuge.on("connected", (ctx) => console.log("[Centrifugo] connected ✅", ctx));
         centrifuge.on("disconnected", (ctx) => console.warn("[Centrifugo] disconnected ❌", ctx));
@@ -34,7 +34,7 @@ export default function RealtimeClient({ userId, onNewNotification }) {
         sub.on("subscribed", (ctx) => console.log(`🟢 Subscribed to ${channel}`, ctx));
         sub.on("error", (err) => console.error(`❌ Subscription error on ${channel}`, err));
         sub.on("publication", (ctx) => {
-          console.log("📩 Notification received:", ctx.data);
+          // console.log("📩 Notification received:", ctx.data);
           if (onNewNotification) onNewNotification(ctx.data);
         });
 

@@ -463,7 +463,7 @@ export default function Topbar({
         <RealtimeClient
           userId={userId}
           onNewNotification={async () => {
-            console.log("🔔 New notification received via WebSocket.");
+            // console.log("🔔 New notification received via WebSocket.");
 
             const valid = await checkUserLogin();
             if (valid) {
