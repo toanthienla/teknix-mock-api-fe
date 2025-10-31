@@ -23,7 +23,7 @@ import {
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
-import {API_ROOT} from "@/utils/constants.js";
+// import {API_ROOT} from "@/utils/constants.js";
 import avatar from "@/assets/user-avatar.svg";
 import logoIcon from "@/assets/logo.svg";
 import editIcon from "@/assets/Edit Icon.svg";
@@ -31,7 +31,7 @@ import deleteIcon from "@/assets/Trash Icon.svg";
 import logoutIcon from "@/assets/logout.svg";
 import arrowIcon from "@/assets/arrow.svg";
 import breadcrumbIcon from "@/assets/breadcrumb-arrow.svg";
-import Notifications from "../components/Notifications.jsx";
+// import Notifications from "../components/Notifications.jsx";
 // import RealtimeClient from "@/services/centrifugo.jsx";
 
 export default function Topbar({
@@ -46,8 +46,8 @@ export default function Topbar({
                                }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState(null);
-  const [userId, setUserId] = useState(0);
-  const [notifications, setNotifications] = useState([]);
+  // const [userId, setUserId] = useState(0);
+  // const [notifications, setNotifications] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function Topbar({
       if (res?.data?.username) {
         setAuthChecked(true);
         setUsername(res.data.username); // lưu toàn bộ thông tin user
-        setUserId(res.data.user_id);
+        // setUserId(res.data.user_id);
         console.log("Logged in user:", res.data.username);
         return true;
       } else {
@@ -97,155 +97,162 @@ export default function Topbar({
     checkUserLogin();
   }, []);
 
-  // =============================
-  // FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
-  // =============================
-  const fetchNotifications = async () => {
-    try {
-      console.log("Fetching notifications...");
-      const res = await fetch(`${API_ROOT}/notifications`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch notifications");
-      const data = await res.json();
-
-      // Lấy thêm dữ liệu chi tiết từ project_request_logs, users, và endpoints
-      const endpointCache = {};
-      const detailed = await Promise.all(
-        data.map(async (n) => {
-          let status = null;
-          let request_body = null;
-          let response_body = null;
-          let user_name = null;
-          let endpoint_method = null;
-          let endpoint_path = null;
-
-          // --- Lấy log chi tiết ---
-          try {
-            if (n.project_request_log_id) {
-              const logRes = await fetch(`${API_ROOT}/project_request_logs/${n.project_request_log_id}`, {
-                credentials: "include",
-              });
-              if (logRes.ok) {
-                const log = await logRes.json();
-                status = log.response_status_code;
-                request_body = log.request_body;
-                response_body = log.response_body.data;
-              }
-            }
-          } catch (e) {
-            console.warn("Cannot fetch log for notification", n.id, e);
-          }
-
-          // --- Lấy thông tin user ---
-          try {
-            if (n.user_id) {
-              const userRes = await fetch(`${API_ROOT}/auth/me`, {
-                credentials: "include",
-              });
-              if (userRes.ok) {
-                const user = await userRes.json();
-                user_name = user.username || `User #${n.user_id}`;
-              }
-            }
-          } catch (e) {
-            console.warn("Cannot fetch user info", n.user_id, e);
-          }
-
-          // --- Lấy thông tin endpoint ---
-          try {
-            if (n.endpoint_id) {
-              if (!endpointCache[n.endpoint_id]) {
-                const epRes = await fetch(`${API_ROOT}/endpoints/${n.endpoint_id}`, {
-                  credentials: "include",
-                });
-                if (epRes.ok) {
-                  const ep = await epRes.json();
-                  endpointCache[n.endpoint_id] = ep;
-                }
-              }
-              const ep = endpointCache[n.endpoint_id];
-              endpoint_method = ep?.method;
-              endpoint_path = ep?.path;
-            }
-          } catch (e) {
-            console.warn("Cannot fetch endpoint info", n.endpoint_id, e);
-          }
-
-          return {
-            ...n,
-            status,
-            request_body,
-            response_body,
-            user_name,
-            endpoint_method,
-            endpoint_path,
-          };
-        })
-      );
-
-      setNotifications(detailed);
-    } catch (e) {
-      console.error("Fetch notifications error:", e);
-      toast.error("Failed to fetch notifications");
-    }
-  };
-
-
-  // =============================
-  // Đánh dấu đã đọc 1 notification
-  // =============================
-  const markAsRead = async (id) => {
-    try {
-      const res = await fetch(`${API_ROOT}/notifications/${id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({is_read: true}),
-      });
-      if (!res.ok) throw new Error("Failed to mark as read");
-      await fetchNotifications();
-    } catch (e) {
-      console.error("Mark as read error:", e);
-      toast.error("Failed to mark notification as read");
-    }
-  };
-
-  // =============================
-  // Đánh dấu tất cả đã đọc
-  // =============================
-  const markAllRead = async () => {
-    try {
-      const res = await fetch(`${API_ROOT}/notifications/mark-all-read`, {
-        method: "PUT",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to mark all read");
-      await fetchNotifications();
-      toast.success("All notifications marked as read");
-    } catch (e) {
-      console.error("Mark all read error:", e);
-    }
-  };
-
-  // =============================
-  // Xóa tất cả thông báo đã đọc
-  // =============================
-  const deleteReadNotifications = async () => {
-    try {
-      const res = await fetch(`${API_ROOT}/notifications/read`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to delete read notifications");
-      await fetchNotifications();
-      toast.success("Deleted read notifications");
-    } catch (e) {
-      console.error("Delete read notifications error:", e);
-    }
-  };
+  // // =============================
+  // // FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
+  // // =============================
+  // const fetchNotifications = async () => {
+  //   try {
+  //     console.log("Fetching notifications...");
+  //     const res = await fetch(`${API_ROOT}/notifications`, {
+  //       credentials: "include",
+  //     });
+  //     if (!res.ok) throw new Error("Failed to fetch notifications");
+  //     const data = await res.json();
+  //
+  //     // Lấy thêm dữ liệu chi tiết từ project_request_logs, users, và endpoints
+  //     const endpointCache = {};
+  //     const detailed = await Promise.all(
+  //       data.map(async (n) => {
+  //         let status = null;
+  //         let request_body = null;
+  //         let response_body = null;
+  //         let user_name = null;
+  //         let endpoint_method = null;
+  //         let endpoint_path = null;
+  //
+  //         // --- Lấy log chi tiết ---
+  //         try {
+  //           if (n.project_request_log_id) {
+  //             const logRes = await fetch(`${API_ROOT}/project_request_logs/${n.project_request_log_id}`, {
+  //               credentials: "include",
+  //             });
+  //             if (logRes.ok) {
+  //               const log = await logRes.json();
+  //               status = log.response_status_code;
+  //               request_body = log.request_body;
+  //               response_body = log.response_body.data;
+  //             }
+  //           }
+  //         } catch (e) {
+  //           console.warn("Cannot fetch log for notification", n.id, e);
+  //         }
+  //
+  //         // --- Lấy thông tin user ---
+  //         try {
+  //           if (n.user_id) {
+  //             const userRes = await fetch(`${API_ROOT}/auth/me`, {
+  //               credentials: "include",
+  //             });
+  //             if (userRes.ok) {
+  //               const user = await userRes.json();
+  //               user_name = user.username || `User #${n.user_id}`;
+  //             }
+  //           }
+  //         } catch (e) {
+  //           console.warn("Cannot fetch user info", n.user_id, e);
+  //         }
+  //
+  //         // --- Lấy thông tin endpoint ---
+  //         try {
+  //           if (n.endpoint_id) {
+  //             if (!endpointCache[n.endpoint_id]) {
+  //               const epRes = await fetch(`${API_ROOT}/endpoints/${n.endpoint_id}`, {
+  //                 credentials: "include",
+  //               });
+  //               if (epRes.ok) {
+  //                 const ep = await epRes.json();
+  //                 endpointCache[n.endpoint_id] = ep;
+  //               }
+  //             }
+  //             const ep = endpointCache[n.endpoint_id];
+  //             endpoint_method = ep?.method;
+  //             endpoint_path = ep?.path;
+  //           }
+  //         } catch (e) {
+  //           console.warn("Cannot fetch endpoint info", n.endpoint_id, e);
+  //         }
+  //
+  //         return {
+  //           ...n,
+  //           status,
+  //           request_body,
+  //           response_body,
+  //           user_name,
+  //           endpoint_method,
+  //           endpoint_path,
+  //         };
+  //       })
+  //     );
+  //
+  //     setNotifications(detailed);
+  //   } catch (e) {
+  //     console.error("Fetch notifications error:", e);
+  //     toast.error("Failed to fetch notifications");
+  //   }
+  // };
+  //
+  //
+  // // =============================
+  // // Đánh dấu đã đọc 1 notification
+  // // =============================
+  // const markAsRead = async (id) => {
+  //   try {
+  //     const res = await fetch(`${API_ROOT}/notifications/${id}`, {
+  //       method: "PUT",
+  //       credentials: "include",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({is_read: true}),
+  //     });
+  //     if (!res.ok) throw new Error("Failed to mark as read");
+  //     await fetchNotifications();
+  //   } catch (e) {
+  //     console.error("Mark as read error:", e);
+  //     toast.error("Failed to mark notification as read");
+  //   }
+  // };
+  //
+  // // =============================
+  // // Đánh dấu tất cả đã đọc
+  // // =============================
+  // const markAllRead = async () => {
+  //   try {
+  //     const res = await fetch(`${API_ROOT}/notifications/mark-all-read`, {
+  //       method: "PUT",
+  //       credentials: "include",
+  //     });
+  //     if (!res.ok) throw new Error("Failed to mark all read");
+  //     await fetchNotifications();
+  //     toast.success("All notifications marked as read");
+  //   } catch (e) {
+  //     console.error("Mark all read error:", e);
+  //   }
+  // };
+  //
+  // // =============================
+  // // Xóa tất cả thông báo đã đọc
+  // // =============================
+  // const deleteReadNotifications = async () => {
+  //   try {
+  //     const res = await fetch(`${API_ROOT}/notifications/read`, {
+  //       method: "DELETE",
+  //       credentials: "include",
+  //     });
+  //     if (!res.ok) throw new Error("Failed to delete read notifications");
+  //     await fetchNotifications();
+  //     toast.success("Deleted read notifications");
+  //   } catch (e) {
+  //     console.error("Delete read notifications error:", e);
+  //   }
+  // };
+  //
+  //
+  // useEffect(() => {
+  //   if (authChecked && username) {
+  //     fetchNotifications();
+  //   }
+  // }, [authChecked, username]);
 
   const handleLogout = async () => {
     try {
@@ -261,12 +268,6 @@ export default function Topbar({
       toast.error("Logout failed. Please try again.");
     }
   };
-
-  useEffect(() => {
-    if (authChecked && username) {
-      fetchNotifications();
-    }
-  }, [authChecked, username]);
 
   return (
     <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
@@ -436,12 +437,12 @@ export default function Topbar({
       {/* User + Notification + Logout */}
       <div className="flex items-center gap-2">
         {/* Notification */}
-        <Notifications
-          notifications={notifications}
-          onMarkRead={markAsRead}
-          onMarkAllRead={markAllRead}
-          onDeleteRead={deleteReadNotifications}
-        />
+        {/*<Notifications*/}
+        {/*  notifications={notifications}*/}
+        {/*  onMarkRead={markAsRead}*/}
+        {/*  onMarkAllRead={markAllRead}*/}
+        {/*  onDeleteRead={deleteReadNotifications}*/}
+        {/*/>*/}
 
         {/* Avatar + Name */}
         <div className="flex items-center gap-2 pl-4 border-l-2 border-slate-500">
