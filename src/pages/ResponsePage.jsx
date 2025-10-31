@@ -2687,6 +2687,8 @@ const DashboardPage = () => {
                     <div className="flex items-center justify-center w-full">
                       <Card className="p-4 shadow-none rounded-none border-none w-[85%]">
                         <div className="flex justify-between items-center">
+                          <div></div>
+                          {/* Tất cả nút nằm bên phải */}
                           <div className="flex items-center gap-2">
                             <div className="relative">
                               <Button
@@ -2708,9 +2710,10 @@ const DashboardPage = () => {
                                 Save button
                               </Tooltip>
                             </div>
+
                             {/* Nút Default - ẩn khi stateful */}
                             {!isStateful && (
-                              <div className="relative ml-2">
+                              <div className="relative">
                                 <Button
                                   variant="outline"
                                   size="icon"
@@ -2743,97 +2746,97 @@ const DashboardPage = () => {
                                 </Tooltip>
                               </div>
                             )}
-                          </div>
 
-                          {/* Nút Popover - di chuyển từ trong editor ra đây */}
-                          <div className="relative">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={() => {
-                                const canEdit =
-                                  !isStateful ||
-                                  statusCode !== "200" ||
-                                  method !== "GET";
-                                if (canEdit) {
-                                  setIsPopoverOpen(!isPopoverOpen);
+                            {/* Nút Popover - di chuyển từ trong editor ra đây */}
+                            <div className="relative">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                onClick={() => {
+                                  const canEdit =
+                                    !isStateful ||
+                                    statusCode !== "200" ||
+                                    method !== "GET";
+                                  if (canEdit) {
+                                    setIsPopoverOpen(!isPopoverOpen);
+                                  }
+                                }}
+                                disabled={
+                                  isStateful &&
+                                  statusCode === "200" &&
+                                  method === "GET"
                                 }
-                              }}
-                              disabled={
-                                isStateful &&
-                                statusCode === "200" &&
-                                method === "GET"
-                              }
-                              title="Variable Picker"
-                            >
-                              <FileCode className="h-5 w-5 text-[#898883]" />
-                            </Button>
-
-                            {/* Popover */}
-                            {isPopoverOpen && (
-                              <div
-                                ref={popoverRef}
-                                className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                title="Variable Picker"
                               >
-                                <div className="flex flex-col items-center gap-2 p-3.5">
-                                  <div className="w-full flex justify-between items-center">
-                                    <div className="font-semibold text-sm text-gray-800">
-                                      Variable Picker
+                                <FileCode className="h-5 w-5 text-[#898883]" />
+                              </Button>
+
+                              {/* Popover */}
+                              {isPopoverOpen && (
+                                <div
+                                  ref={popoverRef}
+                                  className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                >
+                                  <div className="flex flex-col items-center gap-2 p-3.5">
+                                    <div className="w-full flex justify-between items-center">
+                                      <div className="font-semibold text-sm text-gray-800">
+                                        Variable Picker
+                                      </div>
+                                      <X
+                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setIsPopoverOpen(false);
+                                        }}
+                                      />
                                     </div>
-                                    <X
-                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+
+                                    <div className="w-full flex justify-between">
+                                      {["url", "query", "state"].map(
+                                        (section) => (
+                                          <div
+                                            key={section}
+                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === section
+                                                ? "bg-[#EDEDEC] text-[#374151]"
+                                                : "text-[#374151] hover:bg-gray-100"
+                                            }`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedSection(section);
+                                            }}
+                                          >
+                                            {section === "url"
+                                              ? "URL Parameters"
+                                              : section === "query"
+                                              ? "Query Parameters"
+                                              : "Project State"}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+
+                                    <div
+                                      className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setIsPopoverOpen(false);
+                                        const templateText =
+                                          getTemplateText().template;
+                                        insertTemplate(templateText);
                                       }}
-                                    />
-                                  </div>
-
-                                  <div className="w-full flex justify-between">
-                                    {["url", "query", "state"].map(
-                                      (section) => (
-                                        <div
-                                          key={section}
-                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                            selectedSection === section
-                                              ? "bg-[#EDEDEC] text-[#374151]"
-                                              : "text-[#374151] hover:bg-gray-100"
-                                          }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedSection(section);
-                                          }}
-                                        >
-                                          {section === "url"
-                                            ? "URL Parameters"
-                                            : section === "query"
-                                            ? "Query Parameters"
-                                            : "Project State"}
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-
-                                  <div
-                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const templateText =
-                                        getTemplateText().template;
-                                      insertTemplate(templateText);
-                                    }}
-                                  >
-                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                      {getTemplateText().template}
-                                    </div>
-                                    <div className="text-[12px] text-gray-500">
-                                      {getTemplateText().description}
+                                    >
+                                      <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                        {getTemplateText().template}
+                                      </div>
+                                      <div className="text-[12px] text-gray-500">
+                                        {getTemplateText().description}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -3122,12 +3125,12 @@ const DashboardPage = () => {
                     <div className="flex justify-center items-center w-full ">
                       {selectedResponse ? (
                         <div className="flex flex-col items-center w-[85%] ">
-                        <Frame
-                          responseName={selectedResponse?.name}
-                          selectedResponse={selectedResponse}
-                          onUpdateRules={setResponseCondition}
-                          onSave={handleSaveResponse}
-                        />
+                          <Frame
+                            responseName={selectedResponse?.name}
+                            selectedResponse={selectedResponse}
+                            onUpdateRules={setResponseCondition}
+                            onSave={handleSaveResponse}
+                          />
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-[400px]">
@@ -3184,7 +3187,9 @@ const DashboardPage = () => {
                                 />
                               </div>
                               <div className="flex flex-col gap-[8px] w-full">
-                                <span className="text-md text-[#374151]">Method</span>
+                                <span className="text-md text-[#374151]">
+                                  Method
+                                </span>
                                 <Select
                                   value={proxyMethod}
                                   onValueChange={setProxyMethod}
@@ -3383,15 +3388,27 @@ const DashboardPage = () => {
                                       try {
                                         const formatted =
                                           endpointData?.data_current &&
-                                          Object.keys(endpointData.data_current).length > 0
-                                            ? JSON.stringify(endpointData.data_current, null, 2)
+                                          Object.keys(endpointData.data_current)
+                                            .length > 0
+                                            ? JSON.stringify(
+                                                endpointData.data_current,
+                                                null,
+                                                2
+                                              )
                                             : "[]";
 
                                         // Prism highlight có format giữ nguyên
-                                        const highlighted = highlight(formatted, languages.json, "json");
+                                        const highlighted = highlight(
+                                          formatted,
+                                          languages.json,
+                                          "json"
+                                        );
                                         return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
                                       } catch (err) {
-                                        console.error("JSON format error:", err);
+                                        console.error(
+                                          "JSON format error:",
+                                          err
+                                        );
                                         return "<pre style='color:red'>Invalid JSON</pre>";
                                       }
                                     })(),
