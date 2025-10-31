@@ -225,4 +225,39 @@ button:hover,
     font-feature-settings: normal !important;
 }
 
+/* === Custom JSON Viewer: Initial Value === */
+/* Key */
+.custom-initial-value .token.property {
+    color: #0051D9 !important; /* xanh dương đậm */
+}
+
+/* String & Value */
+.custom-initial-value .token.string {
+    color: #4093ff !important; /* xanh nhạt */
+}
+
+/* Number, Boolean, Null */
+.custom-initial-value .token.number,
+.custom-initial-value .token.boolean,
+.custom-initial-value .token.null {
+    color: #4093ff !important;
+}
+
+.custom-initial-value .token.punctuation,
+.custom-initial-value .token.operator,
+.custom-initial-value span[style*=":"],
+.custom-initial-value .token.punctuation:has(+ .token.string),
+.custom-initial-value .token.string + .token.punctuation {
+    color: #000000 !important;
+    font-feature-settings: normal !important;
+    font-variant-ligatures: none !important;
+    content: none !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    text-shadow: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+}
+
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { API_ROOT } from "@/utils/constants";
+import React, {useState, useEffect, useRef} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Card} from "@/components/ui/card";
+import {API_ROOT} from "@/utils/constants";
 import {
   Plus,
   Trash2,
@@ -13,7 +13,7 @@ import {
   X,
   SaveIcon,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import {
   Select,
   SelectContent,
@@ -22,27 +22,109 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs/components/prism-core";
+import {highlight, languages} from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
-import { statusCodes } from "@/components/endpoint/constants.js";
+import {statusCodes} from "@/components/endpoint/constants.js";
 
 export const ApiCallEditor = ({
-  endpointId,
-  nextCalls,
-  setNextCalls,
-  setIsNewApiCallDialogOpen,
-  onSave,
-  currentEndpoint, // Thêm prop này
-  getFullPath,
-}) => {
+                                endpointId,
+                                nextCalls,
+                                setNextCalls,
+                                setIsNewApiCallDialogOpen,
+                                onSave,
+                                currentEndpoint,
+                                getFullPath,
+                              }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
 
   // Thêm state để lưu danh sách endpoints cho dropdown
   const [availableEndpoints, setAvailableEndpoints] = useState([]);
+
+  // Thêm state cho popover
+  const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
+    useState(false);
+  const [selectedSection, setSelectedSection] = useState("url");
+  const requestBodyPopoverRef = useRef(null);
+
+  // Thêm state để control tooltip visibility trong ApiCallEditor
+  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
+  const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+  const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
+
+  // Component Tooltip (thêm vào đầu file)
+  const Tooltip = ({visible, children, className = ""}) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div
+          className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
+
+  // Cập nhật useEffect để handle click outside popover
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        requestBodyPopoverRef.current &&
+        !requestBodyPopoverRef.current.contains(event.target)
+      ) {
+        setIsRequestBodyPopoverOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Hàm lấy text mẫu dựa trên section được chọn
+  const getTemplateText = () => {
+    switch (selectedSection) {
+      case "url":
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+      case "query":
+        return {
+          template: "{{query.<param>}}",
+          description: "Get values from query string parameters",
+        };
+      case "state":
+        return {
+          template: "{{state.<param>}}",
+          description: "Get values from project state",
+        };
+      default:
+        return {
+          template: "{{params.<param>}}",
+          description: "Get values from URL path parameters",
+        };
+    }
+  };
+
+  // Thêm hàm chèn template cho Request Body (copy to clipboard)
+  const insertRequestBodyTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsRequestBodyPopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
+  };
 
   // Fetch danh sách endpoints từ API mới
   useEffect(() => {
@@ -147,13 +229,13 @@ export const ApiCallEditor = ({
 
     // Xóa JSON string tương ứng
     setJsonStrings((prev) => {
-      const newStrings = { ...prev };
+      const newStrings = {...prev};
       delete newStrings[index];
       return newStrings;
     });
 
     setJsonErrors((prev) => {
-      const newErrors = { ...prev };
+      const newErrors = {...prev};
       delete newErrors[index];
       return newErrors;
     });
@@ -307,7 +389,7 @@ export const ApiCallEditor = ({
     fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
       credentials: "include",
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
     })
       .then((res) => {
@@ -335,25 +417,146 @@ export const ApiCallEditor = ({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-            onClick={handleSave}
-          >
-            <SaveIcon className="h-5 w-5 text-[#898883]" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setIsNewApiCallDialogOpen(true)}
-            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-          >
-            <Plus className="h-7 w-7" />
-          </Button>
+          {/* Thêm nút popover bên cạnh nút save */}
+          <div className="relative" ref={requestBodyPopoverRef}>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                onClick={() =>
+                  setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
+                }
+                onMouseEnter={() => setTemplateTooltipVisible(true)}
+                onMouseLeave={() => setTemplateTooltipVisible(false)}
+              >
+                <FileCode className="h-5 w-5 text-[#898883]"/>
+              </Button>
+              <Tooltip
+                visible={templateTooltipVisible}
+                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+              >
+                Variable Picker
+              </Tooltip>
+            </div>
+
+            {/* Popover */}
+            {isRequestBodyPopoverOpen && (
+              <div
+                className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                <div className="flex flex-col items-center gap-2 p-3.5">
+                  <div className="w-full flex justify-between items-center">
+                    <div className="font-semibold text-sm text-gray-800">
+                      Variable Picker
+                    </div>
+                    <X
+                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsRequestBodyPopoverOpen(false);
+                      }}
+                    />
+                  </div>
+
+                  <div className="w-full flex justify-between">
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "url"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("url");
+                      }}
+                    >
+                      URL Parameters
+                    </div>
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "query"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("query");
+                      }}
+                    >
+                      Query Parameters
+                    </div>
+                    <div
+                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                        selectedSection === "state"
+                          ? "bg-[#EDEDEC] text-[#374151]"
+                          : "text-[#374151] hover:bg-gray-100"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection("state");
+                      }}
+                    >
+                      Project State
+                    </div>
+                  </div>
+
+                  <div
+                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const templateText = getTemplateText().template;
+                      insertRequestBodyTemplate(templateText);
+                    }}
+                  >
+                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                      {getTemplateText().template}
+                    </div>
+                    <div className="text-[12px] text-gray-500">
+                      {getTemplateText().description}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              onClick={handleSave}
+              onMouseEnter={() => setSaveTooltipVisible(true)}
+              onMouseLeave={() => setSaveTooltipVisible(false)}
+            >
+              <SaveIcon className="h-5 w-5 text-[#898883]"/>
+            </Button>
+            <Tooltip
+              visible={saveTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Save API Calls
+            </Tooltip>
+          </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              onClick={() => setIsNewApiCallDialogOpen(true)}
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+              onMouseEnter={() => setAddTooltipVisible(true)}
+              onMouseLeave={() => setAddTooltipVisible(false)}
+            >
+              <Plus className="h-7 w-7"/>
+            </Button>
+            <Tooltip
+              visible={addTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Add New API Call
+            </Tooltip>
+          </div>
         </div>
       </div>
-
-      <div className="border-b border-[#EDEFF1] mb-6"></div>
 
       {nextCalls.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
@@ -363,16 +566,17 @@ export const ApiCallEditor = ({
         nextCalls.map((call, index) => (
           <div
             key={call.id || index}
-            className="mb-6 p-4 border border-[#CBD5E1] rounded-lg relative"
+            className="mb-6 p-4 relative"
           >
             {/* Thêm title "Next API Call" và số thứ tự */}
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
-                <span className="font-bold text-[#37352F] mr-2">
-                  Next API Call
+                <span
+                  className="mr-2 flex items-center justify-center text-lg font-medium">
+                  #{index + 1}
                 </span>
-                <span className="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                  {index + 1}
+                <span className="font-bold text-[#37352F]">
+                  Next API Call
                 </span>
               </div>
               {nextCalls.length > 1 && (
@@ -382,18 +586,16 @@ export const ApiCallEditor = ({
                   className="text-red-500 hover:text-red-700"
                   onClick={() => handleRemoveNextCall(index)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4"/>
                 </Button>
               )}
             </div>
 
-            <div className="border-b border-[#EDEFF1] mb-4"></div>
-
-            <div className="space-y-4">
+            <div className="space-y-4 pb-8 border-b border-[#CBD5E1]">
               {/* Target Endpoint - Sửa lại để sử dụng target_endpoint làm giá trị */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Target Endpoint
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -458,7 +660,7 @@ export const ApiCallEditor = ({
               {/* Method */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Method
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -475,7 +677,7 @@ export const ApiCallEditor = ({
                             : ""
                         }`}
                       >
-                        <SelectValue placeholder="Select method" />
+                        <SelectValue placeholder="Select method"/>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="GET">GET</SelectItem>
@@ -491,74 +693,75 @@ export const ApiCallEditor = ({
               {/* Request Body */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-start">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Request Body
                   </label>
-                  <div className="flex-1 max-w-[801px] relative">
-                    <div className="relative">
-                      <Editor
-                        value={
-                          jsonStrings[index] ||
-                          '{\n  "orderId": "{{response.body.orderId}}"\n}'
-                        }
-                        onValueChange={(code) => handleJsonChange(index, code)}
-                        highlight={(code) => highlight(code, languages.json)}
-                        padding={10}
-                        className="custom-json-editor"
-                        style={{
-                          fontFamily: '"Fira code", "Fira Mono", monospace',
-                          fontSize: 12,
-                          minHeight: "124px",
-                          maxHeight: "200px",
-                          overflow: "auto",
-                          border: jsonErrors[index]
-                            ? "1px solid #ef4444"
-                            : "1px solid #CBD5E1",
-                          borderRadius: "0.375rem",
-                          backgroundColor: "#101728",
-                          color: "white",
+                </div>
+                <div className="flex-1 w-full relative">
+                  <div className="relative">
+                    <Editor
+                      value={
+                        jsonStrings[index] ||
+                        '{\n  "orderId": "{{response.body.orderId}}"\n}'
+                      }
+                      onValueChange={(code) => handleJsonChange(index, code)}
+                      highlight={(code) => highlight(code, languages.json)}
+                      padding={10}
+                      className="custom-json-editor"
+                      style={{
+                        fontFamily: '"Fira code", "Fira Mono", monospace',
+                        fontSize: 12,
+                        minHeight: "124px",
+                        maxHeight: "200px",
+                        overflow: "auto",
+                        border: jsonErrors[index]
+                          ? "1px solid #ef4444"
+                          : "1px solid #CBD5E1",
+                        borderRadius: "0.375rem",
+                        backgroundColor: "#101728",
+                        color: "white",
+                      }}
+                      textareaClassName="focus:outline-none"
+                    />
+
+                    {/* JSON Editor controls */}
+                    <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            const formatted = JSON.stringify(
+                              JSON.parse(jsonStrings[index]),
+                              null,
+                              2
+                            );
+                            handleJsonChange(index, formatted);
+                          } catch {
+                            toast.error("Invalid JSON format");
+                          }
                         }}
-                        textareaClassName="focus:outline-none"
-                      />
-
-                      {/* JSON Editor controls */}
-                      <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            try {
-                              const formatted = JSON.stringify(
-                                JSON.parse(jsonStrings[index]),
-                                null,
-                                2
-                              );
-                              handleJsonChange(index, formatted);
-                            } catch {
-                              toast.error("Invalid JSON format");
-                            }
-                          }}
-                        >
-                          <Code className="mr-1 h-4 w-4" /> Format
-                        </Button>
-                      </div>
+                      >
+                        <Code className="mr-1 h-4 w-4"/> Format
+                      </Button>
                     </div>
-
-                    {/* Hiển thị lỗi JSON */}
-                    {jsonErrors[index] && (
-                      <div className="text-red-400 text-xs mt-1 pl-2">
-                        Invalid JSON: {jsonErrors[index]}
-                      </div>
-                    )}
                   </div>
+
+                  {/* Hiển thị lỗi JSON */}
+                  {jsonErrors[index] && (
+                    <div className="text-red-400 text-xs mt-1 pl-2">
+                      Invalid JSON: {jsonErrors[index]}
+                    </div>
+                  )}
                 </div>
               </div>
+
               {/* Status condition */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Status condition
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -569,7 +772,7 @@ export const ApiCallEditor = ({
                       }
                     >
                       <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                        <SelectValue placeholder="Select condition" />
+                        <SelectValue placeholder="Select condition"/>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {statusCodes.map((status) => (
@@ -591,15 +794,34 @@ export const ApiCallEditor = ({
 };
 
 export const Frame = ({
-  responseName,
-  selectedResponse,
-  onUpdateRules,
-  onSave,
-}) => {
+                        responseName,
+                        selectedResponse,
+                        onUpdateRules,
+                        onSave,
+                      }) => {
   const [parameterRows, setParameterRows] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [selectedRuleId, setSelectedRuleId] = useState(null);
+  // Thêm state để control tooltip visibility trong Frame
+  const [frameSaveTooltipVisible, setFrameSaveTooltipVisible] = useState(false);
+  const [frameAddTooltipVisible, setFrameAddTooltipVisible] = useState(false);
+
+  // Component Tooltip (thêm vào đầu file)
+  const Tooltip = ({visible, children, className = ""}) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div
+          className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
 
   const validateRule = (row) => {
     const newErrors = {};
@@ -740,13 +962,13 @@ export const Frame = ({
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              type: newType,
-              name:
-                row.name === "" || row.name === getPlaceholderText(row.type)
-                  ? ""
-                  : row.name,
-            }
+            ...row,
+            type: newType,
+            name:
+              row.name === "" || row.name === getPlaceholderText(row.type)
+                ? ""
+                : row.name,
+          }
           : row
       )
     );
@@ -794,7 +1016,7 @@ export const Frame = ({
       const filteredRows = prevRows.filter((row) => row.id !== idToDelete);
 
       setErrors((prev) => {
-        const newErrors = { ...prev };
+        const newErrors = {...prev};
         delete newErrors[idToDelete];
         return newErrors;
       });
@@ -813,14 +1035,14 @@ export const Frame = ({
 
   const handleNameChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, name: value } : r))
+      prev.map((r) => (r.id === id ? {...r, name: value} : r))
     );
 
     // Validate rule sau khi thay đổi tên
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, name: value });
+        const rowErrors = validateRule({...row, name: value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -831,14 +1053,14 @@ export const Frame = ({
 
   const handleValueChange = (id, value) => {
     setParameterRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, value } : r))
+      prev.map((r) => (r.id === id ? {...r, value} : r))
     );
 
     // Validate rule after value change
     setTimeout(() => {
       const row = parameterRows.find((r) => r.id === id);
       if (row) {
-        const rowErrors = validateRule({ ...row, value });
+        const rowErrors = validateRule({...row, value});
         setErrors((prev) => ({
           ...prev,
           [id]: rowErrors,
@@ -904,37 +1126,56 @@ export const Frame = ({
   };
 
   return (
-    <div>
-            <Card className="p-6 border-0 rounded-lg"> 
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-[#37352F]">
-            {responseName || "No Response Selected"}
-          </h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleAddRule}
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-            >
-              <Plus className="h-7 w-7" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-              onClick={handleSave}
-            >
-              <SaveIcon className="h-5 w-5 text-[#898883]" />
-            </Button>
-          </div>
+    <div className="relative w-full">
+      {/* Hai nút Add & Save ở góc trên bên phải của toàn vùng Frame */}
+      <div className="justify-end pt-2 flex items-center gap-2">
+        <div className="relative">
+          <Button
+            variant="outline"
+            onClick={handleAddRule}
+            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+            onMouseEnter={() => setFrameAddTooltipVisible(true)}
+            onMouseLeave={() => setFrameAddTooltipVisible(false)}
+          >
+            <Plus className="h-7 w-7"/>
+          </Button>
+          <Tooltip
+            visible={frameAddTooltipVisible}
+            className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          >
+            Add New Rule
+          </Tooltip>
         </div>
 
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+            onClick={handleSave}
+            onMouseEnter={() => setFrameSaveTooltipVisible(true)}
+            onMouseLeave={() => setFrameSaveTooltipVisible(false)}
+          >
+            <SaveIcon className="h-5 w-5 text-[#898883]"/>
+          </Button>
+          <Tooltip
+            visible={frameSaveTooltipVisible}
+            className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          >
+            Save Rules
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Phần nội dung chính */}
+      <Card className="p-6 border-0 rounded-lg shadow-none overflow-visible">
         {/* Header frame for parameters */}
-        <div className="relative w-[650.17px] h-[37.53px] mb-2">
+        <div className="relative w-full h-[37.53px] mb-2">
           <div className="absolute w-full h-full bg-[#F2F2F2] rounded-[5.49px]"></div>
 
           {/* Parameter Type và Parameter Name */}
-          <div className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
+          <div
+            className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
             <div className="w-[153.78px] pl-2 font-inter font-bold text-[14px] text-black">
               Parameter Type
             </div>
@@ -949,13 +1190,15 @@ export const Frame = ({
             </div>
           </div>
           {/* Expected Value */}
-          <div className="absolute w-[150.47px] h-[27.46px] right-[80.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
+          <div
+            className="absolute w-[150.47px] h-[27.46px] right-[80.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
             <div className="font-inter font-bold text-[14px] text-black">
               Expected Value
             </div>
           </div>
           <div className="absolute w-[42.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
-            <div className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
+            <div
+              className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
               ?
             </div>
           </div>
@@ -979,7 +1222,7 @@ export const Frame = ({
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Route Parameter">
@@ -1004,7 +1247,8 @@ export const Frame = ({
                   }`}
                   placeholder={getPlaceholderText(row.type)}
                 />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
+                <div
+                  className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
                   <span
                     className="text-[32px] text-black"
                     style={{
@@ -1030,7 +1274,7 @@ export const Frame = ({
                 />
 
                 {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
+                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch"/>
 
                 <Button
                   variant="ghost"
@@ -1040,7 +1284,7 @@ export const Frame = ({
                     handleDeleteRule(row.id);
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4"/>
                 </Button>
               </div>
 

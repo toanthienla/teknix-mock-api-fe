@@ -36,6 +36,23 @@ export const SchemaBodyEditor = ({
   // Thêm state để trigger refresh
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  // Thêm state để control tooltip visibility trong ApiCallEditor
+  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
+
+  // Component Tooltip (thêm vào đầu file)
+  const Tooltip = ({ visible, children, className = "" }) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
 
   // Tạo danh sách fields đã được filter theo search term
   const getFilteredFields = () => {
@@ -338,31 +355,31 @@ export const SchemaBodyEditor = ({
   return (
     <div>
       <Card className="p-6 border-0 rounded-lg">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-[#37352F]">
-            Schema Definition
-          </h1>
-          <div className="flex justify-end mt-4">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-              onClick={handleSave}
-            >
-              <SaveIcon className="h-10 w-10 text-[#898883]" />
-            </Button>
+        <div className="flex justify-end items-center mb-1">
+          <div className="flex justify-end">
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                onClick={handleSave}
+                onMouseEnter={() => setSaveTooltipVisible(true)}
+                onMouseLeave={() => setSaveTooltipVisible(false)}
+              >
+                <SaveIcon className="h-5 w-5 text-[#898883]" />
+              </Button>
+              <Tooltip
+                visible={saveTooltipVisible}
+                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+              >
+                Save API Calls
+              </Tooltip>
+            </div>
           </div>
         </div>
 
-        {/* Tiêu đề Fields Input */}
-        <div className="mb-2">
-          <span className="font-inter font-bold text-[17px] leading-[16px] text-black">
-            Fields Input
-          </span>
-        </div>
-
         {/* Bảng hiển thị các field */}
-        <div className="border border-[#CBD5E1] rounded-md p-2 mt-2 max-h-60 overflow-y-auto">
+        <div className="p-2 mt-2">
           {/* Header bảng */}
           <div
             className={`grid ${
@@ -436,7 +453,7 @@ export const SchemaBodyEditor = ({
                 </div>
 
                 {/* Type */}
-                <div>{fieldType}</div>
+                <div className="px-2 py-1 rounded-sm bg-[#EDEDEC] w-fit">{fieldType}</div>
 
                 {/* Required (chỉ hiển thị nếu không phải GET) */}
                 {method !== "GET" && (

@@ -27,6 +27,7 @@ import {
   X,
   SaveIcon,
   Hash,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -119,6 +120,10 @@ const DashboardPage = () => {
   const [statusData, setStatusData] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const [selectedResponse, setSelectedResponse] = useState(null);
+  const [isResponseDropdownOpen, setIsResponseDropdownOpen] = useState(false);
+  const [isTabBarDropdownOpen, setIsTabBarDropdownOpen] = useState(false);
+  const responseDropdownRef = useRef(null);
+  const tabBarDropdownRef = useRef(null);
   const [endpointResponses, setEndpointResponses] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -141,7 +146,6 @@ const DashboardPage = () => {
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [isEndpointsLoaded, setIsEndpointsLoaded] = useState(false);
   const [delayError, setDelayError] = useState("");
-  const [requestBody, setRequestBody] = useState("");
 
   const [currentUsername, setCurrentUsername] = useState("Unknown");
 
@@ -149,7 +153,6 @@ const DashboardPage = () => {
   const initialValueEditorRef = useRef(null);
   const currentResponseBody = useRef(responseBody);
   const currentTempDataDefaultString = useRef(tempDataDefaultString);
-  const requestBodyEditorRef = useRef(null);
   const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
     useState(false);
 
@@ -167,11 +170,55 @@ const DashboardPage = () => {
     setIsNewApiCallRequestBodyPopoverOpen,
   ] = useState(false);
 
+  // Thêm state để control tooltip visibility
+  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
+  const [starTooltipVisible, setStarTooltipVisible] = useState(false);
+  const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+
+  // Component Tooltip
+  const Tooltip = ({ visible, children, className = "" }) => {
+    if (!visible) return null;
+
+    return (
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs text-white bg-black rounded shadow-lg whitespace-nowrap ${className}`}
+      >
+        {children}
+        {/* Mũi tên tooltip */}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+      </div>
+    );
+  };
+
   // Thêm ref cho editor
   const newApiCallRequestBodyEditorRef = useRef(null);
   const newApiCallRequestBodyPopoverRef = useRef(null);
 
   const [nextCalls, setNextCalls] = useState([]);
+
+  // Cập nhật useEffect để handle click outside cho cả 2 dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        responseDropdownRef.current &&
+        !responseDropdownRef.current.contains(event.target)
+      ) {
+        setIsResponseDropdownOpen(false);
+      }
+      if (
+        tabBarDropdownRef.current &&
+        !tabBarDropdownRef.current.contains(event.target)
+      ) {
+        setIsTabBarDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Sửa lại useEffect để cập nhật nextCalls khi endpointId thay đổi
   useEffect(() => {
     if (!currentEndpointId || !isStateful) {
@@ -386,14 +433,15 @@ const DashboardPage = () => {
   };
 
   // Thêm hàm xử lý chèn template cho New API Call Request Body
-  const insertNewApiCallRequestBodyTemplate = (template) => {
-    insertIntoEditor(
-      newApiCallRequestBodyEditorRef,
-      newApiCallRequestBody,
-      setNewApiCallRequestBody,
-      template
-    );
-    setIsNewApiCallRequestBodyPopoverOpen(false);
+  const insertNewApiCallRequestBodyTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsNewApiCallRequestBodyPopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
   };
 
   const getFullPath = (path) => {
@@ -602,16 +650,16 @@ const DashboardPage = () => {
   };
 
   // Hàm chèn template cho Initial Value
-  const insertInitialValueTemplate = (template) => {
-    insertIntoEditor(
-      initialValueEditorRef,
-      tempDataDefaultString,
-      setTempDataDefaultString,
-      template
-    );
-    setIsInitialValuePopoverOpen(false);
+  const insertInitialValueTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsInitialValuePopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
   };
-
   // Xử lý click outside popover
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -638,61 +686,28 @@ const DashboardPage = () => {
     currentTempDataDefaultString.current = tempDataDefaultString;
   }, [tempDataDefaultString]);
 
-  // Hàm insert chung cho tất cả các editor
-  const insertIntoEditor = (editorRef, currentValue, setValue, template) => {
-    // Tìm textarea bên trong editor
-    const textarea = editorRef.current?.querySelector("textarea");
-    if (!textarea) {
-      console.error("Textarea not found in editor");
-      return;
-    }
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    // Sử dụng giá trị hiện tại từ textarea thay vì state
-    const currentValueFromDOM = textarea.value;
-
-    // Chèn template tại vị trí con trỏ
-    const newValue =
-      currentValueFromDOM.substring(0, start) +
-      template +
-      currentValueFromDOM.substring(end);
-
-    setValue(newValue);
-
-    // Di chuyển con trỏ sau template đã chèn
-    setTimeout(() => {
-      const updatedTextarea = editorRef.current?.querySelector("textarea");
-      if (updatedTextarea) {
-        updatedTextarea.focus();
-        updatedTextarea.setSelectionRange(
-          start + template.length,
-          start + template.length
-        );
-      }
-    }, 50); // Tăng thời gian timeout để đảm bảo DOM đã cập nhật
-  };
-
   // Hàm chèn template cho Request Body
-  const insertRequestBodyTemplate = (template) => {
-    insertIntoEditor(
-      requestBodyEditorRef,
-      requestBody,
-      setRequestBody,
-      template
-    );
-    setIsRequestBodyPopoverOpen(false);
+  const insertRequestBodyTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsRequestBodyPopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
   };
 
   // Hàm chèn template cho Response Body
-  const insertTemplate = (template) => {
-    insertIntoEditor(
-      responseEditorRef,
-      responseBody,
-      setResponseBody,
-      template
-    );
-    setIsPopoverOpen(false);
+  const insertTemplate = async (template) => {
+    try {
+      await navigator.clipboard.writeText(template);
+      toast.success("Template copied to clipboard!");
+      setIsPopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy template to clipboard");
+    }
   };
 
   // Thêm useEffect để cập nhật trạng thái stateful khi endpointId thay đổi
@@ -1744,12 +1759,18 @@ const DashboardPage = () => {
     setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
-    setResponseBody("");
+    setResponseBody("{}");
     setDelay("0");
     setIsDialogOpen(true);
   };
 
   const handleSaveResponse = () => {
+    // Chỉ cho phép cập nhật response đã có sẵn
+    if (!selectedResponse) {
+      toast.error("Please select a response to save");
+      return;
+    }
+
     const delayValidationError = validateDelay(delay);
     if (delayValidationError) {
       setDelayError(delayValidationError);
@@ -1777,8 +1798,6 @@ const DashboardPage = () => {
     // Reset lỗi nếu có
     setResponseNameError("");
 
-    const isFirstResponse = endpointResponses.length === 0 && !selectedResponse;
-
     // Payload khác nhau cho stateful và stateless
     let payload;
     if (isStateful) {
@@ -1795,34 +1814,30 @@ const DashboardPage = () => {
         status_code: parseInt(statusCode),
         response_body: responseBodyObj,
         condition: responseCondition,
-        is_default: selectedResponse
-          ? selectedResponse.is_default
-          : isFirstResponse,
+        is_default: selectedResponse.is_default, // Giữ nguyên is_default hiện tại
         delay_ms: parseInt(delay) || 0,
         proxy_url: proxyUrl.trim() ? proxyUrl : null,
         proxy_method: proxyUrl.trim() ? proxyMethod : null,
       };
     }
 
-    const method = selectedResponse ? "PUT" : "POST";
-    // Sửa URL API cho chế độ stateful
+    // Chỉ sử dụng PUT method để cập nhật
     const url = selectedResponse
       ? isStateful
         ? `${API_ROOT}/endpoint_responses_ful/${selectedResponse.id}`
         : `${API_ROOT}/endpoint_responses/${selectedResponse.id}`
-      : `${API_ROOT}/endpoint_responses`;
+      : null; // Không bao giờ null vì đã validate ở đầu
 
     fetch(url, {
-      method,
+      method: "PUT", // Chỉ PUT, không còn POST nữa
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then((res) => {
-        if (!res.ok)
-          throw new Error(
-            `Failed to ${selectedResponse ? "update" : "create"} response`
-          );
+        if (!res.ok) {
+          throw new Error("Failed to update response");
+        }
         return res.json();
       })
       .then((updatedResponse) => {
@@ -1848,90 +1863,149 @@ const DashboardPage = () => {
 
           // Cập nhật state với response stateful
           setEndpointResponses((prev) =>
-            selectedResponse
-              ? prev.map((r) =>
-                  r.id === statefulResponse.id ? statefulResponse : r
-                )
-              : [...prev, statefulResponse]
+            prev.map((r) =>
+              r.id === statefulResponse.id ? statefulResponse : r
+            )
           );
 
           // Cập nhật statusData
           setStatusData((prev) =>
-            selectedResponse
-              ? prev.map((s) =>
-                  s.id === statefulResponse.id
-                    ? {
-                        ...s,
-                        code: statefulResponse.status_code.toString(),
-                        name: statefulResponse.name,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: statefulResponse.id,
+            prev.map((s) =>
+              s.id === statefulResponse.id
+                ? {
+                    ...s,
                     code: statefulResponse.status_code.toString(),
                     name: statefulResponse.name,
-                  },
-                ]
+                  }
+                : s
+            )
           );
 
-          if (selectedResponse) {
-            setSelectedResponse(statefulResponse);
-          }
+          setSelectedResponse(statefulResponse);
         } else {
           // Xử lý như hiện tại cho stateless
           setEndpointResponses((prev) =>
-            selectedResponse
-              ? prev.map((r) =>
-                  r.id === updatedResponse.id ? updatedResponse : r
-                )
-              : [...prev, updatedResponse]
+            prev.map((r) => (r.id === updatedResponse.id ? updatedResponse : r))
           );
 
           setStatusData((prev) =>
-            selectedResponse
-              ? prev.map((s) =>
-                  s.id === updatedResponse.id
-                    ? {
-                        ...s,
-                        code: updatedResponse.status_code.toString(),
-                        name: updatedResponse.name,
-                        isDefault: updatedResponse.is_default,
-                      }
-                    : s
-                )
-              : [
-                  ...prev,
-                  {
-                    id: updatedResponse.id,
+            prev.map((s) =>
+              s.id === updatedResponse.id
+                ? {
+                    ...s,
                     code: updatedResponse.status_code.toString(),
                     name: updatedResponse.name,
                     isDefault: updatedResponse.is_default,
-                  },
-                ]
+                  }
+                : s
+            )
           );
 
           setProxyUrl(updatedResponse.proxy_url || "");
           setProxyMethod(updatedResponse.proxy_method || "GET");
 
-          if (selectedResponse) {
-            setSelectedResponse(updatedResponse);
-          }
+          setSelectedResponse(updatedResponse);
         }
 
-        if (selectedResponse) {
-          toast.success("Response updated successfully!");
-        } else {
-          toast.success("New response created successfully!");
-          setIsDialogOpen(false);
-          setSelectedResponse(null);
-          setResponseName("");
-          setStatusCode("200");
-          setResponseBody("");
-          setDelay("0");
-        }
+        toast.success("Response updated successfully!");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(error.message);
+      });
+  };
+
+  // Tạo hàm riêng chỉ để tạo response mới
+  const handleCreateResponse = () => {
+    const delayValidationError = validateDelay(delay);
+    if (delayValidationError) {
+      setDelayError(delayValidationError);
+      toast.error(delayValidationError);
+      return;
+    }
+
+    // Parse response body
+    let responseBodyObj = {};
+    try {
+      responseBodyObj = JSON.parse(responseBody);
+    } catch {
+      toast.error("Invalid JSON in response body");
+      return;
+    }
+
+    // Validate response name
+    const trimmedName = responseName.trim();
+    if (!trimmedName) {
+      setResponseNameError("Name cannot be empty");
+      toast.error("Response name cannot be empty");
+      return;
+    }
+
+    // Reset lỗi nếu có
+    setResponseNameError("");
+
+    // Chỉ cho stateless mode
+    if (isStateful) {
+      toast.error("Cannot create new responses in stateful mode");
+      return;
+    }
+
+    // Payload cho tạo mới response (stateless only)
+    const payload = {
+      endpoint_id: currentEndpointId,
+      name: responseName,
+      status_code: parseInt(statusCode),
+      response_body: responseBodyObj,
+      condition: {},
+      is_default: endpointResponses.length === 0, // Nếu là response đầu tiên thì là default
+      delay_ms: parseInt(delay) || 0,
+      proxy_url: null,
+      proxy_method: null,
+    };
+
+    fetch(`${API_ROOT}/endpoint_responses`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create response");
+        return res.json();
+      })
+      .then((newResponse) => {
+        // Thêm response mới vào danh sách
+        setEndpointResponses((prev) => [...prev, newResponse]);
+
+        // Cập nhật statusData
+        setStatusData((prev) => [
+          ...prev,
+          {
+            id: newResponse.id,
+            code: newResponse.status_code.toString(),
+            name: newResponse.name,
+            isDefault: newResponse.is_default,
+          },
+        ]);
+
+        // Tự động chọn response mới tạo
+        setSelectedResponse(newResponse);
+        setResponseName(newResponse.name);
+        setStatusCode(newResponse.status_code.toString());
+        setResponseBody(JSON.stringify(newResponse.response_body, null, 2));
+        setDelay(newResponse.delay_ms?.toString() || "0");
+
+        // Đóng dialog và reset form
+        setIsDialogOpen(false);
+        setSelectedResponse(null);
+        setResponseName("");
+        setStatusCode("200");
+        setResponseBody("");
+        setDelay("0");
+        setResponseNameError("");
+        setDelayError("");
+
+        toast.success("New response created successfully!");
       })
       .catch((error) => {
         console.error(error);
@@ -1948,21 +2022,26 @@ const DashboardPage = () => {
   const defaultTab = availableTabs[0] || "Rules";
   const [activeTab, setActiveTab] = useState(defaultTab);
 
-  const renderTabButton = (value, label, icon) => (
-    <button
-      onClick={() => setActiveTab(value)}
-      className={`flex rounded-tl-lg px-4 py-2 -mb-px ${
-        activeTab === value
-          ? "bg-white text-stone-900 border-l border-t border-r border-[#EDEFF1]"
-          : "bg-gray-200 text-stone-500 hover:bg-gray-100"
-      }`}
-    >
-      <div className="flex items-center">
-        <img src={icon} alt={label} className="w-4 h-4 mr-2" />
-        <span className="text-md font-semibold">{label}</span>
-      </div>
-    </button>
-  );
+  const renderTabButton = (value, label, icon) => {
+    const isActive = activeTab === value;
+    const isDataDefault = label === "Data Default";
+
+    return (
+      <button
+        onClick={() => setActiveTab(value)}
+        className={`flex px-4 py-2 -mb-px ${
+          isActive
+            ? "bg-white text-stone-900 border-l border-t border-r border-[#EDEFF1]"
+            : "bg-gray-200 text-stone-500 hover:bg-gray-100"
+        } ${isDataDefault ? "rounded-tl-md" : ""}`}
+      >
+        <div className="flex items-center">
+          <img src={icon} alt={label} className="w-4 h-4 mr-2" />
+          <span className="text-md font-semibold">{label}</span>
+        </div>
+      </button>
+    );
+  };
 
   // khi isStateful/method/availableTabs thay đổi, đảm bảo activeTab vẫn hợp lệ
   useEffect(() => {
@@ -2354,18 +2433,28 @@ const DashboardPage = () => {
                 <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
                   <div className="flex items-center gap-3.5">
                     {!isStateful && (
-                      <button
-                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
-                        onClick={handleNewResponse}
-                        disabled={isStateful}
-                        title={
-                          isStateful
-                            ? "Cannot add responses in stateful mode"
-                            : "Add new response"
-                        }
-                      >
-                        <Plus className="w-4 h-4 text-[#1C1C1C]" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                          onClick={handleNewResponse}
+                          disabled={isStateful}
+                          title={
+                            isStateful
+                              ? "Cannot add responses in stateful mode"
+                              : "Add new response"
+                          }
+                          onMouseEnter={() => setAddTooltipVisible(true)}
+                          onMouseLeave={() => setAddTooltipVisible(false)}
+                        >
+                          <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                        </button>
+                        <Tooltip
+                          visible={addTooltipVisible}
+                          className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                        >
+                          Add New Response
+                        </Tooltip>
+                      </div>
                     )}
                     <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
@@ -2531,12 +2620,9 @@ const DashboardPage = () => {
               <div className="flex flex-col w-full">
                 {/* Nội dung phần Header & Body */}
                 <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
-                  {/* Thanh tiêu đề thay cho TabsList */}
-                  <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
-                    <button
-                      // onClick={() => setActiveTab("folders")}
-                      className={`flex rounded-tl-lg px-4 py-2 -mb-px bg-white text-stone-900`}
-                    >
+                  {/* Thanh tiêu đề và dropdown nằm cùng hàng */}
+                  <div className="flex justify-between items-center bg-gray-200 rounded-t-lg">
+                    <button className="flex px-4 py-2 -mb-px bg-white text-stone-900 rounded-tl-lg">
                       <div className="flex items-center">
                         <img
                           src={Header_Body}
@@ -2548,72 +2634,237 @@ const DashboardPage = () => {
                         </span>
                       </div>
                     </button>
+
+                    {/* Dropdown chọn response - Response Detail */}
+                    <div className="relative right-5" ref={responseDropdownRef}>
+                      <button
+                        onClick={() =>
+                          setIsResponseDropdownOpen(!isResponseDropdownOpen)
+                        }
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <span className="truncate max-w-[150px]">
+                          {selectedResponse
+                            ? `${selectedResponse.status_code}-${selectedResponse.name}`
+                            : "Select Response"}
+                        </span>
+                        <ChevronDown className="h-3 w-3 flex-shrink-0" />
+                      </button>
+
+                      {isResponseDropdownOpen && (
+                        <div className="absolute z-50 right-0 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                          {endpointResponses.map((response) => (
+                            <button
+                              key={response.id}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                                selectedResponse?.id === response.id
+                                  ? "bg-gray-200"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                handleResponseSelect(response);
+                                setIsResponseDropdownOpen(false);
+                              }}
+                            >
+                              {/* Chỉ hiển thị 1 dòng với định dạng StatusCode-Name */}
+                              <div className="font-medium">
+                                {response.status_code} - {response.name}
+                              </div>
+                            </button>
+                          ))}
+
+                          {endpointResponses.length === 0 && (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                              No responses available
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {selectedResponse ? (
-                    <div className="">
-                      <Card className="p-4 rounded-none border-none">
+                    <div className="flex items-center justify-center w-full">
+                      <Card className="p-4 shadow-none rounded-none border-none w-[85%]">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveResponse}
-                            >
-                              <SaveIcon className="h-5 w-5 text-[#898883]" />
-                            </Button>
-                            {/* Nút Default - ẩn khi stateful */}
-                            {!isStateful && (
+                            <div className="relative">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="border-[#E5E5E1]"
-                                onClick={() => {
-                                  if (selectedResponse) {
-                                    setDefaultResponse(selectedResponse.id);
-                                  }
-                                }}
+                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                onClick={handleSaveResponse}
+                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseLeave={() =>
+                                  setSaveTooltipVisible(false)
+                                }
                               >
-                                <Star
-                                  className={`h-4 w-4 ${
-                                    selectedResponse?.is_default
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-[#898883]"
-                                  }`}
-                                />
+                                <SaveIcon className="h-5 w-5 text-[#898883]" />
                               </Button>
+                              <Tooltip
+                                visible={saveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
+                            </div>
+                            {/* Nút Default - ẩn khi stateful */}
+                            {!isStateful && (
+                              <div className="relative ml-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="border-[#E5E5E1]"
+                                  onClick={() => {
+                                    if (selectedResponse) {
+                                      setDefaultResponse(selectedResponse.id);
+                                    }
+                                  }}
+                                  onMouseEnter={() =>
+                                    setStarTooltipVisible(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setStarTooltipVisible(false)
+                                  }
+                                >
+                                  <Star
+                                    className={`h-4 w-4 ${
+                                      selectedResponse?.is_default
+                                        ? "text-yellow-500 fill-yellow-500"
+                                        : "text-[#898883]"
+                                    }`}
+                                  />
+                                </Button>
+                                <Tooltip
+                                  visible={starTooltipVisible}
+                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                                >
+                                  Set Default
+                                </Tooltip>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Nút Popover - di chuyển từ trong editor ra đây */}
+                          <div className="relative">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                              onClick={() => {
+                                const canEdit =
+                                  !isStateful ||
+                                  statusCode !== "200" ||
+                                  method !== "GET";
+                                if (canEdit) {
+                                  setIsPopoverOpen(!isPopoverOpen);
+                                }
+                              }}
+                              disabled={
+                                isStateful &&
+                                statusCode === "200" &&
+                                method === "GET"
+                              }
+                              title="Variable Picker"
+                            >
+                              <FileCode className="h-5 w-5 text-[#898883]" />
+                            </Button>
+
+                            {/* Popover */}
+                            {isPopoverOpen && (
+                              <div
+                                ref={popoverRef}
+                                className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                              >
+                                <div className="flex flex-col items-center gap-2 p-3.5">
+                                  <div className="w-full flex justify-between items-center">
+                                    <div className="font-semibold text-sm text-gray-800">
+                                      Variable Picker
+                                    </div>
+                                    <X
+                                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsPopoverOpen(false);
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="w-full flex justify-between">
+                                    {["url", "query", "state"].map(
+                                      (section) => (
+                                        <div
+                                          key={section}
+                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            selectedSection === section
+                                              ? "bg-[#EDEDEC] text-[#374151]"
+                                              : "text-[#374151] hover:bg-gray-100"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSection(section);
+                                          }}
+                                        >
+                                          {section === "url"
+                                            ? "URL Parameters"
+                                            : section === "query"
+                                            ? "Query Parameters"
+                                            : "Project State"}
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+
+                                  <div
+                                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const templateText =
+                                        getTemplateText().template;
+                                      insertTemplate(templateText);
+                                    }}
+                                  >
+                                    <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      {getTemplateText().template}
+                                    </div>
+                                    <div className="text-[12px] text-gray-500">
+                                      {getTemplateText().description}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </div>
 
                         {/* Form nội dung */}
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-4 items-center gap-4">
+                        <div className="w-full">
+                          {/* Name */}
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="response-name"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
-                              Response Name
+                              Name
                             </Label>
                             <Input
                               id="response-name"
                               value={responseName}
                               onChange={(e) => setResponseName(e.target.value)}
-                              className="col-span-3 border-[#CBD5E1] rounded-md"
+                              className="col-span-5 border-[#CBD5E1] rounded-md"
                               placeholder="Enter response name"
                             />
                           </div>
 
                           {/* Status Code */}
-                          <div className="grid grid-cols-4 items-center gap-4">
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="status-code"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
-                              Status Code
+                              Code
                             </Label>
-                            <div className="col-span-3">
+                            <div className="col-span-5">
                               <Select
                                 value={statusCode}
                                 onValueChange={(value) =>
@@ -2647,31 +2898,31 @@ const DashboardPage = () => {
                           </div>
 
                           {/* Response Header */}
-                          <div className="grid grid-cols-4 items-start gap-4">
-                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                              Response Header
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
+                            <div className="text-sm font-medium text-[#000000] py-2">
+                              Header
                             </div>
-                            <div className="col-span-3"></div>
-                          </div>
-
-                          <div className="grid grid-cols-2 items-start gap-4">
-                            <div className="text-right text-sm font-medium text-[#000000] self-start pt-1">
-                              Content-Type:
+                            <div className="col-span-1 px-2 pl-2 text-sm text-[#000000]">
+                              Content-Type
                             </div>
-                            <div className="col-span-1 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                            <div className="col-span-4 border border-[#CBD5E1] rounded-md p-2 bg-gray-100">
                               application/json
                             </div>
                           </div>
 
-                          {/* Response Body */}
-                          <div className="grid grid-cols-4 gap-4">
+                          {/* Body */}
+                          <div className="grid grid-cols-6 gap-4 my-2">
                             <Label
                               htmlFor="response-body"
-                              className="text-right pt-2 text-sm font-medium text-[#000000]"
+                              className="pt-2 text-sm font-medium text-[#000000]"
                             >
-                              Response Body
+                              Body
                             </Label>
-                            <div className="col-span-3 space-y-2">
+                          </div>
+
+                          {/* Response */}
+                          <div className="grid grid-cols-6 gap-4 my-2">
+                            <div className="col-span-6">
                               <div className="relative" ref={responseEditorRef}>
                                 <Editor
                                   value={responseBody}
@@ -2737,102 +2988,19 @@ const DashboardPage = () => {
                                     <Code className="h-4 w-4" /> Format
                                   </Button>
                                 </div>
-
-                                {/* Popover trigger */}
-                                <div className="absolute bottom-2 right-2 flex space-x-2">
-                                  <FileCode
-                                    className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                    size={26}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const canEdit =
-                                        !isStateful ||
-                                        statusCode !== "200" ||
-                                        method !== "GET";
-                                      if (canEdit) {
-                                        setIsPopoverOpen(!isPopoverOpen);
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Popover */}
-                                {isPopoverOpen && (
-                                  <div
-                                    ref={popoverRef}
-                                    className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                                  >
-                                    <div className="flex flex-col items-center gap-2 p-3.5">
-                                      <div className="w-full flex justify-between items-center">
-                                        <div className="font-semibold text-sm text-gray-800">
-                                          Variable Picker
-                                        </div>
-                                        <X
-                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsPopoverOpen(false);
-                                          }}
-                                        />
-                                      </div>
-
-                                      <div className="w-full flex justify-between">
-                                        {["url", "query", "state"].map(
-                                          (section) => (
-                                            <div
-                                              key={section}
-                                              className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                                selectedSection === section
-                                                  ? "bg-[#EDEDEC] text-[#374151]"
-                                                  : "text-[#374151] hover:bg-gray-100"
-                                              }`}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedSection(section);
-                                              }}
-                                            >
-                                              {section === "url"
-                                                ? "URL Parameters"
-                                                : section === "query"
-                                                ? "Query Parameters"
-                                                : "Project State"}
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-
-                                      <div
-                                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const templateText =
-                                            getTemplateText().template;
-                                          insertTemplate(templateText);
-                                        }}
-                                      >
-                                        <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                          {getTemplateText().template}
-                                        </div>
-                                        <div className="text-[12px] text-gray-500">
-                                          {getTemplateText().description}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </div>
 
                           {/* Delay */}
-                          <div className="grid grid-cols-4 items-center gap-4">
+                          <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="delay"
-                              className="text-right text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium text-[#000000]"
                             >
                               Delay (ms)
                             </Label>
-                            <div className="col-span-3">
+                            <div className="col-span-5">
                               <Input
                                 id="delay"
                                 value={delay}
@@ -2875,37 +3043,92 @@ const DashboardPage = () => {
               <div className="flex flex-col border-2 border-gray-200 rounded-lg bg-white">
                 {/* Tab bar header */}
                 <div className="flex rounded-t-lg bg-gray-200 mb-0 text-stone-500">
-                  {!isStateful && renderTabButton("Rules", "Rules", Rules_icon)}
-                  {!isStateful && renderTabButton("proxy", "Proxy", Proxy_icon)}
-                  {isStateful &&
-                    renderTabButton(
-                      "dataDefault",
-                      "Data Default",
-                      Data_default
-                    )}
-                  {isStateful &&
-                    method !== "DELETE" &&
-                    renderTabButton(
-                      "schemaBody",
-                      method === "GET" ? "Response Body" : "Request Body",
-                      Request_Response_icon
-                    )}
-                  {isStateful &&
-                    renderTabButton("advanced", "Advanced", Advanced_icon)}
+                  {!isStateful ? (
+                    <div className="flex justify-between items-center bg-gray-200 w-full">
+                      <div className="flex items-center">
+                        {renderTabButton("Rules", "Rules", Rules_icon)}
+                        {renderTabButton("proxy", "Proxy", Proxy_icon)}
+                      </div>
+
+                      {/* Dropdown chọn response - Tab bar (chỉ hiển thị khi stateless) */}
+                      <div className="relative right-4" ref={tabBarDropdownRef}>
+                        <button
+                          onClick={() =>
+                            setIsTabBarDropdownOpen(!isTabBarDropdownOpen)
+                          }
+                          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          <span className="truncate max-w-[150px]">
+                            {selectedResponse
+                              ? `${selectedResponse.status_code}-${selectedResponse.name}`
+                              : "Select Response"}
+                          </span>
+                          <ChevronDown className="h-3 w-3 flex-shrink-0" />
+                        </button>
+
+                        {isTabBarDropdownOpen && (
+                          <div className="absolute z-50 right-0 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                            {endpointResponses.map((response) => (
+                              <button
+                                key={response.id}
+                                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                                  selectedResponse?.id === response.id
+                                    ? "bg-gray-200"
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  handleResponseSelect(response);
+                                  setIsTabBarDropdownOpen(false);
+                                }}
+                              >
+                                {/* Chỉ hiển thị 1 dòng với định dạng StatusCode-Name */}
+                                <div className="font-medium">
+                                  {response.status_code} - {response.name}
+                                </div>
+                              </button>
+                            ))}
+
+                            {endpointResponses.length === 0 && (
+                              <div className="px-3 py-2 text-sm text-gray-500">
+                                No responses available
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      {renderTabButton(
+                        "dataDefault",
+                        "Data Default",
+                        Data_default
+                      )}
+                      {method !== "DELETE" &&
+                        renderTabButton(
+                          "schemaBody",
+                          method === "GET" ? "Response Body" : "Request Body",
+                          Request_Response_icon
+                        )}
+                      {renderTabButton("advanced", "Advanced", Advanced_icon)}
+                    </div>
+                  )}
                 </div>
 
                 {/* Nội dung tab */}
                 <div className="w-full">
                   {/* Rules */}
                   {!isStateful && activeTab === "Rules" && (
-                    <div className="mt-0">
+                    <div className="flex justify-center items-center w-full ">
                       {selectedResponse ? (
+                        <div className="flex flex-col items-center w-[85%] ">
                         <Frame
                           responseName={selectedResponse?.name}
                           selectedResponse={selectedResponse}
                           onUpdateRules={setResponseCondition}
                           onSave={handleSaveResponse}
                         />
+                        </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-[400px]">
                           <img
@@ -2920,25 +3143,48 @@ const DashboardPage = () => {
 
                   {/* Proxy */}
                   {!isStateful && activeTab === "proxy" && (
-                    <div className="mt-0">
+                    <div className="flex justify-center items-center w-full">
                       {selectedResponse ? (
-                        <Card className="p-6 border-0 rounded-none">
-                          <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-[#37352F]">
+                        <Card className="p-6 border-0 rounded-none shadow-none w-[85%]">
+                          <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-md  text-[#37352F]">
                               Forward Proxy URL
                             </h2>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveResponse}
-                            >
-                              <SaveIcon className="h-10 w-10 text-[#898883]" />
-                            </Button>
+                            <div className="relative">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                onClick={handleSaveResponse}
+                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseLeave={() =>
+                                  setSaveTooltipVisible(false)
+                                }
+                              >
+                                <SaveIcon className="h-5 w-5 text-[#898883]" />
+                              </Button>
+                              <Tooltip
+                                visible={saveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
+                            </div>
                           </div>
-                          <div className="space-y-6">
+                          <div className="space-y-2">
                             <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                              <div className="flex flex-row items-center gap-[16px] w-full">
+                              <div className="flex flex-col gap-[8px] w-full">
+                                <Input
+                                  id="proxy-url"
+                                  name="proxy-url"
+                                  placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}}))"
+                                  value={proxyUrl}
+                                  onChange={(e) => setProxyUrl(e.target.value)}
+                                  className="flex-1 py-2 border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-[8px] w-full">
+                                <span className="text-md text-[#374151]">Method</span>
                                 <Select
                                   value={proxyMethod}
                                   onValueChange={setProxyMethod}
@@ -2955,19 +3201,7 @@ const DashboardPage = () => {
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <Input
-                                  id="proxy-url"
-                                  name="proxy-url"
-                                  placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}}))"
-                                  value={proxyUrl}
-                                  onChange={(e) => setProxyUrl(e.target.value)}
-                                  className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
-                                />
                               </div>
-                              <p className="text-xs text-gray-500">
-                                Use {"{{params.id}}"} for route parameters (e.g.
-                                /users/:id)
-                              </p>
                             </div>
                           </div>
                         </Card>
@@ -2999,50 +3233,179 @@ const DashboardPage = () => {
 
                   {/* Data Default */}
                   {isStateful && activeTab === "dataDefault" && (
-                    <div className="mt-0">
-                      <Card className="p-6 border-0 rounded-none">
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
                         <div className="space-y-6">
                           {/* Đưa Current Value lên trên */}
-                          <div className="flex justify-end mb-0">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-                              onClick={handleSaveInitialValue}
-                            >
-                              <SaveIcon className="h-5 w-5 text-[#898883]" />
-                            </Button>
-                          </div>
-                          <div className="text-left text-2xl font-medium text-[#000000] self-start pt-1 mb-1">
-                            Current Value
+                          <div className="flex justify-between items-center mb-0">
+                            <div className="text-xl font-medium text-[#000000] self-start pt-1 mb-1">
+                              Current Value
+                            </div>
+
+                            {/* Nút Save và Popover nằm cạnh nhau */}
+                            <div className="flex items-center gap-2">
+                              {/* Nút Popover */}
+                              <div
+                                className="relative"
+                                ref={initialValuePopoverRef}
+                              >
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={() =>
+                                    setIsInitialValuePopoverOpen(
+                                      !isInitialValuePopoverOpen
+                                    )
+                                  }
+                                  title="Variable Picker"
+                                >
+                                  <FileCode className="h-5 w-5 text-[#898883]" />
+                                </Button>
+
+                                {/* Popover cho Initial Value */}
+                                {isInitialValuePopoverOpen && (
+                                  <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                                    <div className="flex flex-col items-center gap-2 p-3.5">
+                                      <div className="w-full flex justify-between items-center">
+                                        <div className="font-semibold text-sm text-gray-800">
+                                          Variable Picker
+                                        </div>
+                                        <X
+                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsInitialValuePopoverOpen(false);
+                                          }}
+                                        />
+                                      </div>
+
+                                      <div className="w-full flex justify-between">
+                                        <div
+                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            selectedSection === "url"
+                                              ? "bg-[#EDEDEC] text-[#374151]"
+                                              : "text-[#374151] hover:bg-gray-100"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSection("url");
+                                          }}
+                                        >
+                                          URL Parameters
+                                        </div>
+                                        <div
+                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            selectedSection === "query"
+                                              ? "bg-[#EDEDEC] text-[#374151]"
+                                              : "text-[#374151] hover:bg-gray-100"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSection("query");
+                                          }}
+                                        >
+                                          Query Parameters
+                                        </div>
+                                        <div
+                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            selectedSection === "state"
+                                              ? "bg-[#EDEDEC] text-[#374151]"
+                                              : "text-[#374151] hover:bg-gray-100"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSection("state");
+                                          }}
+                                        >
+                                          Project State
+                                        </div>
+                                      </div>
+
+                                      <div
+                                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // Đảm bảo sử dụng selectedSection hiện tại
+                                          const templateText =
+                                            getTemplateText().template;
+                                          insertInitialValueTemplate(
+                                            templateText
+                                          );
+                                        }}
+                                      >
+                                        <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                          {getTemplateText().template}
+                                        </div>
+                                        <div className="text-[12px] text-gray-500">
+                                          {getTemplateText().description}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Nút Save */}
+                              <div className="relative">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="border-[#E5E5E1] hover:bg-yellow-50"
+                                  onClick={handleSaveInitialValue}
+                                  onMouseEnter={() =>
+                                    setSaveTooltipVisible(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setSaveTooltipVisible(false)
+                                  }
+                                >
+                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                </Button>
+                                <Tooltip
+                                  visible={saveTooltipVisible}
+                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                                >
+                                  Save button
+                                </Tooltip>
+                              </div>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
-                                {/* Thay Textarea bằng div chỉ đọc */}
-                                <div className="font-mono h-60 border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto">
-                                  <pre className="whitespace-pre-wrap break-words m-0">
-                                    {endpointData?.data_current
-                                      ? JSON.stringify(
-                                          endpointData.data_current,
-                                          null,
-                                          2
-                                        )
-                                      : "[]"}
-                                  </pre>
-                                </div>
+                                {/* JSON Viewer (read-only, có highlight + format) */}
+                                <div
+                                  className="custom-initial-value font-mono text-sm h-60 border border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto text-white"
+                                  dangerouslySetInnerHTML={{
+                                    __html: (() => {
+                                      try {
+                                        const formatted =
+                                          endpointData?.data_current &&
+                                          Object.keys(endpointData.data_current).length > 0
+                                            ? JSON.stringify(endpointData.data_current, null, 2)
+                                            : "[]";
+
+                                        // Prism highlight có format giữ nguyên
+                                        const highlighted = highlight(formatted, languages.json, "json");
+                                        return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
+                                      } catch (err) {
+                                        console.error("JSON format error:", err);
+                                        return "<pre style='color:red'>Invalid JSON</pre>";
+                                      }
+                                    })(),
+                                  }}
+                                />
                               </div>
                             </div>
                           </div>
-
                           {/* Đưa Initial Value xuống dưới */}
                           <div className="flex justify-between items-center mb-1">
-                            <h2 className="text-2xl font-medium text-[#37352F]">
+                            <h2 className="text-xl font-medium text-[#37352F]">
                               Initial Value
                             </h2>
                           </div>
-
                           <div className="grid grid-cols-1 items-start gap-1">
                             <div className="col-span-3 space-y-2">
                               <div className="relative">
@@ -3069,7 +3432,7 @@ const DashboardPage = () => {
                                     style={{
                                       fontFamily:
                                         '"Fira code", "Fira Mono", monospace',
-                                      fontSize: 12,
+                                      fontSize: 14,
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",
@@ -3111,107 +3474,6 @@ const DashboardPage = () => {
                                       <Code className="mr-1 h-4 w-4" /> Format
                                     </Button>
                                   </div>
-
-                                  {/* Bottom right icon */}
-                                  <div className="absolute bottom-2 right-2 flex space-x-2">
-                                    <FileCode
-                                      className="text-gray-400 cursor-pointer hover:text-gray-600"
-                                      size={26}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsInitialValuePopoverOpen(
-                                          !isInitialValuePopoverOpen
-                                        );
-                                      }}
-                                    />
-                                  </div>
-
-                                  {/* Popover cho Initial Value */}
-                                  {isInitialValuePopoverOpen && (
-                                    <div
-                                      ref={initialValuePopoverRef}
-                                      className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
-                                    >
-                                      <div className="flex flex-col items-center gap-2 p-3.5">
-                                        <div className="w-full flex justify-between items-center">
-                                          <div className="font-semibold text-sm text-gray-800">
-                                            Variable Picker
-                                          </div>
-                                          <X
-                                            className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setIsInitialValuePopoverOpen(
-                                                false
-                                              );
-                                            }}
-                                          />
-                                        </div>
-
-                                        <div className="w-full flex justify-between">
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "url"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("url");
-                                            }}
-                                          >
-                                            URL Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "query"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("query");
-                                            }}
-                                          >
-                                            Query Parameters
-                                          </div>
-                                          <div
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                                              selectedSection === "state"
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
-                                            }`}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSelectedSection("state");
-                                            }}
-                                          >
-                                            Project State
-                                          </div>
-                                        </div>
-
-                                        <div
-                                          className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Đảm bảo sử dụng selectedSection hiện tại
-                                            const templateText =
-                                              getTemplateText().template;
-                                            insertInitialValueTemplate(
-                                              templateText
-                                            );
-                                          }}
-                                        >
-                                          <div className="font-mono text-[12px] text-black mb-[-5px]">
-                                            {getTemplateText().template}
-                                          </div>
-                                          <div className="text-[12px] text-gray-500">
-                                            {getTemplateText().description}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -3807,9 +4069,7 @@ const DashboardPage = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle>
-              {selectedResponse ? "Edit Response" : "Create New Response"}
-            </DialogTitle>
+            <DialogTitle>Create New Response</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -3819,7 +4079,10 @@ const DashboardPage = () => {
                 id="new-response-name"
                 placeholder="Enter response name"
                 value={responseName}
-                onChange={(e) => setResponseName(e.target.value)}
+                onChange={(e) => {
+                  setResponseName(e.target.value);
+                  if (responseNameError) setResponseNameError("");
+                }}
                 className={`w-full ${
                   responseNameError ? "border-red-500" : ""
                 }`}
@@ -3889,7 +4152,7 @@ const DashboardPage = () => {
                       e.stopPropagation();
                       try {
                         const formatted = JSON.stringify(
-                          JSON.parse(responseBody),
+                          JSON.parse(responseBody || "{}"),
                           null,
                           2
                         );
@@ -3934,13 +4197,23 @@ const DashboardPage = () => {
                 variant="outline"
                 onClick={() => {
                   setIsDialogOpen(false);
+                  // Reset form khi hủy
                   setSelectedResponse(null);
+                  setResponseName("");
+                  setStatusCode("200");
+                  setResponseBody("");
+                  setDelay("0");
+                  setResponseNameError("");
+                  setDelayError("");
                 }}
               >
                 Cancel
               </Button>
-              <Button onClick={handleSaveResponse}>
-                {selectedResponse ? "Update" : "Create"}
+              <Button
+                onClick={handleCreateResponse}
+                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              >
+                Create
               </Button>
             </DialogFooter>
           </div>

@@ -108,7 +108,7 @@ export function LoginForm({className, ...props}) {
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="font-semibold underline underline-offset-4 text-black"
+                className="font-bold underline underline-offset-4 text-black"
               >
                 Sign up
               </button>
