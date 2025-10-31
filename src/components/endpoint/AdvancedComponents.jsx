@@ -558,8 +558,6 @@ export const ApiCallEditor = ({
         </div>
       </div>
 
-      <div className="border-b border-[#EDEFF1] mb-6"></div>
-
       {nextCalls.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           No API calls configured. Click "New API Call" to add one.
@@ -568,17 +566,17 @@ export const ApiCallEditor = ({
         nextCalls.map((call, index) => (
           <div
             key={call.id || index}
-            className="mb-6 p-4 border border-[#CBD5E1] rounded-lg relative"
+            className="mb-6 p-4 relative"
           >
             {/* Thêm title "Next API Call" và số thứ tự */}
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
-                <span className="font-bold text-[#37352F] mr-2">
-                  Next API Call
-                </span>
                 <span
-                  className="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                  {index + 1}
+                  className="mr-2 flex items-center justify-center text-lg font-medium">
+                  #{index + 1}
+                </span>
+                <span className="font-bold text-[#37352F]">
+                  Next API Call
                 </span>
               </div>
               {nextCalls.length > 1 && (
@@ -593,13 +591,11 @@ export const ApiCallEditor = ({
               )}
             </div>
 
-            <div className="border-b border-[#EDEFF1] mb-4"></div>
-
-            <div className="space-y-4">
+            <div className="space-y-4 pb-8 border-b border-[#CBD5E1]">
               {/* Target Endpoint - Sửa lại để sử dụng target_endpoint làm giá trị */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Target Endpoint
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -664,7 +660,7 @@ export const ApiCallEditor = ({
               {/* Method */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Method
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -697,74 +693,75 @@ export const ApiCallEditor = ({
               {/* Request Body */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-start">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000] pt-2">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Request Body
                   </label>
-                  <div className="flex-1 max-w-[801px] relative">
-                    <div className="relative">
-                      <Editor
-                        value={
-                          jsonStrings[index] ||
-                          '{\n  "orderId": "{{response.body.orderId}}"\n}'
-                        }
-                        onValueChange={(code) => handleJsonChange(index, code)}
-                        highlight={(code) => highlight(code, languages.json)}
-                        padding={10}
-                        className="custom-json-editor"
-                        style={{
-                          fontFamily: '"Fira code", "Fira Mono", monospace',
-                          fontSize: 12,
-                          minHeight: "124px",
-                          maxHeight: "200px",
-                          overflow: "auto",
-                          border: jsonErrors[index]
-                            ? "1px solid #ef4444"
-                            : "1px solid #CBD5E1",
-                          borderRadius: "0.375rem",
-                          backgroundColor: "#101728",
-                          color: "white",
+                </div>
+                <div className="flex-1 w-full relative">
+                  <div className="relative">
+                    <Editor
+                      value={
+                        jsonStrings[index] ||
+                        '{\n  "orderId": "{{response.body.orderId}}"\n}'
+                      }
+                      onValueChange={(code) => handleJsonChange(index, code)}
+                      highlight={(code) => highlight(code, languages.json)}
+                      padding={10}
+                      className="custom-json-editor"
+                      style={{
+                        fontFamily: '"Fira code", "Fira Mono", monospace',
+                        fontSize: 12,
+                        minHeight: "124px",
+                        maxHeight: "200px",
+                        overflow: "auto",
+                        border: jsonErrors[index]
+                          ? "1px solid #ef4444"
+                          : "1px solid #CBD5E1",
+                        borderRadius: "0.375rem",
+                        backgroundColor: "#101728",
+                        color: "white",
+                      }}
+                      textareaClassName="focus:outline-none"
+                    />
+
+                    {/* JSON Editor controls */}
+                    <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            const formatted = JSON.stringify(
+                              JSON.parse(jsonStrings[index]),
+                              null,
+                              2
+                            );
+                            handleJsonChange(index, formatted);
+                          } catch {
+                            toast.error("Invalid JSON format");
+                          }
                         }}
-                        textareaClassName="focus:outline-none"
-                      />
-
-                      {/* JSON Editor controls */}
-                      <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            try {
-                              const formatted = JSON.stringify(
-                                JSON.parse(jsonStrings[index]),
-                                null,
-                                2
-                              );
-                              handleJsonChange(index, formatted);
-                            } catch {
-                              toast.error("Invalid JSON format");
-                            }
-                          }}
-                        >
-                          <Code className="mr-1 h-4 w-4"/> Format
-                        </Button>
-                      </div>
+                      >
+                        <Code className="mr-1 h-4 w-4"/> Format
+                      </Button>
                     </div>
-
-                    {/* Hiển thị lỗi JSON */}
-                    {jsonErrors[index] && (
-                      <div className="text-red-400 text-xs mt-1 pl-2">
-                        Invalid JSON: {jsonErrors[index]}
-                      </div>
-                    )}
                   </div>
+
+                  {/* Hiển thị lỗi JSON */}
+                  {jsonErrors[index] && (
+                    <div className="text-red-400 text-xs mt-1 pl-2">
+                      Invalid JSON: {jsonErrors[index]}
+                    </div>
+                  )}
                 </div>
               </div>
+
               {/* Status condition */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-right text-sm font-medium text-[#000000]">
+                  <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Status condition
                   </label>
                   <div className="relative flex-1 max-w-[801px]">
@@ -1129,48 +1126,51 @@ export const Frame = ({
   };
 
   return (
-    <div className="relative">
-      <Card className="p-6 border-0 rounded-lg shadow-none relative">
-        <div className="absolute top-3 right-3 z-[9999] flex items-center gap-2">
-          <div className="relative">
-            <Button
-              variant="outline"
-              onClick={handleAddRule}
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-              onMouseEnter={() => setFrameAddTooltipVisible(true)}
-              onMouseLeave={() => setFrameAddTooltipVisible(false)}
-            >
-              <Plus className="h-7 w-7"/>
-            </Button>
-            <Tooltip
-              visible={frameAddTooltipVisible}
-              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-            >
-              Add New Rule
-            </Tooltip>
-          </div>
-          <div className="relative">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
-              onClick={handleSave}
-              onMouseEnter={() => setFrameSaveTooltipVisible(true)}
-              onMouseLeave={() => setFrameSaveTooltipVisible(false)}
-            >
-              <SaveIcon className="h-5 w-5 text-[#898883]"/>
-            </Button>
-            <Tooltip
-              visible={frameSaveTooltipVisible}
-              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-            >
-              Save Rules
-            </Tooltip>
-          </div>
+    <div className="relative w-full">
+      {/* Hai nút Add & Save ở góc trên bên phải của toàn vùng Frame */}
+      <div className="justify-end pt-2 flex items-center gap-2">
+        <div className="relative">
+          <Button
+            variant="outline"
+            onClick={handleAddRule}
+            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+            onMouseEnter={() => setFrameAddTooltipVisible(true)}
+            onMouseLeave={() => setFrameAddTooltipVisible(false)}
+          >
+            <Plus className="h-7 w-7"/>
+          </Button>
+          <Tooltip
+            visible={frameAddTooltipVisible}
+            className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          >
+            Add New Rule
+          </Tooltip>
         </div>
 
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+            onClick={handleSave}
+            onMouseEnter={() => setFrameSaveTooltipVisible(true)}
+            onMouseLeave={() => setFrameSaveTooltipVisible(false)}
+          >
+            <SaveIcon className="h-5 w-5 text-[#898883]"/>
+          </Button>
+          <Tooltip
+            visible={frameSaveTooltipVisible}
+            className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          >
+            Save Rules
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Phần nội dung chính */}
+      <Card className="p-6 border-0 rounded-lg shadow-none overflow-visible">
         {/* Header frame for parameters */}
-        <div className="relative w-[650.17px] h-[37.53px] mb-2">
+        <div className="relative w-full h-[37.53px] mb-2">
           <div className="absolute w-full h-full bg-[#F2F2F2] rounded-[5.49px]"></div>
 
           {/* Parameter Type và Parameter Name */}

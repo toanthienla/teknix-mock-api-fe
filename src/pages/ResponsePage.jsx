@@ -3119,14 +3119,16 @@ const DashboardPage = () => {
                 <div className="w-full">
                   {/* Rules */}
                   {!isStateful && activeTab === "Rules" && (
-                    <div className="flex justify-center items-center w-full">
+                    <div className="flex justify-center items-center w-full ">
                       {selectedResponse ? (
+                        <div className="flex flex-col items-center w-[85%] ">
                         <Frame
                           responseName={selectedResponse?.name}
                           selectedResponse={selectedResponse}
                           onUpdateRules={setResponseCondition}
                           onSave={handleSaveResponse}
                         />
+                        </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-[400px]">
                           <img
@@ -3141,11 +3143,11 @@ const DashboardPage = () => {
 
                   {/* Proxy */}
                   {!isStateful && activeTab === "proxy" && (
-                    <div className="mt-0">
+                    <div className="flex justify-center items-center w-full">
                       {selectedResponse ? (
-                        <Card className="p-6 border-0 rounded-none">
-                          <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-[#37352F]">
+                        <Card className="p-6 border-0 rounded-none shadow-none w-[85%]">
+                          <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-md  text-[#37352F]">
                               Forward Proxy URL
                             </h2>
                             <div className="relative">
@@ -3169,9 +3171,20 @@ const DashboardPage = () => {
                               </Tooltip>
                             </div>
                           </div>
-                          <div className="space-y-6">
+                          <div className="space-y-2">
                             <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
-                              <div className="flex flex-row items-center gap-[16px] w-full">
+                              <div className="flex flex-col gap-[8px] w-full">
+                                <Input
+                                  id="proxy-url"
+                                  name="proxy-url"
+                                  placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}}))"
+                                  value={proxyUrl}
+                                  onChange={(e) => setProxyUrl(e.target.value)}
+                                  className="flex-1 py-2 border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-[8px] w-full">
+                                <span className="text-md text-[#374151]">Method</span>
                                 <Select
                                   value={proxyMethod}
                                   onValueChange={setProxyMethod}
@@ -3188,19 +3201,7 @@ const DashboardPage = () => {
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <Input
-                                  id="proxy-url"
-                                  name="proxy-url"
-                                  placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}}))"
-                                  value={proxyUrl}
-                                  onChange={(e) => setProxyUrl(e.target.value)}
-                                  className="flex-1 h-[36px] border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
-                                />
                               </div>
-                              <p className="text-xs text-gray-500">
-                                Use {"{{params.id}}"} for route parameters (e.g.
-                                /users/:id)
-                              </p>
                             </div>
                           </div>
                         </Card>
