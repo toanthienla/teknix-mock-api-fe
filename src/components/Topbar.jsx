@@ -32,7 +32,7 @@ import logoutIcon from "@/assets/logout.svg";
 import arrowIcon from "@/assets/arrow.svg";
 import breadcrumbIcon from "@/assets/breadcrumb-arrow.svg";
 import Notifications from "../components/Notifications.jsx";
-import RealtimeClient from "@/services/centrifugo.jsx";
+// import RealtimeClient from "@/services/centrifugo.jsx";
 
 export default function Topbar({
                                  workspaces = [],
@@ -459,21 +459,21 @@ export default function Topbar({
         </button>
       </div>
 
-      {userId > 0 && (
-        <RealtimeClient
-          userId={userId}
-          onNewNotification={async () => {
-            // console.log("🔔 New notification received via WebSocket.");
+      {/*{userId > 0 && (*/}
+      {/*  <RealtimeClient*/}
+      {/*    userId={userId}*/}
+      {/*    onNewNotification={async () => {*/}
+      {/*      // console.log("🔔 New notification received via WebSocket.");*/}
 
-            const valid = await checkUserLogin();
-            if (valid) {
-              await fetchNotifications();
-            } else {
-              console.warn("⚠️ Session expired.");
-            }
-          }}
-        />
-      )}
+      {/*      const valid = await checkUserLogin();*/}
+      {/*      if (valid) {*/}
+      {/*        await fetchNotifications();*/}
+      {/*      } else {*/}
+      {/*        console.warn("⚠️ Session expired.");*/}
+      {/*      }*/}
+      {/*    }}*/}
+      {/*  />*/}
+      {/*)}*/}
     </div>
   );
 }
