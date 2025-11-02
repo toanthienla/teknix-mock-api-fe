@@ -2514,49 +2514,27 @@ const DashboardPage = () => {
                       return (
                         <div
                           key={status.id || status.code}
-                          className={`flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
-                            selectedResponse?.id === status.id
-                              ? "bg-gray-100"
-                              : "hover:bg-gray-50"
-                          } ${
-                            index === filteredStatusData.length - 1
-                              ? "border-b-0"
-                              : ""
-                          }`}
-                          // Disable drag & drop khi đang search
+                          className={`group flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
+                            selectedResponse?.id === status.id ? "bg-gray-100" : "hover:bg-gray-50"
+                          } ${index === filteredStatusData.length - 1 ? "border-b-0" : ""}`}
                           draggable={!isStateful && !searchTerm}
                           onDragStart={
-                            !isStateful && !searchTerm
-                              ? (e) => handleDragStart(e, index)
-                              : undefined
+                            !isStateful && !searchTerm ? (e) => handleDragStart(e, index) : undefined
                           }
-                          onDragOver={
-                            !isStateful && !searchTerm
-                              ? handleDragOver
-                              : undefined
-                          }
-                          onDragEnd={
-                            !isStateful && !searchTerm
-                              ? () => setDraggedItem(null)
-                              : undefined
-                          }
-                          onDrop={
-                            !isStateful && !searchTerm
-                              ? (e) => handleDrop(e, index)
-                              : undefined
-                          }
+                          onDragOver={!isStateful && !searchTerm ? handleDragOver : undefined}
+                          onDragEnd={!isStateful && !searchTerm ? () => setDraggedItem(null) : undefined}
+                          onDrop={!isStateful && !searchTerm ? (e) => handleDrop(e, index) : undefined}
                           onClick={() => {
-                            const response = endpointResponses.find(
-                              (r) => r.id === status.id
-                            );
+                            const response = endpointResponses.find((r) => r.id === status.id);
                             if (response) handleResponseSelect(response);
                           }}
                         >
                           <div className="flex items-center gap-1">
-                            {/* Disable GripVertical icon khi đang search */}
+                            {/* Icon GripVertical chỉ hiện khi hover */}
                             {!isStateful && !searchTerm && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
                             )}
+
                             <div className="flex items-center gap-2">
                               <span
                                 className="text-[12px] font-medium"
@@ -2564,29 +2542,26 @@ const DashboardPage = () => {
                               >
                                 {status.code}
                               </span>
-                              <span className="text-[12px] text-[#212121]">
-                                {status.name}
-                              </span>
+                              <span className="text-[12px] text-[#212121]">{status.name}</span>
                             </div>
                           </div>
+
                           <div className="flex items-center gap-2">
                             {!isStateful && status.isDefault && (
-                              <span className="text-gray-500 text-xs">
-                                Default
+                              <span className="text-gray-500 font-mono font-semibold text-xs">
+                                DEFAULT
                               </span>
                             )}
-                            {/* Thêm icon thùng rác */}
+
+                            {/* Nút Trash chỉ hiện khi hover */}
                             {!isStateful && !status.isDefault && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-gray-400 hover:text-red-500"
+                                className="h-6 w-6 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Chọn response trước khi xóa
-                                  const response = endpointResponses.find(
-                                    (r) => r.id === status.id
-                                  );
+                                  const response = endpointResponses.find((r) => r.id === status.id);
                                   if (response) {
                                     handleResponseSelect(response);
                                     handleDeleteResponse();

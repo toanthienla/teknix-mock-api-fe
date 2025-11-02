@@ -57,11 +57,12 @@ export default function WelcomePage() {
             <p className="text-gray-400 text-sm mt-6">Login to use</p>
 
             <Button
+              size="lg"
               onClick={() => navigate("/login")}
-              className="mt-4 inline-flex items-center gap-3 rounded-full px-6 py-2 text-sm font-medium shadow-md bg-yellow-300 hover:bg-yellow-400 text-black"
+              className="mt-4 inline-flex items-center rounded-full py-4 text-md font-medium shadow-md bg-yellow-300 hover:bg-yellow-400 text-black"
             >
-              <span>Login</span>
-              <ChevronRight size={18} />
+              <span>Start now</span>
+              <ChevronRight size={36} />
             </Button>
           </div>
 
