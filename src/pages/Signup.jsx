@@ -19,7 +19,7 @@ export default function SignupPage() {
         className="w-full max-w-7xl flex items-center justify-center bg-slate-50"
       >
         {/* Bố cục chính chia 2 cột */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 shadow-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 overflow-hidden">
 
           {/* Cột trái: Phần signup */}
           <div className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-10 relative bg-white">
@@ -50,8 +50,8 @@ export default function SignupPage() {
           <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 bg-white lg:block">
             {/* Logo trên cùng */}
             <div className="flex items-center justify-center lg:justify-start gap-2">
-              <img src={logo} alt="MockAPI logo" className="w-10 h-10 sm:w-12 sm:h-12" />
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">MockAPI</h1>
+              <img src={logo} alt="MockAPI logo" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">MockAPI</h1>
             </div>
 
             {/* Ảnh minh họa */}

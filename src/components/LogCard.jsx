@@ -11,49 +11,79 @@ export default function LogCard({log}) {
     response_status_code,
   } = log;
 
+  const getStatusColor = (code) => {
+    if (!code) return "#EDEDEC"; // neutral
+    if (code >= 100 && code < 200) return "#A78BFA";
+    if (code >= 200 && code < 300) return "#58F287";
+    if (code >= 300 && code < 400) return "#60A5FA";
+    if (code >= 400 && code < 500) return "#ED4245";
+    if (code >= 500 && code < 600) return "#EF8843";
+    return "#EDEDEC";
+  };
+
+  const statusColor = getStatusColor(Number(response_status_code));
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const timePart = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${datePart} • ${timePart}`;
+  };
+
   return (
     <TableRow>
 
-      <TableCell className="font-mono text-sm">
+      <TableCell className="text-sm">
         {log.endpointResponseName || "No response"}
       </TableCell>
 
       <TableCell>
         <Badge
-          className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md ${
             request_method === "GET"
-              ? "bg-emerald-100 text-black hover:bg-emerald-200"
+              ? "bg-lime-200 text-black hover:bg-lime-300"
               : request_method === "POST"
-                ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                ? "bg-sky-200 text-black hover:bg-sky-300"
                 : request_method === "PUT"
-                  ? "bg-orange-400 text-black hover:bg-orange-500"
+                  ? "bg-pink-200 text-black hover:bg-pink-300"
                   : request_method === "DELETE"
-                    ? "bg-red-400 text-black hover:bg-red-500"
-                    : "bg-gray-100 text-black hover:bg-gray-200"
+                    ? "bg-rose-400 text-black hover:bg-rose-500"
+                    : "bg-gray-200 text-black"
           }`}
         >
           {request_method}
         </Badge>
       </TableCell>
 
-      <TableCell className="font-mono text-sm">{request_path}</TableCell>
+      <TableCell className="text-sm">
+        <div className="bg-stone-200 px-1.5 py-0.5 rounded-xs font-semibold">
+          {request_path}
+        </div>
+      </TableCell>
 
-      <TableCell className={response_status_code || "text-gray-600"}>
-        {response_status_code}
+      <TableCell>
+        <div className="flex ml-auto items-center bg-stone-200 rounded-sm px-2 py-1 w-fit">
+          <span
+            className="w-2.5 h-2.5 rounded-full mr-2"
+            style={{ backgroundColor: statusColor }}
+          ></span>
+          <span className="text-sm font-medium text-gray-700">
+            {response_status_code || "-"}
+          </span>
+        </div>
       </TableCell>
 
       <TableCell className="text-center">{latency_ms + " ms" || "-"}</TableCell>
 
-      <TableCell>
-        {new Date(created_at).toLocaleString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })}
-      </TableCell>
+      <TableCell className="text-right">{formatDate(created_at)}</TableCell>
     </TableRow>
   );
 }

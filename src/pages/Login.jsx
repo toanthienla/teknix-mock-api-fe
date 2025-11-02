@@ -19,7 +19,7 @@ export default function LoginPage() {
         className="w-full max-w-7xl flex items-center justify-center bg-slate-50"
       >
         {/* Bố cục chính chia 2 cột */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 shadow-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full bg-white rounded-2xl border border-slate-50 overflow-hidden">
 
           {/* Cột trái: Hình ảnh và mô tả */}
           <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 bg-white lg:block">
@@ -33,8 +33,8 @@ export default function LoginPage() {
             <div className="flex justify-center items-center mt-6 sm:mt-8">
               <img
                 src={loginImage}
-                alt="Astronaut"
-                className="w-3/4 sm:w-full max-w-sm md:max-w-md rounded-xl object-contain hidden sm:block"
+                alt="Login Image"
+                className="w-3/4 sm:w-full md:max-w-md rounded-xl object-contain hidden sm:block"
               />
             </div>
 
