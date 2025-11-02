@@ -54,14 +54,14 @@ export default function WelcomePage() {
               </div>
             </h1>
 
-            <p className="text-gray-400 text-sm mt-6">Login to use</p>
+            <p className="text-gray-400 text-sm font-semibold mt-6">Join the community</p>
 
             <Button
               size="lg"
               onClick={() => navigate("/login")}
-              className="mt-4 inline-flex items-center rounded-full py-4 text-md font-medium shadow-md bg-yellow-300 hover:bg-yellow-400 text-black"
+              className="mt-4 inline-flex items-center rounded-full py-4 text-md font-medium shadow-md bg-yellow-200 hover:bg-yellow-300 text-black"
             >
-              <span>Start now</span>
+              <span>Start Project</span>
               <ChevronRight size={36} />
             </Button>
           </div>

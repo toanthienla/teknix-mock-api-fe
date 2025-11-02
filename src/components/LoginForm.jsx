@@ -103,7 +103,7 @@ export function LoginForm({className, ...props}) {
                 </Button>
               </div>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-4 text-center text-sm font-semibold">
               Don&apos;t have an account?{" "}
               <button
                 type="button"

@@ -123,12 +123,12 @@ export function SignupForm({className, ...props}) {
                 >
                   {isSubmitting ? "Creating..." : "Create Account"}
                 </Button>
-                <div className="mt-2 text-center text-sm">
+                <div className="mt-2 text-center text-sm font-semibold">
                   Already have an account?{" "}
                   <button
                     type="button"
                     onClick={() => navigate("/login")}
-                    className="font-semibold underline underline-offset-4 text-yellow-500"
+                    className="font-bold underline underline-offset-4 text-yellow-500"
                   >
                     Login
                   </button>

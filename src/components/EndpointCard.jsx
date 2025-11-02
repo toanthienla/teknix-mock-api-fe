@@ -43,15 +43,15 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
       {/* Method */}
       <TableCell className="py-3 text-center">
         <Badge
-          className={`px-3 py-0.5 text-xs font-semibold rounded-md ${
+          className={`px-3 py-1.5 text-xs font-semibold rounded-md ${
             method === "GET"
               ? "bg-lime-200 text-black hover:bg-lime-300"
               : method === "POST"
-                ? "bg-sky-300 text-black hover:bg-sky-400"
+                ? "bg-sky-200 text-black hover:bg-sky-300"
                 : method === "PUT"
-                  ? "bg-pink-300 text-black hover:bg-pink-400"
+                  ? "bg-pink-200 text-black hover:bg-pink-300"
                   : method === "DELETE"
-                    ? "bg-red-400 text-white hover:bg-red-500"
+                    ? "bg-rose-400 text-black hover:bg-rose-500"
                     : "bg-gray-200 text-black"
           }`}
         >

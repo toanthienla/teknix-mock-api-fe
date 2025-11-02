@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getCurrentUser } from "@/services/api.js";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import {ChevronLeftIcon, ChevronRightIcon, Loader2} from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -37,8 +37,6 @@ import LogCard from "@/components/LogCard.jsx";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 
-import exportIcon from "@/assets/export.svg";
-import refreshIcon from "@/assets/refresh.svg";
 import tiktokIcon from "@/assets/tiktok.svg";
 import fbIcon from "@/assets/facebook.svg";
 import linkedinIcon from "@/assets/linkedin.svg";
@@ -368,7 +366,7 @@ export default function FolderPage() {
 
   const [methodFilter, setMethodFilter] = useState("All Methods");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [timeFilter, setTimeFilter] = useState("All time");
+  const [timeFilter, setTimeFilter] = useState("Recent logs");
 
   const [newFolderMode, setNewFolderMode] = useState(false);
   const [openEditFolder, setOpenEditFolder] = useState(false);
@@ -396,25 +394,24 @@ export default function FolderPage() {
   const [openNew, setOpenNew] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
 
-  useEffect(() => {
-    const checkUserLogin = async () => {
-      try {
-        const res = await getCurrentUser();
+  const checkUserLogin = async () => {
+    try {
+      const res = await getCurrentUser();
 
-        if (res?.data?.username) {
-          setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
-          console.log("Logged in user:", res.data.username);
-        } else {
-          toast.error("Please log in to continue.");
-          navigate("/login");
-        }
-      } catch (err) {
-        console.error("User not logged in:", err);
-        toast.error("Session expired. Please log in again.");
+      if (res?.data?.username) {
+        setCurrentUsername(res.data.username); // lưu toàn bộ thông tin user
+        console.log("Logged in user:", res.data.username);
+      } else {
+        toast.error("Please log in to continue.");
         navigate("/login");
       }
-    };
-
+    } catch (err) {
+      console.error("User not logged in:", err);
+      toast.error("Session expired. Please log in again.");
+      navigate("/login");
+    }
+  };
+  useEffect(() => {
     checkUserLogin();
   }, []);
 
@@ -561,6 +558,13 @@ export default function FolderPage() {
         `${API_ROOT}/project_request_logs?project_id=${pid}`,
         { credentials: "include" }
       );
+
+      if (res.status === 401) {
+        console.warn("Unauthorized (401) - rechecking user login...");
+        await checkUserLogin();
+        return;
+      }
+
       if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
       const raw = await res.json();
 
@@ -1185,7 +1189,7 @@ export default function FolderPage() {
       String(log.response_status_code) === String(statusFilter);
 
     let timeOk = true;
-    if (timeFilter && timeFilter !== "All time") {
+    if (timeFilter && timeFilter !== "Recent logs") {
       const logTime = new Date(log.created_at);
       if (!isNaN(logTime)) {
         const now = Date.now();
@@ -1485,93 +1489,93 @@ export default function FolderPage() {
                     {/* Logs */}
                     <div className="flex flex-col items-center justify-center w-full">
                       <div className="w-full max-w-7xl overflow-x-auto">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex gap-2">
-                            {/* Method Filter */}
-                            <Select
-                              value={methodFilter}
-                              onValueChange={setMethodFilter}
-                            >
-                              <SelectTrigger className="w-[140px] bg-white">
-                                <SelectValue placeholder="All Methods" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="All Methods">
-                                  All Methods
-                                </SelectItem>
-                                <SelectItem value="GET">GET</SelectItem>
-                                <SelectItem value="POST">POST</SelectItem>
-                                <SelectItem value="PUT">PUT</SelectItem>
-                                <SelectItem value="DELETE">DELETE</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            {/* Status Filter */}
-                            <Select
-                              value={statusFilter}
-                              onValueChange={setStatusFilter}
-                            >
-                              <SelectTrigger className="w-[140px] bg-white">
-                                <SelectValue placeholder="All Status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="All Status">
-                                  All Status
-                                </SelectItem>
-                                <SelectItem value="200">200</SelectItem>
-                                <SelectItem value="400">400</SelectItem>
-                                <SelectItem value="404">404</SelectItem>
-                                <SelectItem value="500">500</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            {/* Time Filter */}
-                            <Select
-                              value={timeFilter}
-                              onValueChange={setTimeFilter}
-                            >
-                              <SelectTrigger className="w-[160px] bg-white">
-                                <SelectValue placeholder="All time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="All time">
-                                  All time
-                                </SelectItem>
-                                <SelectItem value="Last 24 hours">
-                                  Last 24 hours
-                                </SelectItem>
-                                <SelectItem value="Last 7 days">
-                                  Last 7 days
-                                </SelectItem>
-                                <SelectItem value="Last 30 days">
-                                  Last 30 days
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button variant="outline">
-                              <img
-                                src={exportIcon}
-                                alt="Export Icon"
-                                className="w-4 h-4 object-contain"
-                              />
-                              Export
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => fetchLogs(projectId)}
-                            >
-                              <img
-                                src={refreshIcon}
-                                alt="Refresh Icon"
-                                className="w-4 h-4 object-contain"
-                              />
-                              Refresh
-                            </Button>
-                          </div>
-                        </div>
+                        {/*<div className="flex items-center justify-between mb-4">*/}
+                        {/*  <div className="flex gap-2">*/}
+                        {/*    /!* Method Filter *!/*/}
+                        {/*    <Select*/}
+                        {/*      value={methodFilter}*/}
+                        {/*      onValueChange={setMethodFilter}*/}
+                        {/*    >*/}
+                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
+                        {/*        <SelectValue placeholder="All Methods" />*/}
+                        {/*      </SelectTrigger>*/}
+                        {/*      <SelectContent>*/}
+                        {/*        <SelectItem value="All Methods">*/}
+                        {/*          All Methods*/}
+                        {/*        </SelectItem>*/}
+                        {/*        <SelectItem value="GET">GET</SelectItem>*/}
+                        {/*        <SelectItem value="POST">POST</SelectItem>*/}
+                        {/*        <SelectItem value="PUT">PUT</SelectItem>*/}
+                        {/*        <SelectItem value="DELETE">DELETE</SelectItem>*/}
+                        {/*      </SelectContent>*/}
+                        {/*    </Select>*/}
+                        
+                        {/*    /!* Status Filter *!/*/}
+                        {/*    <Select*/}
+                        {/*      value={statusFilter}*/}
+                        {/*      onValueChange={setStatusFilter}*/}
+                        {/*    >*/}
+                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
+                        {/*        <SelectValue placeholder="All Status" />*/}
+                        {/*      </SelectTrigger>*/}
+                        {/*      <SelectContent>*/}
+                        {/*        <SelectItem value="All Status">*/}
+                        {/*          All Status*/}
+                        {/*        </SelectItem>*/}
+                        {/*        <SelectItem value="200">200</SelectItem>*/}
+                        {/*        <SelectItem value="400">400</SelectItem>*/}
+                        {/*        <SelectItem value="404">404</SelectItem>*/}
+                        {/*        <SelectItem value="500">500</SelectItem>*/}
+                        {/*      </SelectContent>*/}
+                        {/*    </Select>*/}
+                        
+                        {/*    /!* Time Filter *!/*/}
+                        {/*    <Select*/}
+                        {/*      value={timeFilter}*/}
+                        {/*      onValueChange={setTimeFilter}*/}
+                        {/*    >*/}
+                        {/*      <SelectTrigger className="w-[160px] bg-white">*/}
+                        {/*        <SelectValue placeholder="Recent logs" />*/}
+                        {/*      </SelectTrigger>*/}
+                        {/*      <SelectContent>*/}
+                        {/*        <SelectItem value="Recent logs">*/}
+                        {/*          Recent logs*/}
+                        {/*        </SelectItem>*/}
+                        {/*        <SelectItem value="Last 24 hours">*/}
+                        {/*          Last 24 hours*/}
+                        {/*        </SelectItem>*/}
+                        {/*        <SelectItem value="Last 7 days">*/}
+                        {/*          Last 7 days*/}
+                        {/*        </SelectItem>*/}
+                        {/*        <SelectItem value="Last 30 days">*/}
+                        {/*          Last 30 days*/}
+                        {/*        </SelectItem>*/}
+                        {/*      </SelectContent>*/}
+                        {/*    </Select>*/}
+                        {/*  </div>*/}
+                        
+                        {/*  <div className="flex gap-2">*/}
+                        {/*    <Button variant="outline">*/}
+                        {/*      <img*/}
+                        {/*        src={exportIcon}*/}
+                        {/*        alt="Export Icon"*/}
+                        {/*        className="w-4 h-4 object-contain"*/}
+                        {/*      />*/}
+                        {/*      Export*/}
+                        {/*    </Button>*/}
+                        {/*    <Button*/}
+                        {/*      variant="outline"*/}
+                        {/*      onClick={() => fetchLogs(projectId)}*/}
+                        {/*    >*/}
+                        {/*      <img*/}
+                        {/*        src={refreshIcon}*/}
+                        {/*        alt="Refresh Icon"*/}
+                        {/*        className="w-4 h-4 object-contain"*/}
+                        {/*      />*/}
+                        {/*      Refresh*/}
+                        {/*    </Button>*/}
+                        {/*  </div>*/}
+                        {/*</div>*/}
 
                         <Table>
                           <TableHeader>
@@ -1582,7 +1586,7 @@ export default function FolderPage() {
                               <TableHead className="w-1/12 text-black">
                                 Method
                               </TableHead>
-                              <TableHead className="w-1/4 text-black">
+                              <TableHead className="w-1/3 text-black">
                                 Path
                               </TableHead>
                               <TableHead className="w-1/12 text-black">
@@ -1591,8 +1595,8 @@ export default function FolderPage() {
                               <TableHead className="w-1/12 text-black">
                                 Latency
                               </TableHead>
-                              <TableHead className="w-1/4 text-black">
-                                Timestamp
+                              <TableHead className="w-1/6 text-black">
+                                Time & Date
                               </TableHead>
                             </TableRow>
                             <TableRow className="border-b border-slate-200">
@@ -1616,10 +1620,24 @@ export default function FolderPage() {
                                   </div>
                                 </div>
                               </TableHead>
+
+                              <TableHead colSpan={1} className="text-right">
+                                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                                  <SelectTrigger className="w-full bg-white border-none shadow-none">
+                                    <SelectValue placeholder="Recent logs" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Recent logs">Recent logs</SelectItem>
+                                    <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
+                                    <SelectItem value="Last 7 days">Last 7 days</SelectItem>
+                                    <SelectItem value="Last 30 days">Last 30 days</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableHead>
                             </TableRow>
                             <TableRow className="border-none">
                               <TableHead
-                                colSpan={5}
+                                colSpan={6}
                                 className="py-1"
                               ></TableHead>
                             </TableRow>
@@ -1652,8 +1670,30 @@ export default function FolderPage() {
                           </TableBody>
                         </Table>
 
-                        <div className="flex items-center justify-end mt-2">
+                        <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={page === 1}
+                              onClick={() => setPage((p) => p - 1)}
+                            >
+                              <ChevronLeftIcon className="w-4 h-4" />
+                            </Button>
+                            <span className="text-sm font-semibold">
+                              {page} / {totalPages || 1}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={page === totalPages || totalPages === 0}
+                              onClick={() => setPage((p) => p + 1)}
+                            >
+                              <ChevronRightIcon className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center gap-2 mb-4">
                             <span className="text-sm">Rows per page</span>
                             <Select
                               value={rowsPerPage.toString()}
@@ -1676,28 +1716,6 @@ export default function FolderPage() {
                                 ))}
                               </SelectContent>
                             </Select>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={page === 1}
-                              onClick={() => setPage((p) => p - 1)}
-                            >
-                              ‹
-                            </Button>
-                            <span className="text-sm">
-                              Page {page} of {totalPages || 1}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={page === totalPages || totalPages === 0}
-                              onClick={() => setPage((p) => p + 1)}
-                            >
-                              ›
-                            </Button>
                           </div>
                         </div>
                       </div>
