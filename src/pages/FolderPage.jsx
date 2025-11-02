@@ -1,6 +1,7 @@
-import React, {useEffect, useMemo, useState} from "react";
-import {getCurrentUser} from "@/services/api.js";
-import {Button} from "@/components/ui/button";
+import React, { useEffect, useMemo, useState } from "react";
+import { getCurrentUser } from "@/services/api.js";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -9,8 +10,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import {useNavigate, useParams} from "react-router-dom";
-import {API_ROOT} from "@/utils/constants.js";
+import { useNavigate, useParams } from "react-router-dom";
+import { API_ROOT } from "@/utils/constants.js";
 import {
   Dialog,
   DialogContent,
@@ -19,20 +20,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input.jsx";
+import { Input } from "@/components/ui/input.jsx";
 import {
   Select,
-  SelectContent, SelectGroup,
-  SelectItem, SelectLabel,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
 
 import Topbar from "@/components/Topbar.jsx";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
-import {Card} from "@/components/ui/card";
-import {Plus, Trash2} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2 } from "lucide-react";
 
 import exportIcon from "@/assets/export.svg";
 import refreshIcon from "@/assets/refresh.svg";
@@ -44,7 +47,7 @@ import logsIcon from "@/assets/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/search.svg";
 
-const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -53,24 +56,28 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   // Khởi tạo schema (luôn có "id" mặc định)
   useEffect(() => {
     if (folderData?.schema && Object.keys(folderData.schema).length > 0) {
-      const fields = Object.entries(folderData.schema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type || "string",
-        required: config.required || false,
-      }));
+      const fields = Object.entries(folderData.schema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type || "string",
+          required: config.required || false,
+        })
+      );
       setSchemaFields(fields);
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
-        id: {type: "number", required: false},
+        id: { type: "number", required: false },
       };
-      const fields = Object.entries(defaultSchema).map(([name, config], index) => ({
-        id: `field-${index}`,
-        name,
-        type: config.type,
-        required: config.required,
-      }));
+      const fields = Object.entries(defaultSchema).map(
+        ([name, config], index) => ({
+          id: `field-${index}`,
+          name,
+          type: config.type,
+          required: config.required,
+        })
+      );
       setSchemaFields(fields);
     }
   }, [folderData]);
@@ -148,7 +155,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
-      const newErrors = {...prev};
+      const newErrors = { ...prev };
       delete newErrors[id];
       return newErrors;
     });
@@ -156,7 +163,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
   const handleChange = (id, key, value) => {
     setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? {...f, [key]: value} : f))
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
     );
   };
 
@@ -223,7 +230,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                 disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
-                  <SelectValue/>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="string">string</SelectItem>
@@ -243,7 +250,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                   disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
-                    <SelectValue/>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">true</SelectItem>
@@ -277,7 +284,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
         {/* Actions */}
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2"/> Add Field
+            <Plus className="w-4 h-4 mr-2" /> Add Field
           </Button>
           <Button
             className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
@@ -294,10 +301,9 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
           <DialogHeader>
             <DialogTitle>Confirm Schema Update</DialogTitle>
             <DialogDescription>
-              Updating this folder's schema will{" "}
-              <b>delete all endpoint data</b> that no longer fits the new
-              schema.
-              <br/> <br/>
+              Updating this folder's schema will <b>delete all endpoint data</b>{" "}
+              that no longer fits the new schema.
+              <br /> <br />
               Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>
@@ -321,7 +327,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
 export default function FolderPage() {
   const navigate = useNavigate();
-  const {projectId} = useParams();
+  const { projectId } = useParams();
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
@@ -433,7 +439,7 @@ export default function FolderPage() {
         // Wait a bit for all to complete
         setTimeout(() => setIsLoading(false), 1000);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
         setIsLoading(false);
       }
     };
@@ -474,8 +480,8 @@ export default function FolderPage() {
     if (!wsId) return;
 
     fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
-      .then(r => r.json())
-      .then(rData => {
+      .then((r) => r.json())
+      .then((rData) => {
         const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
         setProjects(projectsArr);
 
@@ -485,14 +491,16 @@ export default function FolderPage() {
 
         projectsArr.forEach((p) => {
           // fetch folders của từng project
-          fetch(`${API_ROOT}/folders?project_id=${p.id}`, {credentials: "include"})
-            .then(r => r.json())
-            .then(fData => {
+          fetch(`${API_ROOT}/folders?project_id=${p.id}`, {
+            credentials: "include",
+          })
+            .then((r) => r.json())
+            .then((fData) => {
               const fArr = Array.isArray(fData) ? fData : fData.data || [];
-              setFolders(prev => {
+              setFolders((prev) => {
                 const merged = [...prev];
-                fArr.forEach(f => {
-                  if (!merged.some(ff => ff.id === f.id)) {
+                fArr.forEach((f) => {
+                  if (!merged.some((ff) => ff.id === f.id)) {
                     merged.push(f);
                   }
                 });
@@ -501,33 +509,45 @@ export default function FolderPage() {
 
               // fetch endpoints cho từng folder
               fArr.forEach((f) => {
-                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`, {credentials: "include"})
-                  .then(r2 => r2.json())
-                  .then(eData => {
-                    const eArr = Array.isArray(eData) ? eData : eData.data || [];
+                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`, {
+                  credentials: "include",
+                })
+                  .then((r2) => r2.json())
+                  .then((eData) => {
+                    const eArr = Array.isArray(eData)
+                      ? eData
+                      : eData.data || [];
 
-                    const withProjectId = eArr.map(e => ({
+                    const withProjectId = eArr.map((e) => ({
                       ...e,
-                      project_id: f.project_id
+                      project_id: f.project_id,
                     }));
 
-                    setEndpoints(prev => {
+                    setEndpoints((prev) => {
                       const merged = [...prev];
-                      withProjectId.forEach(e => {
-                        if (!merged.some(ee => ee.id === e.id)) {
+                      withProjectId.forEach((e) => {
+                        if (!merged.some((ee) => ee.id === e.id)) {
                           merged.push(e);
                         }
                       });
                       return merged;
                     });
                   })
-                  .catch(() => console.error(`Failed to fetch endpoints for folder ${f.id}`));
+                  .catch(() =>
+                    console.error(
+                      `Failed to fetch endpoints for folder ${f.id}`
+                    )
+                  );
               });
             })
-            .catch(() => console.error(`Failed to fetch folders for project ${p.id}`));
+            .catch(() =>
+              console.error(`Failed to fetch folders for project ${p.id}`)
+            );
         });
       })
-      .catch(() => console.error(`Failed to fetch projects for workspace ${wsId}`));
+      .catch(() =>
+        console.error(`Failed to fetch projects for workspace ${wsId}`)
+      );
   };
 
   // useEffect(() => {
@@ -537,54 +557,68 @@ export default function FolderPage() {
   const fetchLogs = async (pid) => {
     if (!pid) return;
     try {
-      const res = await fetch(`${API_ROOT}/project_request_logs?project_id=${pid}`, {credentials: "include"});
+      const res = await fetch(
+        `${API_ROOT}/project_request_logs?project_id=${pid}`,
+        { credentials: "include" }
+      );
       if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
       const raw = await res.json();
 
       const logsArray = Array.isArray(raw)
         ? raw
         : Array.isArray(raw.items)
-          ? raw.items
-          : Array.isArray(raw.data)
-            ? raw.data
-            : [];
+        ? raw.items
+        : Array.isArray(raw.data)
+        ? raw.data
+        : [];
 
-      const endpointMap = new Map(endpoints.map(e => [String(e.id), e]));
+      const endpointMap = new Map(endpoints.map((e) => [String(e.id), e]));
 
       const enrichedLogs = await Promise.all(
         logsArray.map(async (log) => {
-          if (!log || !log.endpoint_id) return {...log, project_id: log?.project_id ?? pid};
+          if (!log || !log.endpoint_id)
+            return { ...log, project_id: log?.project_id ?? pid };
 
           const endpoint = endpointMap.get(String(log.endpoint_id));
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
 
           try {
-            const r2 =
-              await fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`, {
-                credentials: "include"
-              });
-            if (!r2.ok) throw new Error('responses not ok');
+            const r2 = await fetch(
+              `${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`,
+              {
+                credentials: "include",
+              }
+            );
+            if (!r2.ok) throw new Error("responses not ok");
             const payload = await r2.json();
             const responses = Array.isArray(payload)
               ? payload
               : Array.isArray(payload.items)
-                ? payload.items
-                : Array.isArray(payload.data)
-                  ? payload.data
-                  : [];
+              ? payload.items
+              : Array.isArray(payload.data)
+              ? payload.data
+              : [];
 
-            const matched = responses.find(r => String(r.id) === String(log.response_id)) || responses[0];
+            const matched =
+              responses.find((r) => String(r.id) === String(log.response_id)) ||
+              responses[0];
 
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : (log.project_id ?? pid),
-              endpointResponseName: matched ? `${endpointName} - ${matched.name}` : endpointName,
+              project_id: endpoint
+                ? endpoint.project_id
+                : log.project_id ?? pid,
+              endpointResponseName: matched
+                ? `${endpointName} - ${matched.name}`
+                : endpointName,
             };
           } catch (err) {
             console.error("Error fetching endpoint_responses:", err);
             return {
               ...log,
-              project_id: endpoint ? endpoint.project_id : (log.project_id ?? pid),
+              project_id: endpoint
+                ? endpoint.project_id
+                : log.project_id ?? pid,
               endpointResponseName: endpointName,
             };
           }
@@ -592,7 +626,6 @@ export default function FolderPage() {
       );
 
       setLogs(enrichedLogs);
-
     } catch (err) {
       console.error("Error fetching logs:", err);
       toast.error("Failed to load logs");
@@ -612,28 +645,38 @@ export default function FolderPage() {
       // Get all endpoints in this folder
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(e => String(e.folder_id) === String(deleteFolderId));
+      const endpointsToDelete = allEndpoints.filter(
+        (e) => String(e.folder_id) === String(deleteFolderId)
+      );
 
       // Delete all endpoints in the folder first
       await Promise.all(
-        endpointsToDelete.map(e =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE", credentials: "include",})
+        endpointsToDelete.map((e) =>
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {
+            method: "DELETE",
+            credentials: "include",
+          })
         )
       );
 
       // Delete the folder
-      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {method: "DELETE", credentials: "include",});
+      await fetch(`${API_ROOT}/folders/${deleteFolderId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       // Update local state
-      setFolders(prev => prev.filter(f => f.id !== deleteFolderId));
+      setFolders((prev) => prev.filter((f) => f.id !== deleteFolderId));
 
       toast.dismiss();
-      toast.success(`Folder and its ${endpointsToDelete.length} endpoints deleted successfully`);
+      toast.success(
+        `Folder and its ${endpointsToDelete.length} endpoints deleted successfully`
+      );
 
       setOpenDeleteFolder(false);
       setDeleteFolderId(null);
     } catch (error) {
-      console.error('Delete folder error:', error);
+      console.error("Delete folder error:", error);
       toast.error("Failed to delete folder");
     }
   };
@@ -648,11 +691,15 @@ export default function FolderPage() {
     }
 
     // Check for duplicate folder names in the current project (exclude current folder when editing)
-    const projectFolders = folders.filter(f =>
-      String(f.project_id) === String(projectId) &&
-      f.id !== editingFolderId
+    const projectFolders = folders.filter(
+      (f) =>
+        String(f.project_id) === String(projectId) && f.id !== editingFolderId
     );
-    if (projectFolders.some(f => f.name.toLowerCase() === name.trim().toLowerCase())) {
+    if (
+      projectFolders.some(
+        (f) => f.name.toLowerCase() === name.trim().toLowerCase()
+      )
+    ) {
       return "Folder name already exists in this project";
     }
 
@@ -661,13 +708,10 @@ export default function FolderPage() {
 
   const hasChanges = () => {
     if (!editingFolderId) return true;
-    const originalFolder = folders.find(f => f.id === editingFolderId);
+    const originalFolder = folders.find((f) => f.id === editingFolderId);
     if (!originalFolder) return false;
-    return (
-      editFolderName.trim() !== originalFolder.name
-    );
+    return editFolderName.trim() !== originalFolder.name;
   };
-
 
   const handleCreateFolder = async () => {
     const validationError = validateFolderName(newFolderName);
@@ -686,14 +730,14 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders`, {
         method: "POST",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(folderData),
       });
 
       if (!res.ok) throw new Error("Failed to create folder");
       const saved = await res.json();
 
-      setFolders(prev => [...prev, saved]);
+      setFolders((prev) => [...prev, saved]);
       toast.success(`Folder "${saved.name}" created successfully`);
       setOpenNewFolder(false);
       setNewFolderName("");
@@ -712,7 +756,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editFolderName.trim(),
         }),
@@ -721,8 +765,8 @@ export default function FolderPage() {
       if (!res.ok) throw new Error("Failed to update folder");
       const updated = await res.json();
 
-      setFolders(prev =>
-        prev.map(f => (f.id === editingFolderId ? updated : f))
+      setFolders((prev) =>
+        prev.map((f) => (f.id === editingFolderId ? updated : f))
       );
       toast.success("Folder updated successfully!");
       setOpenEditFolder(false);
@@ -825,9 +869,12 @@ export default function FolderPage() {
     if (state) {
       // Stateful
       try {
-        const res = await fetch(`${API_ROOT}/endpoints_ful?folder_id=${selectedFolder?.id}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${API_ROOT}/endpoints_ful?folder_id=${selectedFolder?.id}`,
+          {
+            credentials: "include",
+          }
+        );
         if (!res.ok) throw new Error("Failed to fetch stateful endpoints");
         const data = await res.json();
         const statefulArr = Array.isArray(data) ? data : data.data || [];
@@ -873,13 +920,13 @@ export default function FolderPage() {
         name: newEName.trim(),
         folder_id: newEFolderId,
         method: newEMethod.toUpperCase(),
-        path: newEPath
+        path: newEPath,
       };
 
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEndpoint),
       });
 
@@ -887,8 +934,11 @@ export default function FolderPage() {
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
         if (errorData && errorData.errors && Array.isArray(errorData.errors)) {
-          errorData.errors.forEach(err => {
-            if (err.message) toast.error(`Error ${err.field ? `${err.field}: ` : ""}${err.message}`);
+          errorData.errors.forEach((err) => {
+            if (err.message)
+              toast.error(
+                `Error ${err.field ? `${err.field}: ` : ""}${err.message}`
+              );
           });
         } else {
           toast.error("Failed to create endpoint");
@@ -898,7 +948,7 @@ export default function FolderPage() {
 
       // Nếu thành công
       const created = await res.json();
-      setEndpoints(prev => [...prev, created]);
+      setEndpoints((prev) => [...prev, created]);
       setOpenNew(false);
       toast.success("Endpoint created!");
     } catch (error) {
@@ -914,7 +964,9 @@ export default function FolderPage() {
     setEditEName(e.name);
     setEditEState(e.is_stateful);
 
-    const folderOfEndpoint = folders.find((f) => String(f.id) === String(e.folder_id));
+    const folderOfEndpoint = folders.find(
+      (f) => String(f.id) === String(e.folder_id)
+    );
     setSelectedFolder(folderOfEndpoint);
 
     setCurrentEndpoint(e);
@@ -923,9 +975,7 @@ export default function FolderPage() {
 
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
-    return (
-      editEName !== currentEndpoint.name
-    );
+    return editEName !== currentEndpoint.name;
   }, [editEName, currentEndpoint]);
 
   const handleUpdateEndpoint = async () => {
@@ -958,7 +1008,10 @@ export default function FolderPage() {
 
   // delete endpoint stateless
   const handleDeleteEndpoint = (id) => {
-    fetch(`${API_ROOT}/endpoints/${id}`, {method: "DELETE", credentials: "include",})
+    fetch(`${API_ROOT}/endpoints/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
       .then(() => {
         setEndpoints((prev) => prev.filter((e) => e.id !== id));
         toast.success("Delete endpoint successfully!");
@@ -977,8 +1030,7 @@ export default function FolderPage() {
     if (name.trim().length > 20) return "Workspace name max 20 chars";
     if (
       workspaces.some(
-        (w) =>
-          w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
+        (w) => w.name.toLowerCase() === name.toLowerCase() && w.id !== excludeId
       )
     )
       return "Workspace name already exists";
@@ -993,7 +1045,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1020,7 +1072,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1029,7 +1081,7 @@ export default function FolderPage() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1045,65 +1097,77 @@ export default function FolderPage() {
       // 1. Get all projects in this workspace
       const projectsRes = await fetch(`${API_ROOT}/projects`);
       const allProjects = await projectsRes.json();
-      const projectsToDelete = allProjects.filter((p) => String(p.workspace_id) === String(id));
-      const projectIds = projectsToDelete.map(p => p.id);
+      const projectsToDelete = allProjects.filter(
+        (p) => String(p.workspace_id) === String(id)
+      );
+      const projectIds = projectsToDelete.map((p) => p.id);
 
       // 2. Get all folders in these projects
       const foldersRes = await fetch(`${API_ROOT}/folders`);
       const allFolders = await foldersRes.json();
       const foldersToDelete = allFolders.filter((f) =>
-        projectIds.some(pid => String(f.project_id) === String(pid))
+        projectIds.some((pid) => String(f.project_id) === String(pid))
       );
-      const folderIds = foldersToDelete.map(f => f.id);
+      const folderIds = foldersToDelete.map((f) => f.id);
 
       // 3. Get all endpoints in these projects/folders
       const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
       const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter((e) =>
-        projectIds.some(pid => String(e.project_id) === String(pid)) ||
-        folderIds.some(fid => String(e.folder_id) === String(fid))
+      const endpointsToDelete = allEndpoints.filter(
+        (e) =>
+          projectIds.some((pid) => String(e.project_id) === String(pid)) ||
+          folderIds.some((fid) => String(e.folder_id) === String(fid))
       );
 
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) => prev.filter((p) => String(p.workspace_id) !== String(id)));
-      setFolders((prev) => prev.filter((f) =>
-        !projectIds.some(pid => String(f.project_id) === String(pid))
-      ));
-      setEndpoints((prev) => prev.filter((e) =>
-        !projectIds.some(pid => String(e.project_id) === String(pid)) &&
-        !folderIds.some(fid => String(e.folder_id) === String(fid))
-      ));
+      setProjects((prev) =>
+        prev.filter((p) => String(p.workspace_id) !== String(id))
+      );
+      setFolders((prev) =>
+        prev.filter(
+          (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
+        )
+      );
+      setEndpoints((prev) =>
+        prev.filter(
+          (e) =>
+            !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
+            !folderIds.some((fid) => String(e.folder_id) === String(fid))
+        )
+      );
 
       if (String(currentWsId) === String(id)) setCurrentWsId(null);
 
-      toast.success(`Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`);
+      toast.success(
+        `Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`
+      );
     } catch (error) {
-      console.error('Delete workspace error:', error);
+      console.error("Delete workspace error:", error);
       toast.error("Failed to delete workspace or its content");
     }
   };
@@ -1161,9 +1225,13 @@ export default function FolderPage() {
   let sortedEndpoints = [...filteredEndpoints];
 
   if (sortOption === "Recently created") {
-    sortedEndpoints.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    sortedEndpoints.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
   } else if (sortOption === "Oldest first") {
-    sortedEndpoints.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    sortedEndpoints.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
   } else if (sortOption === "Alphabetical (A-Z)") {
     sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sortOption === "Alphabetical (Z-A)") {
@@ -1174,7 +1242,9 @@ export default function FolderPage() {
     if (!selectedFolder?.id || !openSchemaDialog) return;
 
     // Fetch base_schema từ folder
-    fetch(`${API_ROOT}/folders/${selectedFolder.id}`, { credentials: "include" })
+    fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
+      credentials: "include",
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch folder schema");
         return res.json();
@@ -1195,8 +1265,8 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({base_schema: newSchema}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -1211,358 +1281,453 @@ export default function FolderPage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
-      <div className="mt-8 w-full bg-white shadow-sm z-20">
-        {/* Top Navbar */}
-        <Topbar
-          workspaces={workspaces}
-          current={currentWsId}
-          setCurrent={setCurrentWsId}
-          onWorkspaceChange={setCurrentWsId}
-          onAddWorkspace={handleAddWorkspace}
-          onEditWorkspace={(ws) => {
-            setEditWsId(ws.id);
-            setEditWsName(ws.name);
-            setOpenEditWs(true);
-          }}
-          onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
-          setOpenNewWs={setOpenNewWs}
-          breadcrumb={
-            currentWorkspace
-              ? currentProject
-                ? [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                  {
-                    label: currentProject.name,
-                    href: `/dashboard/${currentProject.id}`,
-                  },
-                ]
-                : [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                ]
-              : []
-          }
-          showNewResponseButton={false}
-          username={currentUsername}
-        />
-      </div>
-      {/* Main Content */}
-      <main className="flex justify-center items-center bg-white transition-all duration-300">
-        <div className="w-full px-2 pt-2 pb-4">
-          <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
-            <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
-              <button
-                onClick={() => setActiveTab("folders")}
-                className={`flex rounded-tl-lg px-4 py-2 -mb-px ${activeTab === "folders"
-                  ? "bg-white text-stone-900"
-                  : "bg-gray-200 text-stone-500"
-                }`}
-              >
-                <div className="flex items-center">
-                  <img src={folderIcon} alt="folder" className="w-4 h-4 mr-2"/>
-                  <span className="text-md font-semibold">Folders</span>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("logs");
-                  fetchLogs(projectId);
-                }}
-                className={`rounded-none px-4 py-2 -mb-px ${activeTab === "logs"
-                  ? "bg-white text-stone-900"
-                  : "bg-gray-200 text-stone-500"
-                }`}
-              >
-                <div className="flex items-center">
-                  <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2"/>
-                  <span className="text-md font-semibold">Logs</span>
-                </div>
-              </button>
-            </div>
-
-            {activeTab === "folders" ? (
-              <>
-                <div className="flex flex-col items-center justify-center w-full">
-                  <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-4">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-gray-800">
-                        {currentProject?.name} — {folders.filter(f => String(f.project_id) === String(projectId)).length} Folder(s)
-                      </h2>
-
-                      <Button
-                        className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
-                        onClick={() => {
-                          setOpenNewFolder(true);
-                          setNewFolderName("");
-                          setNewFolderMode(false);
-                          setNewFolderDesc("");
-                        }}
-                      >
-                        New Folder
-                      </Button>
-                    </div>
-
-                    {/* Folder List */}
-                    <div className="gap-6">
-                      {folders.filter(f => String(f.project_id) === String(projectId)).length === 0 ? (
-                        <div className="text-center text-slate-500 py-12">
-                          No folders found in this project.
-                        </div>
-                      ) : (
-                        folders
-                          .filter(f => String(f.project_id) === String(projectId))
-                          .map((folder) => (
-                            <FolderCard
-                              key={folder.id}
-                              folder={folder}
-                              endpoints={endpoints}
-                              onEditName={(f) => {
-                                setEditFolderName(f.name);
-                                setEditingFolderId(f.id);
-                                setOpenEditFolder(true);
-                              }}
-                              onEditSchema={(f) => {
-                                setSelectedFolder(f);
-                                setOpenSchemaDialog(true);
-                              }}
-                              onDeleteFolder={(f) => {
-                                handleDeleteFolder(f.id);
-                              }}
-                              onToggleMode={async (f, newVal) => {
-                                await fetch(`${API_ROOT}/folders/${f.id}`, {
-                                  method: "PUT",
-                                  credentials: "include",
-                                  headers: {"Content-Type": "application/json"},
-                                  body: JSON.stringify({is_public: newVal}),
-                                });
-                                setFolders((prev) =>
-                                  prev.map((ff) => (ff.id === f.id ? {...ff, is_public: newVal} : ff))
-                                );
-                              }}
-                              onAddEndpoint={(f) => {
-                                setNewEType(false);
-                                setNewEFolderId(f.id || "");
-                                setNewEName("");
-                                setNewEPath("");
-                                setNewEMethod("");
-                                setOpenNew(true);
-                              }}
-                              onEditEndpoint={(ep) => openEditEndpoint(ep)}
-                              onDeleteEndpoint={(id) => handleDeleteEndpoint(id)}
-                              onOpenEndpoint={(ep) => navigate(`/dashboard/${projectId}/endpoint/${ep.id}`)}
-                            />
-                          ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : activeTab === "logs" ? (
-              <>
-                {/* Logs */}
-                <div className="flex flex-col items-center justify-center w-full">
-                  <div className="w-full max-w-7xl overflow-x-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex gap-2">
-                        {/* Method Filter */}
-                        <Select
-                          value={methodFilter}
-                          onValueChange={setMethodFilter}
-                        >
-                          <SelectTrigger className="w-[140px] bg-white">
-                            <SelectValue placeholder="All Methods"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All Methods">All Methods</SelectItem>
-                            <SelectItem value="GET">GET</SelectItem>
-                            <SelectItem value="POST">POST</SelectItem>
-                            <SelectItem value="PUT">PUT</SelectItem>
-                            <SelectItem value="DELETE">DELETE</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        {/* Status Filter */}
-                        <Select
-                          value={statusFilter}
-                          onValueChange={setStatusFilter}
-                        >
-                          <SelectTrigger className="w-[140px] bg-white">
-                            <SelectValue placeholder="All Status"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All Status">All Status</SelectItem>
-                            <SelectItem value="200">200</SelectItem>
-                            <SelectItem value="400">400</SelectItem>
-                            <SelectItem value="404">404</SelectItem>
-                            <SelectItem value="500">500</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        {/* Time Filter */}
-                        <Select
-                          value={timeFilter}
-                          onValueChange={setTimeFilter}
-                        >
-                          <SelectTrigger className="w-[160px] bg-white">
-                            <SelectValue placeholder="All time"/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="All time">All time</SelectItem>
-                            <SelectItem value="Last 24 hours">
-                              Last 24 hours
-                            </SelectItem>
-                            <SelectItem value="Last 7 days">
-                              Last 7 days
-                            </SelectItem>
-                            <SelectItem value="Last 30 days">
-                              Last 30 days
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <img
-                            src={exportIcon}
-                            alt="Export Icon"
-                            className="w-4 h-4 object-contain"
-                          />
-                          Export
-                        </Button>
-                        <Button variant="outline" onClick={() => fetchLogs(projectId)}>
-                          <img
-                            src={refreshIcon}
-                            alt="Refresh Icon"
-                            className="w-4 h-4 object-contain"
-                          />
-                          Refresh
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-1/4 text-black">Matched Response</TableHead>
-                          <TableHead className="w-1/12 text-black">Method</TableHead>
-                          <TableHead className="w-1/4 text-black">Path</TableHead>
-                          <TableHead className="w-1/12 text-black">Status</TableHead>
-                          <TableHead className="w-1/12 text-black">Latency</TableHead>
-                          <TableHead className="w-1/4 text-black">Timestamp</TableHead>
-                        </TableRow>
-                        <TableRow className="border-b border-slate-200">
-                          <TableHead colSpan={5}>
-                            <div className="flex items-center gap-2 w-1/4">
-                              <div className="relative w-full">
-                                <img
-                                  src={searchIcon}
-                                  alt="search"
-                                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
-                                />
-                                <Input
-                                  type="text"
-                                  placeholder="Search..."
-                                  className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
-                                  value={searchTerm}
-                                  onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                          </TableHead>
-                        </TableRow>
-                        <TableRow className="border-none">
-                          <TableHead colSpan={5} className="py-1">
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-
-                      <TableBody>
-                        {logs.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="text-center text-slate-500 py-4"
-                            >
-                              No logs available.
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredLogs.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="text-center text-slate-500 py-4"
-                            >
-                              No logs found.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          paginatedLogs.map((log, i) => <LogCard key={i} log={log}/>)
-                        )}
-                      </TableBody>
-                    </Table>
-
-                    <div className="flex items-center justify-end mt-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">Rows per page</span>
-                        <Select
-                          value={rowsPerPage.toString()}
-                          onValueChange={(val) => {
-                            setRowsPerPage(Number(val));
-                            setPage(1); // reset về trang 1 khi đổi size
-                          }}
-                        >
-                          <SelectTrigger className="w-[80px]">
-                            <SelectValue/>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[5, 10, 20, 50].map((size) => (
-                              <SelectItem key={size} value={size.toString()}>
-                                {size}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 1}
-                          onClick={() => setPage((p) => p - 1)}
-                        >
-                          ‹
-                        </Button>
-                        <span className="text-sm">
-                          Page {page} of {totalPages || 1}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === totalPages || totalPages === 0}
-                          onClick={() => setPage((p) => p + 1)}
-                        >
-                          ›
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : null}
+      {isLoading ? (
+        // Loading screen
+        <div className="flex justify-center items-center h-screen bg-white">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
+            <p className="text-lg font-medium text-gray-700">
+              Loading folders...
+            </p>
           </div>
         </div>
-      </main>
+      ) : (
+        // Main content
+        <>
+          <div className="mt-8 w-full bg-white shadow-sm z-20">
+            {/* Top Navbar */}
+            <Topbar
+              workspaces={workspaces}
+              current={currentWsId}
+              setCurrent={setCurrentWsId}
+              onWorkspaceChange={setCurrentWsId}
+              onAddWorkspace={handleAddWorkspace}
+              onEditWorkspace={(ws) => {
+                setEditWsId(ws.id);
+                setEditWsName(ws.name);
+                setOpenEditWs(true);
+              }}
+              onDeleteWorkspace={(id) => setConfirmDeleteWs(id)}
+              setOpenNewWs={setOpenNewWs}
+              breadcrumb={
+                currentWorkspace
+                  ? currentProject
+                    ? [
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                      ]
+                    : [
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                      ]
+                  : []
+              }
+              showNewResponseButton={false}
+              username={currentUsername}
+            />
+          </div>
 
-      {/* New Workspace */}
+          {/* Main Content */}
+          <main className="flex justify-center items-center bg-white transition-all duration-300">
+            <div className="w-full px-2 pt-2 pb-4">
+              <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
+                <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
+                  <button
+                    onClick={() => setActiveTab("folders")}
+                    className={`flex rounded-tl-lg px-4 py-2 -mb-px ${
+                      activeTab === "folders"
+                        ? "bg-white text-stone-900"
+                        : "bg-gray-200 text-stone-500"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src={folderIcon}
+                        alt="folder"
+                        className="w-4 h-4 mr-2"
+                      />
+                      <span className="text-md font-semibold">Folders</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("logs");
+                      fetchLogs(projectId);
+                    }}
+                    className={`rounded-none px-4 py-2 -mb-px ${
+                      activeTab === "logs"
+                        ? "bg-white text-stone-900"
+                        : "bg-gray-200 text-stone-500"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2" />
+                      <span className="text-md font-semibold">Logs</span>
+                    </div>
+                  </button>
+                </div>
+
+                {activeTab === "folders" ? (
+                  <>
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-4">
+                        <div className="flex items-center justify-between mb-6">
+                          <h2 className="text-xl font-semibold text-gray-800">
+                            {currentProject?.name} —{" "}
+                            {
+                              folders.filter(
+                                (f) =>
+                                  String(f.project_id) === String(projectId)
+                              ).length
+                            }{" "}
+                            Folder(s)
+                          </h2>
+
+                          <Button
+                            className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                            onClick={() => {
+                              setOpenNewFolder(true);
+                              setNewFolderName("");
+                              setNewFolderMode(false);
+                              setNewFolderDesc("");
+                            }}
+                          >
+                            New Folder
+                          </Button>
+                        </div>
+
+                        {/* Folder List */}
+                        <div className="gap-6">
+                          {folders.filter(
+                            (f) => String(f.project_id) === String(projectId)
+                          ).length === 0 ? (
+                            <div className="text-center text-slate-500 py-12">
+                              No folders found in this project.
+                            </div>
+                          ) : (
+                            folders
+                              .filter(
+                                (f) =>
+                                  String(f.project_id) === String(projectId)
+                              )
+                              .map((folder) => (
+                                <FolderCard
+                                  key={folder.id}
+                                  folder={folder}
+                                  endpoints={endpoints}
+                                  onEditName={(f) => {
+                                    setEditFolderName(f.name);
+                                    setEditingFolderId(f.id);
+                                    setOpenEditFolder(true);
+                                  }}
+                                  onEditSchema={(f) => {
+                                    setSelectedFolder(f);
+                                    setOpenSchemaDialog(true);
+                                  }}
+                                  onDeleteFolder={(f) => {
+                                    handleDeleteFolder(f.id);
+                                  }}
+                                  onToggleMode={async (f, newVal) => {
+                                    await fetch(`${API_ROOT}/folders/${f.id}`, {
+                                      method: "PUT",
+                                      credentials: "include",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        is_public: newVal,
+                                      }),
+                                    });
+                                    setFolders((prev) =>
+                                      prev.map((ff) =>
+                                        ff.id === f.id
+                                          ? { ...ff, is_public: newVal }
+                                          : ff
+                                      )
+                                    );
+                                  }}
+                                  onAddEndpoint={(f) => {
+                                    setNewEType(false);
+                                    setNewEFolderId(f.id || "");
+                                    setNewEName("");
+                                    setNewEPath("");
+                                    setNewEMethod("");
+                                    setOpenNew(true);
+                                  }}
+                                  onEditEndpoint={(ep) => openEditEndpoint(ep)}
+                                  onDeleteEndpoint={(id) =>
+                                    handleDeleteEndpoint(id)
+                                  }
+                                  onOpenEndpoint={(ep) =>
+                                    navigate(
+                                      `/dashboard/${projectId}/endpoint/${ep.id}`
+                                    )
+                                  }
+                                />
+                              ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : activeTab === "logs" ? (
+                  <>
+                    {/* Logs */}
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <div className="w-full max-w-7xl overflow-x-auto">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex gap-2">
+                            {/* Method Filter */}
+                            <Select
+                              value={methodFilter}
+                              onValueChange={setMethodFilter}
+                            >
+                              <SelectTrigger className="w-[140px] bg-white">
+                                <SelectValue placeholder="All Methods" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="All Methods">
+                                  All Methods
+                                </SelectItem>
+                                <SelectItem value="GET">GET</SelectItem>
+                                <SelectItem value="POST">POST</SelectItem>
+                                <SelectItem value="PUT">PUT</SelectItem>
+                                <SelectItem value="DELETE">DELETE</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            {/* Status Filter */}
+                            <Select
+                              value={statusFilter}
+                              onValueChange={setStatusFilter}
+                            >
+                              <SelectTrigger className="w-[140px] bg-white">
+                                <SelectValue placeholder="All Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="All Status">
+                                  All Status
+                                </SelectItem>
+                                <SelectItem value="200">200</SelectItem>
+                                <SelectItem value="400">400</SelectItem>
+                                <SelectItem value="404">404</SelectItem>
+                                <SelectItem value="500">500</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            {/* Time Filter */}
+                            <Select
+                              value={timeFilter}
+                              onValueChange={setTimeFilter}
+                            >
+                              <SelectTrigger className="w-[160px] bg-white">
+                                <SelectValue placeholder="All time" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="All time">
+                                  All time
+                                </SelectItem>
+                                <SelectItem value="Last 24 hours">
+                                  Last 24 hours
+                                </SelectItem>
+                                <SelectItem value="Last 7 days">
+                                  Last 7 days
+                                </SelectItem>
+                                <SelectItem value="Last 30 days">
+                                  Last 30 days
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button variant="outline">
+                              <img
+                                src={exportIcon}
+                                alt="Export Icon"
+                                className="w-4 h-4 object-contain"
+                              />
+                              Export
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => fetchLogs(projectId)}
+                            >
+                              <img
+                                src={refreshIcon}
+                                alt="Refresh Icon"
+                                className="w-4 h-4 object-contain"
+                              />
+                              Refresh
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-1/4 text-black">
+                                Matched Response
+                              </TableHead>
+                              <TableHead className="w-1/12 text-black">
+                                Method
+                              </TableHead>
+                              <TableHead className="w-1/4 text-black">
+                                Path
+                              </TableHead>
+                              <TableHead className="w-1/12 text-black">
+                                Status
+                              </TableHead>
+                              <TableHead className="w-1/12 text-black">
+                                Latency
+                              </TableHead>
+                              <TableHead className="w-1/4 text-black">
+                                Timestamp
+                              </TableHead>
+                            </TableRow>
+                            <TableRow className="border-b border-slate-200">
+                              <TableHead colSpan={5}>
+                                <div className="flex items-center gap-2 w-1/4">
+                                  <div className="relative w-full">
+                                    <img
+                                      src={searchIcon}
+                                      alt="search"
+                                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
+                                    />
+                                    <Input
+                                      type="text"
+                                      placeholder="Search..."
+                                      className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
+                                      value={searchTerm}
+                                      onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </TableHead>
+                            </TableRow>
+                            <TableRow className="border-none">
+                              <TableHead
+                                colSpan={5}
+                                className="py-1"
+                              ></TableHead>
+                            </TableRow>
+                          </TableHeader>
+
+                          <TableBody>
+                            {logs.length === 0 ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={6}
+                                  className="text-center text-slate-500 py-4"
+                                >
+                                  No logs available.
+                                </TableCell>
+                              </TableRow>
+                            ) : filteredLogs.length === 0 ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={6}
+                                  className="text-center text-slate-500 py-4"
+                                >
+                                  No logs found.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              paginatedLogs.map((log, i) => (
+                                <LogCard key={i} log={log} />
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+
+                        <div className="flex items-center justify-end mt-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">Rows per page</span>
+                            <Select
+                              value={rowsPerPage.toString()}
+                              onValueChange={(val) => {
+                                setRowsPerPage(Number(val));
+                                setPage(1); // reset về trang 1 khi đổi size
+                              }}
+                            >
+                              <SelectTrigger className="w-[80px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[5, 10, 20, 50].map((size) => (
+                                  <SelectItem
+                                    key={size}
+                                    value={size.toString()}
+                                  >
+                                    {size}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={page === 1}
+                              onClick={() => setPage((p) => p - 1)}
+                            >
+                              ‹
+                            </Button>
+                            <span className="text-sm">
+                              Page {page} of {totalPages || 1}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={page === totalPages || totalPages === 0}
+                              onClick={() => setPage((p) => p + 1)}
+                            >
+                              ›
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </main>
+
+          {/* footer */}
+          <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+            <span>© Teknix Corp. All rights reserved.</span>
+            <div className="flex items-center gap-3 text-gray-700">
+              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
+              <img src={fbIcon} alt="facebook" className="w-4 h-4" />
+              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+              <a className="hover:underline font-semibold" href="">
+                About
+              </a>
+              <span>·</span>
+              <a className="hover:underline font-semibold" href="">
+                Support
+              </a>
+            </div>
+          </footer>
+        </>
+      )}
+
+      {/* Dialog components luôn hiển thị bên ngoài loading */}
       <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
         <DialogContent>
           <DialogHeader>
@@ -1660,10 +1825,7 @@ export default function FolderPage() {
             Are you sure you want to delete this workspace and all its projects?
           </p>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteWs(null)}
-            >
+            <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
             </Button>
             <Button
@@ -1678,7 +1840,6 @@ export default function FolderPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
 
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
@@ -1714,7 +1875,9 @@ export default function FolderPage() {
             <Button
               onClick={handleUpdateFolder}
               disabled={!hasChanges()}
-              className={`bg-yellow-300 hover:bg-yellow-400 text-indigo-950 ${!hasChanges() ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`bg-yellow-300 hover:bg-yellow-400 text-indigo-950 ${
+                !hasChanges() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Update
             </Button>
@@ -1727,19 +1890,20 @@ export default function FolderPage() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle></DialogTitle>
-            <DialogDescription>
-            </DialogDescription>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
 
           {folderSchema ? (
             <BaseSchemaEditor
-              folderData={{schema: folderSchema}}
+              folderData={{ schema: folderSchema }}
               folderId={selectedFolder?.id}
               onSave={handleSaveFolderSchema}
-              method={"PUT"} // không cần phân biệt GET/POST ở đây
+              method={"PUT"}
             />
           ) : (
-            <div className="text-gray-500 text-center py-6">Loading schema...</div>
+            <div className="text-gray-500 text-center py-6">
+              Loading schema...
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -1753,7 +1917,7 @@ export default function FolderPage() {
 
           <p className="mt-2 text-gray-600">
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
+            <span className="font-semibold">{selectedFolder?.name}</span>?<br />
             <span className="text-red-500 text-sm">
               This action cannot be undone.
             </span>
@@ -1767,12 +1931,16 @@ export default function FolderPage() {
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={async () => {
                 try {
-                  if (!selectedFolder?.id) throw new Error("No folder selected");
+                  if (!selectedFolder?.id)
+                    throw new Error("No folder selected");
 
-                  const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
-                    method: "DELETE",
-                    credentials: "include",
-                  });
+                  const res = await fetch(
+                    `${API_ROOT}/folders/${selectedFolder.id}`,
+                    {
+                      method: "DELETE",
+                      credentials: "include",
+                    }
+                  );
 
                   if (!res.ok) throw new Error("Failed to delete folder");
 
@@ -1805,7 +1973,8 @@ export default function FolderPage() {
 
           <div className="py-2">
             <p className="text-sm text-gray-600">
-              Are you sure you want to delete this folder and all its endpoints? This action cannot be undone.
+              Are you sure you want to delete this folder and all its endpoints?
+              This action cannot be undone.
             </p>
           </div>
 
@@ -1837,23 +2006,24 @@ export default function FolderPage() {
           className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              // avoid Enter triggering when selecting inside selects; create explicitly on button
               e.preventDefault();
               handleCreateEndpoint();
             }
           }}
         >
           <DialogHeader>
-            <DialogTitle>
-              New Endpoint
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-500">Endpoint details</DialogDescription>
+            <DialogTitle>New Endpoint</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              Endpoint details
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Name
+              </h3>
               <Input
                 placeholder="Enter endpoint name"
                 value={newEName}
@@ -1863,10 +2033,15 @@ export default function FolderPage() {
 
             {/* Folder select - only folders for current project */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Folder</h3>
-              <Select value={String(newEFolderId || "")} onValueChange={(v) => setNewEFolderId(v)}>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Folder
+              </h3>
+              <Select
+                value={String(newEFolderId || "")}
+                onValueChange={(v) => setNewEFolderId(v)}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an option"/>
+                  <SelectValue placeholder="Select an option" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -1885,7 +2060,9 @@ export default function FolderPage() {
 
             {/* Path */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Path</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Path
+              </h3>
               <Input
                 placeholder="/examples/example/:id"
                 value={newEPath}
@@ -1895,13 +2072,15 @@ export default function FolderPage() {
 
             {/* Method */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Method</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Method
+              </h3>
               <Select
                 value={newEMethod}
                 onValueChange={(v) => setNewEMethod(v)}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a method"/>
+                  <SelectValue placeholder="Select a method" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -1942,7 +2121,7 @@ export default function FolderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Endpoint Dialog (unchanged) */}
+      {/* Edit Endpoint Dialog */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent
           className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
@@ -1956,11 +2135,15 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Edit Endpoint</DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-sm text-slate-800">Endpoint details</DialogDescription>
+          <DialogDescription className="text-sm text-slate-800">
+            Endpoint details
+          </DialogDescription>
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">Name</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Name
+              </h3>
               <Input
                 placeholder="Enter endpoint name"
                 value={editEName}
@@ -1986,20 +2169,6 @@ export default function FolderPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* footer */}
-      <footer
-        className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
-        <span>© Teknix Corp. All rights reserved.</span>
-        <div className="flex items-center gap-3 text-gray-700">
-          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
-          <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
-          <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
-          <a className="hover:underline font-semibold" href="">About</a>
-          <span>·</span>
-          <a className="hover:underline font-semibold" href="">Support</a>
-        </div>
-      </footer>
     </div>
   );
 }
