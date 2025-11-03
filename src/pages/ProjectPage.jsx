@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
 import { API_ROOT } from "../utils/constants";
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -672,13 +671,11 @@ export default function ProjectPage() {
     <div className="flex flex-col min-h-screen bg-slate-50">
       {isLoading ? (
         // Loading UI
-        <div className="flex justify-center items-center h-screen bg-white">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-            <p className="text-lg font-medium text-gray-700">
-              Loading projects...
-            </p>
-          </div>
+        <div className="flex flex-col justify-center items-center h-screen bg-white">
+          <span className="loader"></span>
+          <p className="text-lg mt-2 font-medium text-gray-700">
+            Loading projects...
+          </p>
         </div>
       ) : (
         // Main content

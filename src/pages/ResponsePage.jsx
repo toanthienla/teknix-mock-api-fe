@@ -22,7 +22,6 @@ import {
   Upload,
   Code,
   GripVertical,
-  Loader2,
   FileCode,
   X,
   SaveIcon,
@@ -2132,13 +2131,11 @@ const DashboardPage = () => {
   // Thêm UI loading
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-white">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-          <p className="text-lg font-medium text-gray-700">
-            Loading endpoint data...
-          </p>
-        </div>
+      <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <span className="loader"></span>
+        <p className="text-lg mt-2 font-medium text-gray-700">
+          Loading endpoint data...
+        </p>
       </div>
     );
   }
