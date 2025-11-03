@@ -1,4 +1,3 @@
-import {useEffect, useState} from "react";
 import loginImageLight from "@/assets/light/loginImage.svg";
 import loginImageDark from "@/assets/dark/loginImage.svg";
 import logoLight from "@/assets/light/logo.svg";
@@ -7,34 +6,18 @@ import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
 import { LoginForm } from "@/components/LoginForm.jsx";
-import "@/styles/login.css";
+import "@/styles/auth.css";
+import {useTheme} from "@/services/useTheme.js";
 
 export default function LoginPage() {
-  const [isDark, setIsDark] = useState(false);
-
-  // Khi load lại trang, đọc theme từ localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-      setIsDark(true);
-    }
-  }, []);
-
-  // Toggle dark/light mode
-  const toggleTheme = () => {
-    const newTheme = isDark ? "light" : "dark";
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle("dark", !isDark);
-    localStorage.setItem("theme", newTheme);
-  };
+  const { isDark, toggleTheme } = useTheme();
 
   // Chọn ảnh theo theme
   const logo = isDark ? logoDark : logoLight;
   const loginImage = isDark ? loginImageDark : loginImageLight;
 
   return (
-    <div className="login-page min-h-screen w-full flex items-center justify-center py-2 sm:p-3 md:p-4 transition-colors duration-300">
+    <div className="auth-page min-h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 transition-colors duration-300">
       {/* Toggle Button */}
       <button
         onClick={toggleTheme}
@@ -44,9 +27,9 @@ export default function LoginPage() {
       </button>
 
       {/* Viền ngoài */}
-      <div className="w-full flex items-center justify-center login-page rounded-2xl">
+      <div className="w-full flex items-center justify-center auth-page rounded-2xl">
         {/* Bố cục chính */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full login-card rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full auth-card rounded-2xl overflow-hidden">
 
           {/* Cột trái */}
           <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10">

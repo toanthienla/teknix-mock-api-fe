@@ -62,7 +62,7 @@ export function LoginForm({className, ...props}) {
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="login-card">
+      <Card className="auth-card">
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
           <CardDescription>Enter your account below to login to your account</CardDescription>
@@ -77,7 +77,7 @@ export function LoginForm({className, ...props}) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="youraccount"
-                  className="login-input"
+                  className="auth-input"
                   disabled={isSubmitting}
                 />
               </div>
@@ -89,14 +89,14 @@ export function LoginForm({className, ...props}) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="login-input"
+                  className="auth-input"
                   disabled={isSubmitting}
                 />
               </div>
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
-                  className="login-button w-full"
+                  className="auth-button w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Logging in..." : "Login"}
@@ -108,7 +108,7 @@ export function LoginForm({className, ...props}) {
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="login-link font-bold underline underline-offset-4"
+                className="auth-link font-bold underline underline-offset-4"
               >
                 Sign up
               </button>

@@ -79,7 +79,7 @@ export default function FolderCard({
     <div className="rounded-2xl border border-gray-200 bg-gray-50 mb-6 overflow-hidden">
       {/* Folder Header */}
       <div
-        className={`flex items-center justify-between px-3 py-2 mx-6 my-2 rounded-t-2xl cursor-pointer ${
+        className={`flex items-center justify-between px-8 py-2 mx-6 my-2 rounded-t-2xl cursor-pointer ${
           expanded ? 'border-b border-gray-200 bg-gray-50' : ''
         }`}
         onClick={handleToggleExpand}
@@ -162,7 +162,7 @@ export default function FolderCard({
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-6 pb-6 pt-2 rounded-b-2xl">
+        <div className="px-12 pb-6 pt-2 rounded-b-2xl">
           {/* Endpoint Table */}
           <div className="overflow-x-auto bg-gray-50 rounded-md">
             <table className="w-full border-separate border-spacing-x-2 border-spacing-y-0">

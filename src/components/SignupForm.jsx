@@ -51,7 +51,7 @@ export function SignupForm({className, ...props}) {
 
     try {
       setIsSubmitting(true);
-      await signup({ username, password });
+      await signup({username, password});
       toast.success("Signup successful! Redirecting...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
@@ -66,7 +66,7 @@ export function SignupForm({className, ...props}) {
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="auth-card">
         <CardHeader>
           <CardTitle className="text-xl">Create an account</CardTitle>
           <CardDescription>
@@ -75,65 +75,66 @@ export function SignupForm({className, ...props}) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup}>
-            <div className="grid gap-6">
-              <div className="grid gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="username">Account</Label>
-                  <Input
-                    id="username"
-                    type="username"
-                    placeholder="youraccount"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="confirm_password">Confirm Password</Label>
-                  </div>
-                  <Input
-                    id="confirm_password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-3">
+                <Label htmlFor="username">Account</Label>
+                <Input
+                  id="username"
+                  type="username"
+                  placeholder="youraccount"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating..." : "Create Account"}
-                </Button>
-                <div className="mt-2 text-center text-sm font-semibold">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login")}
-                    className="font-bold underline underline-offset-4 text-yellow-500"
-                  >
-                    Login
-                  </button>
-                </div>
+                  className="auth-input"
+                />
               </div>
+
+              <div className="grid gap-3">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="grid gap-3">
+                <div className="flex items-center">
+                  <Label htmlFor="confirm_password">Confirm Password</Label>
+                </div>
+                <Input
+                  id="confirm_password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  className="auth-input"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full auth-button"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Creating..." : "Create Account"}
+              </Button>
+            </div>
+            <div className="mt-4 text-center text-sm font-semibold">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="font-bold underline underline-offset-4 auth-link"
+              >
+                Login
+              </button>
             </div>
           </form>
         </CardContent>

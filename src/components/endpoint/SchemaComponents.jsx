@@ -354,8 +354,8 @@ export const SchemaBodyEditor = ({
 
   return (
     <div>
-      <Card className="p-6 border-0 rounded-lg">
-        <div className="flex justify-end items-center mb-1">
+      <Card className="px-24 py-6 border-0 rounded-lg">
+        <div className="z-10 flex justify-end items-center mb-1">
           <div className="flex justify-end">
             <div className="relative">
               <Button
@@ -383,11 +383,11 @@ export const SchemaBodyEditor = ({
           {/* Header bảng */}
           <div
             className={`grid ${
-              method === "GET" ? "grid-cols-3" : "grid-cols-4"
+              method === "GET" ? "grid-cols-4" : "grid-cols-5"
             } gap-4 font-semibold text-gray-700 border-b pb-2 mb-2`}
           >
             <div>Select</div>
-            <div className="flex flex-col">
+            <div className="flex flex-col col-span-2">
               <div>Field Name</div>
               {/* Search input */}
               <div className="mt-2">
@@ -401,8 +401,9 @@ export const SchemaBodyEditor = ({
               </div>
             </div>
             <div>Type</div>
-            {method !== "GET" && <div>Required</div>}{" "}
+
             {/* Ẩn cột Required nếu là GET */}
+            {method !== "GET" && <div>Required</div>}{" "}
           </div>
 
           {/* Dữ liệu từng field */}
@@ -417,7 +418,7 @@ export const SchemaBodyEditor = ({
               <div
                 key={fieldName}
                 className={`grid ${
-                  method === "GET" ? "grid-cols-3" : "grid-cols-4"
+                  method === "GET" ? "grid-cols-4" : "grid-cols-5"
                 } gap-4 items-center py-2 hover:bg-gray-100 ${
                   searchTerm &&
                   !fieldName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -440,7 +441,7 @@ export const SchemaBodyEditor = ({
 
                 {/* Field Name */}
                 <div
-                  className={`cursor-pointer ${
+                  className={`cursor-pointer col-span-2 ${
                     fieldName === "id" ? "text-gray-500" : ""
                   }`}
                   onClick={() => {
@@ -453,11 +454,11 @@ export const SchemaBodyEditor = ({
                 </div>
 
                 {/* Type */}
-                <div className="px-2 py-1 rounded-sm bg-[#EDEDEC] w-fit">{fieldType}</div>
+                <div className="px-2 py-1 rounded-xs text-sm font-normal bg-[#EDEDEC] w-fit">{fieldType}</div>
 
                 {/* Required (chỉ hiển thị nếu không phải GET) */}
                 {method !== "GET" && (
-                  <div>{fieldRequired ? "true" : "false"}</div>
+                  <div className="text-right">{fieldRequired ? "Yes" : "No"}</div>
                 )}
               </div>
             );

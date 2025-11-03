@@ -2384,7 +2384,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-16 pt-4 pb-8 w-full`}>
+        <div className={`transition-all duration-300 px-16 pt-4 pb-4 w-full`}>
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
@@ -3214,7 +3214,7 @@ const DashboardPage = () => {
                       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
                         <div className="space-y-6">
                           {/* Đưa Current Value lên trên */}
-                          <div className="flex justify-between items-center mb-0">
+                          <div className="flex justify-between items-center mb-2">
                             <div className="text-xl font-medium text-[#000000] self-start pt-1 mb-1">
                               Current Value
                             </div>
