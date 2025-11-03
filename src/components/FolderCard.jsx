@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import editIcon from "@/assets/Edit Icon.svg";
-import editSchemaIcon from "@/assets/edit_schema.svg";
-import plusIcon from "@/assets/plus.svg";
-import minusIcon from "@/assets/minus.svg";
-import trashIcon from "@/assets/Trash Icon.svg";
+import editIcon from "@/assets/light/Edit Icon.svg";
+import editSchemaIcon from "@/assets/light/edit_schema.svg";
+import plusIcon from "@/assets/light/plus.svg";
+import minusIcon from "@/assets/light/minus.svg";
+import trashIcon from "@/assets/light/Trash Icon.svg";
 import EndpointCard from "@/components/EndpointCard";
 
 export default function FolderCard({

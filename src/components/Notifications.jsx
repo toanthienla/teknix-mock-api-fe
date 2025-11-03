@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/sheet";
 import {Button} from "@/components/ui/button";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import bellIcon from "@/assets/notification.svg";
-import expandIcon from "@/assets/expand.svg";
+import bellIcon from "@/assets/light/notification.svg";
+import expandIcon from "@/assets/light/expand.svg";
 import {Badge} from "@/components/ui/badge";
-import deleteIcon from "@/assets/Trash Icon.svg";
+import deleteIcon from "@/assets/light/Trash Icon.svg";
 import {toast} from "react-toastify";
 import {API_ROOT} from "@/utils/constants.js";
 

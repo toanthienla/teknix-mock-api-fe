@@ -22,7 +22,6 @@ import {
   Upload,
   Code,
   GripVertical,
-  Loader2,
   FileCode,
   X,
   SaveIcon,
@@ -47,23 +46,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
-import reset_icon from "../assets/reset_state_button.svg";
-import chainIcon from "../assets/Chain.svg";
-import no_response from "../assets/no_response.svg";
-import Advanced_icon from "../assets/Adavanced_icon.svg";
-import Data_default from "../assets/Data_default.svg";
-import Proxy_icon from "../assets/Proxy_icon.svg";
-import Rules_icon from "../assets/Rules_icon.svg";
-import Header_Body from "../assets/Header_Body.svg";
-import Request_Response_icon from "../assets/Request_Response_icon.svg";
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
-import workspaceIcon from "@/assets/workspace-icon.svg";
-import projectIcon from "@/assets/project-icon.svg";
-import folderIcon from "@/assets/folder-icon.svg";
-import endpointIcon from "@/assets/endpoint.svg";
-import dot_background from "@/assets/dot_rows.svg";
+import reset_icon from "@/assets/light/reset_state_button.svg";
+import chainIcon from "@/assets/light/Chain.svg";
+import no_response from "@/assets/light/no_response.svg";
+import Advanced_icon from "@/assets/light/Adavanced_icon.svg";
+import Data_default from "@/assets/light/Data_default.svg";
+import Proxy_icon from "@/assets/light/Proxy_icon.svg";
+import Rules_icon from "@/assets/light/Rules_icon.svg";
+import Header_Body from "@/assets/light/Header_Body.svg";
+import Request_Response_icon from "@/assets/light/Request_Response_icon.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
+import workspaceIcon from "@/assets/light/workspace-icon.svg";
+import projectIcon from "@/assets/light/project-icon.svg";
+import folderIcon from "@/assets/light/folder-icon.svg";
+import endpointIcon from "@/assets/light/endpoint.svg";
+import dot_background from "@/assets/light/dot_rows.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
@@ -2132,13 +2131,11 @@ const DashboardPage = () => {
   // Thêm UI loading
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-white">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-          <p className="text-lg font-medium text-gray-700">
-            Loading endpoint data...
-          </p>
-        </div>
+      <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <span className="loader"></span>
+        <p className="text-lg mt-2 font-medium text-gray-700">
+          Loading endpoint data...
+        </p>
       </div>
     );
   }

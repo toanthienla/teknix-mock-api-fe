@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { getCurrentUser } from "@/services/api.js";
-import { Button } from "@/components/ui/button";
-import {ChevronLeftIcon, ChevronRightIcon, Loader2} from "lucide-react";
+import React, {useEffect, useMemo, useState} from "react";
+import {getCurrentUser} from "@/services/api.js";
+import {Button} from "@/components/ui/button";
+import {ChevronLeftIcon, ChevronRightIcon} from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -10,8 +10,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { useNavigate, useParams } from "react-router-dom";
-import { API_ROOT } from "@/utils/constants.js";
+import {useNavigate, useParams} from "react-router-dom";
+import {API_ROOT} from "@/utils/constants.js";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input.jsx";
+import {Input} from "@/components/ui/input.jsx";
 import {
   Select,
   SelectContent,
@@ -32,20 +32,20 @@ import {
 } from "@/components/ui/select.jsx";
 
 import Topbar from "@/components/Topbar.jsx";
-import { toast } from "react-toastify";
+import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
-import { Card } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import {Card} from "@/components/ui/card";
+import {Plus, Trash2} from "lucide-react";
 
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
-import folderIcon from "@/assets/project-icon.svg";
-import logsIcon from "@/assets/logs.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
+import folderIcon from "@/assets/light/project-icon.svg";
+import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
-import searchIcon from "@/assets/search.svg";
+import searchIcon from "@/assets/light/search.svg";
 
-const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -66,7 +66,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
-        id: { type: "number", required: false },
+        id: {type: "number", required: false},
       };
       const fields = Object.entries(defaultSchema).map(
         ([name, config], index) => ({
@@ -153,7 +153,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
-      const newErrors = { ...prev };
+      const newErrors = {...prev};
       delete newErrors[id];
       return newErrors;
     });
@@ -161,7 +161,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
   const handleChange = (id, key, value) => {
     setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+      prev.map((f) => (f.id === id ? {...f, [key]: value} : f))
     );
   };
 
@@ -228,7 +228,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="string">string</SelectItem>
@@ -248,7 +248,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue/>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">true</SelectItem>
@@ -282,7 +282,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         {/* Actions */}
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2" /> Add Field
+            <Plus className="w-4 h-4 mr-2"/> Add Field
           </Button>
           <Button
             className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
@@ -301,7 +301,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
             <DialogDescription>
               Updating this folder's schema will <b>delete all endpoint data</b>{" "}
               that no longer fits the new schema.
-              <br /> <br />
+              <br/> <br/>
               Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>
@@ -325,7 +325,7 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
 export default function FolderPage() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
+  const {projectId} = useParams();
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
@@ -364,8 +364,6 @@ export default function FolderPage() {
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
 
-  const [methodFilter, setMethodFilter] = useState("All Methods");
-  const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("Recent logs");
 
   const [newFolderMode, setNewFolderMode] = useState(false);
@@ -556,7 +554,7 @@ export default function FolderPage() {
     try {
       const res = await fetch(
         `${API_ROOT}/project_request_logs?project_id=${pid}`,
-        { credentials: "include" }
+        {credentials: "include"}
       );
 
       if (res.status === 401) {
@@ -571,17 +569,17 @@ export default function FolderPage() {
       const logsArray = Array.isArray(raw)
         ? raw
         : Array.isArray(raw.items)
-        ? raw.items
-        : Array.isArray(raw.data)
-        ? raw.data
-        : [];
+          ? raw.items
+          : Array.isArray(raw.data)
+            ? raw.data
+            : [];
 
       const endpointMap = new Map(endpoints.map((e) => [String(e.id), e]));
 
       const enrichedLogs = await Promise.all(
         logsArray.map(async (log) => {
           if (!log || !log.endpoint_id)
-            return { ...log, project_id: log?.project_id ?? pid };
+            return {...log, project_id: log?.project_id ?? pid};
 
           const endpoint = endpointMap.get(String(log.endpoint_id));
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
@@ -598,10 +596,10 @@ export default function FolderPage() {
             const responses = Array.isArray(payload)
               ? payload
               : Array.isArray(payload.items)
-              ? payload.items
-              : Array.isArray(payload.data)
-              ? payload.data
-              : [];
+                ? payload.items
+                : Array.isArray(payload.data)
+                  ? payload.data
+                  : [];
 
             const matched =
               responses.find((r) => String(r.id) === String(log.response_id)) ||
@@ -734,7 +732,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(folderData),
       });
 
@@ -760,7 +758,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           name: editFolderName.trim(),
         }),
@@ -930,7 +928,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(newEndpoint),
       });
 
@@ -986,20 +984,20 @@ export default function FolderPage() {
     const isValid = await validateEditEndpoint(editId, editEName, editEState);
     if (!isValid) return;
 
-    const updated = { name: editEName };
+    const updated = {name: editEName};
 
     try {
       const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(updated),
       });
 
       if (!res.ok) throw new Error("Failed to update endpoint");
 
       setEndpoints((prev) =>
-        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+        prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
       );
 
       setOpenEdit(false);
@@ -1049,7 +1047,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1076,7 +1074,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1085,7 +1083,7 @@ export default function FolderPage() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
+            w.id === editWsId ? {...w, name: editWsName.trim()} : w
           )
         );
         setOpenEditWs(false);
@@ -1126,26 +1124,26 @@ export default function FolderPage() {
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
+      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -1180,14 +1178,6 @@ export default function FolderPage() {
   const filteredLogs = logs.filter((log) => {
     const projectOk = String(log.project_id) === String(projectId);
 
-    const methodOk =
-      methodFilter === "All Methods" ||
-      log.request_method?.toUpperCase() === methodFilter.toUpperCase();
-
-    const statusOk =
-      statusFilter === "All Status" ||
-      String(log.response_status_code) === String(statusFilter);
-
     let timeOk = true;
     if (timeFilter && timeFilter !== "Recent logs") {
       const logTime = new Date(log.created_at);
@@ -1202,7 +1192,7 @@ export default function FolderPage() {
         }
       }
     }
-    return projectOk && methodOk && statusOk && timeOk;
+    return projectOk && timeOk;
   });
 
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
@@ -1269,8 +1259,8 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base_schema: newSchema }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({base_schema: newSchema}),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -1287,13 +1277,11 @@ export default function FolderPage() {
     <div className="min-h-screen bg-white text-slate-800">
       {isLoading ? (
         // Loading screen
-        <div className="flex justify-center items-center h-screen bg-white">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-            <p className="text-lg font-medium text-gray-700">
-              Loading folders...
-            </p>
-          </div>
+        <div className="flex flex-col justify-center items-center h-screen bg-white">
+          <span className="loader"></span>
+          <p className="text-lg mt-2 font-medium text-gray-700">
+            Loading folders...
+          </p>
         </div>
       ) : (
         // Main content
@@ -1317,23 +1305,23 @@ export default function FolderPage() {
                 currentWorkspace
                   ? currentProject
                     ? [
-                        {
-                          label: currentWorkspace.name,
-                          WORKSPACE_ID: currentWorkspace.id,
-                          href: "/dashboard",
-                        },
-                        {
-                          label: currentProject.name,
-                          href: `/dashboard/${currentProject.id}`,
-                        },
-                      ]
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                      {
+                        label: currentProject.name,
+                        href: `/dashboard/${currentProject.id}`,
+                      },
+                    ]
                     : [
-                        {
-                          label: currentWorkspace.name,
-                          WORKSPACE_ID: currentWorkspace.id,
-                          href: "/dashboard",
-                        },
-                      ]
+                      {
+                        label: currentWorkspace.name,
+                        WORKSPACE_ID: currentWorkspace.id,
+                        href: "/dashboard",
+                      },
+                    ]
                   : []
               }
               showNewResponseButton={false}
@@ -1375,7 +1363,7 @@ export default function FolderPage() {
                     }`}
                   >
                     <div className="flex items-center">
-                      <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2" />
+                      <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2"/>
                       <span className="text-md font-semibold">Logs</span>
                     </div>
                   </button>
@@ -1455,7 +1443,7 @@ export default function FolderPage() {
                                     setFolders((prev) =>
                                       prev.map((ff) =>
                                         ff.id === f.id
-                                          ? { ...ff, is_public: newVal }
+                                          ? {...ff, is_public: newVal}
                                           : ff
                                       )
                                     );
@@ -1489,94 +1477,6 @@ export default function FolderPage() {
                     {/* Logs */}
                     <div className="flex flex-col items-center justify-center w-full">
                       <div className="w-full max-w-7xl overflow-x-auto">
-                        {/*<div className="flex items-center justify-between mb-4">*/}
-                        {/*  <div className="flex gap-2">*/}
-                        {/*    /!* Method Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={methodFilter}*/}
-                        {/*      onValueChange={setMethodFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
-                        {/*        <SelectValue placeholder="All Methods" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="All Methods">*/}
-                        {/*          All Methods*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="GET">GET</SelectItem>*/}
-                        {/*        <SelectItem value="POST">POST</SelectItem>*/}
-                        {/*        <SelectItem value="PUT">PUT</SelectItem>*/}
-                        {/*        <SelectItem value="DELETE">DELETE</SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-                        
-                        {/*    /!* Status Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={statusFilter}*/}
-                        {/*      onValueChange={setStatusFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
-                        {/*        <SelectValue placeholder="All Status" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="All Status">*/}
-                        {/*          All Status*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="200">200</SelectItem>*/}
-                        {/*        <SelectItem value="400">400</SelectItem>*/}
-                        {/*        <SelectItem value="404">404</SelectItem>*/}
-                        {/*        <SelectItem value="500">500</SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-                        
-                        {/*    /!* Time Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={timeFilter}*/}
-                        {/*      onValueChange={setTimeFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[160px] bg-white">*/}
-                        {/*        <SelectValue placeholder="Recent logs" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="Recent logs">*/}
-                        {/*          Recent logs*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 24 hours">*/}
-                        {/*          Last 24 hours*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 7 days">*/}
-                        {/*          Last 7 days*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 30 days">*/}
-                        {/*          Last 30 days*/}
-                        {/*        </SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-                        {/*  </div>*/}
-                        
-                        {/*  <div className="flex gap-2">*/}
-                        {/*    <Button variant="outline">*/}
-                        {/*      <img*/}
-                        {/*        src={exportIcon}*/}
-                        {/*        alt="Export Icon"*/}
-                        {/*        className="w-4 h-4 object-contain"*/}
-                        {/*      />*/}
-                        {/*      Export*/}
-                        {/*    </Button>*/}
-                        {/*    <Button*/}
-                        {/*      variant="outline"*/}
-                        {/*      onClick={() => fetchLogs(projectId)}*/}
-                        {/*    >*/}
-                        {/*      <img*/}
-                        {/*        src={refreshIcon}*/}
-                        {/*        alt="Refresh Icon"*/}
-                        {/*        className="w-4 h-4 object-contain"*/}
-                        {/*      />*/}
-                        {/*      Refresh*/}
-                        {/*    </Button>*/}
-                        {/*  </div>*/}
-                        {/*</div>*/}
-
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -1624,7 +1524,7 @@ export default function FolderPage() {
                               <TableHead colSpan={1} className="text-right">
                                 <Select value={timeFilter} onValueChange={setTimeFilter}>
                                   <SelectTrigger className="w-full bg-white border-none shadow-none">
-                                    <SelectValue placeholder="Recent logs" />
+                                    <SelectValue placeholder="Recent logs"/>
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="Recent logs">Recent logs</SelectItem>
@@ -1664,7 +1564,7 @@ export default function FolderPage() {
                               </TableRow>
                             ) : (
                               paginatedLogs.map((log, i) => (
-                                <LogCard key={i} log={log} />
+                                <LogCard key={i} log={log}/>
                               ))
                             )}
                           </TableBody>
@@ -1678,7 +1578,7 @@ export default function FolderPage() {
                               disabled={page === 1}
                               onClick={() => setPage((p) => p - 1)}
                             >
-                              <ChevronLeftIcon className="w-4 h-4" />
+                              <ChevronLeftIcon className="w-4 h-4"/>
                             </Button>
                             <span className="text-sm font-semibold">
                               {page} / {totalPages || 1}
@@ -1689,7 +1589,7 @@ export default function FolderPage() {
                               disabled={page === totalPages || totalPages === 0}
                               onClick={() => setPage((p) => p + 1)}
                             >
-                              <ChevronRightIcon className="w-4 h-4" />
+                              <ChevronRightIcon className="w-4 h-4"/>
                             </Button>
                           </div>
 
@@ -1703,7 +1603,7 @@ export default function FolderPage() {
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
-                                <SelectValue />
+                                <SelectValue/>
                               </SelectTrigger>
                               <SelectContent>
                                 {[5, 10, 20, 50].map((size) => (
@@ -1727,12 +1627,13 @@ export default function FolderPage() {
           </main>
 
           {/* footer */}
-          <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+          <footer
+            className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
             <span>© Teknix Corp. All rights reserved.</span>
             <div className="flex items-center gap-3 text-gray-700">
-              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-              <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
+              <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
+              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
               <a className="hover:underline font-semibold" href="">
                 About
               </a>
@@ -1865,11 +1766,74 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-          />
+
+          <div className="space-y-3">
+            <Input
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateFolder();
+                }
+              }}
+            />
+
+            {/* Folder Mode Selection */}
+            <div className="mt-2">
+              <p className="text-sm font-medium text-slate-700 mb-1">Folder Mode</p>
+              <div className="flex items-center gap-6">
+                {/* Private */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="private"
+                    checked={!newFolderMode}
+                    onChange={() => setNewFolderMode(false)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                      !newFolderMode ? "border-black" : "border-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border ${
+                        !newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm text-slate-700">Private</span>
+                </label>
+
+                {/* Public */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="public"
+                    checked={newFolderMode}
+                    onChange={() => setNewFolderMode(true)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                      newFolderMode ? "border-black" : "border-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border ${
+                        newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm text-slate-700">Public</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <DialogFooter>
             <Button onClick={() => setOpenNewFolder(false)}>Cancel</Button>
             <Button onClick={handleCreateFolder}>Create</Button>
@@ -1887,6 +1851,13 @@ export default function FolderPage() {
             placeholder="Folder name"
             value={editFolderName}
             onChange={(e) => setEditFolderName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (hasChanges()) {
+                  handleUpdateFolder();
+                }
+              }
+            }}
           />
           <DialogFooter>
             <Button onClick={() => setOpenEditFolder(false)}>Cancel</Button>
@@ -1913,7 +1884,7 @@ export default function FolderPage() {
 
           {folderSchema ? (
             <BaseSchemaEditor
-              folderData={{ schema: folderSchema }}
+              folderData={{schema: folderSchema}}
               folderId={selectedFolder?.id}
               onSave={handleSaveFolderSchema}
               method={"PUT"}
@@ -1935,7 +1906,7 @@ export default function FolderPage() {
 
           <p className="mt-2 text-gray-600">
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{selectedFolder?.name}</span>?<br />
+            <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
             <span className="text-red-500 text-sm">
               This action cannot be undone.
             </span>
@@ -2059,7 +2030,7 @@ export default function FolderPage() {
                 onValueChange={(v) => setNewEFolderId(v)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an option" />
+                  <SelectValue placeholder="Select an option"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -2098,7 +2069,7 @@ export default function FolderPage() {
                 onValueChange={(v) => setNewEMethod(v)}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a method" />
+                  <SelectValue placeholder="Select a method"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

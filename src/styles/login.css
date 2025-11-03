@@ -1,0 +1,61 @@
+/* LIGHT MODE */
+.login-page {
+    background-color: #f8fafc; /* bg-slate-50 */
+    color: #2F3136; /* text-slate-900 */
+}
+
+.login-card {
+    background-color: #ffffff;
+    border: 1px solid #f1f5f9;
+    color: #2F3136;
+}
+
+.login-input {
+    background-color: #ffffff;
+    color: #2F3136;
+    border: 1px solid #cbd5e1;
+}
+
+.login-button {
+    background-color: #facc15; /* yellow-300 */
+    color: #1e1b4b; /* indigo-950 */
+}
+
+.login-button:hover {
+    background-color: #fde047; /* yellow-400 */
+}
+
+/* 🌙 DARK MODE */
+.dark .login-page {
+    background-color: #2F3136; /* slate-950 */
+    color: #f8fafc;
+}
+
+.dark .login-card {
+    background-color: #36393F; /* slate-800 */
+    border-color: #42454A;
+    color: #f8fafc;
+}
+
+.dark .login-input {
+    background-color: #334155; /* slate-700 */
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+.dark .login-input::placeholder {
+    color: #cbd5e1;
+}
+
+.dark .login-button {
+    background-color: #5865f2;
+    color: #fefce8; /* vàng nhạt */
+}
+
+.dark .login-button:hover {
+    background-color: #4752c4;
+}
+
+.dark .login-link {
+    color: #fefce8;
+}

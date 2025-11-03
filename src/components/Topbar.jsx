@@ -1,3 +1,14 @@
+import avatar from "@/assets/light/user-avatar.svg";
+import logoIconLight from "@/assets/light/logo.svg";
+import logoIconDark from "@/assets/dark/logo.svg";
+import editIcon from "@/assets/light/Edit Icon.svg";
+import deleteIcon from "@/assets/light/Trash Icon.svg";
+import logoutIcon from "@/assets/light/logout.svg";
+import arrowIcon from "@/assets/light/arrow.svg";
+import breadcrumbIcon from "@/assets/light/breadcrumb-arrow.svg";
+import switchIconLight from "@/assets/light/switchTheme.svg";
+import switchIconDark from "@/assets/dark/switchTheme.svg";
+
 import React, {useEffect, useState} from "react";
 import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
 import {
@@ -20,17 +31,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {Button} from "@/components/ui/button.jsx";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
 // import {API_ROOT} from "@/utils/constants.js";
-import avatar from "@/assets/user-avatar.svg";
-import logoIcon from "@/assets/logo.svg";
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
-import logoutIcon from "@/assets/logout.svg";
-import arrowIcon from "@/assets/arrow.svg";
-import breadcrumbIcon from "@/assets/breadcrumb-arrow.svg";
 // import Notifications from "../components/Notifications.jsx";
 // import RealtimeClient from "@/services/centrifugo.jsx";
 
@@ -46,6 +51,7 @@ export default function Topbar({
                                }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState(null);
+  const [isDark, setIsDark] = useState(false);
   // const [userId, setUserId] = useState(0);
   // const [notifications, setNotifications] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
@@ -69,6 +75,14 @@ export default function Topbar({
   const currentWorkspace = workspaces.find(
     (ws) => String(ws.id) === String(current)
   );
+
+  // Toggle dark/light mode
+  const toggleTheme = () => {
+    const newTheme = isDark ? "light" : "dark";
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle("dark", !isDark);
+    localStorage.setItem("theme", newTheme);
+  };
 
   const checkUserLogin = async () => {
     try {
@@ -95,7 +109,14 @@ export default function Topbar({
 
   useEffect(() => {
     checkUserLogin();
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    }
   }, []);
+  const switchIcon = isDark ? switchIconDark : switchIconLight;
+  const logoIcon = isDark ? logoIconDark : logoIconLight;
 
   // // =============================
   // // FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
@@ -443,6 +464,15 @@ export default function Topbar({
         {/*  onMarkAllRead={markAllRead}*/}
         {/*  onDeleteRead={deleteReadNotifications}*/}
         {/*/>*/}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          onClick={toggleTheme}
+        >
+          <img src={switchIcon} alt="Switch Themes" className="w-5 h-5"/>
+        </Button>
 
         {/* Avatar + Name */}
         <div className="flex items-center gap-2 pl-4 border-l-2 border-slate-500">

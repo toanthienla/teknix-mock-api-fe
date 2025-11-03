@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
 import { API_ROOT } from "../utils/constants";
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -48,16 +47,16 @@ import {
 
 import { toast } from "react-toastify";
 import { getCurrentUser } from "@/services/api.js";
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
-import searchIcon from "@/assets/search.svg";
-import pDesc from "@/assets/project_desc.svg";
-import folderIcon from "@/assets/project-icon.svg";
-import dateIcon from "@/assets/date.svg";
-import statelessIcon from "@/assets/stateless.svg";
-import statefulIcon from "@/assets/stateful.svg";
-import trashIcon from "@/assets/Trash Icon.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
+import searchIcon from "@/assets/light/search.svg";
+import pDesc from "@/assets/light/project_desc.svg";
+import folderIcon from "@/assets/light/project-icon.svg";
+import dateIcon from "@/assets/light/date.svg";
+import statelessIcon from "@/assets/light/stateless.svg";
+import statefulIcon from "@/assets/light/stateful.svg";
+import trashIcon from "@/assets/light/Trash Icon.svg";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
@@ -672,13 +671,11 @@ export default function ProjectPage() {
     <div className="flex flex-col min-h-screen bg-slate-50">
       {isLoading ? (
         // Loading UI
-        <div className="flex justify-center items-center h-screen bg-white">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-500 mb-4" />
-            <p className="text-lg font-medium text-gray-700">
-              Loading projects...
-            </p>
-          </div>
+        <div className="flex flex-col justify-center items-center h-screen bg-white">
+          <span className="loader"></span>
+          <p className="text-lg mt-2 font-medium text-gray-700">
+            Loading projects...
+          </p>
         </div>
       ) : (
         // Main content

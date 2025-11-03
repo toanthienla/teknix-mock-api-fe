@@ -1,11 +1,11 @@
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import helloIcon from "@/assets/human_hello.svg";
-import yellowLogo from "@/assets/yellow_logo.svg";
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
+import helloIcon from "@/assets/light/human_hello.svg";
+import yellowLogo from "@/assets/light/yellow_logo.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function WelcomePage() {
                   <img src={yellowLogo} alt="Yellow logo" className="w-22 h-22" />
                 </span>
                 <span className="text-outline font-extrabold text-[clamp(2rem,6vw,4.5rem)]">
-                  MockAPI
+                  MockHub
                 </span>
               </div>
 

@@ -62,12 +62,10 @@ export function LoginForm({className, ...props}) {
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="login-card">
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your account below to login to your account
-          </CardDescription>
+          <CardDescription>Enter your account below to login to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
@@ -79,6 +77,7 @@ export function LoginForm({className, ...props}) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="youraccount"
+                  className="login-input"
                   disabled={isSubmitting}
                 />
               </div>
@@ -90,13 +89,14 @@ export function LoginForm({className, ...props}) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  className="login-input"
                   disabled={isSubmitting}
                 />
               </div>
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
-                  className="w-full bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+                  className="login-button w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Logging in..." : "Login"}
@@ -108,7 +108,7 @@ export function LoginForm({className, ...props}) {
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="font-bold underline underline-offset-4 text-black"
+                className="login-link font-bold underline underline-offset-4"
               >
                 Sign up
               </button>
