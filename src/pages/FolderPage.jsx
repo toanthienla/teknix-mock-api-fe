@@ -40,7 +40,7 @@ import {Plus, Trash2} from "lucide-react";
 import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
-import folderIcon from "@/assets/light/project-icon.svg";
+import folderIcon from "@/assets/light/folder-icon.svg";
 import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
@@ -1274,7 +1274,7 @@ export default function FolderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-800">
+    <div className="flex flex-col min-h-screen bg-white text-slate-800">
       {isLoading ? (
         // Loading screen
         <div className="flex flex-col justify-center items-center h-screen bg-white">
@@ -1330,7 +1330,7 @@ export default function FolderPage() {
           </div>
 
           {/* Main Content */}
-          <main className="flex justify-center items-center bg-white transition-all duration-300">
+          <main className="flex justify-center min-h-full items-center bg-white transition-all duration-300">
             <div className="w-full px-2 pt-2 pb-4">
               <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
                 <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
@@ -1346,7 +1346,11 @@ export default function FolderPage() {
                       <img
                         src={folderIcon}
                         alt="folder"
-                        className="w-4 h-4 mr-2"
+                        className={`w-4 h-4 mr-2 ${
+                          activeTab === "folders"
+                            ? "brightness-0"
+                            : ""
+                        }`}
                       />
                       <span className="text-md font-semibold">Folders</span>
                     </div>
@@ -1363,7 +1367,15 @@ export default function FolderPage() {
                     }`}
                   >
                     <div className="flex items-center">
-                      <img src={logsIcon} alt="logs" className="w-4 h-4 mr-2"/>
+                      <img
+                        src={logsIcon}
+                        alt="logs"
+                        className={`w-4 h-4 mr-2 ${
+                          activeTab === "logs"
+                            ? "brightness-0"
+                            : ""
+                        }`}
+                      />
                       <span className="text-md font-semibold">Logs</span>
                     </div>
                   </button>
@@ -1372,7 +1384,7 @@ export default function FolderPage() {
                 {activeTab === "folders" ? (
                   <>
                     <div className="flex flex-col items-center justify-center w-full">
-                      <div className="w-full max-w-5xl bg-white rounded-lg px-8 py-4">
+                      <div className="w-full max-w-7xl bg-white rounded-lg px-8 py-4">
                         <div className="flex items-center justify-between mb-6">
                           <h2 className="text-xl font-semibold text-gray-800">
                             {currentProject?.name} —{" "}

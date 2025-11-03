@@ -6,9 +6,7 @@ import { API_ROOT } from "@/utils/constants";
 import {
   Plus,
   Trash2,
-  Upload,
   Code,
-  Loader2,
   FileCode,
   X,
   SaveIcon,
@@ -412,10 +410,29 @@ export const ApiCallEditor = ({
   }, [nextCalls, savedCalls]);
 
   return (
-    <Card className="p-6 border-0 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>
+    <Card className="px-16 py-6 border-0 rounded-lg">
+      <div className="flex justify-end items-center mb-2">
+        {/*<h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>*/}
         <div className="flex items-center gap-2">
+          {/* New API Call */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              onClick={() => setIsNewApiCallDialogOpen(true)}
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+              onMouseEnter={() => setAddTooltipVisible(true)}
+              onMouseLeave={() => setAddTooltipVisible(false)}
+            >
+              <Plus className="h-7 w-7" />
+            </Button>
+            <Tooltip
+              visible={addTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Add New API Call
+            </Tooltip>
+          </div>
+
           {/* Thêm nút popover bên cạnh nút save */}
           <div className="relative" ref={requestBodyPopoverRef}>
             <div className="relative">
@@ -518,6 +535,7 @@ export const ApiCallEditor = ({
             )}
           </div>
 
+          {/* Save button */}
           <div className="relative">
             <Button
               variant="outline"
@@ -534,23 +552,6 @@ export const ApiCallEditor = ({
               className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
             >
               Save API Calls
-            </Tooltip>
-          </div>
-          <div className="relative">
-            <Button
-              variant="outline"
-              onClick={() => setIsNewApiCallDialogOpen(true)}
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
-              onMouseEnter={() => setAddTooltipVisible(true)}
-              onMouseLeave={() => setAddTooltipVisible(false)}
-            >
-              <Plus className="h-7 w-7" />
-            </Button>
-            <Tooltip
-              visible={addTooltipVisible}
-              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-            >
-              Add New API Call
             </Tooltip>
           </div>
         </div>
@@ -612,7 +613,7 @@ export const ApiCallEditor = ({
                       >
                         <SelectValue placeholder="Select endpoint">
                           {call.target_endpoint ? (
-                            <span className="font-medium text-sm">
+                            <span className="text-sm">
                               {availableEndpoints.find(
                                 (ep) => ep.path === call.target_endpoint
                               )?.path || call.target_endpoint}

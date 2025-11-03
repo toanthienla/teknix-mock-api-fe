@@ -3,14 +3,17 @@ import logoIconLight from "@/assets/light/logo.svg";
 import logoIconDark from "@/assets/dark/logo.svg";
 import editIcon from "@/assets/light/Edit Icon.svg";
 import deleteIcon from "@/assets/light/Trash Icon.svg";
-import logoutIcon from "@/assets/light/logout.svg";
+import logoutIconLight from "@/assets/light/logout.svg";
+import logoutIconDark from "@/assets/dark/logout.svg";
 import arrowIcon from "@/assets/light/arrow.svg";
 import breadcrumbIcon from "@/assets/light/breadcrumb-arrow.svg";
 import switchIconLight from "@/assets/light/switchTheme.svg";
 import switchIconDark from "@/assets/dark/switchTheme.svg";
+import openWorkspaceIconLight from "@/assets/light/triangle.svg";
+import openWorkspaceIconDark from "@/assets/dark/triangle.svg";
 
 import React, {useEffect, useState} from "react";
-import {ChevronDown, MoreHorizontal, Plus} from "lucide-react";
+import {MoreHorizontal, Plus} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +38,8 @@ import {Button} from "@/components/ui/button.jsx";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
+import {useTheme} from "@/services/useTheme.js";
+import "@/styles/topbar.css";
 // import {API_ROOT} from "@/utils/constants.js";
 // import Notifications from "../components/Notifications.jsx";
 // import RealtimeClient from "@/services/centrifugo.jsx";
@@ -51,7 +56,7 @@ export default function Topbar({
                                }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState(null);
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
   // const [userId, setUserId] = useState(0);
   // const [notifications, setNotifications] = useState([]);
   const [authChecked, setAuthChecked] = useState(false);
@@ -75,14 +80,6 @@ export default function Topbar({
   const currentWorkspace = workspaces.find(
     (ws) => String(ws.id) === String(current)
   );
-
-  // Toggle dark/light mode
-  const toggleTheme = () => {
-    const newTheme = isDark ? "light" : "dark";
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle("dark", !isDark);
-    localStorage.setItem("theme", newTheme);
-  };
 
   const checkUserLogin = async () => {
     try {
@@ -109,14 +106,11 @@ export default function Topbar({
 
   useEffect(() => {
     checkUserLogin();
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-      setIsDark(true);
-    }
   }, []);
   const switchIcon = isDark ? switchIconDark : switchIconLight;
   const logoIcon = isDark ? logoIconDark : logoIconLight;
+  const openWorkspaceIcon = isDark ? openWorkspaceIconDark : openWorkspaceIconLight
+  const logoutIcon = isDark ? logoutIconDark : logoutIconLight;
 
   // // =============================
   // // FETCH notifications từ BE + lấy thêm dữ liệu chi tiết
@@ -291,8 +285,8 @@ export default function Topbar({
   };
 
   return (
-    <div className="relative flex items-center justify-between bg-white px-8 py-2 -mt-8 border-b border-slate-200 h-16">
-      {/* Logo + Workspace Selector */}
+    <div className="topbar relative flex items-center justify-between px-8 py-2 -mt-8 h-16">
+    {/* Logo + Workspace Selector */}
       <div className="flex items-center gap-4">
         <div
           className="flex items-center cursor-pointer select-none"
@@ -305,9 +299,10 @@ export default function Topbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="flex items-center justify-between px-3 py-2 rounded-md bg-stone-200 border border-slate-300 hover:bg-slate-50 font-medium min-w-[180px]">
-              <span>{currentWorkspace?.name || "Select Workspace"}</span>
-              <ChevronDown className="w-4 h-4 text-slate-500"/>
+              className="workspace-btn flex items-center justify-between px-3 py-2 rounded-md font-medium min-w-[180px]"
+            >
+            <span>{currentWorkspace?.name || "Select Workspace"}</span>
+              <img src={openWorkspaceIcon} className="w-4 h-4 " alt="edit"/>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
@@ -371,13 +366,13 @@ export default function Topbar({
               className="p-1 rounded hover:bg-slate-100 transition"
               onClick={() => window.history.back()}
             >
-              <img src={arrowIcon} alt="Back" className="w-4 h-4"/>
+              <img src={arrowIcon} alt="Back" className="w-4 h-4 dark:invert"/>
             </button>
             <button
               className="p-1 rounded hover:bg-slate-100 transition"
               onClick={() => window.history.forward()}
             >
-              <img src={arrowIcon} alt="Forward" className="w-4 h-4 rotate-180"/>
+              <img src={arrowIcon} alt="Forward" className="w-4 h-4 rotate-180 dark:invert"/>
             </button>
           </div>
 
@@ -486,7 +481,7 @@ export default function Topbar({
 
         {/* Logout Button */}
         <button onClick={handleLogout} className="relative">
-          <img src={logoutIcon} alt="Logout" className="w-4 h-4 mr-2"/>
+          <img src={logoutIcon} alt="Logout" className="w-4 h-4"/>
         </button>
       </div>
 
