@@ -1,8 +1,8 @@
-import signupImage from "@/assets/signupImage.svg";
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
-import logo from "@/assets/logo.svg";
+import signupImage from "@/assets/light/signupImage.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
+import logo from "@/assets/light/logo.svg";
 import { SignupForm } from "@/components/SignupForm.jsx";
 
 export default function SignupPage() {
@@ -51,7 +51,7 @@ export default function SignupPage() {
             {/* Logo trên cùng */}
             <div className="flex items-center justify-center lg:justify-start gap-2">
               <img src={logo} alt="MockAPI logo" className="w-8 h-8 sm:w-10 sm:h-10" />
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">MockAPI</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">MockHub</h1>
             </div>
 
             {/* Ảnh minh họa */}

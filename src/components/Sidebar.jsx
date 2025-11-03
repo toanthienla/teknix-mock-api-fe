@@ -14,13 +14,13 @@ import {
   ContextMenuItem,
 } from "@/components/ui/context-menu";
 import { Badge } from "@/components/ui/badge";
-import avatar from "@/assets/user-avatar.svg";
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
+import avatar from "@/assets/light/user-avatar.svg";
+import editIcon from "@/assets/light/Edit Icon.svg";
+import deleteIcon from "@/assets/light/Trash Icon.svg";
 import randomColor from "randomcolor";
-import OpenIcon from "@/assets/opensidebar.svg";
-import statefulIcon from "@/assets/stateful.svg";
-import logoIcon from "@/assets/logo.svg"
+import OpenIcon from "@/assets/light/opensidebar.svg";
+import statefulIcon from "@/assets/light/stateful.svg";
+import logoIcon from "@/assets/light/logo.svg"
 import {logout} from "@/services/api.js";
 import {toast} from "react-toastify";
 

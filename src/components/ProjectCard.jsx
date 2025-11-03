@@ -3,7 +3,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import detailIcon from "@/assets/view_detail.svg";
+import detailIcon from "@/assets/light/view_detail.svg";
 
 export default function ProjectCard({ project, folders, endpoints, onView, onClick }) {
   const { id, name, created_at } = project;

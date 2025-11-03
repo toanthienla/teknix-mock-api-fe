@@ -37,13 +37,13 @@ import LogCard from "@/components/LogCard.jsx";
 import {Card} from "@/components/ui/card";
 import {Plus, Trash2} from "lucide-react";
 
-import tiktokIcon from "@/assets/tiktok.svg";
-import fbIcon from "@/assets/facebook.svg";
-import linkedinIcon from "@/assets/linkedin.svg";
-import folderIcon from "@/assets/project-icon.svg";
-import logsIcon from "@/assets/logs.svg";
+import tiktokIcon from "@/assets/light/tiktok.svg";
+import fbIcon from "@/assets/light/facebook.svg";
+import linkedinIcon from "@/assets/light/linkedin.svg";
+import folderIcon from "@/assets/light/project-icon.svg";
+import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
-import searchIcon from "@/assets/search.svg";
+import searchIcon from "@/assets/light/search.svg";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -364,8 +364,6 @@ export default function FolderPage() {
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
 
-  const [methodFilter, setMethodFilter] = useState("All Methods");
-  const [statusFilter, setStatusFilter] = useState("All Status");
   const [timeFilter, setTimeFilter] = useState("Recent logs");
 
   const [newFolderMode, setNewFolderMode] = useState(false);
@@ -1180,14 +1178,6 @@ export default function FolderPage() {
   const filteredLogs = logs.filter((log) => {
     const projectOk = String(log.project_id) === String(projectId);
 
-    const methodOk =
-      methodFilter === "All Methods" ||
-      log.request_method?.toUpperCase() === methodFilter.toUpperCase();
-
-    const statusOk =
-      statusFilter === "All Status" ||
-      String(log.response_status_code) === String(statusFilter);
-
     let timeOk = true;
     if (timeFilter && timeFilter !== "Recent logs") {
       const logTime = new Date(log.created_at);
@@ -1202,7 +1192,7 @@ export default function FolderPage() {
         }
       }
     }
-    return projectOk && methodOk && statusOk && timeOk;
+    return projectOk && timeOk;
   });
 
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
@@ -1487,94 +1477,6 @@ export default function FolderPage() {
                     {/* Logs */}
                     <div className="flex flex-col items-center justify-center w-full">
                       <div className="w-full max-w-7xl overflow-x-auto">
-                        {/*<div className="flex items-center justify-between mb-4">*/}
-                        {/*  <div className="flex gap-2">*/}
-                        {/*    /!* Method Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={methodFilter}*/}
-                        {/*      onValueChange={setMethodFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
-                        {/*        <SelectValue placeholder="All Methods" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="All Methods">*/}
-                        {/*          All Methods*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="GET">GET</SelectItem>*/}
-                        {/*        <SelectItem value="POST">POST</SelectItem>*/}
-                        {/*        <SelectItem value="PUT">PUT</SelectItem>*/}
-                        {/*        <SelectItem value="DELETE">DELETE</SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-
-                        {/*    /!* Status Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={statusFilter}*/}
-                        {/*      onValueChange={setStatusFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[140px] bg-white">*/}
-                        {/*        <SelectValue placeholder="All Status" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="All Status">*/}
-                        {/*          All Status*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="200">200</SelectItem>*/}
-                        {/*        <SelectItem value="400">400</SelectItem>*/}
-                        {/*        <SelectItem value="404">404</SelectItem>*/}
-                        {/*        <SelectItem value="500">500</SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-
-                        {/*    /!* Time Filter *!/*/}
-                        {/*    <Select*/}
-                        {/*      value={timeFilter}*/}
-                        {/*      onValueChange={setTimeFilter}*/}
-                        {/*    >*/}
-                        {/*      <SelectTrigger className="w-[160px] bg-white">*/}
-                        {/*        <SelectValue placeholder="Recent logs" />*/}
-                        {/*      </SelectTrigger>*/}
-                        {/*      <SelectContent>*/}
-                        {/*        <SelectItem value="Recent logs">*/}
-                        {/*          Recent logs*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 24 hours">*/}
-                        {/*          Last 24 hours*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 7 days">*/}
-                        {/*          Last 7 days*/}
-                        {/*        </SelectItem>*/}
-                        {/*        <SelectItem value="Last 30 days">*/}
-                        {/*          Last 30 days*/}
-                        {/*        </SelectItem>*/}
-                        {/*      </SelectContent>*/}
-                        {/*    </Select>*/}
-                        {/*  </div>*/}
-
-                        {/*  <div className="flex gap-2">*/}
-                        {/*    <Button variant="outline">*/}
-                        {/*      <img*/}
-                        {/*        src={exportIcon}*/}
-                        {/*        alt="Export Icon"*/}
-                        {/*        className="w-4 h-4 object-contain"*/}
-                        {/*      />*/}
-                        {/*      Export*/}
-                        {/*    </Button>*/}
-                        {/*    <Button*/}
-                        {/*      variant="outline"*/}
-                        {/*      onClick={() => fetchLogs(projectId)}*/}
-                        {/*    >*/}
-                        {/*      <img*/}
-                        {/*        src={refreshIcon}*/}
-                        {/*        alt="Refresh Icon"*/}
-                        {/*        className="w-4 h-4 object-contain"*/}
-                        {/*      />*/}
-                        {/*      Refresh*/}
-                        {/*    </Button>*/}
-                        {/*  </div>*/}
-                        {/*</div>*/}
-
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -1864,11 +1766,74 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-          />
+
+          <div className="space-y-3">
+            <Input
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateFolder();
+                }
+              }}
+            />
+
+            {/* Folder Mode Selection */}
+            <div className="mt-2">
+              <p className="text-sm font-medium text-slate-700 mb-1">Folder Mode</p>
+              <div className="flex items-center gap-6">
+                {/* Private */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="private"
+                    checked={!newFolderMode}
+                    onChange={() => setNewFolderMode(false)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                      !newFolderMode ? "border-black" : "border-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border ${
+                        !newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm text-slate-700">Private</span>
+                </label>
+
+                {/* Public */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="folderMode"
+                    value="public"
+                    checked={newFolderMode}
+                    onChange={() => setNewFolderMode(true)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                      newFolderMode ? "border-black" : "border-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full border ${
+                        newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-sm text-slate-700">Public</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <DialogFooter>
             <Button onClick={() => setOpenNewFolder(false)}>Cancel</Button>
             <Button onClick={handleCreateFolder}>Create</Button>
@@ -1886,6 +1851,13 @@ export default function FolderPage() {
             placeholder="Folder name"
             value={editFolderName}
             onChange={(e) => setEditFolderName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (hasChanges()) {
+                  handleUpdateFolder();
+                }
+              }
+            }}
           />
           <DialogFooter>
             <Button onClick={() => setOpenEditFolder(false)}>Cancel</Button>

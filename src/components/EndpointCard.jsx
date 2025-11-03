@@ -1,8 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import editIcon from "@/assets/Edit Icon.svg";
-import deleteIcon from "@/assets/Trash Icon.svg";
+import editIcon from "@/assets/light/Edit Icon.svg";
+import deleteIcon from "@/assets/light/Trash Icon.svg";
 // import statefulEndpoint from "@/assets/stateful.svg";
 import {
   AlertDialog,
