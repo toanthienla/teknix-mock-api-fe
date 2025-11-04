@@ -176,6 +176,13 @@ const DashboardPage = () => {
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
 
+  // Thêm state cho internal filter dropdowns
+  const [newApiCallInternalWorkspace, setNewApiCallInternalWorkspace] =
+    useState("");
+  const [newApiCallInternalProject, setNewApiCallInternalProject] =
+    useState("");
+  const [newApiCallInternalFolder, setNewApiCallInternalFolder] = useState("");
+
   // Component Tooltip
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -291,7 +298,7 @@ const DashboardPage = () => {
     {}
   );
 
-  // Cập nhật hàm fetch available endpoints trong ResponsePage.jsx
+  // Cập nhật hàm fetch available endpoints
   useEffect(() => {
     if (!currentEndpointId || !isStateful) return;
 
@@ -301,13 +308,20 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data && Array.isArray(data.data)) {
-          // SỬA LẠI: Giữ tất cả endpoints, chỉ lấy unique IDs
-          const transformedEndpoints = data.data.map((endpoint, index) => ({
-            id: endpoint.id || `temp-${index}`, // Fallback ID nếu không có
-            path: endpoint.path,
-            workspaceName: endpoint.workspaceName,
-            projectName: endpoint.projectName,
-          }));
+          // ✅ FIX: Filter out null/undefined trước khi transform
+          const validEndpoints = data.data.filter(
+            (endpoint) => endpoint && typeof endpoint === "object"
+          );
+
+          const transformedEndpoints = validEndpoints.map(
+            (endpoint, index) => ({
+              id: endpoint.id || `temp-${index}`,
+              path: endpoint.path || "", // ✅ Fallback cho empty values
+              workspaceName: endpoint.workspaceName || "",
+              projectName: endpoint.projectName || "",
+              folderName: endpoint.folderName || "",
+            })
+          );
 
           setNewApiCallAvailableEndpoints(transformedEndpoints);
         } else {
@@ -315,10 +329,8 @@ const DashboardPage = () => {
         }
       })
       .catch((error) => {
-        console.error(
-          "Failed to fetch available endpoints for New API Call:",
-          error
-        );
+        console.error("Failed to fetch available endpoints:", error);
+        setNewApiCallAvailableEndpoints([]); // ✅ Fallback
       });
   }, [currentEndpointId, isStateful]);
 
@@ -386,35 +398,106 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
-  // Hàm filter endpoints theo mode
+  // ✅ FIX: Cập nhật hàm filter với safety checks
   const getFilteredEndpoints = () => {
     if (newApiCallFilterMode === "external") {
       // External: hiện tất cả, nhưng deduplicate theo path
       const uniqueByPath = new Map();
       newApiCallAvailableEndpoints.forEach((endpoint) => {
-        if (!uniqueByPath.has(endpoint.path)) {
+        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
           uniqueByPath.set(endpoint.path, endpoint);
         }
       });
       return Array.from(uniqueByPath.values());
     }
 
-    // Internal: chỉ lấy endpoints có cùng workspace và project
-    const filtered = newApiCallAvailableEndpoints.filter(
-      (endpoint) =>
-        endpoint.workspaceName === currentWorkspace?.name &&
-        endpoint.projectName === currentProject?.name
+    // Internal: lọc theo 3 dropdown đã chọn
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
     );
+
+    // ✅ CẬP NHẬT: Xử lý cả empty string và "all"
+    if (newApiCallInternalWorkspace && newApiCallInternalWorkspace !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    if (newApiCallInternalProject && newApiCallInternalProject !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.projectName === newApiCallInternalProject
+      );
+    }
+
+    if (newApiCallInternalFolder && newApiCallInternalFolder !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.folderName === newApiCallInternalFolder
+      );
+    }
 
     // Deduplicate theo path trong filtered results
     const uniqueByPath = new Map();
     filtered.forEach((endpoint) => {
-      if (!uniqueByPath.has(endpoint.path)) {
+      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
         uniqueByPath.set(endpoint.path, endpoint);
       }
     });
 
     return Array.from(uniqueByPath.values());
+  };
+
+  // ✅ FIX: Cập nhật hàm get options với safety checks
+  const getInternalWorkspaceOptions = () => {
+    // ✅ Filter out null/undefined trước khi map
+    const validEndpoints = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && ep.workspaceName
+    );
+    const workspaces = [
+      ...new Set(validEndpoints.map((ep) => ep.workspaceName)),
+    ];
+    return workspaces.sort();
+  };
+
+  const getInternalProjectOptions = () => {
+    // ✅ Filter out null/undefined trước khi filter và map
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    if (newApiCallInternalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    // ✅ Filter out null/undefined trước khi map
+    const validFiltered = filtered.filter((ep) => ep && ep.projectName);
+    const projects = [...new Set(validFiltered.map((ep) => ep.projectName))];
+    return projects.sort();
+  };
+
+  const getInternalFolderOptions = () => {
+    // ✅ Filter out null/undefined trước khi filter và map
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    if (newApiCallInternalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    if (newApiCallInternalProject) {
+      filtered = filtered.filter(
+        (ep) => ep.projectName === newApiCallInternalProject
+      );
+    }
+
+    // ✅ Filter out null/undefined trước khi map
+    const validFiltered = filtered.filter((ep) => ep && ep.folderName);
+    const folders = [...new Set(validFiltered.map((ep) => ep.folderName))];
+    return folders.sort();
   };
 
   // Thêm hàm get full target endpoint cho New API Call
@@ -3718,14 +3801,123 @@ const DashboardPage = () => {
                       </div>
                     </div>
 
-                    {/* Thêm thông báo mô tả bên dưới toggle */}
-                    <div className="mb-2">
-                      <span className="text-xs text-gray-600">
-                        {newApiCallFilterMode === "external"
-                          ? "Showing all available paths from all workspaces and projects"
-                          : "Showing only paths from the current workspace and project"}
-                      </span>
-                    </div>
+                    {/* Internal Filter UI - 3 Dropdowns trong cùng 1 hàng */}
+                    {newApiCallFilterMode === "internal" && (
+                      <div className="mb-3 flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                        <span className="text-xs font-semibold text-black whitespace-nowrap">
+                          Filter
+                        </span>
+                        <div className="w-px h-4 bg-yellow-300"></div>
+
+                        {/* Workspace Dropdown */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalWorkspace}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalWorkspace(
+                                value === "all" ? "" : value
+                              );
+                              // Reset project và folder khi workspace thay đổi
+                              setNewApiCallInternalProject("");
+                              setNewApiCallInternalFolder("");
+                            }}
+                          >
+                            <SelectTrigger className="w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs">
+                              <SelectValue
+                                placeholder="Workspace"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">
+                                All Workspaces
+                              </SelectItem>
+                              {getInternalWorkspaceOptions().map(
+                                (workspace) => (
+                                  <SelectItem key={workspace} value={workspace}>
+                                    {workspace}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Project Dropdown - Disable khi chưa chọn workspace */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalProject}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalProject(
+                                value === "all" ? "" : value
+                              );
+                              // Reset folder khi project thay đổi
+                              setNewApiCallInternalFolder("");
+                            }}
+                            disabled={!newApiCallInternalWorkspace} // ✅ Disable khi chưa chọn workspace
+                          >
+                            <SelectTrigger
+                              className={`w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs ${
+                                !newApiCallInternalWorkspace
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <SelectValue
+                                placeholder="Project"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">All Projects</SelectItem>
+                              {getInternalProjectOptions().map((project) => (
+                                <SelectItem key={project} value={project}>
+                                  {project}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Folder Dropdown - Disable khi chưa chọn workspace và project */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalFolder}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalFolder(
+                                value === "all" ? "" : value
+                              );
+                            }}
+                            disabled={
+                              !newApiCallInternalWorkspace ||
+                              !newApiCallInternalProject
+                            } // ✅ Disable khi chưa chọn workspace và project
+                          >
+                            <SelectTrigger
+                              className={`w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs ${
+                                !newApiCallInternalWorkspace ||
+                                !newApiCallInternalProject
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <SelectValue
+                                placeholder="Folder"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">All Folders</SelectItem>
+                              {getInternalFolderOptions().map((folder) => (
+                                <SelectItem key={folder} value={folder}>
+                                  {folder}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="relative mt-1">
                       <Select
@@ -4033,6 +4225,10 @@ const DashboardPage = () => {
                       setNewApiCallStatusCondition(""); // Reset về rỗng thay vì "200"
                       setNewApiCallValidationErrors({});
                       setNewApiCallFilterMode("external");
+                      // Reset internal filter dropdowns
+                      setNewApiCallInternalWorkspace("");
+                      setNewApiCallInternalProject("");
+                      setNewApiCallInternalFolder("");
                     }}
                     className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
                   >

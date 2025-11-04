@@ -617,12 +617,6 @@ export const ApiCallEditor = ({
               <div className="flex items-center justify-between mb-3">
                 <div className="w-[130px]"></div> {/* Spacer để căn chỉnh */}
                 <div className="flex items-center gap-4">
-                  {/* Thông báo bên cạnh toggle */}
-                  <span className="text-xs text-gray-600">
-                    {filterMode === "external"
-                      ? "Showing all available paths"
-                      : "Showing only paths from current workspace/project"}
-                  </span>
                   {/* Toggle External/Internal */}
                   <div className="flex items-center gap-2">
                     <span
