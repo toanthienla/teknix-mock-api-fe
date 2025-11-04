@@ -285,7 +285,7 @@ export default function Topbar({
   };
 
   return (
-    <div className="topbar relative flex items-center justify-between px-8 py-2 -mt-8 h-16">
+    <div className="topbar shadow-none relative flex items-center justify-between px-8 py-2 -mt-8 h-16">
     {/* Logo + Workspace Selector */}
       <div className="flex items-center gap-4">
         <div
@@ -427,7 +427,7 @@ export default function Topbar({
                               </BreadcrumbLink>
                             )}
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" className="bg-black text-white text-xs px-2 py-1 rounded">
+                          <TooltipContent side="bottom" className="text-xs px-2 py-1 rounded">
                             {tooltipText}
                           </TooltipContent>
                         </Tooltip>

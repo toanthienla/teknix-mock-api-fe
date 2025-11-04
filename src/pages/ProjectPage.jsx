@@ -57,10 +57,13 @@ import dateIcon from "@/assets/light/date.svg";
 import statelessIcon from "@/assets/light/stateless.svg";
 import statefulIcon from "@/assets/light/stateful.svg";
 import trashIcon from "@/assets/light/Trash Icon.svg";
+import "@/styles/pages/project-page.css";
+import {useTheme} from "@/services/useTheme.js";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
+  // const { isDark } = useTheme();
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -668,10 +671,10 @@ export default function ProjectPage() {
 
   // -------------------- Render --------------------
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="project-page flex flex-col min-h-screen">
       {isLoading ? (
         // Loading UI
-        <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <div className="project-page flex flex-col justify-center items-center h-screen">
           <span className="loader"></span>
           <p className="text-lg mt-2 font-medium text-gray-700">
             Loading projects...
@@ -681,7 +684,7 @@ export default function ProjectPage() {
         // Main content
         <>
           {/* Topbar full chiều ngang */}
-          <div className="mt-8 w-full bg-white shadow-sm z-20">
+          <div className="mt-8 w-full shadow-sm z-20">
             <Topbar
               workspaces={workspaces}
               current={currentWsId}
@@ -713,17 +716,17 @@ export default function ProjectPage() {
               username={currentUsername}
             />
           </div>
-          <main className="flex-1 w-full flex justify-center bg-white">
+          <main className="project-page-content flex-1 w-full flex justify-center">
             {workspaces.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-4">
-                <p className="text-xl font-semibold text-gray-700">
+                <p className="text-xl font-semibold">
                   No available workspaces.
                 </p>
-                <p className="text-gray-500">
+                <p>
                   Create a new workspace to get started.
                 </p>
                 <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 text-md font-bold px-5"
+                  className="text-md font-bold px-5"
                   onClick={() => setOpenNewWs(true)}
                 >
                   New workspace
@@ -734,13 +737,13 @@ export default function ProjectPage() {
                 {/* Tiêu đề + Nút New Project */}
                 <div className="flex items-center justify-between mb-6">
                   {currentWorkspace && (
-                    <h2 className="text-3xl font-bold text-black">
+                    <h2 className="text-3xl font-bold">
                       {currentWorkspace.name} - {sortedProjects.length} projects
                     </h2>
                   )}
                   <Button
                     onClick={() => setOpenNewProject(true)}
-                    className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black font-bold px-5"
+                    className="rounded-xs font-semibold text-sm px-5"
                   >
                     New Project
                   </Button>
@@ -751,37 +754,37 @@ export default function ProjectPage() {
                   <div className="rounded-md overflow-hidden">
                     <Table className="w-full">
                       {/* ==== Header ==== */}
-                      <TableHeader className="bg-white">
+                      <TableHeader>
                         <TableRow className="border-none">
-                          <TableHead className="w-1/4 text-black font-semibold text-sm">
+                          <TableHead className="w-1/4 font-semibold text-sm">
                             Project Name
                           </TableHead>
-                          <TableHead className="w-1/3 text-black font-semibold text-sm">
+                          <TableHead className="w-1/3 font-semibold text-sm">
                             Folders
                           </TableHead>
-                          <TableHead className="text-center text-black font-semibold text-sm">
+                          <TableHead className="text-center font-semibold text-sm">
                             Endpoints
                           </TableHead>
-                          <TableHead className="text-black text-right font-semibold text-sm">
+                          <TableHead className=" text-right font-semibold text-sm">
                             Date Created
                           </TableHead>
-                          <TableHead className="text-right text-black font-semibold text-sm">
+                          <TableHead className="text-right font-semibold text-sm">
                             Action
                           </TableHead>
                         </TableRow>
-                        <TableRow className="border-b border-slate-200">
+                        <TableRow>
                           <TableHead colSpan={5}>
                             <div className="flex items-center gap-2 w-1/4">
                               <div className="relative w-full">
                                 <img
                                   src={searchIcon}
                                   alt="search"
-                                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
+                                  className="absolute top-1/2 -translate-y-1/2 left-1 w-4 h-4 opacity-70 dark:invert"
                                 />
                                 <Input
                                   type="text"
                                   placeholder="Search projects..."
-                                  className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
+                                  className="pl-6 pr-3 h-9 text-sm border-none shadow-none w-full"
                                   value={searchTerm}
                                   onChange={(e) =>
                                     setSearchTerm(e.target.value)
@@ -816,7 +819,7 @@ export default function ProjectPage() {
                           <TableRow>
                             <TableCell
                               colSpan="5"
-                              className="text-center py-6 text-gray-500"
+                              className="text-center py-6 opacity-50"
                             >
                               No projects found.
                             </TableCell>
@@ -832,7 +835,7 @@ export default function ProjectPage() {
                         }).map((_, i) => (
                           <TableRow
                             key={`empty-${i}`}
-                            className="h-[64px] bg-white border-none"
+                            className="h-[64px] border-none"
                           ></TableRow>
                         ))}
                       </TableBody>
@@ -840,7 +843,7 @@ export default function ProjectPage() {
                   </div>
 
                   {/* ==== Pagination ==== */}
-                  <div className="flex items-center justify-between mt-4 px-2 text-sm text-gray-700">
+                  <div className="flex items-center justify-between mt-4 px-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Pagination>
                         <PaginationContent>
@@ -896,7 +899,7 @@ export default function ProjectPage() {
                           setCurrentPage(1);
                         }}
                       >
-                        <SelectTrigger className="w-[80px] h-8 border-gray-300 text-sm">
+                        <SelectTrigger className="w-[80px] h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -919,14 +922,14 @@ export default function ProjectPage() {
                 <DialogTitle className="text-lg font-semibold">
                   New Project
                 </DialogTitle>
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm">
                   Project details
                 </div>
               </DialogHeader>
 
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Name
                   </label>
                   <Input
@@ -943,7 +946,7 @@ export default function ProjectPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Description
                   </label>
                   <Textarea
@@ -959,7 +962,7 @@ export default function ProjectPage() {
                       }
                     }}
                   />
-                  <p className="text-xs text-slate-400 text-right mt-1">
+                  <p className="text-xs text-right mt-1">
                     {newDesc.length}/200
                   </p>
                 </div>
@@ -972,7 +975,6 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={handleCreateProject}
                 >
                   Create
@@ -988,14 +990,14 @@ export default function ProjectPage() {
                 <DialogTitle className="text-lg font-semibold">
                   Edit Project
                 </DialogTitle>
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm">
                   Project details
                 </div>
               </DialogHeader>
 
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Name
                   </label>
                   <Input
@@ -1023,7 +1025,7 @@ export default function ProjectPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Description
                   </label>
                   <Textarea
@@ -1050,7 +1052,7 @@ export default function ProjectPage() {
                       }
                     }}
                   />
-                  <p className="text-xs text-slate-400 text-right mt-1">
+                  <p className="text-xs text-right mt-1">
                     {editDesc.length}/200
                   </p>
                 </div>
@@ -1064,7 +1066,6 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={handleUpdateProject}
                   disabled={
                     editTitle.trim() ===
@@ -1107,7 +1108,7 @@ export default function ProjectPage() {
                 <DialogTitle>New Workspace</DialogTitle>
               </DialogHeader>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium">
                   Name
                 </label>
                 <Input
@@ -1127,7 +1128,6 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={() => {
                     handleAddWorkspace(newWsName);
                   }}
@@ -1159,7 +1159,6 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
-                  className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                   onClick={handleEditWorkspace}
                   disabled={
                     editWsName.trim() ===
@@ -1209,7 +1208,7 @@ export default function ProjectPage() {
           <Sheet open={openDetail} onOpenChange={setOpenDetail}>
             <SheetContent
               side="right"
-              className="!max-w-none w-[420px] sm:w-[500px] md:w-[600px] bg-white shadow-lg overflow-y-auto p-6"
+              className="!max-w-none w-[420px] sm:w-[500px] md:w-[600px] shadow-lg overflow-y-auto p-6"
             >
               {selectedProject && (
                 <>
@@ -1222,8 +1221,8 @@ export default function ProjectPage() {
 
                   <div className="space-y-5">
                     {/* Description */}
-                    <div className="border rounded-lg p-4 bg-slate-50">
-                      <h2 className="text-2xl font-bold text-gray-900">
+                    <div className="border rounded-lg p-4">
+                      <h2 className="text-2xl font-bold">
                         {selectedProject.name}
                       </h2>
                       <div className="flex items-center gap-2 mb-2">
@@ -1232,7 +1231,7 @@ export default function ProjectPage() {
                           alt="description"
                           className="w-4 h-4"
                         />
-                        <h3 className="font-semibold text-gray-700">
+                        <h3 className="font-semibold">
                           Description
                         </h3>
                       </div>
@@ -1243,7 +1242,7 @@ export default function ProjectPage() {
                     </div>
 
                     {/* Folders & Endpoints */}
-                    <div className="border rounded-lg p-4 bg-slate-50">
+                    <div className="border rounded-lg p-4">
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center gap-2">
                           <img
@@ -1251,11 +1250,11 @@ export default function ProjectPage() {
                             alt="folders"
                             className="w-4 h-4"
                           />
-                          <h3 className="font-semibold text-gray-800">
+                          <h3 className="font-semibold">
                             FOLDERS
                           </h3>
                         </div>
-                        <h3 className="font-semibold text-gray-800">
+                        <h3 className="font-semibold">
                           ENDPOINTS
                         </h3>
                       </div>
@@ -1284,10 +1283,10 @@ export default function ProjectPage() {
                                 </span>
 
                                 {/* Endpoint badge */}
-                                <div className="flex items-center bg-neutral-800 text-white rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
+                                <div className="flex items-center rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
                                   {/* Stateless */}
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-300">
+                                    <span>
                                       {statelessCount}
                                     </span>
                                     <img
@@ -1302,7 +1301,7 @@ export default function ProjectPage() {
 
                                   {/* Stateful */}
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-300">
+                                    <span>
                                       {statefulCount}
                                     </span>
                                     <img
@@ -1319,8 +1318,8 @@ export default function ProjectPage() {
                     </div>
 
                     {/* Date */}
-                    <div className="border rounded-lg p-4 bg-slate-50 flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <div className="border rounded-lg p-4 flex justify-between items-center">
+                      <div className="flex items-center gap-2 text-sm">
                         <img
                           src={dateIcon}
                           alt="calendar"
@@ -1328,7 +1327,7 @@ export default function ProjectPage() {
                         />
                         <span>Date</span>
                       </div>
-                      <div className="text-right text-sm text-gray-700">
+                      <div className="text-right text-sm">
                         {new Date(
                           selectedProject.created_at
                         ).toLocaleDateString()}{" "}
@@ -1344,12 +1343,12 @@ export default function ProjectPage() {
                   </div>
 
                   <SheetFooter className="flex justify-between items-center mt-6">
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                    <div className="text-sm flex items-center gap-2">
                       <span>Expand new tab</span> <span>•</span>
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        className="bg-white hover:bg-red-400 text-indigo-950"
+                        className="hover:bg-red-400"
                         onClick={() => {
                           openDeleteProjectDialog(selectedProject?.id);
                         }}
@@ -1361,7 +1360,6 @@ export default function ProjectPage() {
                         />
                       </Button>
                       <Button
-                        className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
                         onClick={() => {
                           openEditProjectDialog(selectedProject);
                         }}
@@ -1382,12 +1380,12 @@ export default function ProjectPage() {
           </Sheet>
 
           {/* footer */}
-          <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700 border-t bg-white">
+          <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold border-t">
             <span>© Teknix Corp. All rights reserved.</span>
-            <div className="flex items-center gap-3 text-gray-700">
-              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-              <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+            <div className="flex items-center gap-3">
+              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert" />
+              <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
+              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert" />
               <a className="hover:underline font-semibold" href="">
                 About
               </a>

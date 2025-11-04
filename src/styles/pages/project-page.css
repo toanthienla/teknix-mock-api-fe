@@ -1,0 +1,68 @@
+.project-page {
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+/* Thẻ chính */
+.project-page-content main {
+    background-color: var(--card);
+    border-color: var(--card-border);
+}
+
+/* Input, Search box */
+.project-page-content input,
+.project-page-content textarea {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+}
+
+.project-page-content input::placeholder,
+.project-page-content textarea::placeholder {
+    color: var(--input-placeholder);
+}
+
+/* Button */
+.project-page-content button {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.project-page-content button:hover {
+    background-color: var(--button-bg-hover);
+}
+
+/* Footer */
+.project-page-content footer {
+    background-color: var(--card);
+    color: var(--foreground);
+    border-top: 1px solid var(--border);
+}
+
+/* Bảng */
+.project-page-content table {
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+.project-page-content th,
+.project-page-content td {
+    border-color: var(--border);
+}
+
+/* Scrollbar */
+.project-page-content ::-webkit-scrollbar {
+    width: 8px;
+}
+
+.project-page-content ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.project-page-content ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+}
+
+.project-page-content ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
