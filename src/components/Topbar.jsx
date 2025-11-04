@@ -404,7 +404,7 @@ export default function Topbar({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {isLast || !item.href ? (
-                              <BreadcrumbPage className="flex items-center gap-1 font-bold text-slate-900">
+                              <BreadcrumbPage className="flex items-center gap-1 text-slate-900">
                                 {item.label}
                               </BreadcrumbPage>
                             ) : (
@@ -421,7 +421,7 @@ export default function Topbar({
                                     localStorage.setItem("openFolders", JSON.stringify(savedFolders));
                                   }
                                 }}
-                                className="flex items-center gap-1 font-bold text-slate-400"
+                                className="flex items-center gap-1 text-slate-400"
                               >
                                 {item.label}
                               </BreadcrumbLink>
@@ -436,7 +436,7 @@ export default function Topbar({
 
                     {!isLast && (
                       <BreadcrumbSeparator>
-                        <span className="text-lg font-semibold">/</span>
+                        <span>/</span>
                       </BreadcrumbSeparator>
                     )}
                   </React.Fragment>
