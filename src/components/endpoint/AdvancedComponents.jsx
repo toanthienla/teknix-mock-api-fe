@@ -26,7 +26,6 @@ import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
-import { statusCodes } from "@/components/endpoint/constants.js";
 
 export const ApiCallEditor = ({
   endpointId,
@@ -41,7 +40,8 @@ export const ApiCallEditor = ({
   filterMode = "external",
   setFilterMode = () => {},
   currentWorkspace,
-  currentProject,
+  currentProject, // Thêm props cho available status codes
+  availableStatusCodes = [],
 }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
@@ -180,6 +180,14 @@ export const ApiCallEditor = ({
 
     setFilteredEndpoints(filtered);
   }, [availableEndpoints, filterMode, currentWorkspace, currentProject]);
+
+  // Cập nhật Status condition dropdown để sử dụng availableStatusCodes
+  const getStatusConditionOptions = () => {
+    // Sắp xếp theo thứ tự status code tăng dần
+    return [...availableStatusCodes].sort(
+      (a, b) => parseInt(a.code) - parseInt(b.code)
+    );
+  };
 
   // Cập nhật hàm để lấy full target endpoint
   const getFullTargetEndpoint = (targetEndpoint) => {
@@ -843,7 +851,8 @@ export const ApiCallEditor = ({
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {statusCodes.map((status) => (
+                        {/* Sử dụng availableStatusCodes thay vì statusCodes từ constants */}
+                        {getStatusConditionOptions().map((status) => (
                           <SelectItem key={status.code} value={status.code}>
                             {status.code} - {status.description.split("–")[0]}
                           </SelectItem>

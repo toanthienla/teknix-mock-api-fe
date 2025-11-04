@@ -163,14 +163,14 @@ const DashboardPage = () => {
   const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
   const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("{}");
   const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
-    useState("200");
+    useState("");
   const [
     isNewApiCallRequestBodyPopoverOpen,
     setIsNewApiCallRequestBodyPopoverOpen,
   ] = useState(false);
   // Thêm state filter mode
   const [newApiCallFilterMode, setNewApiCallFilterMode] = useState("external");
-const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
+  const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
@@ -282,6 +282,10 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
   const [newApiCallAvailableEndpoints, setNewApiCallAvailableEndpoints] =
     useState([]);
 
+  // Thêm state cho available status codes từ endpoint responses
+  const [newApiCallAvailableStatusCodes, setNewApiCallAvailableStatusCodes] =
+    useState([]);
+
   // Thêm state cho validation lỗi
   const [newApiCallValidationErrors, setNewApiCallValidationErrors] = useState(
     {}
@@ -315,6 +319,70 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
           "Failed to fetch available endpoints for New API Call:",
           error
         );
+      });
+  }, [currentEndpointId, isStateful]);
+
+  // Thêm useEffect để fetch status codes từ endpoint responses
+  useEffect(() => {
+    if (!currentEndpointId) return;
+
+    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // Lấy unique status codes từ endpoint responses
+          const uniqueStatusCodes = [
+            ...new Set(data.map((response) => response.status_code.toString())),
+          ];
+
+          // Thêm các status code 500 mặc định (500-505)
+          const default500Codes = ["500", "501", "502", "503", "504", "505"];
+          const combinedCodes = [
+            ...new Set([...uniqueStatusCodes, ...default500Codes]),
+          ];
+
+          // Tạo danh sách status codes với description
+          const statusCodesWithDesc = combinedCodes.map((code) => {
+            // Tìm description từ constants.js nếu có
+            const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
+            const description = statusCodeInfo
+              ? statusCodeInfo.description
+              : "Custom status code";
+
+            return {
+              code: code,
+              description: description,
+            };
+          });
+
+          setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+        } else {
+          setNewApiCallAvailableStatusCodes([
+            { code: "500", description: "Internal Server Error." },
+            { code: "501", description: "Not Implemented." },
+            { code: "502", description: "Bad Gateway." },
+            { code: "503", description: "Service Unavailable." },
+            { code: "504", description: "Gateway Timeout." },
+            { code: "505", description: "HTTP Version Not Supported." },
+          ]);
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch status codes from endpoint responses:",
+          error
+        );
+        // Fallback về default 500 codes
+        setNewApiCallAvailableStatusCodes([
+          { code: "500", description: "Internal Server Error." },
+          { code: "501", description: "Not Implemented." },
+          { code: "502", description: "Bad Gateway." },
+          { code: "503", description: "Service Unavailable." },
+          { code: "504", description: "Gateway Timeout." },
+          { code: "505", description: "HTTP Version Not Supported." },
+        ]);
       });
   }, [currentEndpointId, isStateful]);
 
@@ -377,6 +445,11 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
       errors.method = "Method is required";
     }
 
+    // Thêm kiểm tra status code không được trống
+    if (!newApiCallStatusCondition || newApiCallStatusCondition.trim() === "") {
+      errors.statusCondition = "Status condition is required";
+    }
+
     // Validate JSON request body
     if (newApiCallRequestBody) {
       try {
@@ -395,10 +468,20 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
 
   // Reset validation errors khi các giá trị thay đổi
   useEffect(() => {
-    if (newApiCallTargetEndpoint || newApiCallMethod || newApiCallRequestBody) {
+    if (
+      newApiCallTargetEndpoint ||
+      newApiCallMethod ||
+      newApiCallRequestBody ||
+      newApiCallStatusCondition
+    ) {
       setNewApiCallValidationErrors({});
     }
-  }, [newApiCallTargetEndpoint, newApiCallMethod, newApiCallRequestBody]);
+  }, [
+    newApiCallTargetEndpoint,
+    newApiCallMethod,
+    newApiCallRequestBody,
+    newApiCallStatusCondition,
+  ]);
 
   // Sửa lại hàm handleCreateNewApiCall để xử lý response mới
   const handleCreateNewApiCall = async () => {
@@ -462,8 +545,9 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
       setNewApiCallTargetEndpoint("");
       setNewApiCallMethod("GET");
       setNewApiCallRequestBody("{}");
-      setNewApiCallStatusCondition("200");
+      setNewApiCallStatusCondition("");
       setNewApiCallValidationErrors({});
+      setNewApiCallFilterMode("external");
 
       // Gọi lại GET API để lấy dữ liệu mới nhất
       await fetchAdvancedConfig();
@@ -3559,12 +3643,13 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
                         onSave={() => fetchEndpointResponses(isStateful)}
-                                                // Thêm props cho filter
+                        // Thêm props cho filter
                         availableEndpoints={newApiCallAvailableEndpoints}
                         filterMode={advancedFilterMode}
                         setFilterMode={setAdvancedFilterMode}
                         currentWorkspace={currentWorkspace}
                         currentProject={currentProject}
+                        availableStatusCodes={newApiCallAvailableStatusCodes}
                       />
                     </div>
                   )}
@@ -3901,20 +3986,36 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
                         value={newApiCallStatusCondition}
                         onValueChange={setNewApiCallStatusCondition}
                       >
-                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px]">
+                        <SelectTrigger
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                            newApiCallValidationErrors.statusCondition
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue
                             placeholder="Select condition"
                             className="truncate"
                           />
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {statusCodes.map((status) => (
-                            <SelectItem key={status.code} value={status.code}>
-                              {status.code} - {status.description.split("–")[0]}
-                            </SelectItem>
-                          ))}
+                          {/* Sử dụng status codes từ endpoint responses + 500 default */}
+                          {newApiCallAvailableStatusCodes
+                            .sort((a, b) => parseInt(a.code) - parseInt(b.code))
+                            .map((status) => (
+                              <SelectItem key={status.code} value={status.code}>
+                                {status.code} -{" "}
+                                {status.description.split("–")[0]}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
+                      {/* Hiển thị lỗi validation cho status condition */}
+                      {newApiCallValidationErrors.statusCondition && (
+                        <div className="text-red-400 text-xs mt-1 pl-2">
+                          {newApiCallValidationErrors.statusCondition}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -3929,7 +4030,7 @@ const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
                       setNewApiCallTargetEndpointDisplay("");
                       setNewApiCallMethod("GET");
                       setNewApiCallRequestBody("{}");
-                      setNewApiCallStatusCondition("");
+                      setNewApiCallStatusCondition(""); // Reset về rỗng thay vì "200"
                       setNewApiCallValidationErrors({});
                       setNewApiCallFilterMode("external");
                     }}
