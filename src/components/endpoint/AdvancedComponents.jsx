@@ -37,17 +37,11 @@ export const ApiCallEditor = ({
   getFullPath,
   // Thêm props cho filter
   availableEndpoints = [],
-  filterMode = "external",
-  setFilterMode = () => {},
-  currentWorkspace,
-  currentProject, // Thêm props cho available status codes
   availableStatusCodes = [],
 }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
-
-  const [filteredEndpoints, setFilteredEndpoints] = useState([]);
 
   // Thêm state cho popover
   const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
@@ -60,6 +54,8 @@ export const ApiCallEditor = ({
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
   const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
 
+  // Thêm state để lưu filter mode và internal filters cho mỗi call
+  const [callsFilterState, setCallsFilterState] = useState({});
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -130,56 +126,134 @@ export const ApiCallEditor = ({
     }
   };
 
-  // Cập nhật filtered endpoints khi availableEndpoints hoặc filterMode thay đổi
-  useEffect(() => {
-    let filtered = [...availableEndpoints];
+  // Thêm hàm để cập nhật filter state cho từng call
+  const updateCallFilterState = (callIndex, updates) => {
+    setCallsFilterState((prev) => ({
+      ...prev,
+      [callIndex]: {
+        ...prev[callIndex],
+        ...updates,
+      },
+    }));
+  };
 
-    if (filterMode === "internal" && currentWorkspace && currentProject) {
-      // Filter theo workspace và project hiện tại
-      filtered = availableEndpoints.filter(
-        (endpoint) =>
-          endpoint.workspaceName === currentWorkspace.name &&
-          endpoint.projectName === currentProject.name
+  // Thêm hàm để lấy filter state của một call
+  const getCallFilterState = (callIndex) => {
+    return (
+      callsFilterState[callIndex] || {
+        filterMode: "external",
+        internalWorkspace: "",
+        internalProject: "",
+        internalFolder: "",
+      }
+    );
+  };
+
+  // ✅ FIX: Cập nhật hàm get options với safety checks
+  const getInternalWorkspaceOptions = (callIndex) => {
+    const callState = getCallFilterState(callIndex);
+    const validEndpoints = availableEndpoints.filter(
+      (ep) => ep && ep.workspaceName
+    );
+
+    let filtered = validEndpoints;
+    if (callState.internalWorkspace) {
+      // Filter theo workspace đã chọn
+    }
+
+    const workspaces = [...new Set(filtered.map((ep) => ep.workspaceName))];
+    return workspaces.sort();
+  };
+
+  const getInternalProjectOptions = (callIndex) => {
+    const callState = getCallFilterState(callIndex);
+    let filtered = availableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    if (callState.internalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === callState.internalWorkspace
       );
     }
 
-    setFilteredEndpoints(filtered);
-  }, [availableEndpoints, filterMode, currentWorkspace, currentProject]);
+    const validFiltered = filtered.filter((ep) => ep && ep.projectName);
+    const projects = [...new Set(validFiltered.map((ep) => ep.projectName))];
+    return projects.sort();
+  };
 
-  // Cập nhật filtered endpoints khi availableEndpoints hoặc filterMode thay đổi
-  useEffect(() => {
-    let filtered = [...availableEndpoints];
+  const getInternalFolderOptions = (callIndex) => {
+    const callState = getCallFilterState(callIndex);
+    let filtered = availableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
 
-    if (filterMode === "external") {
+    if (callState.internalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === callState.internalWorkspace
+      );
+    }
+
+    if (callState.internalProject) {
+      filtered = filtered.filter(
+        (ep) => ep.projectName === callState.internalProject
+      );
+    }
+
+    const validFiltered = filtered.filter((ep) => ep && ep.folderName);
+    const folders = [...new Set(validFiltered.map((ep) => ep.folderName))];
+    return folders.sort();
+  };
+
+  // ✅ FIX: Cập nhật hàm filter với safety checks
+  const getFilteredEndpoints = (callIndex) => {
+    const callState = getCallFilterState(callIndex);
+
+    if (callState.filterMode === "external") {
       // External: hiện tất cả, nhưng deduplicate theo path
       const uniqueByPath = new Map();
-      filtered.forEach((endpoint) => {
-        if (!uniqueByPath.has(endpoint.path)) {
+      availableEndpoints.forEach((endpoint) => {
+        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
           uniqueByPath.set(endpoint.path, endpoint);
         }
       });
-      filtered = Array.from(uniqueByPath.values());
-    } else {
-      // Internal: chỉ lấy endpoints có cùng workspace và project
-      filtered = availableEndpoints.filter(
-        (endpoint) =>
-          endpoint.workspaceName === currentWorkspace?.name &&
-          endpoint.projectName === currentProject?.name
-      );
-
-      // Deduplicate theo path trong filtered results
-      const uniqueByPath = new Map();
-      filtered.forEach((endpoint) => {
-        if (!uniqueByPath.has(endpoint.path)) {
-          uniqueByPath.set(endpoint.path, endpoint);
-        }
-      });
-
-      filtered = Array.from(uniqueByPath.values());
+      return Array.from(uniqueByPath.values());
     }
 
-    setFilteredEndpoints(filtered);
-  }, [availableEndpoints, filterMode, currentWorkspace, currentProject]);
+    // Internal: lọc theo 3 dropdown đã chọn
+    let filtered = availableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    // ✅ CẬP NHẬT: Xử lý cả empty string và "all"
+    if (callState.internalWorkspace && callState.internalWorkspace !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.workspaceName === callState.internalWorkspace
+      );
+    }
+
+    if (callState.internalProject && callState.internalProject !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.projectName === callState.internalProject
+      );
+    }
+
+    if (callState.internalFolder && callState.internalFolder !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.folderName === callState.internalFolder
+      );
+    }
+
+    // Deduplicate theo path trong filtered results
+    const uniqueByPath = new Map();
+    filtered.forEach((endpoint) => {
+      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
+        uniqueByPath.set(endpoint.path, endpoint);
+      }
+    });
+
+    return Array.from(uniqueByPath.values());
+  };
 
   // Cập nhật Status condition dropdown để sử dụng availableStatusCodes
   const getStatusConditionOptions = () => {
@@ -602,65 +676,160 @@ export const ApiCallEditor = ({
                 </span>
                 <span className="font-bold text-[#37352F]">Next API Call</span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-700"
-                onClick={() => handleRemoveNextCall(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+
+              {/* Text "External call" và nút toggle, delete */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-black">
+                  External call
+                </span>
+                <button
+                  onClick={() => {
+                    const currentState = getCallFilterState(index);
+                    const newMode =
+                      currentState.filterMode === "external"
+                        ? "internal"
+                        : "external";
+                    updateCallFilterState(index, { filterMode: newMode });
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${
+                    getCallFilterState(index).filterMode === "internal"
+                      ? "bg-yellow-300"
+                      : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      getCallFilterState(index).filterMode === "internal"
+                        ? "translate-x-6"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => handleRemoveNextCall(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-4 pb-8 border-b border-[#CBD5E1]">
-              {/* Thêm phần toggle và thông báo riêng biệt */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-[130px]"></div> {/* Spacer để căn chỉnh */}
-                <div className="flex items-center gap-4">
-                  {/* Toggle External/Internal */}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-sm ${
-                        filterMode === "external"
-                          ? "text-gray-700"
-                          : "text-gray-400"
-                      }`}
+              {/* Internal Filter UI trong ApiCallEditor - 3 Dropdowns */}
+              {getCallFilterState(index).filterMode === "internal" && (
+                <div className="flex items-center gap-2 p-3 rounded-md max-w-[951px]">
+                  <span className="text-l font-semibold text-black whitespace-nowrap">
+                    Filter
+                  </span>
+                  <div className="w-px h-8 bg-yellow-300"></div>
+
+                  {/* Workspace Dropdown */}
+                  <div className="flex-1 min-w-0">
+                    <Select
+                      value={getCallFilterState(index).internalWorkspace}
+                      onValueChange={(value) => {
+                        updateCallFilterState(index, {
+                          internalWorkspace: value === "all" ? "" : value,
+                          // Reset project và folder khi workspace thay đổi
+                          internalProject: "",
+                          internalFolder: "",
+                        });
+                      }}
                     >
-                      External
-                    </span>
-                    <button
-                      onClick={() =>
-                        setFilterMode(
-                          filterMode === "external" ? "internal" : "external"
-                        )
-                      }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${
-                        filterMode === "internal"
-                          ? "bg-yellow-300"
-                          : "bg-gray-300"
-                      }`}
+                      <SelectTrigger className="w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs">
+                        <SelectValue
+                          placeholder="Workspace"
+                          className="text-xs truncate"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40">
+                        <SelectItem value="all">All Workspaces</SelectItem>
+                        {getInternalWorkspaceOptions(index).map((workspace) => (
+                          <SelectItem key={workspace} value={workspace}>
+                            {workspace}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Project Dropdown - Disable khi chưa chọn workspace */}
+                  <div className="flex-1 min-w-0">
+                    <Select
+                      value={getCallFilterState(index).internalProject}
+                      onValueChange={(value) => {
+                        updateCallFilterState(index, {
+                          internalProject: value === "all" ? "" : value,
+                          // Reset folder khi project thay đổi
+                          internalFolder: "",
+                        });
+                      }}
+                      disabled={!getCallFilterState(index).internalWorkspace}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          filterMode === "internal"
-                            ? "translate-x-6"
-                            : "translate-x-1"
+                      <SelectTrigger
+                        className={`w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs ${
+                          !getCallFilterState(index).internalWorkspace
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
                         }`}
-                      />
-                    </button>
-                    <span
-                      className={`text-sm ${
-                        filterMode === "internal"
-                          ? "text-gray-700"
-                          : "text-gray-400"
-                      }`}
+                      >
+                        <SelectValue
+                          placeholder="Project"
+                          className="text-xs truncate"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40">
+                        <SelectItem value="all">All Projects</SelectItem>
+                        {getInternalProjectOptions(index).map((project) => (
+                          <SelectItem key={project} value={project}>
+                            {project}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Folder Dropdown - Disable khi chưa chọn workspace và project */}
+                  <div className="flex-1 min-w-0">
+                    <Select
+                      value={getCallFilterState(index).internalFolder}
+                      onValueChange={(value) => {
+                        updateCallFilterState(index, {
+                          internalFolder: value === "all" ? "" : value,
+                        });
+                      }}
+                      disabled={
+                        !getCallFilterState(index).internalWorkspace ||
+                        !getCallFilterState(index).internalProject
+                      }
                     >
-                      Internal
-                    </span>
+                      <SelectTrigger
+                        className={`w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs ${
+                          !getCallFilterState(index).internalWorkspace ||
+                          !getCallFilterState(index).internalProject
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
+                        }`}
+                      >
+                        <SelectValue
+                          placeholder="Folder"
+                          className="text-xs truncate"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40">
+                        <SelectItem value="all">All Folders</SelectItem>
+                        {getInternalFolderOptions(index).map((folder) => (
+                          <SelectItem key={folder} value={folder}>
+                            {folder}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              </div>
-
+              )}
               {/* Target Endpoint */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
@@ -691,7 +860,7 @@ export const ApiCallEditor = ({
                         <SelectValue placeholder="Select endpoint">
                           {call.target_endpoint ? (
                             <span className="font-medium text-sm">
-                              {filteredEndpoints.find(
+                              {getFilteredEndpoints(index).find(
                                 (ep) => ep.path === call.target_endpoint
                               )?.path || call.target_endpoint}
                             </span>
@@ -704,7 +873,7 @@ export const ApiCallEditor = ({
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {/* Hiển thị danh sách endpoints đã được filter */}
-                        {filteredEndpoints.map((endpoint) => (
+                        {getFilteredEndpoints(index).map((endpoint) => (
                           <SelectItem key={endpoint.id} value={endpoint.path}>
                             <div className="flex flex-col">
                               <span className="font-medium">
@@ -726,7 +895,6 @@ export const ApiCallEditor = ({
                   </div>
                 </div>
               </div>
-
               {/* Method */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
@@ -759,7 +927,6 @@ export const ApiCallEditor = ({
                   </div>
                 </div>
               </div>
-
               {/* Request Body */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-start">
@@ -827,7 +994,6 @@ export const ApiCallEditor = ({
                   )}
                 </div>
               </div>
-
               {/* Status condition */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">

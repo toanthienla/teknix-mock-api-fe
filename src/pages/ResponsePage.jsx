@@ -170,7 +170,6 @@ const DashboardPage = () => {
   ] = useState(false);
   // Thêm state filter mode
   const [newApiCallFilterMode, setNewApiCallFilterMode] = useState("external");
-  const [advancedFilterMode, setAdvancedFilterMode] = useState("external");
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
@@ -3726,12 +3725,8 @@ const DashboardPage = () => {
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
                         onSave={() => fetchEndpointResponses(isStateful)}
-                        // Thêm props cho filter
+                        // Bỏ các props filter vì ApiCallEditor sẽ tự quản lý
                         availableEndpoints={newApiCallAvailableEndpoints}
-                        filterMode={advancedFilterMode}
-                        setFilterMode={setAdvancedFilterMode}
-                        currentWorkspace={currentWorkspace}
-                        currentProject={currentProject}
                         availableStatusCodes={newApiCallAvailableStatusCodes}
                       />
                     </div>
@@ -3756,16 +3751,10 @@ const DashboardPage = () => {
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label htmlFor="target-endpoint">Target Endpoint</Label>
-                      {/* Toggle External/Internal */}
+                      {/* Toggle External/Internal - Đơn giản hóa giống như trong API Call Editor */}
                       <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm ${
-                            newApiCallFilterMode === "external"
-                              ? "text-gray-700"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          External
+                        <span className="text-sm font-medium text-black">
+                          External call
                         </span>
                         <button
                           onClick={() =>
@@ -3789,15 +3778,6 @@ const DashboardPage = () => {
                             }`}
                           />
                         </button>
-                        <span
-                          className={`text-sm ${
-                            newApiCallFilterMode === "internal"
-                              ? "text-gray-700"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          Internal
-                        </span>
                       </div>
                     </div>
 
