@@ -36,13 +36,18 @@ export const ApiCallEditor = ({
   onSave,
   currentEndpoint,
   getFullPath,
+  // Thêm props cho filter
+  availableEndpoints = [],
+  filterMode = "external",
+  setFilterMode = () => {},
+  currentWorkspace,
+  currentProject,
 }) => {
   // Thêm state để lưu trữ JSON string và trạng thái lỗi
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
 
-  // Thêm state để lưu danh sách endpoints cho dropdown
-  const [availableEndpoints, setAvailableEndpoints] = useState([]);
+  const [filteredEndpoints, setFilteredEndpoints] = useState([]);
 
   // Thêm state cho popover
   const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
@@ -125,38 +130,56 @@ export const ApiCallEditor = ({
     }
   };
 
-  // Fetch danh sách endpoints từ API mới
+  // Cập nhật filtered endpoints khi availableEndpoints hoặc filterMode thay đổi
   useEffect(() => {
-    if (!currentEndpoint) return;
+    let filtered = [...availableEndpoints];
 
-    fetch(`${API_ROOT}/endpoints/advanced/path/${currentEndpoint.id}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          // Chỉ lấy unique paths, bỏ duplicate
-          const uniquePaths = [
-            ...new Set(data.data.map((endpoint) => endpoint.path)),
-          ];
+    if (filterMode === "internal" && currentWorkspace && currentProject) {
+      // Filter theo workspace và project hiện tại
+      filtered = availableEndpoints.filter(
+        (endpoint) =>
+          endpoint.workspaceName === currentWorkspace.name &&
+          endpoint.projectName === currentProject.name
+      );
+    }
 
-          // Transform data để chỉ có path và id (lấy id đầu tiên của mỗi path)
-          const transformedEndpoints = uniquePaths.map((path) => {
-            const firstEndpoint = data.data.find((ep) => ep.path === path);
-            return {
-              id: firstEndpoint.id, // Lấy id đầu tiên của path này
-              path: path,
-            };
-          });
+    setFilteredEndpoints(filtered);
+  }, [availableEndpoints, filterMode, currentWorkspace, currentProject]);
 
-          setAvailableEndpoints(transformedEndpoints);
+  // Cập nhật filtered endpoints khi availableEndpoints hoặc filterMode thay đổi
+  useEffect(() => {
+    let filtered = [...availableEndpoints];
+
+    if (filterMode === "external") {
+      // External: hiện tất cả, nhưng deduplicate theo path
+      const uniqueByPath = new Map();
+      filtered.forEach((endpoint) => {
+        if (!uniqueByPath.has(endpoint.path)) {
+          uniqueByPath.set(endpoint.path, endpoint);
         }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch available endpoints:", error);
-        toast.error("Failed to load available endpoints");
       });
-  }, [currentEndpoint]);
+      filtered = Array.from(uniqueByPath.values());
+    } else {
+      // Internal: chỉ lấy endpoints có cùng workspace và project
+      filtered = availableEndpoints.filter(
+        (endpoint) =>
+          endpoint.workspaceName === currentWorkspace?.name &&
+          endpoint.projectName === currentProject?.name
+      );
+
+      // Deduplicate theo path trong filtered results
+      const uniqueByPath = new Map();
+      filtered.forEach((endpoint) => {
+        if (!uniqueByPath.has(endpoint.path)) {
+          uniqueByPath.set(endpoint.path, endpoint);
+        }
+      });
+
+      filtered = Array.from(uniqueByPath.values());
+    }
+
+    setFilteredEndpoints(filtered);
+  }, [availableEndpoints, filterMode, currentWorkspace, currentProject]);
 
   // Cập nhật hàm để lấy full target endpoint
   const getFullTargetEndpoint = (targetEndpoint) => {
@@ -571,25 +594,78 @@ export const ApiCallEditor = ({
                 </span>
                 <span className="font-bold text-[#37352F]">Next API Call</span>
               </div>
-              {nextCalls.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => handleRemoveNextCall(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-700"
+                onClick={() => handleRemoveNextCall(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
 
             <div className="space-y-4 pb-8 border-b border-[#CBD5E1]">
-              {/* Target Endpoint - Sửa lại để sử dụng target_endpoint làm giá trị */}
+              {/* Thêm phần toggle và thông báo riêng biệt */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-[130px]"></div> {/* Spacer để căn chỉnh */}
+                <div className="flex items-center gap-4">
+                  {/* Thông báo bên cạnh toggle */}
+                  <span className="text-xs text-gray-600">
+                    {filterMode === "external"
+                      ? "Showing all available paths"
+                      : "Showing only paths from current workspace/project"}
+                  </span>
+                  {/* Toggle External/Internal */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-sm ${
+                        filterMode === "external"
+                          ? "text-gray-700"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      External
+                    </span>
+                    <button
+                      onClick={() =>
+                        setFilterMode(
+                          filterMode === "external" ? "internal" : "external"
+                        )
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${
+                        filterMode === "internal"
+                          ? "bg-yellow-300"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          filterMode === "internal"
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                    <span
+                      className={`text-sm ${
+                        filterMode === "internal"
+                          ? "text-gray-700"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      Internal
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Target Endpoint */}
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="w-[130px] text-sm font-medium text-[#000000]">
                     Target Endpoint
                   </label>
+
                   <div className="relative flex-1 max-w-[801px]">
                     <Select
                       value={call.target_endpoint}
@@ -613,7 +689,7 @@ export const ApiCallEditor = ({
                         <SelectValue placeholder="Select endpoint">
                           {call.target_endpoint ? (
                             <span className="font-medium text-sm">
-                              {availableEndpoints.find(
+                              {filteredEndpoints.find(
                                 (ep) => ep.path === call.target_endpoint
                               )?.path || call.target_endpoint}
                             </span>
@@ -625,8 +701,8 @@ export const ApiCallEditor = ({
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Hiển thị danh sách endpoints từ API - chỉ hiển thị path */}
-                        {availableEndpoints.map((endpoint) => (
+                        {/* Hiển thị danh sách endpoints đã được filter */}
+                        {filteredEndpoints.map((endpoint) => (
                           <SelectItem key={endpoint.id} value={endpoint.path}>
                             <div className="flex flex-col">
                               <span className="font-medium">
