@@ -3,14 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { API_ROOT } from "@/utils/constants";
-import {
-  Plus,
-  Trash2,
-  Code,
-  FileCode,
-  X,
-  SaveIcon,
-} from "lucide-react";
+import { Plus, Trash2, Code, FileCode, X, SaveIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Select,
@@ -31,8 +24,6 @@ export const ApiCallEditor = ({
   setNextCalls,
   setIsNewApiCallDialogOpen,
   onSave,
-  currentEndpoint,
-  getFullPath,
   // Thêm props cho filter
   availableEndpoints = [],
   availableStatusCodes = [],
@@ -54,6 +45,10 @@ export const ApiCallEditor = ({
 
   // Thêm state để lưu filter mode và internal filters cho mỗi call
   const [callsFilterState, setCallsFilterState] = useState({});
+
+  // ✅ THÊM: State để lưu selected endpoint ID cho mỗi call
+  const [selectedEndpointIds, setSelectedEndpointIds] = useState({});
+
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -147,6 +142,27 @@ export const ApiCallEditor = ({
     );
   };
 
+  // ✅ THÊM: Hàm để cập nhật selected endpoint ID cho một call
+  const updateSelectedEndpointId = (callIndex, endpointId) => {
+    setSelectedEndpointIds((prev) => ({
+      ...prev,
+      [callIndex]: endpointId,
+    }));
+  };
+
+  // ✅ THÊM: Hàm để lấy selected endpoint ID của một call
+  const getSelectedEndpointId = (callIndex) => {
+    return selectedEndpointIds[callIndex] || null;
+  };
+
+  // ✅ THÊM: Hàm để lấy selected endpoint object của một call
+  const getSelectedEndpoint = (callIndex) => {
+    const endpointId = getSelectedEndpointId(callIndex);
+    if (!endpointId) return null;
+
+    return availableEndpoints.find((ep) => ep.id === endpointId) || null;
+  };
+
   // ✅ FIX: Cập nhật hàm get options với safety checks
   const getInternalWorkspaceOptions = (callIndex) => {
     const callState = getCallFilterState(callIndex);
@@ -203,19 +219,15 @@ export const ApiCallEditor = ({
     return folders.sort();
   };
 
-  // ✅ FIX: Cập nhật hàm filter với safety checks
+  // ✅ CẬP NHẬT: Bỏ lọc trùng path, hiển thị tất cả
   const getFilteredEndpoints = (callIndex) => {
     const callState = getCallFilterState(callIndex);
 
     if (callState.filterMode === "external") {
-      // External: hiện tất cả, nhưng deduplicate theo path
-      const uniqueByPath = new Map();
-      availableEndpoints.forEach((endpoint) => {
-        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-          uniqueByPath.set(endpoint.path, endpoint);
-        }
-      });
-      return Array.from(uniqueByPath.values());
+      // External: hiển thị tất cả endpoints, KHÔNG deduplicate
+      return availableEndpoints.filter(
+        (ep) => ep && typeof ep === "object" && ep.path
+      );
     }
 
     // Internal: lọc theo 3 dropdown đã chọn
@@ -242,15 +254,8 @@ export const ApiCallEditor = ({
       );
     }
 
-    // Deduplicate theo path trong filtered results
-    const uniqueByPath = new Map();
-    filtered.forEach((endpoint) => {
-      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-        uniqueByPath.set(endpoint.path, endpoint);
-      }
-    });
-
-    return Array.from(uniqueByPath.values());
+    // ✅ BỎ deduplicate - trả về tất cả kể cả trùng path
+    return filtered;
   };
 
   // Cập nhật Status condition dropdown để sử dụng availableStatusCodes
@@ -261,21 +266,17 @@ export const ApiCallEditor = ({
     );
   };
 
-  // Cập nhật hàm để lấy full target endpoint
-  const getFullTargetEndpoint = (targetEndpoint) => {
-    if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
-
-    // Tìm endpoint được chọn từ availableEndpoints
-    const selectedEndpoint = availableEndpoints.find(
-      (ep) => ep.path === targetEndpoint
-    );
+  // ✅ CẬP NHẬT: Sử dụng hàm helper để tạo full path
+  const getFullTargetEndpoint = (callIndex) => {
+    const selectedEndpoint = getSelectedEndpoint(callIndex);
 
     if (selectedEndpoint) {
-      // Sử dụng getFullPath để tạo full path
-      return getFullPath(selectedEndpoint.path);
+      return formatFullPath(selectedEndpoint);
     }
 
-    return targetEndpoint;
+    // ✅ FALLBACK: Nếu không có endpoint được chọn, dùng target_endpoint hiện tại
+    const call = nextCalls[callIndex];
+    return call?.target_endpoint || "";
   };
 
   // Khởi tạo JSON strings từ nextCalls
@@ -378,6 +379,19 @@ export const ApiCallEditor = ({
     }
   }, [nextCalls]);
 
+  // ✅ THÊM: Hàm helper để format full path
+  const formatFullPath = (endpoint) => {
+    if (!endpoint) return "";
+
+    const cleanWorkspaceName = endpoint.workspaceName.replace(/^\/+|\/+$/g, "");
+    const cleanProjectName = endpoint.projectName.replace(/^\/+|\/+$/g, "");
+    const cleanPath = endpoint.path.startsWith("/")
+      ? endpoint.path.substring(1)
+      : endpoint.path;
+
+    return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
+  };
+
   // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpointsForDisplay
   const validateTargetEndpointsForDisplay = (currentCalls = nextCalls) => {
     const newErrors = {};
@@ -434,57 +448,49 @@ export const ApiCallEditor = ({
     return true;
   };
 
-  // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpoints
+  // ✅ CẬP NHẬT: Validation sử dụng ID thay vì path
   const validateTargetEndpoints = () => {
-    const endpointGroups = {};
+    const errors = {};
 
-    // Chỉ nhóm các calls đã được save (có id và id không phải temporary)
     nextCalls.forEach((call, index) => {
-      const isSavedCall =
-        call.id &&
-        typeof call.id !== "string" &&
-        !call.id.toString().startsWith("temp_");
-
-      if (!call.target_endpoint || !call.method || !isSavedCall) return;
-
-      if (!endpointGroups[call.target_endpoint]) {
-        endpointGroups[call.target_endpoint] = [];
+      // Kiểm tra xem có ID endpoint nào được chọn không
+      const selectedEndpoint = getSelectedEndpoint(index);
+      if (!selectedEndpoint) {
+        errors[index] = "Please select a valid endpoint";
       }
-      endpointGroups[call.target_endpoint].push({
-        index,
-        method: call.method,
-        id: call.id,
-      });
     });
 
-    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate methods nữa
-    // Mỗi endpoint có thể có nhiều calls với cùng method
-
-    return true;
+    setEndpointValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Cập nhật hàm handleSave
+  // ✅ CẬP NHẬT: Logic save với full target endpoints
   const handleSave = () => {
     // Kiểm tra tất cả JSON trước khi lưu
     if (!validateAllJson()) {
-      return; // Không tiếp tức nếu có lỗi JSON
+      return; // Không tiếp tục nếu có lỗi JSON
     }
 
     // Kiểm tra target endpoints và methods
     if (!validateTargetEndpoints()) {
+      toast.error("Please select valid endpoints for all API calls");
       return; // Không tiếp tục nếu có lỗi validate endpoint
     }
 
-    // Chuẩn bị payload đúng định dạng
+    // Chuẩn bị payload với full target endpoints
     const payload = {
       advanced_config: {
-        nextCalls: nextCalls.map((call) => ({
-          id: Number(call.id),
-          target_endpoint: call.target_endpoint,
-          method: call.method,
-          body: call.body,
-          condition: Number(call.condition),
-        })),
+        nextCalls: nextCalls.map((call, index) => {
+          const fullTargetEndpoint = getFullTargetEndpoint(index);
+
+          return {
+            id: call.id || undefined, // Chỉ có ID cho calls đã được save
+            target_endpoint: fullTargetEndpoint, // Sử dụng full path
+            method: call.method,
+            body: call.body,
+            condition: Number(call.condition),
+          };
+        }),
       },
     };
 
@@ -508,11 +514,54 @@ export const ApiCallEditor = ({
         toast.error(error.message);
       });
   };
-
   // Cập nhật hàm validateTargetEndpoints khi nextCalls thay đổi
   useEffect(() => {
     validateTargetEndpointsForDisplay();
   }, [nextCalls, savedCalls]);
+
+  // ✅ THÊM: Khởi tạo selectedEndpointIds khi nextCalls thay đổi (chỉ 1 lần duy nhất)
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    // Chỉ khởi tạo 1 lần duy nhất khi có dữ liệu
+    if (
+      !isInitialized &&
+      nextCalls.length > 0 &&
+      availableEndpoints.length > 0
+    ) {
+      const newSelectedEndpointIds = {};
+
+      nextCalls.forEach((call, index) => {
+        // Nếu call có target_endpoint (full path từ backend)
+        if (call.target_endpoint) {
+          // Tìm endpoint trong availableEndpoints có workspace/project/path match với target_endpoint
+          const matchingEndpoint = availableEndpoints.find((ep) => {
+            // Tạo full path từ endpoint data
+            const cleanWorkspaceName = ep.workspaceName.replace(
+              /^\/+|\/+$/g,
+              ""
+            );
+            const cleanProjectName = ep.projectName.replace(/^\/+|\/+$/g, "");
+            const cleanPath = ep.path.startsWith("/")
+              ? ep.path.substring(1)
+              : ep.path;
+            const fullPath = `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
+
+            return fullPath === call.target_endpoint;
+          });
+
+          if (matchingEndpoint) {
+            newSelectedEndpointIds[index] = matchingEndpoint.id;
+          }
+        }
+      });
+
+      if (Object.keys(newSelectedEndpointIds).length > 0) {
+        setSelectedEndpointIds(newSelectedEndpointIds);
+      }
+      setIsInitialized(true);
+    }
+  }, [nextCalls, availableEndpoints, isInitialized]);
 
   return (
     <Card className="px-16 py-6 border-0 rounded-lg">
@@ -840,15 +889,23 @@ export const ApiCallEditor = ({
 
                   <div className="relative flex-1 max-w-[801px]">
                     <Select
-                      value={call.target_endpoint}
+                      // ✅ SỬ DỤNG: ID thay vì path
+                      value={getSelectedEndpointId(index) || ""}
                       onValueChange={(value) => {
-                        // Khi chọn từ dropdown, concat với full path hiện tại
-                        const fullTargetPath = getFullTargetEndpoint(value);
-                        handleNextCallChange(
-                          index,
-                          "target_endpoint",
-                          fullTargetPath
+                        // Lưu ID của endpoint được chọn
+                        updateSelectedEndpointId(index, value);
+
+                        // Tìm endpoint để cập nhật target_endpoint display
+                        const selectedEndpoint = availableEndpoints.find(
+                          (ep) => ep.id === value
                         );
+                        if (selectedEndpoint) {
+                          handleNextCallChange(
+                            index,
+                            "target_endpoint",
+                            selectedEndpoint.path // Vẫn lưu path trong call object để tương thích
+                          );
+                        }
                       }}
                     >
                       <SelectTrigger
@@ -859,28 +916,38 @@ export const ApiCallEditor = ({
                         }`}
                       >
                         <SelectValue placeholder="Select endpoint">
-                          {call.target_endpoint ? (
-                            <span className="font-medium text-sm">
-                              {getFilteredEndpoints(index).find(
-                                (ep) => ep.path === call.target_endpoint
-                              )?.path || call.target_endpoint}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">
-                              Select endpoint
-                            </span>
-                          )}
+                          {(() => {
+                            // ✅ CẬP NHẬT: Hiển thị theo format /workspace/project/path
+                            const selectedEp = getSelectedEndpoint(index);
+                            if (selectedEp) {
+                              // Có ID và tìm thấy endpoint trong availableEndpoints
+                              return formatFullPath(selectedEp);
+                            } else if (call.target_endpoint) {
+                              // Không có ID nhưng có target_endpoint (từ backend)
+                              return call.target_endpoint;
+                            } else {
+                              // Chưa chọn gì
+                              return "Select endpoint";
+                            }
+                          })()}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Hiển thị danh sách endpoints đã được filter */}
+                        {/* ✅ HIỂN THỊ: Path + workspace/project */}
                         {getFilteredEndpoints(index).map((endpoint) => (
-                          <SelectItem key={endpoint.id} value={endpoint.path}>
+                          <SelectItem
+                            key={endpoint.id}
+                            value={endpoint.id} // ✅ Sử dụng ID thay vì path
+                          >
                             <div className="flex flex-col">
                               <span className="font-medium">
                                 {endpoint.path}
                               </span>
-                              {/* Bỏ hiển thị method và name */}
+                              {/* ✅ THÊM: Thông tin workspace/project */}
+                              <span className="text-xs text-gray-500">
+                                {endpoint.workspaceName} /{" "}
+                                {endpoint.projectName}
+                              </span>
                             </div>
                           </SelectItem>
                         ))}

@@ -156,7 +156,6 @@ const DashboardPage = () => {
     useState(false);
 
   const [isNewApiCallDialogOpen, setIsNewApiCallDialogOpen] = useState(false);
-  const [newApiCallTargetEndpoint, setNewApiCallTargetEndpoint] = useState("");
   // Thêm state để lưu display text
   const [newApiCallTargetEndpointDisplay, setNewApiCallTargetEndpointDisplay] =
     useState("");
@@ -397,17 +396,13 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
-  // ✅ FIX: Cập nhật hàm filter với safety checks
+  // ✅ CẬP NHẬT: Bỏ lọc trùng path, hiển thị tất cả
   const getFilteredEndpoints = () => {
     if (newApiCallFilterMode === "external") {
-      // External: hiện tất cả, nhưng deduplicate theo path
-      const uniqueByPath = new Map();
-      newApiCallAvailableEndpoints.forEach((endpoint) => {
-        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-          uniqueByPath.set(endpoint.path, endpoint);
-        }
-      });
-      return Array.from(uniqueByPath.values());
+      // External: hiển thị tất cả endpoints, KHÔNG deduplicate
+      return newApiCallAvailableEndpoints.filter(
+        (ep) => ep && typeof ep === "object" && ep.path
+      );
     }
 
     // Internal: lọc theo 3 dropdown đã chọn
@@ -434,15 +429,8 @@ const DashboardPage = () => {
       );
     }
 
-    // Deduplicate theo path trong filtered results
-    const uniqueByPath = new Map();
-    filtered.forEach((endpoint) => {
-      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-        uniqueByPath.set(endpoint.path, endpoint);
-      }
-    });
-
-    return Array.from(uniqueByPath.values());
+    // ✅ BỎ deduplicate - trả về tất cả kể cả trùng path
+    return filtered;
   };
 
   // ✅ FIX: Cập nhật hàm get options với safety checks
@@ -499,27 +487,45 @@ const DashboardPage = () => {
     return folders.sort();
   };
 
-  // Thêm hàm get full target endpoint cho New API Call
-  const getNewApiCallFullTargetEndpoint = (targetEndpoint) => {
-    if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
+  // ✅ CẬP NHẬT: Thêm state để lưu ID của endpoint được chọn
+  const [newApiCallTargetEndpointId, setNewApiCallTargetEndpointId] =
+    useState(null);
 
-    // Tìm endpoint đầu tiên có path này từ available endpoints
+  // ✅ CẬP NHẬT: Chỉ dùng path gốc, không concat với current workspace/project
+  const getNewApiCallFullTargetEndpoint = (targetEndpointId) => {
+    if (!targetEndpointId) return "";
+
+    // Tìm endpoint được chọn bằng ID thay vì path
     const selectedEndpoint = newApiCallAvailableEndpoints.find(
-      (ep) => ep.path === targetEndpoint
+      (ep) => ep.id === targetEndpointId
     );
 
     if (selectedEndpoint) {
-      return getFullPath(selectedEndpoint.path);
+      // Tạo full path từ workspace/project của endpoint được chọn
+      const cleanWorkspaceName = selectedEndpoint.workspaceName.replace(
+        /^\/+|\/+$/g,
+        ""
+      );
+      const cleanProjectName = selectedEndpoint.projectName.replace(
+        /^\/+|\/+$/g,
+        ""
+      );
+      const cleanPath = selectedEndpoint.path.startsWith("/")
+        ? selectedEndpoint.path.substring(1)
+        : selectedEndpoint.path;
+
+      return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
     }
 
-    return targetEndpoint;
+    return "";
   };
 
   // Thêm hàm validate New API Call
   const validateNewApiCall = () => {
     const errors = {};
 
-    if (!newApiCallTargetEndpoint.trim()) {
+    // ✅ MỚI: Kiểm tra ID thay vì path
+    if (!newApiCallTargetEndpointId) {
       errors.targetEndpoint = "Target endpoint is required";
     }
 
@@ -551,7 +557,7 @@ const DashboardPage = () => {
   // Reset validation errors khi các giá trị thay đổi
   useEffect(() => {
     if (
-      newApiCallTargetEndpoint ||
+      newApiCallTargetEndpointId ||
       newApiCallMethod ||
       newApiCallRequestBody ||
       newApiCallStatusCondition
@@ -559,7 +565,7 @@ const DashboardPage = () => {
       setNewApiCallValidationErrors({});
     }
   }, [
-    newApiCallTargetEndpoint,
+    newApiCallTargetEndpointId,
     newApiCallMethod,
     newApiCallRequestBody,
     newApiCallStatusCondition,
@@ -575,8 +581,13 @@ const DashboardPage = () => {
 
       // Lấy full target endpoint
       const fullTargetEndpoint = getNewApiCallFullTargetEndpoint(
-        newApiCallTargetEndpoint
+        newApiCallTargetEndpointId
       );
+
+      if (!fullTargetEndpoint) {
+        toast.error("Please select a valid endpoint");
+        return;
+      }
 
       // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
@@ -622,9 +633,10 @@ const DashboardPage = () => {
       // Hiển thị thông báo thành công và đóng dialog
       toast.success("API Call added successfully!");
       setIsNewApiCallDialogOpen(false);
+      window.location.reload();
 
       // Reset form
-      setNewApiCallTargetEndpoint("");
+      setNewApiCallTargetEndpointId("");
       setNewApiCallMethod("GET");
       setNewApiCallRequestBody("{}");
       setNewApiCallStatusCondition("");
@@ -3901,10 +3913,19 @@ const DashboardPage = () => {
 
                     <div className="relative mt-1">
                       <Select
-                        value={newApiCallTargetEndpoint}
+                        value={newApiCallTargetEndpointId || ""} // ✅ Sử dụng ID thay vì path
                         onValueChange={(value) => {
-                          setNewApiCallTargetEndpoint(value);
-                          setNewApiCallTargetEndpointDisplay(value);
+                          setNewApiCallTargetEndpointId(value);
+                          // Tìm endpoint để hiển thị path
+                          const selectedEndpoint =
+                            newApiCallAvailableEndpoints.find(
+                              (ep) => ep.id === value
+                            );
+                          if (selectedEndpoint) {
+                            setNewApiCallTargetEndpointDisplay(
+                              selectedEndpoint.path
+                            );
+                          }
                         }}
                       >
                         <SelectTrigger
@@ -3923,11 +3944,11 @@ const DashboardPage = () => {
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {/* Sử dụng filtered endpoints */}
+                          {/* Hiển thị path + workspace/project */}
                           {getFilteredEndpoints().map((endpoint) => (
                             <SelectItem
                               key={endpoint.id}
-                              value={endpoint.path}
+                              value={endpoint.id} // ✅ Sử dụng ID thay vì path
                               className="max-w-[430px]"
                             >
                               <div className="flex flex-col min-w-0 w-full">
@@ -3936,6 +3957,11 @@ const DashboardPage = () => {
                                   title={endpoint.path}
                                 >
                                   {endpoint.path}
+                                </span>
+                                {/* Thêm thông tin workspace/project */}
+                                <span className="text-xs text-gray-500 truncate text-left">
+                                  {endpoint.workspaceName} /{" "}
+                                  {endpoint.projectName}
                                 </span>
                               </div>
                             </SelectItem>
@@ -4198,8 +4224,8 @@ const DashboardPage = () => {
                     onClick={() => {
                       setIsNewApiCallDialogOpen(false);
                       // Reset form khi đóng dialog
-                      setNewApiCallTargetEndpoint("");
                       setNewApiCallTargetEndpointDisplay("");
+                      setNewApiCallTargetEndpointId("");
                       setNewApiCallMethod("GET");
                       setNewApiCallRequestBody("{}");
                       setNewApiCallStatusCondition(""); // Reset về rỗng thay vì "200"
