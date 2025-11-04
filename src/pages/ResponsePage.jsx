@@ -55,6 +55,7 @@ import Proxy_icon from "@/assets/light/Proxy_icon.svg";
 import Rules_icon from "@/assets/light/Rules_icon.svg";
 import Header_Body from "@/assets/light/Header_Body.svg";
 import Request_Response_icon from "@/assets/light/Request_Response_icon.svg";
+import ws_config_icon from "@/assets/light/ws-config.svg";
 import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
@@ -77,6 +78,7 @@ import {
   BaseSchemaEditor,
 } from "@/components/endpoint/SchemaComponents";
 import { statusCodes } from "@/components/endpoint/constants";
+import {WSConfig} from "@/components/endpoint/WSConfig.jsx";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -168,6 +170,9 @@ const DashboardPage = () => {
     isNewApiCallRequestBodyPopoverOpen,
     setIsNewApiCallRequestBodyPopoverOpen,
   ] = useState(false);
+
+  const [config, setConfig] = useState(null);
+
   // Thêm state filter mode
   const [newApiCallFilterMode, setNewApiCallFilterMode] = useState("external");
   // Thêm state để control tooltip visibility
@@ -1281,6 +1286,23 @@ const DashboardPage = () => {
       });
   };
 
+  const fetchWebsocketConfig = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/endpoints/${endpointId}/websocket`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch WebSocket config");
+
+      const data = await res.json();
+      setConfig(data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      toast.error("Unable to load WebSocket config");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchEndpointResponses = (isStatefulMode) => {
     const endpointIdStr = String(currentEndpointId);
 
@@ -1489,6 +1511,7 @@ const DashboardPage = () => {
           fetchProjects(),
           fetchEndpoints(),
           fetchFolders(),
+          fetchWebsocketConfig(),
         ]);
       } finally {
         setIsLoading(false);
@@ -2545,49 +2568,49 @@ const DashboardPage = () => {
               />
             </div>
 
-            <div className="ml-4 flex items-center gap-2">
-              <span className="font-inter font-semibold text-base text-black select-none">
-                Notification
-              </span>
-              <Switch
-                checked={!!currentEndpoint?.send_notification}
-                onCheckedChange={async (val) => {
-                  try {
-                    const response = await fetch(
-                      `${API_ROOT}/endpoints/${currentEndpointId}/notification`,
-                      {
-                        method: "PUT",
-                        credentials: "include",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ send_notification: val }),
-                      }
-                    );
+            {/*<div className="ml-4 flex items-center gap-2">*/}
+            {/*  <span className="font-inter font-semibold text-base text-black select-none">*/}
+            {/*    Notification*/}
+            {/*  </span>*/}
+            {/*  <Switch*/}
+            {/*    checked={!!currentEndpoint?.send_notification}*/}
+            {/*    onCheckedChange={async (val) => {*/}
+            {/*      try {*/}
+            {/*        const response = await fetch(*/}
+            {/*          `${API_ROOT}/endpoints/${currentEndpointId}/notification`,*/}
+            {/*          {*/}
+            {/*            method: "PUT",*/}
+            {/*            credentials: "include",*/}
+            {/*            headers: {*/}
+            {/*              "Content-Type": "application/json",*/}
+            {/*            },*/}
+            {/*            body: JSON.stringify({ send_notification: val }),*/}
+            {/*          }*/}
+            {/*        );*/}
 
-                    if (!response.ok)
-                      throw new Error("Failed to update notification setting");
+            {/*        if (!response.ok)*/}
+            {/*          throw new Error("Failed to update notification setting");*/}
 
-                    toast.success(
-                      val
-                        ? "Notification has been enabled for this endpoint!"
-                        : "Notification has been disabled for this endpoint!"
-                    );
+            {/*        toast.success(*/}
+            {/*          val*/}
+            {/*            ? "Notification has been enabled for this endpoint!"*/}
+            {/*            : "Notification has been disabled for this endpoint!"*/}
+            {/*        );*/}
 
-                    // Fetch lại endpoint để đảm bảo state chính xác
-                    await fetchEndpoint(currentEndpointId);
-                  } catch (error) {
-                    console.error(
-                      "Error updating notification setting:",
-                      error
-                    );
-                    toast.error("Unable to update notification setting!");
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
-              />
-            </div>
+            {/*        // Fetch lại endpoint để đảm bảo state chính xác*/}
+            {/*        await fetchEndpoint(currentEndpointId);*/}
+            {/*      } catch (error) {*/}
+            {/*        console.error(*/}
+            {/*          "Error updating notification setting:",*/}
+            {/*          error*/}
+            {/*        );*/}
+            {/*        toast.error("Unable to update notification setting!");*/}
+            {/*      }*/}
+            {/*    }}*/}
+            {/*    onClick={(e) => e.stopPropagation()}*/}
+            {/*    className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"*/}
+            {/*  />*/}
+            {/*</div>*/}
           </div>
         </div>
 
@@ -3257,6 +3280,7 @@ const DashboardPage = () => {
                       <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
+                        {renderTabButton("wsConfig", "WS Configuration", ws_config_icon)}
                       </div>
 
                       {/* Dropdown chọn response - Tab bar (chỉ hiển thị khi stateless) */}
@@ -3320,6 +3344,7 @@ const DashboardPage = () => {
                           Request_Response_icon
                         )}
                       {renderTabButton("advanced", "Advanced", Advanced_icon)}
+                      {renderTabButton("wsConfig", "WS Configuration", ws_config_icon)}
                     </div>
                   )}
                 </div>
@@ -3731,6 +3756,16 @@ const DashboardPage = () => {
                       />
                     </div>
                   )}
+
+                  {activeTab === "wsConfig" && (
+                    <div className="mt-0">
+                      <WSConfig
+                        config={config}
+                        endpointId={currentEndpointId}
+                      />
+                    </div>
+                  )}
+
                 </div>
               </div>
             </div>

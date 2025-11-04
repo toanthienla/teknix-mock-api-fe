@@ -44,6 +44,7 @@ import folderIcon from "@/assets/light/folder-icon.svg";
 import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
+import deleteIcon from "@/assets/light/delete.svg";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -391,6 +392,9 @@ export default function FolderPage() {
   // dialogs
   const [openNew, setOpenNew] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+
+  const [openWSDialog, setOpenWSDialog] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
 
   const checkUserLogin = async () => {
     try {
@@ -1273,6 +1277,58 @@ export default function FolderPage() {
     }
   };
 
+  const handleEnableWSChannel = async (projectId) => {
+    try {
+      const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ websocket_enabled: true }),
+      });
+
+      if (!res.ok) throw new Error("Failed to enable WebSocket");
+
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId ? { ...p, websocket_enabled: true } : p
+        )
+      );
+
+      toast.success("WebSocket Channel created!");
+    } catch (err) {
+      console.error("Enable WebSocket error:", err);
+      toast.error("Failed to create WebSocket Channel");
+    }
+  };
+
+  const handleDeleteWSChannel = async (projectId) => {
+    try {
+      const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ websocket_enabled: false }),
+      });
+
+      if (!res.ok) throw new Error("Failed to delete WebSocket Channel");
+
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId ? { ...p, websocket_enabled: false } : p
+        )
+      );
+
+      toast.success("WebSocket Channel deleted");
+      setOpenWSDialog(false);
+    } catch (err) {
+      console.error("Delete WS error:", err);
+      toast.error("Failed to delete WebSocket Channel");
+    }
+  };
+
+  const handleCopyURL = (url) => {
+    navigator.clipboard.writeText(url);
+    toast.info("Copied to clipboard!");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
       {isLoading ? (
@@ -1386,6 +1442,7 @@ export default function FolderPage() {
                     <div className="flex flex-col items-center justify-center w-full">
                       <div className="w-full max-w-7xl bg-white rounded-lg px-8 py-4">
                         <div className="flex items-center justify-between mb-6">
+                          {/* Project name */}
                           <h2 className="text-xl font-semibold text-gray-800">
                             {currentProject?.name} —{" "}
                             {
@@ -1397,17 +1454,36 @@ export default function FolderPage() {
                             Folder(s)
                           </h2>
 
-                          <Button
-                            className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
-                            onClick={() => {
-                              setOpenNewFolder(true);
-                              setNewFolderName("");
-                              setNewFolderMode(false);
-                              setNewFolderDesc("");
-                            }}
-                          >
-                            New Folder
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {!currentProject.websocket_enabled ? (
+                              <Button
+                                onClick={() => handleEnableWSChannel(currentProject.id)}
+                                className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                              >
+                                Create WS Channel
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => setOpenWSDialog(true)}
+                                className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                              >
+                                View WS Channel
+                              </Button>
+                            )}
+
+                            {/* New Folder button */}
+                            <Button
+                              className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                              onClick={() => {
+                                setOpenNewFolder(true);
+                                setNewFolderName("");
+                                setNewFolderMode(false);
+                                setNewFolderDesc("");
+                              }}
+                            >
+                              New Folder
+                            </Button>
+                          </div>
                         </div>
 
                         {/* Folder List */}
@@ -2168,6 +2244,121 @@ export default function FolderPage() {
               Update
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View WS Channel Dialog */}
+      <Dialog open={openWSDialog} onOpenChange={setOpenWSDialog}>
+        <DialogContent className="max-w-lg rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              Real-time Updates via WebSocket
+            </DialogTitle>
+          </DialogHeader>
+
+          {currentProject && currentWorkspace && (
+            <div className="mt-4 space-y-4 text-sm">
+              {/* Unsecured URL */}
+              <div className="relative">
+                <div className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                  bash
+                  <button
+                    className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
+                    onClick={() =>
+                      handleCopyURL(
+                        `ws://localhost:3000/ws/${currentWorkspace.name}/${currentProject.name}`
+                      )
+                    }
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
+                  <span>
+                    Your Unsecured URL:{" "}
+                    <span className="text-blue-600">
+                      “ws://localhost:3000/ws/{currentWorkspace.name}/{currentProject.name}”
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Secured URL */}
+              <div className="relative">
+                <div className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                  bash
+                  <button
+                    className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
+                    onClick={() =>
+                      handleCopyURL(
+                        `ws://localhost:3000/ws/${currentWorkspace.name}/${currentProject.name}`
+                      )
+                    }
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
+                  <span>
+                    Your Secured URL:{" "}
+                    <span className="text-blue-600">
+                      “wss://localhost:3000/ws/{currentWorkspace.name}/{currentProject.name}”
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Delete Button */}
+              <div className="pt-2">
+                <Button
+                  variant="destructive"
+                  className="group w-full flex items-center gap-2 justify-center text-black hover:text-white bg-white
+                    border border-red-500 hover:bg-red-500 transition-colors duration-200"
+                  onClick={() => setOpenDeleteConfirm(true)}
+                >
+                  <img
+                    src={deleteIcon}
+                    alt="Delete"
+                    className="w-4 h-4 transition duration-200 group-hover:brightness-0 group-hover:invert"
+                  />
+                  <span>Delete WS Channel</span>
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-center">
+              Delete Confirm
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4 flex flex-col space-y-2">
+            {/* Delete button */}
+            <Button
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md py-2"
+              onClick={() => {
+                handleDeleteWSChannel(currentProject.id);
+                setOpenDeleteConfirm(false);
+              }}
+            >
+              Delete
+            </Button>
+
+            {/* Cancel button */}
+            <Button
+              variant="outline"
+              className="bg-gray-50 hover:bg-gray-100 font-semibold text-black rounded-md py-2"
+              onClick={() => setOpenDeleteConfirm(false)}
+            >
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
