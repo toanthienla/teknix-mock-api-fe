@@ -39,7 +39,7 @@ import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
 import {useTheme} from "@/services/useTheme.js";
-import "@/styles/topbar.css";
+import "@/styles/components/topbar.css";
 // import {API_ROOT} from "@/utils/constants.js";
 // import Notifications from "../components/Notifications.jsx";
 // import RealtimeClient from "@/services/centrifugo.jsx";
@@ -285,7 +285,7 @@ export default function Topbar({
   };
 
   return (
-    <div className="topbar relative flex items-center justify-between px-8 py-2 -mt-8 h-16">
+    <div className="topbar shadow-none relative flex items-center justify-between px-8 py-2 -mt-8 h-16">
     {/* Logo + Workspace Selector */}
       <div className="flex items-center gap-4">
         <div
@@ -311,7 +311,7 @@ export default function Topbar({
                 key={ws.id}
                 className={`flex justify-between items-center px-2 py-1 ${
                   String(currentWorkspace?.id) === String(ws.id)
-                    ? "bg-slate-50 font-semibold"
+                    ? "active-workspace"
                     : ""
                 }`}
               >
@@ -323,7 +323,7 @@ export default function Topbar({
                 </DropdownMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-1 hover:bg-slate-100 rounded">
+                    <button className="p-1 rounded">
                       <MoreHorizontal className="w-4 h-4 text-slate-500"/>
                     </button>
                   </DropdownMenuTrigger>
@@ -427,7 +427,7 @@ export default function Topbar({
                               </BreadcrumbLink>
                             )}
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" className="bg-black text-white text-xs px-2 py-1 rounded">
+                          <TooltipContent side="bottom" className="text-xs px-2 py-1 rounded">
                             {tooltipText}
                           </TooltipContent>
                         </Tooltip>

@@ -1,0 +1,72 @@
+.topbar {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Text, icon, button */
+.topbar button,
+.topbar img,
+.topbar span {
+    color: var(--foreground);
+    fill: var(--icon);
+}
+
+.topbar .border-l-2 {
+    border-color: var(--border);
+}
+
+/* Dropdown */
+.dropdown-menu-content {
+    background-color: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu-item:hover {
+    background-color: var(--input-bg);
+}
+
+/* Workspace button */
+.workspace-btn {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    transition: none;
+    border-radius: 0.375rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.workspace-btn:hover {
+    background-color: var(--card-border);
+}
+
+/* Active workspace item */
+.active-workspace {
+    position: relative;
+    background-color: var(--card-border);
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    overflow: hidden;
+    padding-left: 12px;
+}
+
+/* Thanh bên trái hiển thị workspace đang chọn */
+.active-workspace::before {
+    content: "";
+    position: absolute;
+    left: 1%;
+    top: 8%;
+    bottom: 8%;
+    width: 8px;
+    background-color: var(--button-bg);
+    border-radius: 6px;
+}
+
+.active-workspace:hover {
+    background-color: var(--input-border);
+}

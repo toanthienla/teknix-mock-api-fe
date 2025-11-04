@@ -3,10 +3,15 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import detailIcon from "@/assets/light/view_detail.svg";
+import detailIconLight from "@/assets/light/view_detail.svg";
+import detailIconDark from "@/assets/dark/view_detail.svg";
+import {useTheme} from "@/services/useTheme.js";
 
 export default function ProjectCard({ project, folders, endpoints, onView, onClick }) {
   const { id, name, created_at } = project;
+  const { isDark } = useTheme();
+
+  const detailIcon = isDark ? detailIconDark : detailIconLight;
 
   // Format ngày tạo
   const formatDate = (dateStr) => {
@@ -30,10 +35,10 @@ export default function ProjectCard({ project, folders, endpoints, onView, onCli
   return (
     <TableRow
       onClick={onClick}
-      className="h-[64px] hover:bg-gray-50 border-b border-gray-200 transition cursor-pointer"
+      className="h-[64px] border-b transition cursor-pointer"
     >
       {/* Project name */}
-      <TableCell className="font-medium text-gray-800">{name}</TableCell>
+      <TableCell className="font-medium pl-2.5">{name}</TableCell>
 
       {/* Folders */}
       <TableCell>
@@ -42,30 +47,32 @@ export default function ProjectCard({ project, folders, endpoints, onView, onCli
             folderNames.map((fn) => (
               <span
                 key={fn}
-                className="bg-yellow-200 text-gray-800 text-sm px-2.5 py-0.5 rounded-full font-medium shadow-sm"
+                className="text-sm px-3 py-1 rounded-full shadow-sm
+                 bg-yellow-200 hover:bg-yellow-300 text-black dark:bg-[#5865F2] dark:hover:bg-[#4f5ad9]
+                 dark:text-white"
               >
                 {fn}
               </span>
             ))
           ) : (
-            <span className="text-gray-400 text-sm">No folders</span>
+            <span className="text-sm">No folders</span>
           )}
         </div>
       </TableCell>
 
       {/* Endpoints */}
-      <TableCell className="text-center text-sm font-semibold text-gray-700">
+      <TableCell className="text-center text-sm font-semibold">
         {projectEndpoints.length}
       </TableCell>
 
       {/* Date Created */}
-      <TableCell className="text-sm text-right text-gray-600">
+      <TableCell className="text-sm text-right">
         {formatDate(created_at)}
       </TableCell>
 
       {/* Actions */}
-      <TableCell className="text-right">
-        <div className="flex justify-end gap-3">
+      <TableCell>
+        <div className="flex justify-end pr-2.5">
           <img
             src={detailIcon}
             alt="Detail"
