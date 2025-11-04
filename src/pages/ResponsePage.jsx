@@ -161,18 +161,26 @@ const DashboardPage = () => {
   const [newApiCallTargetEndpointDisplay, setNewApiCallTargetEndpointDisplay] =
     useState("");
   const [newApiCallMethod, setNewApiCallMethod] = useState("GET");
-  const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("");
+  const [newApiCallRequestBody, setNewApiCallRequestBody] = useState("{}");
   const [newApiCallStatusCondition, setNewApiCallStatusCondition] =
-    useState("200");
+    useState("");
   const [
     isNewApiCallRequestBodyPopoverOpen,
     setIsNewApiCallRequestBodyPopoverOpen,
   ] = useState(false);
-
+  // Thêm state filter mode
+  const [newApiCallFilterMode, setNewApiCallFilterMode] = useState("external");
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+
+  // Thêm state cho internal filter dropdowns
+  const [newApiCallInternalWorkspace, setNewApiCallInternalWorkspace] =
+    useState("");
+  const [newApiCallInternalProject, setNewApiCallInternalProject] =
+    useState("");
+  const [newApiCallInternalFolder, setNewApiCallInternalFolder] = useState("");
 
   // Component Tooltip
   const Tooltip = ({ visible, children, className = "" }) => {
@@ -218,7 +226,7 @@ const DashboardPage = () => {
     };
   }, []);
 
-  // Sửa lại useEffect để cập nhật nextCalls khi endpointId thay đổi
+  // Sửa lại useEffect để fetch nextCalls khi endpoint hoặc isStateful thay đổi
   useEffect(() => {
     if (!currentEndpointId || !isStateful) {
       setNextCalls([]);
@@ -233,9 +241,15 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((data) => {
-        // Chỉ lấy nextCalls từ response
-        const advancedConfig = data.advanced_config || {};
-        setNextCalls(advancedConfig.nextCalls || []);
+        // Xử lý response mới
+        if (data && data.success && data.data && data.data.advanced_config) {
+          const advancedConfig = data.data.advanced_config || {};
+          setNextCalls(advancedConfig.nextCalls || []);
+        } else {
+          // Fallback nếu response không đúng định dạng
+          setNextCalls([]);
+          console.warn("Invalid response format from server:", data);
+        }
       })
       .catch((error) => {
         console.error("Failed to fetch advanced config:", error);
@@ -243,6 +257,7 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
+  // Sửa lại hàm fetchAdvancedConfig để xử lý response mới
   const fetchAdvancedConfig = () => {
     return fetch(`${API_ROOT}/endpoints/advanced/${currentEndpointId}`, {
       credentials: "include",
@@ -252,9 +267,15 @@ const DashboardPage = () => {
         return res.json();
       })
       .then((data) => {
-        // Chỉ lấy nextCalls từ response
-        const advancedConfig = data.advanced_config || {};
-        setNextCalls(advancedConfig.nextCalls || []);
+        // Xử lý response mới
+        if (data && data.success && data.data && data.data.advanced_config) {
+          const advancedConfig = data.data.advanced_config || {};
+          setNextCalls(advancedConfig.nextCalls || []);
+        } else {
+          // Fallback nếu response không đúng định dạng
+          setNextCalls([]);
+          console.warn("Invalid response format from server:", data);
+        }
       })
       .catch((error) => {
         console.error("Failed to fetch advanced config:", error);
@@ -267,45 +288,216 @@ const DashboardPage = () => {
   const [newApiCallAvailableEndpoints, setNewApiCallAvailableEndpoints] =
     useState([]);
 
+  // Thêm state cho available status codes từ endpoint responses
+  const [newApiCallAvailableStatusCodes, setNewApiCallAvailableStatusCodes] =
+    useState([]);
+
   // Thêm state cho validation lỗi
   const [newApiCallValidationErrors, setNewApiCallValidationErrors] = useState(
     {}
   );
 
-  // Thêm hàm fetch available endpoints cho New API Call dialog
+  // Cập nhật hàm fetch available endpoints
   useEffect(() => {
     if (!currentEndpointId || !isStateful) return;
 
-    fetch(`${API_ROOT}/endpoints/advanced/path/${currentEndpointId}`, {
+    fetch(`${API_ROOT}/endpoints/advanced/path`, {
       credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.data) {
-          // Chỉ lấy unique paths, bỏ duplicate
-          const uniquePaths = [
-            ...new Set(data.data.map((endpoint) => endpoint.path)),
+        if (data.success && data.data && Array.isArray(data.data)) {
+          // ✅ FIX: Filter out null/undefined trước khi transform
+          const validEndpoints = data.data.filter(
+            (endpoint) => endpoint && typeof endpoint === "object"
+          );
+
+          const transformedEndpoints = validEndpoints.map(
+            (endpoint, index) => ({
+              id: endpoint.id || `temp-${index}`,
+              path: endpoint.path || "", // ✅ Fallback cho empty values
+              workspaceName: endpoint.workspaceName || "",
+              projectName: endpoint.projectName || "",
+              folderName: endpoint.folderName || "",
+            })
+          );
+
+          setNewApiCallAvailableEndpoints(transformedEndpoints);
+        } else {
+          setNewApiCallAvailableEndpoints([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch available endpoints:", error);
+        setNewApiCallAvailableEndpoints([]); // ✅ Fallback
+      });
+  }, [currentEndpointId, isStateful]);
+
+  // Thêm useEffect để fetch status codes từ endpoint responses
+  useEffect(() => {
+    if (!currentEndpointId) return;
+
+    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${currentEndpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // Lấy unique status codes từ endpoint responses
+          const uniqueStatusCodes = [
+            ...new Set(data.map((response) => response.status_code.toString())),
           ];
 
-          // Transform data để chỉ có path và id (lấy id đầu tiên của mỗi path)
-          const transformedEndpoints = uniquePaths.map((path) => {
-            const firstEndpoint = data.data.find((ep) => ep.path === path);
+          // Thêm các status code 500 mặc định (500-505)
+          const default500Codes = ["500", "501", "502", "503", "504", "505"];
+          const combinedCodes = [
+            ...new Set([...uniqueStatusCodes, ...default500Codes]),
+          ];
+
+          // Tạo danh sách status codes với description
+          const statusCodesWithDesc = combinedCodes.map((code) => {
+            // Tìm description từ constants.js nếu có
+            const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
+            const description = statusCodeInfo
+              ? statusCodeInfo.description
+              : "Custom status code";
+
             return {
-              id: firstEndpoint.id, // Lấy id đầu tiên của path này
-              path: path,
+              code: code,
+              description: description,
             };
           });
 
-          setNewApiCallAvailableEndpoints(transformedEndpoints);
+          setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+        } else {
+          setNewApiCallAvailableStatusCodes([
+            { code: "500", description: "Internal Server Error." },
+            { code: "501", description: "Not Implemented." },
+            { code: "502", description: "Bad Gateway." },
+            { code: "503", description: "Service Unavailable." },
+            { code: "504", description: "Gateway Timeout." },
+            { code: "505", description: "HTTP Version Not Supported." },
+          ]);
         }
       })
       .catch((error) => {
         console.error(
-          "Failed to fetch available endpoints for New API Call:",
+          "Failed to fetch status codes from endpoint responses:",
           error
         );
+        // Fallback về default 500 codes
+        setNewApiCallAvailableStatusCodes([
+          { code: "500", description: "Internal Server Error." },
+          { code: "501", description: "Not Implemented." },
+          { code: "502", description: "Bad Gateway." },
+          { code: "503", description: "Service Unavailable." },
+          { code: "504", description: "Gateway Timeout." },
+          { code: "505", description: "HTTP Version Not Supported." },
+        ]);
       });
   }, [currentEndpointId, isStateful]);
+
+  // ✅ FIX: Cập nhật hàm filter với safety checks
+  const getFilteredEndpoints = () => {
+    if (newApiCallFilterMode === "external") {
+      // External: hiện tất cả, nhưng deduplicate theo path
+      const uniqueByPath = new Map();
+      newApiCallAvailableEndpoints.forEach((endpoint) => {
+        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
+          uniqueByPath.set(endpoint.path, endpoint);
+        }
+      });
+      return Array.from(uniqueByPath.values());
+    }
+
+    // Internal: lọc theo 3 dropdown đã chọn
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    // ✅ CẬP NHẬT: Xử lý cả empty string và "all"
+    if (newApiCallInternalWorkspace && newApiCallInternalWorkspace !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    if (newApiCallInternalProject && newApiCallInternalProject !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.projectName === newApiCallInternalProject
+      );
+    }
+
+    if (newApiCallInternalFolder && newApiCallInternalFolder !== "all") {
+      filtered = filtered.filter(
+        (endpoint) => endpoint.folderName === newApiCallInternalFolder
+      );
+    }
+
+    // Deduplicate theo path trong filtered results
+    const uniqueByPath = new Map();
+    filtered.forEach((endpoint) => {
+      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
+        uniqueByPath.set(endpoint.path, endpoint);
+      }
+    });
+
+    return Array.from(uniqueByPath.values());
+  };
+
+  // ✅ FIX: Cập nhật hàm get options với safety checks
+  const getInternalWorkspaceOptions = () => {
+    // ✅ Filter out null/undefined trước khi map
+    const validEndpoints = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && ep.workspaceName
+    );
+    const workspaces = [
+      ...new Set(validEndpoints.map((ep) => ep.workspaceName)),
+    ];
+    return workspaces.sort();
+  };
+
+  const getInternalProjectOptions = () => {
+    // ✅ Filter out null/undefined trước khi filter và map
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    if (newApiCallInternalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    // ✅ Filter out null/undefined trước khi map
+    const validFiltered = filtered.filter((ep) => ep && ep.projectName);
+    const projects = [...new Set(validFiltered.map((ep) => ep.projectName))];
+    return projects.sort();
+  };
+
+  const getInternalFolderOptions = () => {
+    // ✅ Filter out null/undefined trước khi filter và map
+    let filtered = newApiCallAvailableEndpoints.filter(
+      (ep) => ep && typeof ep === "object"
+    );
+
+    if (newApiCallInternalWorkspace) {
+      filtered = filtered.filter(
+        (ep) => ep.workspaceName === newApiCallInternalWorkspace
+      );
+    }
+
+    if (newApiCallInternalProject) {
+      filtered = filtered.filter(
+        (ep) => ep.projectName === newApiCallInternalProject
+      );
+    }
+
+    // ✅ Filter out null/undefined trước khi map
+    const validFiltered = filtered.filter((ep) => ep && ep.folderName);
+    const folders = [...new Set(validFiltered.map((ep) => ep.folderName))];
+    return folders.sort();
+  };
 
   // Thêm hàm get full target endpoint cho New API Call
   const getNewApiCallFullTargetEndpoint = (targetEndpoint) => {
@@ -335,6 +527,11 @@ const DashboardPage = () => {
       errors.method = "Method is required";
     }
 
+    // Thêm kiểm tra status code không được trống
+    if (!newApiCallStatusCondition || newApiCallStatusCondition.trim() === "") {
+      errors.statusCondition = "Status condition is required";
+    }
+
     // Validate JSON request body
     if (newApiCallRequestBody) {
       try {
@@ -353,12 +550,22 @@ const DashboardPage = () => {
 
   // Reset validation errors khi các giá trị thay đổi
   useEffect(() => {
-    if (newApiCallTargetEndpoint || newApiCallMethod || newApiCallRequestBody) {
+    if (
+      newApiCallTargetEndpoint ||
+      newApiCallMethod ||
+      newApiCallRequestBody ||
+      newApiCallStatusCondition
+    ) {
       setNewApiCallValidationErrors({});
     }
-  }, [newApiCallTargetEndpoint, newApiCallMethod, newApiCallRequestBody]);
+  }, [
+    newApiCallTargetEndpoint,
+    newApiCallMethod,
+    newApiCallRequestBody,
+    newApiCallStatusCondition,
+  ]);
 
-  // Sửa lại hàm handleCreateNewApiCall
+  // Sửa lại hàm handleCreateNewApiCall để xử lý response mới
   const handleCreateNewApiCall = async () => {
     try {
       // Validate dữ liệu
@@ -420,8 +627,9 @@ const DashboardPage = () => {
       setNewApiCallTargetEndpoint("");
       setNewApiCallMethod("GET");
       setNewApiCallRequestBody("{}");
-      setNewApiCallStatusCondition("200");
+      setNewApiCallStatusCondition("");
       setNewApiCallValidationErrors({});
+      setNewApiCallFilterMode("external");
 
       // Gọi lại GET API để lấy dữ liệu mới nhất
       await fetchAdvancedConfig();
@@ -2512,17 +2720,39 @@ const DashboardPage = () => {
                         <div
                           key={status.id || status.code}
                           className={`group flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
-                            selectedResponse?.id === status.id ? "bg-gray-100" : "hover:bg-gray-50"
-                          } ${index === filteredStatusData.length - 1 ? "border-b-0" : ""}`}
+                            selectedResponse?.id === status.id
+                              ? "bg-gray-100"
+                              : "hover:bg-gray-50"
+                          } ${
+                            index === filteredStatusData.length - 1
+                              ? "border-b-0"
+                              : ""
+                          }`}
                           draggable={!isStateful && !searchTerm}
                           onDragStart={
-                            !isStateful && !searchTerm ? (e) => handleDragStart(e, index) : undefined
+                            !isStateful && !searchTerm
+                              ? (e) => handleDragStart(e, index)
+                              : undefined
                           }
-                          onDragOver={!isStateful && !searchTerm ? handleDragOver : undefined}
-                          onDragEnd={!isStateful && !searchTerm ? () => setDraggedItem(null) : undefined}
-                          onDrop={!isStateful && !searchTerm ? (e) => handleDrop(e, index) : undefined}
+                          onDragOver={
+                            !isStateful && !searchTerm
+                              ? handleDragOver
+                              : undefined
+                          }
+                          onDragEnd={
+                            !isStateful && !searchTerm
+                              ? () => setDraggedItem(null)
+                              : undefined
+                          }
+                          onDrop={
+                            !isStateful && !searchTerm
+                              ? (e) => handleDrop(e, index)
+                              : undefined
+                          }
                           onClick={() => {
-                            const response = endpointResponses.find((r) => r.id === status.id);
+                            const response = endpointResponses.find(
+                              (r) => r.id === status.id
+                            );
                             if (response) handleResponseSelect(response);
                           }}
                         >
@@ -2539,7 +2769,9 @@ const DashboardPage = () => {
                               >
                                 {status.code}
                               </span>
-                              <span className="text-[12px] text-[#212121]">{status.name}</span>
+                              <span className="text-[12px] text-[#212121]">
+                                {status.name}
+                              </span>
                             </div>
                           </div>
 
@@ -2558,7 +2790,9 @@ const DashboardPage = () => {
                                 className="h-6 w-6 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const response = endpointResponses.find((r) => r.id === status.id);
+                                  const response = endpointResponses.find(
+                                    (r) => r.id === status.id
+                                  );
                                   if (response) {
                                     handleResponseSelect(response);
                                     handleDeleteResponse();
@@ -3491,6 +3725,9 @@ const DashboardPage = () => {
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
                         onSave={() => fetchEndpointResponses(isStateful)}
+                        // Bỏ các props filter vì ApiCallEditor sẽ tự quản lý
+                        availableEndpoints={newApiCallAvailableEndpoints}
+                        availableStatusCodes={newApiCallAvailableStatusCodes}
                       />
                     </div>
                   )}
@@ -3512,14 +3749,161 @@ const DashboardPage = () => {
                 <div className="space-y-6 mt-4">
                   {/* Target Endpoint */}
                   <div>
-                    <Label htmlFor="target-endpoint">Target Endpoint</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label htmlFor="target-endpoint">Target Endpoint</Label>
+                      {/* Toggle External/Internal - Đơn giản hóa giống như trong API Call Editor */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-black">
+                          External call
+                        </span>
+                        <button
+                          onClick={() =>
+                            setNewApiCallFilterMode(
+                              newApiCallFilterMode === "external"
+                                ? "internal"
+                                : "external"
+                            )
+                          }
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${
+                            newApiCallFilterMode === "internal"
+                              ? "bg-yellow-300"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              newApiCallFilterMode === "internal"
+                                ? "translate-x-6"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Internal Filter UI - 3 Dropdowns trong cùng 1 hàng */}
+                    {newApiCallFilterMode === "internal" && (
+                      <div className="mb-3 flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                        <span className="text-xs font-semibold text-black whitespace-nowrap">
+                          Filter
+                        </span>
+                        <div className="w-px h-4 bg-yellow-300"></div>
+
+                        {/* Workspace Dropdown */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalWorkspace}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalWorkspace(
+                                value === "all" ? "" : value
+                              );
+                              // Reset project và folder khi workspace thay đổi
+                              setNewApiCallInternalProject("");
+                              setNewApiCallInternalFolder("");
+                            }}
+                          >
+                            <SelectTrigger className="w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs">
+                              <SelectValue
+                                placeholder="Workspace"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">
+                                All Workspaces
+                              </SelectItem>
+                              {getInternalWorkspaceOptions().map(
+                                (workspace) => (
+                                  <SelectItem key={workspace} value={workspace}>
+                                    {workspace}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Project Dropdown - Disable khi chưa chọn workspace */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalProject}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalProject(
+                                value === "all" ? "" : value
+                              );
+                              // Reset folder khi project thay đổi
+                              setNewApiCallInternalFolder("");
+                            }}
+                            disabled={!newApiCallInternalWorkspace} // ✅ Disable khi chưa chọn workspace
+                          >
+                            <SelectTrigger
+                              className={`w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs ${
+                                !newApiCallInternalWorkspace
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <SelectValue
+                                placeholder="Project"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">All Projects</SelectItem>
+                              {getInternalProjectOptions().map((project) => (
+                                <SelectItem key={project} value={project}>
+                                  {project}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Folder Dropdown - Disable khi chưa chọn workspace và project */}
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newApiCallInternalFolder}
+                            onValueChange={(value) => {
+                              setNewApiCallInternalFolder(
+                                value === "all" ? "" : value
+                              );
+                            }}
+                            disabled={
+                              !newApiCallInternalWorkspace ||
+                              !newApiCallInternalProject
+                            } // ✅ Disable khi chưa chọn workspace và project
+                          >
+                            <SelectTrigger
+                              className={`w-full h-[20px] border-[#CBD5E1] rounded-sm text-xs ${
+                                !newApiCallInternalWorkspace ||
+                                !newApiCallInternalProject
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <SelectValue
+                                placeholder="Folder"
+                                className="text-xs truncate"
+                              />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-40">
+                              <SelectItem value="all">All Folders</SelectItem>
+                              {getInternalFolderOptions().map((folder) => (
+                                <SelectItem key={folder} value={folder}>
+                                  {folder}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="relative mt-1">
                       <Select
                         value={newApiCallTargetEndpoint}
                         onValueChange={(value) => {
                           setNewApiCallTargetEndpoint(value);
-
-                          // Chỉ cần set display text là path
                           setNewApiCallTargetEndpointDisplay(value);
                         }}
                       >
@@ -3539,11 +3923,11 @@ const DashboardPage = () => {
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {/* Hiển thị danh sách endpoints từ API - chỉ hiển thị path */}
-                          {newApiCallAvailableEndpoints.map((endpoint) => (
+                          {/* Sử dụng filtered endpoints */}
+                          {getFilteredEndpoints().map((endpoint) => (
                             <SelectItem
-                              key={endpoint.id} // Sử dụng id làm key
-                              value={endpoint.path} // Sử dụng path làm value
+                              key={endpoint.id}
+                              value={endpoint.path}
                               className="max-w-[430px]"
                             >
                               <div className="flex flex-col min-w-0 w-full">
@@ -3558,7 +3942,6 @@ const DashboardPage = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {/* Hiển thị lỗi validation */}
                       {newApiCallValidationErrors.targetEndpoint && (
                         <div className="text-red-400 text-xs mt-1 pl-2">
                           {newApiCallValidationErrors.targetEndpoint}
@@ -3775,20 +4158,36 @@ const DashboardPage = () => {
                         value={newApiCallStatusCondition}
                         onValueChange={setNewApiCallStatusCondition}
                       >
-                        <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px]">
+                        <SelectTrigger
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                            newApiCallValidationErrors.statusCondition
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue
                             placeholder="Select condition"
                             className="truncate"
                           />
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {statusCodes.map((status) => (
-                            <SelectItem key={status.code} value={status.code}>
-                              {status.code} - {status.description.split("–")[0]}
-                            </SelectItem>
-                          ))}
+                          {/* Sử dụng status codes từ endpoint responses + 500 default */}
+                          {newApiCallAvailableStatusCodes
+                            .sort((a, b) => parseInt(a.code) - parseInt(b.code))
+                            .map((status) => (
+                              <SelectItem key={status.code} value={status.code}>
+                                {status.code} -{" "}
+                                {status.description.split("–")[0]}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
+                      {/* Hiển thị lỗi validation cho status condition */}
+                      {newApiCallValidationErrors.statusCondition && (
+                        <div className="text-red-400 text-xs mt-1 pl-2">
+                          {newApiCallValidationErrors.statusCondition}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -3803,8 +4202,13 @@ const DashboardPage = () => {
                       setNewApiCallTargetEndpointDisplay("");
                       setNewApiCallMethod("GET");
                       setNewApiCallRequestBody("{}");
-                      setNewApiCallStatusCondition("");
+                      setNewApiCallStatusCondition(""); // Reset về rỗng thay vì "200"
                       setNewApiCallValidationErrors({});
+                      setNewApiCallFilterMode("external");
+                      // Reset internal filter dropdowns
+                      setNewApiCallInternalWorkspace("");
+                      setNewApiCallInternalProject("");
+                      setNewApiCallInternalFolder("");
                     }}
                     className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
                   >
