@@ -6,7 +6,7 @@ import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
 import { LoginForm } from "@/components/LoginForm.jsx";
-import "@/styles/auth.css";
+import "@/styles/pages/auth.css";
 import {useTheme} from "@/services/useTheme.js";
 
 export default function LoginPage() {
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const loginImage = isDark ? loginImageDark : loginImageLight;
 
   return (
-    <div className="auth-page min-h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 transition-colors duration-300">
+    <div className="auth-page min-h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4">
       {/* Toggle Button */}
       <button
         onClick={toggleTheme}
@@ -62,7 +62,7 @@ export default function LoginPage() {
               <LoginForm />
             </div>
 
-            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs font-medium">
+            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs">
               © Teknix Corp. All rights reserved.
             </div>
 

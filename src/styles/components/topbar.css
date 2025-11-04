@@ -56,3 +56,42 @@
 .dark .workspace-btn:hover {
     background-color: #475569; /* slate-600 */
 }
+
+.active-workspace {
+    position: relative;
+    background-color: #f8fafc; /* slate-50 */
+    border-radius: 0.5rem; /* rounded-lg */
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    overflow: hidden;
+    padding-left: 12px; /* chừa không gian cho thanh vàng */
+}
+
+/* Tạo thanh vàng bên trái */
+.active-workspace::before {
+    content: "";
+    position: absolute;
+    left: 1%;
+    top: 8%;
+    bottom: 8%;
+    width: 8px;
+    background-color: #FBEB6B; /* yellow-300 */
+    border-radius: 6px;
+}
+
+.active-workspace:hover {
+    background-color: #e2e8f0; /* slate-200 */
+}
+
+.dark .active-workspace {
+    background-color: #475569;
+    font-weight: 600;
+}
+
+.dark .active-workspace::before {
+    background-color: #5865F2; /* yellow-400 */
+}
+
+.dark .active-workspace:hover {
+    background-color: #64748b; /* slate-500 */
+}

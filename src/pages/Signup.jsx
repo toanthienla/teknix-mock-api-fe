@@ -6,7 +6,7 @@ import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
 import { SignupForm } from "@/components/SignupForm.jsx";
-import "@/styles/auth.css";
+import "@/styles/pages/auth.css";
 import {useTheme} from "@/services/useTheme.js";
 
 export default function SignupPage() {
@@ -37,7 +37,7 @@ export default function SignupPage() {
             </div>
 
             {/* Footer */}
-            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs font-medium text-center sm:text-left">
+            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs text-center sm:text-left">
               © Teknix Corp. All rights reserved.
             </div>
 
