@@ -61,7 +61,9 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
 
       {/* Status */}
       <TableCell className="py-3 text-emerald-400 font-semibold text-center">
-        {endpoint.is_active ? "active" : "inactive"}
+        {endpoint.is_stateful ? "active"
+          : endpoint.is_active ? "active"
+            : "inactive"}
       </TableCell>
 
       {/* Time & Date */}

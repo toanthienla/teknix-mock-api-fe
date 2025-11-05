@@ -172,6 +172,10 @@ const DashboardPage = () => {
   ] = useState(false);
 
   const [config, setConfig] = useState(null);
+  const [wsEnabled, setWsEnabled] = useState(false);
+  const [wsMessage, setWsMessage] = useState("");
+  const [wsDelay, setWsDelay] = useState(0);
+  const [wsCondition, setWsCondition] = useState(0);
 
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
@@ -1336,6 +1340,10 @@ const DashboardPage = () => {
 
       const data = await res.json();
       setConfig(data);
+      setWsEnabled(data?.enabled ?? false);
+      setWsMessage(data?.message ?? "");
+      setWsDelay(data?.delay_ms ?? 0);
+      setWsCondition(data?.condition ?? 0);
     } catch (err) {
       console.error("Fetch error:", err);
       toast.error("Unable to load WebSocket config");
@@ -2439,6 +2447,35 @@ const DashboardPage = () => {
     );
   }
 
+  const handleToggleWebSocket = async (checked) => {
+    try {
+      setWsEnabled(checked);
+
+      const payload = {
+        websocket_config: {
+          enabled: checked,
+          message: wsMessage,
+          delay_ms: wsDelay,
+          condition: wsCondition,
+        },
+      };
+
+      const res = await fetch(`${API_ROOT}/endpoints/${endpointId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to update WebSocket config");
+      toast.success(`WebSocket ${checked ? "enabled" : "disabled"} successfully`);
+    } catch (err) {
+      console.error("Update failed:", err);
+      toast.error("Failed to update WebSocket config");
+      setWsEnabled((prev) => !prev); // rollback
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-800 flex">
       {/* Main Content */}
@@ -2636,49 +2673,18 @@ const DashboardPage = () => {
               />
             </div>
 
-            {/*<div className="ml-4 flex items-center gap-2">*/}
-            {/*  <span className="font-inter font-semibold text-base text-black select-none">*/}
-            {/*    Notification*/}
-            {/*  </span>*/}
-            {/*  <Switch*/}
-            {/*    checked={!!currentEndpoint?.send_notification}*/}
-            {/*    onCheckedChange={async (val) => {*/}
-            {/*      try {*/}
-            {/*        const response = await fetch(*/}
-            {/*          `${API_ROOT}/endpoints/${currentEndpointId}/notification`,*/}
-            {/*          {*/}
-            {/*            method: "PUT",*/}
-            {/*            credentials: "include",*/}
-            {/*            headers: {*/}
-            {/*              "Content-Type": "application/json",*/}
-            {/*            },*/}
-            {/*            body: JSON.stringify({ send_notification: val }),*/}
-            {/*          }*/}
-            {/*        );*/}
 
-            {/*        if (!response.ok)*/}
-            {/*          throw new Error("Failed to update notification setting");*/}
-
-            {/*        toast.success(*/}
-            {/*          val*/}
-            {/*            ? "Notification has been enabled for this endpoint!"*/}
-            {/*            : "Notification has been disabled for this endpoint!"*/}
-            {/*        );*/}
-
-            {/*        // Fetch lại endpoint để đảm bảo state chính xác*/}
-            {/*        await fetchEndpoint(currentEndpointId);*/}
-            {/*      } catch (error) {*/}
-            {/*        console.error(*/}
-            {/*          "Error updating notification setting:",*/}
-            {/*          error*/}
-            {/*        );*/}
-            {/*        toast.error("Unable to update notification setting!");*/}
-            {/*      }*/}
-            {/*    }}*/}
-            {/*    onClick={(e) => e.stopPropagation()}*/}
-            {/*    className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"*/}
-            {/*  />*/}
-            {/*</div>*/}
+            <div className="flex items-center gap-3">
+              <Label htmlFor="ws-enable" className="text-base font-inter font-semibold">
+                Connect WS
+              </Label>
+              <Switch
+                id="ws-enable"
+                checked={wsEnabled}
+                onCheckedChange={handleToggleWebSocket}
+                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+              />
+            </div>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
-import { Card } from "@/components/ui/card.jsx";
-import { Button } from "@/components/ui/button.jsx";
-import { Label } from "@/components/ui/label";
+import {Card} from "@/components/ui/card.jsx";
+import {Button} from "@/components/ui/button.jsx";
+import {Label} from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -8,18 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { SaveIcon } from "lucide-react";
-import { highlight, languages } from "prismjs/components/prism-core.js";
+import {Input} from "@/components/ui/input";
+import {Code, SaveIcon} from "lucide-react";
+import {highlight, languages} from "prismjs/components/prism-core.js";
 import Editor from "react-simple-code-editor";
-import { toast } from "react-toastify";
-import React, { useState } from "react";
-import { statusCodes } from "@/components/endpoint/constants.js";
+import {toast} from "react-toastify";
+import React, {useState} from "react";
+import {statusCodes} from "@/components/endpoint/constants.js";
 import {API_ROOT} from "@/utils/constants.js";
 
-export const WSConfig = ({ config, endpointId }) => {
+export const WSConfig = ({config, endpointId}) => {
 
-  const [enabled, setEnabled] = useState(config.enabled ?? false);
+  const [enabled] = useState(config.enabled ?? false);
   const [message, setMessage] = useState(
     JSON.stringify(config.message ?? {}, null, 2)
   );
@@ -43,7 +43,7 @@ export const WSConfig = ({ config, endpointId }) => {
       setIsSaving(true);
       const res = await fetch(`${API_ROOT}/endpoints/${endpointId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
       });
 
@@ -83,38 +83,52 @@ export const WSConfig = ({ config, endpointId }) => {
             </Button>
           </div>
 
-          {/* --- Enable Toggle --- */}
-          <div className="flex items-center gap-3 mt-3">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              id="ws-enable"
-              className="w-4 h-4 accent-yellow-300"
-            />
-            <Label htmlFor="ws-enable">
-              Enable WebSocket
-            </Label>
-          </div>
+          <div className="flex-1 w-full relative">
+            <div className="relative">
+              {/* --- JSON Editor for message --- */}
+              <Editor
+                className="custom-json-editor"
+                value={message}
+                onValueChange={(code) => setMessage(code)}
+                highlight={(code) => highlight(code, languages.json)}
+                padding={10}
+                style={{
+                  fontFamily: '"Fira code", "Fira Mono", monospace',
+                  fontSize: 14,
+                  minHeight: "120px",
+                  backgroundColor: "#101728",
+                  color: "white",
+                  border: "1px solid #CBD5E1",
+                  borderRadius: "0.375rem",
+                  width: "100%",
+                }}
+              />
 
-          {/* --- JSON Editor for message --- */}
-          <Editor
-            className="custom-json-editor"
-            value={message}
-            onValueChange={(code) => setMessage(code)}
-            highlight={(code) => highlight(code, languages.json)}
-            padding={10}
-            style={{
-              fontFamily: '"Fira code", "Fira Mono", monospace',
-              fontSize: 14,
-              minHeight: "120px",
-              backgroundColor: "#101728",
-              color: "white",
-              border: "1px solid #CBD5E1",
-              borderRadius: "0.375rem",
-              width: "100%",
-            }}
-          />
+              {/*/!* JSON Editor controls *!/*/}
+              {/*<div className="absolute top-2 right-2 flex space-x-2 z-10">*/}
+              {/*  <Button*/}
+              {/*    variant="outline"*/}
+              {/*    size="sm"*/}
+              {/*    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"*/}
+              {/*    onClick={(e) => {*/}
+              {/*      e.stopPropagation();*/}
+              {/*      try {*/}
+              {/*        const formatted = JSON.stringify(*/}
+              {/*          JSON.parse(jsonStrings[index]),*/}
+              {/*          null,*/}
+              {/*          2*/}
+              {/*        );*/}
+              {/*        handleJsonChange(index, formatted);*/}
+              {/*      } catch {*/}
+              {/*        toast.error("Invalid JSON format");*/}
+              {/*      }*/}
+              {/*    }}*/}
+              {/*  >*/}
+              {/*    <Code className="mr-1 h-4 w-4"/> Format*/}
+              {/*  </Button>*/}
+              {/*</div>*/}
+            </div>
+          </div>
 
           {/* --- Delay --- */}
           <div className="flex justify-between items-center gap-1">
@@ -133,10 +147,10 @@ export const WSConfig = ({ config, endpointId }) => {
             <Label htmlFor="code">Code</Label>
             <Select value={String(code)} onValueChange={(v) => setCode(Number(v))}>
               <SelectTrigger className="w-[70%]">
-                <SelectValue placeholder="Select Code" />
+                <SelectValue placeholder="Select Code"/>
               </SelectTrigger>
               <SelectContent className="max-h-[200px] overflow-y-auto">
-                {statusCodes.map(({ code, description }) => (
+                {statusCodes.map(({code, description}) => (
                   <SelectItem key={code} value={code}>
                     {code} - {description}
                   </SelectItem>

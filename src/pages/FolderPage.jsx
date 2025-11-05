@@ -331,6 +331,7 @@ export default function FolderPage() {
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);
   const [endpoints, setEndpoints] = useState([]);
@@ -396,6 +397,7 @@ export default function FolderPage() {
 
   const [openWSDialog, setOpenWSDialog] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const cleanAPIROOT = API_ROOT.replace(/^https?:\/\//, "");
 
   const checkUserLogin = async () => {
     try {
@@ -429,6 +431,7 @@ export default function FolderPage() {
   // state cho pagination
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   // fetch workspaces + projects + endpoints
   useEffect(() => {
@@ -550,15 +553,18 @@ export default function FolderPage() {
       );
   };
 
-  // useEffect(() => {
-  //   if (projectId && endpoints.length) fetchLogs(projectId);
-  // }, [projectId, endpoints]);
+  useEffect(() => {
+    if (activeTab === "logs") {
+      fetchLogs(projectId, page, rowsPerPage);
+    }
+  }, [activeTab, page, rowsPerPage, projectId]);
 
-  const fetchLogs = async (pid) => {
+  const fetchLogs = async (pid, page = 1, limit = 10) => {
     if (!pid) return;
+    setLoadingLogs(true);
     try {
       const res = await fetch(
-        `${API_ROOT}/project_request_logs?project_id=${pid}`,
+        `http://localhost:3000/project_request_logs/by_project?project_id=${pid}&page=${page}&limit=${limit}`,
         {credentials: "include"}
       );
 
@@ -568,16 +574,20 @@ export default function FolderPage() {
         return;
       }
 
-      if (!res.ok) throw new Error(`logs not ok: ${res.status}`);
+      if (!res.ok) throw new Error(`Logs not ok: ${res.status}`);
+
       const raw = await res.json();
 
-      const logsArray = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw.items)
-          ? raw.items
-          : Array.isArray(raw.data)
-            ? raw.data
-            : [];
+      // Nếu không có dữ liệu hoặc items rỗng/null
+      if (!raw || !raw.items || raw.items.length === 0) {
+        toast.info("Không có endpoint");
+        setLogs([]);
+        return;
+      }
+
+      setTotalPages(raw.totalPages || 1);
+      setPage(raw.page || 1);
+      const logsArray = raw.items;
 
       const endpointMap = new Map(endpoints.map((e) => [String(e.id), e]));
 
@@ -592,11 +602,9 @@ export default function FolderPage() {
           try {
             const r2 = await fetch(
               `${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`,
-              {
-                credentials: "include",
-              }
+              {credentials: "include"}
             );
-            if (!r2.ok) throw new Error("responses not ok");
+            if (!r2.ok) throw new Error("Responses not ok");
             const payload = await r2.json();
             const responses = Array.isArray(payload)
               ? payload
@@ -612,9 +620,7 @@ export default function FolderPage() {
 
             return {
               ...log,
-              project_id: endpoint
-                ? endpoint.project_id
-                : log.project_id ?? pid,
+              project_id: endpoint ? endpoint.project_id : log.project_id ?? pid,
               endpointResponseName: matched
                 ? `${endpointName} - ${matched.name}`
                 : endpointName,
@@ -623,9 +629,7 @@ export default function FolderPage() {
             console.error("Error fetching endpoint_responses:", err);
             return {
               ...log,
-              project_id: endpoint
-                ? endpoint.project_id
-                : log.project_id ?? pid,
+              project_id: endpoint ? endpoint.project_id : log.project_id ?? pid,
               endpointResponseName: endpointName,
             };
           }
@@ -636,6 +640,8 @@ export default function FolderPage() {
     } catch (err) {
       console.error("Error fetching logs:", err);
       toast.error("Failed to load logs");
+    } finally {
+      setLoadingLogs(false);
     }
   };
 
@@ -1200,14 +1206,6 @@ export default function FolderPage() {
     return projectOk && timeOk;
   });
 
-  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-
-  // logs hiển thị theo trang
-  const paginatedLogs = filteredLogs.slice(
-    (page - 1) * rowsPerPage,
-    page * rowsPerPage
-  );
-
   // filter + sort endpoints
   let filteredEndpoints = endpoints.filter((e) =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1282,15 +1280,15 @@ export default function FolderPage() {
     try {
       const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ websocket_enabled: true }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({websocket_enabled: true}),
       });
 
       if (!res.ok) throw new Error("Failed to enable WebSocket");
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === projectId ? { ...p, websocket_enabled: true } : p
+          p.id === projectId ? {...p, websocket_enabled: true} : p
         )
       );
 
@@ -1305,15 +1303,15 @@ export default function FolderPage() {
     try {
       const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ websocket_enabled: false }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({websocket_enabled: false}),
       });
 
       if (!res.ok) throw new Error("Failed to delete WebSocket Channel");
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === projectId ? { ...p, websocket_enabled: false } : p
+          p.id === projectId ? {...p, websocket_enabled: false} : p
         )
       );
 
@@ -1415,7 +1413,7 @@ export default function FolderPage() {
                   <button
                     onClick={() => {
                       setActiveTab("logs");
-                      fetchLogs(projectId);
+                      setPage(1);
                     }}
                     className={`rounded-none px-4 py-2 -mb-px ${
                       activeTab === "logs"
@@ -1633,7 +1631,20 @@ export default function FolderPage() {
                           </TableHeader>
 
                           <TableBody>
-                            {logs.length === 0 ? (
+                            {loadingLogs ? (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={6}
+                                  className="text-center text-slate-500 py-4"
+                                >
+                                  {/* Loading screen */}
+                                  <span className="loader"></span>
+                                  <p className="mt-2 font-medium text-gray-700">
+                                    Loading logs...
+                                  </p>
+                                </TableCell>
+                              </TableRow>
+                            ) : logs.length === 0 ? (
                               <TableRow>
                                 <TableCell
                                   colSpan={6}
@@ -1652,7 +1663,7 @@ export default function FolderPage() {
                                 </TableCell>
                               </TableRow>
                             ) : (
-                              paginatedLogs.map((log, i) => (
+                              logs.map((log, i) => (
                                 <LogCard key={i} log={log}/>
                               ))
                             )}
@@ -1664,8 +1675,8 @@ export default function FolderPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              disabled={page === 1}
-                              onClick={() => setPage((p) => p - 1)}
+                              disabled={page <= 1}
+                              onClick={() => setPage((p) => Math.max(p - 1, 1))}
                             >
                               <ChevronLeftIcon className="w-4 h-4"/>
                             </Button>
@@ -1675,8 +1686,8 @@ export default function FolderPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              disabled={page === totalPages || totalPages === 0}
-                              onClick={() => setPage((p) => p + 1)}
+                              disabled={page >= totalPages}
+                              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                             >
                               <ChevronRightIcon className="w-4 h-4"/>
                             </Button>
@@ -1687,8 +1698,10 @@ export default function FolderPage() {
                             <Select
                               value={rowsPerPage.toString()}
                               onValueChange={(val) => {
-                                setRowsPerPage(Number(val));
-                                setPage(1); // reset về trang 1 khi đổi size
+                                const newLimit = Number(val);
+                                setRowsPerPage(newLimit);
+                                setPage(1);
+                                fetchLogs(projectId, 1, newLimit);
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
@@ -2256,18 +2269,19 @@ export default function FolderPage() {
               Real-time Updates via WebSocket
             </DialogTitle>
           </DialogHeader>
-
+          <DialogDescription className="text-sm text-slate-500">Click to reveal</DialogDescription>
           {currentProject && currentWorkspace && (
             <div className="mt-4 space-y-4 text-sm">
               {/* Unsecured URL */}
               <div className="relative">
-                <div className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                <div
+                  className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
                   bash
                   <button
                     className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
-                        `ws://${API_ROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
+                        `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
                       )
                     }
                   >
@@ -2275,10 +2289,10 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="border-b-2 border-gray-300 px-2 py-1">
+                  <span className="px-2 py-1">
                     Your Unsecured URL:{" "}
                     <spoiler-span>
-                      “ws://{API_ROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
+                      “ws://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
                     </spoiler-span>
                   </span>
                 </div>
@@ -2286,13 +2300,14 @@ export default function FolderPage() {
 
               {/* Secured URL */}
               <div className="relative">
-                <div className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                <div
+                  className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
                   bash
                   <button
                     className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
-                        `ws://${API_ROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
+                        `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
                       )
                     }
                   >
@@ -2300,10 +2315,10 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="border-b-2 border-gray-300 px-2 py-1">
+                  <span className="px-2 py-1">
                     Your Secured URL:{" "}
                     <spoiler-span>
-                      “wss://{API_ROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
+                      “wss://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
                     </spoiler-span>
                   </span>
                 </div>
