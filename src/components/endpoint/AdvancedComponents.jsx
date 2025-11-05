@@ -449,6 +449,20 @@ export const ApiCallEditor = ({
     };
     setNextCalls(updatedCalls);
 
+    // ✅ THÊM: Reset status condition về rỗng khi thay đổi method
+    if (field === "method") {
+      // Reset condition về rỗng
+      updatedCalls[index].condition = "";
+      setNextCalls([...updatedCalls]);
+      
+      // Clear validation errors cho status condition của call này
+      setStatusConditionErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+    }
+
     // Validate ngay khi thay đổi target_endpoint hoặc method
     if (field === "target_endpoint" || field === "method") {
       setTimeout(() => {

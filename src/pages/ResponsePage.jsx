@@ -486,7 +486,7 @@ const DashboardPage = () => {
   // Reset validation errors khi các giá trị thay đổi
   useEffect(() => {
     if (
-      newApiCallTargetEndpointDisplay || // ✅ Cập nhậT: kiểm tra input field
+      newApiCallTargetEndpointDisplay || // ✅ CẬP NHẬT: kiểm tra input field
       newApiCallMethod ||
       newApiCallRequestBody ||
       newApiCallStatusCondition
@@ -494,11 +494,25 @@ const DashboardPage = () => {
       setNewApiCallValidationErrors({});
     }
   }, [
-    newApiCallTargetEndpointDisplay, // ✅ Cập nhậT: kiểm tra input field
+    newApiCallTargetEndpointDisplay, // ✅ CẬP NHẬT: kiểm tra input field
     newApiCallMethod,
     newApiCallRequestBody,
     newApiCallStatusCondition,
   ]);
+
+  // ✅ THÊM: Reset status condition khi method thay đổi
+  useEffect(() => {
+    // Khi method thay đổi, reset status condition về rỗng
+    if (newApiCallMethod) {
+      setNewApiCallStatusCondition("");
+      // Clear validation error cho status condition
+      setNewApiCallValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.statusCondition;
+        return newErrors;
+      });
+    }
+  }, [newApiCallMethod]);
 
   // Sửa lại hàm handleCreateNewApiCall
   const handleCreateNewApiCall = async () => {
