@@ -2269,7 +2269,7 @@ export default function FolderPage() {
               Real-time Updates via WebSocket
             </DialogTitle>
           </DialogHeader>
-
+          <DialogDescription className="text-sm text-slate-500">Click to reveal</DialogDescription>
           {currentProject && currentWorkspace && (
             <div className="mt-4 space-y-4 text-sm">
               {/* Unsecured URL */}
@@ -2289,7 +2289,7 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="border-b-2 border-gray-300 px-2 py-1">
+                  <span className="px-2 py-1">
                     Your Unsecured URL:{" "}
                     <spoiler-span>
                       “ws://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
@@ -2315,7 +2315,7 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="border-b-2 border-gray-300 px-2 py-1">
+                  <span className="px-2 py-1">
                     Your Secured URL:{" "}
                     <spoiler-span>
                       “wss://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
