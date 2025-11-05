@@ -226,16 +226,50 @@ export const ApiCallEditor = ({
     const minimumId = getMinimumId(nextCalls);
     const currentCall = nextCalls[callIndex];
 
-    // Nếu call hiện tại có ID nhỏ nhất hoặc chưa có ID, sử dụng availableStatusCodes
-    if (!currentCall.id || currentCall.id === minimumId) {
-      // Sắp xếp theo thứ tự status code tăng dần
-      return [...availableStatusCodes].sort(
-        (a, b) => parseInt(a.code) - parseInt(b.code)
-      );
-    }
+    // ✅ KIỂM TRA: Có API call nào đã có ID trong nextCalls không
+    const hasApiCallsWithIds = nextCalls.some((call) => call.id);
 
-    // Nếu không phải ID nhỏ nhất, sử dụng quy luật theo method
-    return getStatusCodesByMethod(currentCall.method);
+    if (hasApiCallsWithIds) {
+      // Nếu đã có API call với ID → ID nhỏ nhất dùng endpoint response, các ID khác dùng quy luật method
+      if (currentCall.id === minimumId) {
+        // ✅ ID nhỏ nhất → dùng endpoint response
+        console.log(
+          "API Call Editor - Minimum ID using endpoint response:",
+          availableStatusCodes
+        );
+
+        if (availableStatusCodes && availableStatusCodes.length > 0) {
+          return [...availableStatusCodes].sort(
+            (a, b) => parseInt(a.code) - parseInt(b.code)
+          );
+        }
+
+        // Fallback về quy luật method nếu không có endpoint response
+        return getStatusCodesByMethod(currentCall.method);
+      } else {
+        // ✅ ID không phải nhỏ nhất → dùng quy luật method
+        console.log(
+          "API Call Editor - Non-minimum ID using method rules:",
+          currentCall.method
+        );
+        return getStatusCodesByMethod(currentCall.method);
+      }
+    } else {
+      // ✅ Chưa có API call nào có ID → tất cả dùng endpoint response
+      console.log(
+        "API Call Editor - No IDs yet, using endpoint response:",
+        availableStatusCodes
+      );
+
+      if (availableStatusCodes && availableStatusCodes.length > 0) {
+        return [...availableStatusCodes].sort(
+          (a, b) => parseInt(a.code) - parseInt(b.code)
+        );
+      }
+
+      // Fallback về quy luật method nếu không có endpoint response
+      return getStatusCodesByMethod(currentCall.method);
+    }
   };
 
   // ✅ CẬP NHẬT: Sử dụng hàm helper để tạo full path

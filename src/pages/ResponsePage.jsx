@@ -325,7 +325,7 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
-  // Thêm useEffect để fetch status codes từ endpoint responses
+  // ✅ SỬA: Luôn fetch endpoint responses để có status codes đúng cho API Call Editor
   useEffect(() => {
     if (!currentEndpointId) return;
 
@@ -335,12 +335,12 @@ const DashboardPage = () => {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          // Lấy unique status codes từ endpoint responses
+          // ✅ SỬA: Lấy unique status codes từ endpoint responses thực tế
           const uniqueStatusCodes = [
             ...new Set(data.map((response) => response.status_code.toString())),
           ];
 
-          // Thêm các status code 500 mặc định (500-505)
+          // ✅ THÊM: Luôn thêm các status code 500 mặc định
           const default500Codes = ["500", "501", "502", "503", "504", "505"];
           const combinedCodes = [
             ...new Set([...uniqueStatusCodes, ...default500Codes]),
@@ -360,34 +360,15 @@ const DashboardPage = () => {
             };
           });
 
-          // ✅ KIỂM TRA: Chỉ cập nhật nếu chưa có API call nào có ID
-          const hasApiCallsWithIds = nextCalls.some((call) => call.id);
-          if (!hasApiCallsWithIds) {
-            setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
-          }
+          // ✅ SỬA: Luôn cập nhật để đảm bảo có status codes đúng từ endpoint responses
+          setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+
+          console.log(
+            "Updated available status codes from endpoint responses:",
+            statusCodesWithDesc
+          );
         } else {
-          // ✅ KIỂM TRA: Chỉ fallback nếu chưa có API call nào có ID
-          const hasApiCallsWithIds = nextCalls.some((call) => call.id);
-          if (!hasApiCallsWithIds) {
-            setNewApiCallAvailableStatusCodes([
-              { code: "500", description: "Internal Server Error." },
-              { code: "501", description: "Not Implemented." },
-              { code: "502", description: "Bad Gateway." },
-              { code: "503", description: "Service Unavailable." },
-              { code: "504", description: "Gateway Timeout." },
-              { code: "505", description: "HTTP Version Not Supported." },
-            ]);
-          }
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "Failed to fetch status codes from endpoint responses:",
-          error
-        );
-        // ✅ KIỂM TRA: Chỉ fallback nếu chưa có API call nào có ID
-        const hasApiCallsWithIds = nextCalls.some((call) => call.id);
-        if (!hasApiCallsWithIds) {
+          // Fallback nếu không có endpoint responses
           setNewApiCallAvailableStatusCodes([
             { code: "500", description: "Internal Server Error." },
             { code: "501", description: "Not Implemented." },
@@ -397,30 +378,38 @@ const DashboardPage = () => {
             { code: "505", description: "HTTP Version Not Supported." },
           ]);
         }
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch status codes from endpoint responses:",
+          error
+        );
+        // Fallback nếu fetch lỗi
+        setNewApiCallAvailableStatusCodes([
+          { code: "500", description: "Internal Server Error." },
+          { code: "501", description: "Not Implemented." },
+          { code: "502", description: "Bad Gateway." },
+          { code: "503", description: "Service Unavailable." },
+          { code: "504", description: "Gateway Timeout." },
+          { code: "505", description: "HTTP Version Not Supported." },
+        ]);
       });
-  }, [currentEndpointId, isStateful, nextCalls]);
-
-  // ✅ CẬP NHẬT: Cập nhật status condition options khi method hoặc nextCalls thay đổi
+  }, [currentEndpointId, isStateful]);
+  // ✅ CẬP NHẬT: Chỉ cập nhật logic khi method thay đổi
   useEffect(() => {
     // Kiểm tra có API call nào đã có ID trong nextCalls không
     const hasApiCallsWithIds = nextCalls.some((call) => call.id);
 
     if (hasApiCallsWithIds) {
-      // Có API call đã có ID → sử dụng quy luật theo method
-      setNewApiCallAvailableStatusCodes(
-        getStatusCodesByMethod(newApiCallMethod || "GET")
-      );
-    } else {
-      // Chưa có API call nào có ID → sử dụng endpoint responses nếu có
+      // Có API call đã có ID → chỉ cập nhật nếu newApiCallAvailableStatusCodes đang rỗng
+      // (khi chưa có data từ endpoint responses)
       if (newApiCallAvailableStatusCodes.length === 0) {
-        // Nếu chưa có endpoint responses, sử dụng quy luật method
         setNewApiCallAvailableStatusCodes(
           getStatusCodesByMethod(newApiCallMethod || "GET")
         );
       }
-      // Nếu đã có endpoint responses, giữ nguyên
     }
-  }, [newApiCallMethod, nextCalls, newApiCallAvailableStatusCodes.length]);
+  }, [newApiCallMethod]); // ✅ Chỉ phụ thuộc vào method
 
   // ✅ ĐỞN GIẢN HÓA: Bỏ filter logic, hiển thị tất cả endpoints
   const getFilteredEndpoints = () => {
@@ -774,12 +763,12 @@ const DashboardPage = () => {
     // KIỂM TRA: Có API call nào đã có ID trong nextCalls không
     const hasApiCallsWithIds = nextCalls.some((call) => call.id);
 
-    // Nếu có API call đã có ID, sử dụng quy luật theo method
+    // Nếu có API call đã có ID → sử dụng quy luật theo method
     if (hasApiCallsWithIds) {
       return getStatusCodesByMethod(newApiCallMethod);
     }
 
-    // Nếu nextCalls rỗng hoặc không có ID nào, sử dụng endpoint responses
+    // Nếu nextCalls rỗng hoặc không có ID nào → sử dụng endpoint responses + 500 codes
     if (newApiCallAvailableStatusCodes.length > 0) {
       return newApiCallAvailableStatusCodes;
     }
@@ -787,7 +776,6 @@ const DashboardPage = () => {
     // Fallback về quy luật method nếu chưa có endpoint responses
     return getStatusCodesByMethod(newApiCallMethod);
   };
-
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
@@ -3782,9 +3770,8 @@ const DashboardPage = () => {
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
                         onSave={() => fetchEndpointResponses(isStateful)}
-                        // Bỏ các props filter vì ApiCallEditor sẽ tự quản lý
                         availableEndpoints={newApiCallAvailableEndpoints}
-                        availableStatusCodes={newApiCallAvailableStatusCodes}
+                        availableStatusCodes={newApiCallAvailableStatusCodes} // ✅ Debug: Kiểm tra prop này
                       />
                     </div>
                   )}
