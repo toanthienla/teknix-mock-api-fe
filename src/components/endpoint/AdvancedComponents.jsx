@@ -3,14 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { API_ROOT } from "@/utils/constants";
-import {
-  Plus,
-  Trash2,
-  Code,
-  FileCode,
-  X,
-  SaveIcon,
-} from "lucide-react";
+import { Plus, Trash2, Code, FileCode, X, SaveIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Select,
@@ -31,8 +24,6 @@ export const ApiCallEditor = ({
   setNextCalls,
   setIsNewApiCallDialogOpen,
   onSave,
-  currentEndpoint,
-  getFullPath,
   // Thêm props cho filter
   availableEndpoints = [],
   availableStatusCodes = [],
@@ -52,8 +43,13 @@ export const ApiCallEditor = ({
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
   const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
 
-  // Thêm state để lưu filter mode và internal filters cho mỗi call
-  const [callsFilterState, setCallsFilterState] = useState({});
+  // ✅ THÊM: State để lưu selected endpoint ID cho mỗi call
+  const [selectedEndpointIds, setSelectedEndpointIds] = useState({});
+
+  // ✅ THÊM: State để control dropdown suggestions
+  const [isTargetEndpointSuggestionsOpen, setIsTargetEndpointSuggestionsOpen] =
+    useState({});
+
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -124,133 +120,46 @@ export const ApiCallEditor = ({
     }
   };
 
-  // Thêm hàm để cập nhật filter state cho từng call
-  const updateCallFilterState = (callIndex, updates) => {
-    setCallsFilterState((prev) => ({
+  // ✅ THÊM: Hàm để cập nhật selected endpoint ID cho một call
+  const updateSelectedEndpointId = (callIndex, endpointId) => {
+    setSelectedEndpointIds((prev) => ({
       ...prev,
-      [callIndex]: {
-        ...prev[callIndex],
-        ...updates,
-      },
+      [callIndex]: endpointId,
     }));
   };
 
-  // Thêm hàm để lấy filter state của một call
-  const getCallFilterState = (callIndex) => {
-    return (
-      callsFilterState[callIndex] || {
-        filterMode: "external",
-        internalWorkspace: "",
-        internalProject: "",
-        internalFolder: "",
-      }
-    );
+  // ✅ THÊM: Hàm để lấy selected endpoint ID của một call
+  const getSelectedEndpointId = (callIndex) => {
+    return selectedEndpointIds[callIndex] || null;
   };
 
-  // ✅ FIX: Cập nhật hàm get options với safety checks
-  const getInternalWorkspaceOptions = (callIndex) => {
-    const callState = getCallFilterState(callIndex);
-    const validEndpoints = availableEndpoints.filter(
-      (ep) => ep && ep.workspaceName
-    );
+  // ✅ THÊM: Hàm để lấy selected endpoint object của một call
+  const getSelectedEndpoint = (callIndex) => {
+    const endpointId = getSelectedEndpointId(callIndex);
+    if (!endpointId) return null;
 
-    let filtered = validEndpoints;
-    if (callState.internalWorkspace) {
-      // Filter theo workspace đã chọn
-    }
-
-    const workspaces = [...new Set(filtered.map((ep) => ep.workspaceName))];
-    return workspaces.sort();
+    return availableEndpoints.find((ep) => ep.id === endpointId) || null;
   };
 
-  const getInternalProjectOptions = (callIndex) => {
-    const callState = getCallFilterState(callIndex);
-    let filtered = availableEndpoints.filter(
-      (ep) => ep && typeof ep === "object"
-    );
-
-    if (callState.internalWorkspace) {
-      filtered = filtered.filter(
-        (ep) => ep.workspaceName === callState.internalWorkspace
-      );
-    }
-
-    const validFiltered = filtered.filter((ep) => ep && ep.projectName);
-    const projects = [...new Set(validFiltered.map((ep) => ep.projectName))];
-    return projects.sort();
+  // ✅ THÊM: Hàm để cập nhật suggestions dropdown state cho một call
+  const updateSuggestionsOpen = (callIndex, isOpen) => {
+    setIsTargetEndpointSuggestionsOpen((prev) => ({
+      ...prev,
+      [callIndex]: isOpen,
+    }));
   };
 
-  const getInternalFolderOptions = (callIndex) => {
-    const callState = getCallFilterState(callIndex);
-    let filtered = availableEndpoints.filter(
-      (ep) => ep && typeof ep === "object"
-    );
-
-    if (callState.internalWorkspace) {
-      filtered = filtered.filter(
-        (ep) => ep.workspaceName === callState.internalWorkspace
-      );
-    }
-
-    if (callState.internalProject) {
-      filtered = filtered.filter(
-        (ep) => ep.projectName === callState.internalProject
-      );
-    }
-
-    const validFiltered = filtered.filter((ep) => ep && ep.folderName);
-    const folders = [...new Set(validFiltered.map((ep) => ep.folderName))];
-    return folders.sort();
+  // ✅ THÊM: Hàm để lấy suggestions dropdown state của một call
+  const getSuggestionsOpen = (callIndex) => {
+    return isTargetEndpointSuggestionsOpen[callIndex] || false;
   };
 
-  // ✅ FIX: Cập nhật hàm filter với safety checks
-  const getFilteredEndpoints = (callIndex) => {
-    const callState = getCallFilterState(callIndex);
-
-    if (callState.filterMode === "external") {
-      // External: hiện tất cả, nhưng deduplicate theo path
-      const uniqueByPath = new Map();
-      availableEndpoints.forEach((endpoint) => {
-        if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-          uniqueByPath.set(endpoint.path, endpoint);
-        }
-      });
-      return Array.from(uniqueByPath.values());
-    }
-
-    // Internal: lọc theo 3 dropdown đã chọn
-    let filtered = availableEndpoints.filter(
-      (ep) => ep && typeof ep === "object"
+  // ✅ CẬP NHẬT: Đơn giản hóa getFilteredEndpoints - không cần filter logic
+  const getFilteredEndpoints = () => {
+    // Hiển thị tất cả available endpoints, không cần filter
+    return availableEndpoints.filter(
+      (ep) => ep && typeof ep === "object" && ep.path
     );
-
-    // ✅ CẬP NHẬT: Xử lý cả empty string và "all"
-    if (callState.internalWorkspace && callState.internalWorkspace !== "all") {
-      filtered = filtered.filter(
-        (endpoint) => endpoint.workspaceName === callState.internalWorkspace
-      );
-    }
-
-    if (callState.internalProject && callState.internalProject !== "all") {
-      filtered = filtered.filter(
-        (endpoint) => endpoint.projectName === callState.internalProject
-      );
-    }
-
-    if (callState.internalFolder && callState.internalFolder !== "all") {
-      filtered = filtered.filter(
-        (endpoint) => endpoint.folderName === callState.internalFolder
-      );
-    }
-
-    // Deduplicate theo path trong filtered results
-    const uniqueByPath = new Map();
-    filtered.forEach((endpoint) => {
-      if (endpoint && endpoint.path && !uniqueByPath.has(endpoint.path)) {
-        uniqueByPath.set(endpoint.path, endpoint);
-      }
-    });
-
-    return Array.from(uniqueByPath.values());
   };
 
   // Cập nhật Status condition dropdown để sử dụng availableStatusCodes
@@ -261,21 +170,17 @@ export const ApiCallEditor = ({
     );
   };
 
-  // Cập nhật hàm để lấy full target endpoint
-  const getFullTargetEndpoint = (targetEndpoint) => {
-    if (!targetEndpoint || !currentEndpoint) return targetEndpoint;
-
-    // Tìm endpoint được chọn từ availableEndpoints
-    const selectedEndpoint = availableEndpoints.find(
-      (ep) => ep.path === targetEndpoint
-    );
+  // ✅ CẬP NHẬT: Sử dụng hàm helper để tạo full path
+  const getFullTargetEndpoint = (callIndex) => {
+    const selectedEndpoint = getSelectedEndpoint(callIndex);
 
     if (selectedEndpoint) {
-      // Sử dụng getFullPath để tạo full path
-      return getFullPath(selectedEndpoint.path);
+      return formatFullPath(selectedEndpoint);
     }
 
-    return targetEndpoint;
+    // ✅ FALLBACK: Nếu không có endpoint được chọn, dùng target_endpoint hiện tại
+    const call = nextCalls[callIndex];
+    return call?.target_endpoint || "";
   };
 
   // Khởi tạo JSON strings từ nextCalls
@@ -378,6 +283,19 @@ export const ApiCallEditor = ({
     }
   }, [nextCalls]);
 
+  // ✅ THÊM: Hàm để format full path
+  const formatFullPath = (endpoint) => {
+    if (!endpoint) return "";
+
+    const cleanWorkspaceName = endpoint.workspaceName.replace(/^\/+|\/+$/g, "");
+    const cleanProjectName = endpoint.projectName.replace(/^\/+|\/+$/g, "");
+    const cleanPath = endpoint.path.startsWith("/")
+      ? endpoint.path.substring(1)
+      : endpoint.path;
+
+    return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
+  };
+
   // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpointsForDisplay
   const validateTargetEndpointsForDisplay = (currentCalls = nextCalls) => {
     const newErrors = {};
@@ -434,57 +352,109 @@ export const ApiCallEditor = ({
     return true;
   };
 
-  // Trong AdvancedComponents.jsx - sửa hàm validateTargetEndpoints
+  // ✅ CẬP NHẬT: Validation sử dụng ID thay vì path
   const validateTargetEndpoints = () => {
-    const endpointGroups = {};
+    const errors = {};
 
-    // Chỉ nhóm các calls đã được save (có id và id không phải temporary)
     nextCalls.forEach((call, index) => {
-      const isSavedCall =
-        call.id &&
-        typeof call.id !== "string" &&
-        !call.id.toString().startsWith("temp_");
+      // Kiểm tra format /workspace/project/path
+      const targetEndpoint = (() => {
+        const selectedEp = getSelectedEndpoint(index);
+        if (selectedEp) {
+          return formatFullPath(selectedEp);
+        } else if (call.target_endpoint) {
+          return call.target_endpoint;
+        } else {
+          return "";
+        }
+      })();
 
-      if (!call.target_endpoint || !call.method || !isSavedCall) return;
-
-      if (!endpointGroups[call.target_endpoint]) {
-        endpointGroups[call.target_endpoint] = [];
+      // ✅ VALIDATION: Kiểm tra có endpoint nào được chọn không
+      const selectedEp = getSelectedEndpoint(index);
+      if (!selectedEp) {
+        errors[index] = "Please select a valid endpoint";
+        return;
       }
-      endpointGroups[call.target_endpoint].push({
-        index,
-        method: call.method,
-        id: call.id,
+
+      // ✅ VALIDATION: Kiểm tra format /workspace/project/path
+      if (!targetEndpoint.match(/^\/[^/]+\/[^/]+\/.+/)) {
+        errors[index] = "Endpoint must follow format /workspace/project/path";
+        return;
+      }
+
+      // ✅ VALIDATION: Kiểm tra endpoint có tồn tại trong danh sách không
+      const matchingEndpoint = availableEndpoints.find((ep) => {
+        return formatFullPath(ep) === targetEndpoint;
       });
+
+      if (!matchingEndpoint) {
+        errors[index] = "Invalid endpoint. Please select from suggestions.";
+      }
     });
 
-    // BỎ KIỂM TRA TRÙNG METHOD - không cần check duplicate methods nữa
-    // Mỗi endpoint có thể có nhiều calls với cùng method
-
-    return true;
+    setEndpointValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Cập nhật hàm handleSave
+  // ✅ THÊM: useEffect để handle click outside cho suggestions dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Kiểm tra tất cả các dropdown đang mở
+      Object.keys(isTargetEndpointSuggestionsOpen).forEach((callIndex) => {
+        if (isTargetEndpointSuggestionsOpen[callIndex]) {
+          const targetEndpointInput = document.getElementById(
+            `target-endpoint-${callIndex}`
+          );
+          const suggestionsDropdown = document.querySelector(
+            `[data-dropdown="target-endpoint-${callIndex}"]`
+          );
+
+          // Đóng dropdown nếu click bên ngoài input hoặc dropdown
+          if (targetEndpointInput && suggestionsDropdown) {
+            if (
+              !targetEndpointInput.contains(event.target) &&
+              !suggestionsDropdown.contains(event.target)
+            ) {
+              updateSuggestionsOpen(parseInt(callIndex), false);
+            }
+          }
+        }
+      });
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isTargetEndpointSuggestionsOpen]);
+
+  // ✅ CẬP NHẬT: Logic save với full target endpoints
   const handleSave = () => {
     // Kiểm tra tất cả JSON trước khi lưu
     if (!validateAllJson()) {
-      return; // Không tiếp tức nếu có lỗi JSON
+      return; // Không tiếp tục nếu có lỗi JSON
     }
 
     // Kiểm tra target endpoints và methods
     if (!validateTargetEndpoints()) {
+      toast.error("Please select valid endpoints for all API calls");
       return; // Không tiếp tục nếu có lỗi validate endpoint
     }
 
-    // Chuẩn bị payload đúng định dạng
+    // Chuẩn bị payload với full target endpoints
     const payload = {
       advanced_config: {
-        nextCalls: nextCalls.map((call) => ({
-          id: Number(call.id),
-          target_endpoint: call.target_endpoint,
-          method: call.method,
-          body: call.body,
-          condition: Number(call.condition),
-        })),
+        nextCalls: nextCalls.map((call, index) => {
+          const fullTargetEndpoint = getFullTargetEndpoint(index);
+
+          return {
+            id: call.id || undefined, // Chỉ có ID cho calls đã được save
+            target_endpoint: fullTargetEndpoint, // Sử dụng full path
+            method: call.method,
+            body: call.body,
+            condition: Number(call.condition),
+          };
+        }),
       },
     };
 
@@ -508,11 +478,54 @@ export const ApiCallEditor = ({
         toast.error(error.message);
       });
   };
-
   // Cập nhật hàm validateTargetEndpoints khi nextCalls thay đổi
   useEffect(() => {
     validateTargetEndpointsForDisplay();
   }, [nextCalls, savedCalls]);
+
+  // ✅ THÊM: Khởi tạo selectedEndpointIds khi nextCalls thay đổi (chỉ 1 lần duy nhất)
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    // Chỉ khởi tạo 1 lần duy nhất khi có dữ liệu
+    if (
+      !isInitialized &&
+      nextCalls.length > 0 &&
+      availableEndpoints.length > 0
+    ) {
+      const newSelectedEndpointIds = {};
+
+      nextCalls.forEach((call, index) => {
+        // Nếu call có target_endpoint (full path từ backend)
+        if (call.target_endpoint) {
+          // Tìm endpoint trong availableEndpoints có workspace/project/path match với target_endpoint
+          const matchingEndpoint = availableEndpoints.find((ep) => {
+            // Tạo full path từ endpoint data
+            const cleanWorkspaceName = ep.workspaceName.replace(
+              /^\/+|\/+$/g,
+              ""
+            );
+            const cleanProjectName = ep.projectName.replace(/^\/+|\/+$/g, "");
+            const cleanPath = ep.path.startsWith("/")
+              ? ep.path.substring(1)
+              : ep.path;
+            const fullPath = `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
+
+            return fullPath === call.target_endpoint;
+          });
+
+          if (matchingEndpoint) {
+            newSelectedEndpointIds[index] = matchingEndpoint.id;
+          }
+        }
+      });
+
+      if (Object.keys(newSelectedEndpointIds).length > 0) {
+        setSelectedEndpointIds(newSelectedEndpointIds);
+      }
+      setIsInitialized(true);
+    }
+  }, [nextCalls, availableEndpoints, isInitialized]);
 
   return (
     <Card className="px-16 py-6 border-0 rounded-lg">
@@ -680,32 +693,6 @@ export const ApiCallEditor = ({
 
               {/* Text "External call" và nút toggle, delete */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-black">
-                  External call
-                </span>
-                <button
-                  onClick={() => {
-                    const currentState = getCallFilterState(index);
-                    const newMode =
-                      currentState.filterMode === "external"
-                        ? "internal"
-                        : "external";
-                    updateCallFilterState(index, { filterMode: newMode });
-                  }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2 ${
-                    getCallFilterState(index).filterMode === "internal"
-                      ? "bg-yellow-300"
-                      : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      getCallFilterState(index).filterMode === "internal"
-                        ? "translate-x-6"
-                        : "translate-x-1"
-                    }`}
-                  />
-                </button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -717,310 +704,278 @@ export const ApiCallEditor = ({
               </div>
             </div>
 
-            <div className="space-y-4 pb-8 border-b border-[#CBD5E1]">
-              {/* Internal Filter UI trong ApiCallEditor - 3 Dropdowns */}
-              {getCallFilterState(index).filterMode === "internal" && (
-                <div className="flex items-center gap-2 p-3 rounded-md max-w-[951px]">
-                  <span className="text-l font-semibold text-black whitespace-nowrap">
-                    Filter
-                  </span>
-                  <div className="w-px h-8 bg-yellow-300"></div>
+            {/* Target Endpoint */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                  Target Endpoint
+                </label>
 
-                  {/* Workspace Dropdown */}
-                  <div className="flex-1 min-w-0">
-                    <Select
-                      value={getCallFilterState(index).internalWorkspace}
-                      onValueChange={(value) => {
-                        updateCallFilterState(index, {
-                          internalWorkspace: value === "all" ? "" : value,
-                          // Reset project và folder khi workspace thay đổi
-                          internalProject: "",
-                          internalFolder: "",
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs">
-                        <SelectValue
-                          placeholder="Workspace"
-                          className="text-xs truncate"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-40">
-                        <SelectItem value="all">All Workspaces</SelectItem>
-                        {getInternalWorkspaceOptions(index).map((workspace) => (
-                          <SelectItem key={workspace} value={workspace}>
-                            {workspace}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Project Dropdown - Disable khi chưa chọn workspace */}
-                  <div className="flex-1 min-w-0">
-                    <Select
-                      value={getCallFilterState(index).internalProject}
-                      onValueChange={(value) => {
-                        updateCallFilterState(index, {
-                          internalProject: value === "all" ? "" : value,
-                          // Reset folder khi project thay đổi
-                          internalFolder: "",
-                        });
-                      }}
-                      disabled={!getCallFilterState(index).internalWorkspace}
-                    >
-                      <SelectTrigger
-                        className={`w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs ${
-                          !getCallFilterState(index).internalWorkspace
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                      >
-                        <SelectValue
-                          placeholder="Project"
-                          className="text-xs truncate"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-40">
-                        <SelectItem value="all">All Projects</SelectItem>
-                        {getInternalProjectOptions(index).map((project) => (
-                          <SelectItem key={project} value={project}>
-                            {project}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Folder Dropdown - Disable khi chưa chọn workspace và project */}
-                  <div className="flex-1 min-w-0">
-                    <Select
-                      value={getCallFilterState(index).internalFolder}
-                      onValueChange={(value) => {
-                        updateCallFilterState(index, {
-                          internalFolder: value === "all" ? "" : value,
-                        });
-                      }}
-                      disabled={
-                        !getCallFilterState(index).internalWorkspace ||
-                        !getCallFilterState(index).internalProject
+                <div className="relative flex-1 max-w-[801px]">
+                  {/* ✅ THAY ĐỔI: Input field thay vì Select dropdown */}
+                  {/* ✅ Input field thay vì Select dropdown */}
+                  <Input
+                    id={`target-endpoint-${index}`}
+                    value={(() => {
+                      // Hiển thị full path /workspace/project/path
+                      const selectedEp = getSelectedEndpoint(index);
+                      if (selectedEp) {
+                        return formatFullPath(selectedEp);
+                      } else if (call.target_endpoint) {
+                        return call.target_endpoint;
+                      } else {
+                        return "";
                       }
-                    >
-                      <SelectTrigger
-                        className={`w-full h-[30px] border-[#CBD5E1] rounded-sm text-xs ${
-                          !getCallFilterState(index).internalWorkspace ||
-                          !getCallFilterState(index).internalProject
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                      >
-                        <SelectValue
-                          placeholder="Folder"
-                          className="text-xs truncate"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-40">
-                        <SelectItem value="all">All Folders</SelectItem>
-                        {getInternalFolderOptions(index).map((folder) => (
-                          <SelectItem key={folder} value={folder}>
-                            {folder}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-              {/* Target Endpoint */}
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-sm font-medium text-[#000000]">
-                    Target Endpoint
-                  </label>
+                    })()}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
 
-                  <div className="relative flex-1 max-w-[801px]">
-                    <Select
-                      value={call.target_endpoint}
-                      onValueChange={(value) => {
-                        // Khi chọn từ dropdown, concat với full path hiện tại
-                        const fullTargetPath = getFullTargetEndpoint(value);
+                      // ✅ CẬP NHẬT: Tìm endpoint match với full path user nhập
+                      const matchingEndpoint = availableEndpoints.find((ep) => {
+                        return formatFullPath(ep) === newValue;
+                      });
+
+                      if (matchingEndpoint) {
+                        // Nếu tìm thấy match, lưu ID
+                        updateSelectedEndpointId(index, matchingEndpoint.id);
                         handleNextCallChange(
                           index,
                           "target_endpoint",
-                          fullTargetPath
+                          newValue
                         );
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
-                          endpointValidationErrors[index]
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      >
-                        <SelectValue placeholder="Select endpoint">
-                          {call.target_endpoint ? (
-                            <span className="font-medium text-sm">
-                              {getFilteredEndpoints(index).find(
-                                (ep) => ep.path === call.target_endpoint
-                              )?.path || call.target_endpoint}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">
-                              Select endpoint
-                            </span>
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Hiển thị danh sách endpoints đã được filter */}
-                        {getFilteredEndpoints(index).map((endpoint) => (
-                          <SelectItem key={endpoint.id} value={endpoint.path}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {endpoint.path}
-                              </span>
-                              {/* Bỏ hiển thị method và name */}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      } else {
+                        // Nếu không match, reset ID và lưu giá trị user nhập
+                        updateSelectedEndpointId(index, null);
+                        handleNextCallChange(
+                          index,
+                          "target_endpoint",
+                          newValue
+                        );
+                      }
 
-                    {/* Hiển thị lỗi validation */}
-                    {endpointValidationErrors[index] && (
-                      <div className="text-red-400 text-xs mt-1">
-                        {endpointValidationErrors[index]}
+                      // Mở dropdown khi user nhập
+                      if (newValue) {
+                        updateSuggestionsOpen(index, true);
+                      }
+                    }}
+                    onFocus={() => {
+                      // Mở dropdown khi focus vào input (nếu có data)
+                      if (getFilteredEndpoints(index).length > 0) {
+                        updateSuggestionsOpen(index, true);
+                      }
+                    }}
+                    onBlur={() => {
+                      // Delay đóng để có thể click vào suggestion
+                      setTimeout(() => {
+                        updateSuggestionsOpen(index, false);
+                      }, 200);
+                    }}
+                    placeholder="Enter endpoint path (e.g., /workspace/project/path)"
+                    className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                      endpointValidationErrors[index] ? "border-red-500" : ""
+                    }`}
+                  />
+
+                  {/* ✅ Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
+                  {getSuggestionsOpen(index) &&
+                    getFilteredEndpoints(index).length > 0 && (
+                      <div
+                        data-dropdown={`target-endpoint-${index}`}
+                        className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                      >
+                        {getFilteredEndpoints(index)
+                          .filter((endpoint) => {
+                            const inputValue = (() => {
+                              const selectedEp = getSelectedEndpoint(index);
+                              if (selectedEp) {
+                                return selectedEp.path;
+                              } else if (call.target_endpoint) {
+                                return call.target_endpoint;
+                              } else {
+                                return "";
+                              }
+                            })();
+
+                            // Lọc gợi ý dựa trên input
+                            return (
+                              endpoint.path
+                                .toLowerCase()
+                                .includes(inputValue.toLowerCase()) ||
+                              inputValue === ""
+                            );
+                          })
+                          .slice(0, 10) // Giới hạn 10 gợi ý
+                          .map((endpoint) => (
+                            <button
+                              key={endpoint.id}
+                              type="button"
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                              onClick={() => {
+                                const fullPath = formatFullPath(endpoint);
+
+                                // ✅ ĐIỀN full path vào input thay vì chỉ path
+                                handleNextCallChange(
+                                  index,
+                                  "target_endpoint",
+                                  fullPath
+                                );
+                                // Lưu ID để tạo full path
+                                updateSelectedEndpointId(index, endpoint.id);
+                                // Đóng dropdown
+                                updateSuggestionsOpen(index, false);
+                              }}
+                              onMouseDown={(e) => {
+                                // Ngăn input mất focus trước khi click
+                                e.preventDefault();
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">
+                                  {formatFullPath(endpoint)}{" "}
+                                  {/* ✅ HIỂN THỊ full path */}
+                                </span>
+                                {/* Thông tin workspace/project */}
+                                <span className="text-xs text-gray-500">
+                                  {endpoint.workspaceName} /{" "}
+                                  {endpoint.projectName}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-              {/* Method */}
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-sm font-medium text-[#000000]">
-                    Method
-                  </label>
-                  <div className="relative flex-1 max-w-[801px]">
-                    <Select
-                      value={call.method}
-                      onValueChange={(value) =>
-                        handleNextCallChange(index, "method", value)
-                      }
-                    >
-                      <SelectTrigger
-                        className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
-                          endpointValidationErrors[index]
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      >
-                        <SelectValue placeholder="Select method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GET">GET</SelectItem>
-                        <SelectItem value="POST">POST</SelectItem>
-                        <SelectItem value="PUT">PUT</SelectItem>
-                        <SelectItem value="DELETE">DELETE</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              {/* Request Body */}
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between items-start">
-                  <label className="w-[130px] text-sm font-medium text-[#000000]">
-                    Request Body
-                  </label>
-                </div>
-                <div className="flex-1 w-full relative">
-                  <div className="relative">
-                    <Editor
-                      value={
-                        jsonStrings[index] ||
-                        '{\n  "orderId": "{{response.body.orderId}}"\n}'
-                      }
-                      onValueChange={(code) => handleJsonChange(index, code)}
-                      highlight={(code) => highlight(code, languages.json)}
-                      padding={10}
-                      className="custom-json-editor"
-                      style={{
-                        fontFamily: '"Fira code", "Fira Mono", monospace',
-                        fontSize: 12,
-                        minHeight: "124px",
-                        maxHeight: "200px",
-                        overflow: "auto",
-                        border: jsonErrors[index]
-                          ? "1px solid #ef4444"
-                          : "1px solid #CBD5E1",
-                        borderRadius: "0.375rem",
-                        backgroundColor: "#101728",
-                        color: "white",
-                      }}
-                      textareaClassName="focus:outline-none"
-                    />
 
-                    {/* JSON Editor controls */}
-                    <div className="absolute top-2 right-2 flex space-x-2 z-10">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          try {
-                            const formatted = JSON.stringify(
-                              JSON.parse(jsonStrings[index]),
-                              null,
-                              2
-                            );
-                            handleJsonChange(index, formatted);
-                          } catch {
-                            toast.error("Invalid JSON format");
-                          }
-                        }}
-                      >
-                        <Code className="mr-1 h-4 w-4" /> Format
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Hiển thị lỗi JSON */}
-                  {jsonErrors[index] && (
-                    <div className="text-red-400 text-xs mt-1 pl-2">
-                      Invalid JSON: {jsonErrors[index]}
+                  {/* Hiển thị lỗi validation */}
+                  {endpointValidationErrors[index] && (
+                    <div className="text-red-400 text-xs mt-1">
+                      {endpointValidationErrors[index]}
                     </div>
                   )}
                 </div>
               </div>
-              {/* Status condition */}
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="w-[130px] text-sm font-medium text-[#000000]">
-                    Status condition
-                  </label>
-                  <div className="relative flex-1 max-w-[801px]">
-                    <Select
-                      value={String(call.condition)}
-                      onValueChange={(value) =>
-                        handleNextCallChange(index, "condition", value)
-                      }
+            </div>
+            {/* Method */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                  Method
+                </label>
+                <div className="relative flex-1 max-w-[801px]">
+                  <Select
+                    value={call.method}
+                    onValueChange={(value) =>
+                      handleNextCallChange(index, "method", value)
+                    }
+                  >
+                    <SelectTrigger
+                      className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                        endpointValidationErrors[index] ? "border-red-500" : ""
+                      }`}
                     >
-                      <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
-                        <SelectValue placeholder="Select condition" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60 overflow-y-auto">
-                        {/* Sử dụng availableStatusCodes thay vì statusCodes từ constants */}
-                        {getStatusConditionOptions().map((status) => (
-                          <SelectItem key={status.code} value={status.code}>
-                            {status.code} - {status.description.split("–")[0]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GET">GET</SelectItem>
+                      <SelectItem value="POST">POST</SelectItem>
+                      <SelectItem value="PUT">PUT</SelectItem>
+                      <SelectItem value="DELETE">DELETE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            {/* Request Body */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex justify-between items-start">
+                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                  Request Body
+                </label>
+              </div>
+              <div className="flex-1 w-full relative">
+                <div className="relative">
+                  <Editor
+                    value={
+                      jsonStrings[index] ||
+                      '{\n  "orderId": "{{response.body.orderId}}"\n}'
+                    }
+                    onValueChange={(code) => handleJsonChange(index, code)}
+                    highlight={(code) => highlight(code, languages.json)}
+                    padding={10}
+                    className="custom-json-editor"
+                    style={{
+                      fontFamily: '"Fira code", "Fira Mono", monospace',
+                      fontSize: 12,
+                      minHeight: "124px",
+                      maxHeight: "200px",
+                      overflow: "auto",
+                      border: jsonErrors[index]
+                        ? "1px solid #ef4444"
+                        : "1px solid #CBD5E1",
+                      borderRadius: "0.375rem",
+                      backgroundColor: "#101728",
+                      color: "white",
+                    }}
+                    textareaClassName="focus:outline-none"
+                  />
+
+                  {/* JSON Editor controls */}
+                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          const formatted = JSON.stringify(
+                            JSON.parse(jsonStrings[index]),
+                            null,
+                            2
+                          );
+                          handleJsonChange(index, formatted);
+                        } catch {
+                          toast.error("Invalid JSON format");
+                        }
+                      }}
+                    >
+                      <Code className="mr-1 h-4 w-4" /> Format
+                    </Button>
                   </div>
+                </div>
+
+                {/* Hiển thị lỗi JSON */}
+                {jsonErrors[index] && (
+                  <div className="text-red-400 text-xs mt-1 pl-2">
+                    Invalid JSON: {jsonErrors[index]}
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Status condition */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                  Status condition
+                </label>
+                <div className="relative flex-1 max-w-[801px]">
+                  <Select
+                    value={String(call.condition)}
+                    onValueChange={(value) =>
+                      handleNextCallChange(index, "condition", value)
+                    }
+                  >
+                    <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                      <SelectValue placeholder="Select condition" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {/* Sử dụng availableStatusCodes thay vì statusCodes từ constants */}
+                      {getStatusConditionOptions().map((status) => (
+                        <SelectItem key={status.code} value={status.code}>
+                          {status.code} - {status.description.split("–")[0]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
