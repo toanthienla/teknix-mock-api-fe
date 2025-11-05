@@ -360,8 +360,34 @@ const DashboardPage = () => {
             };
           });
 
-          setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+          // ✅ KIỂM TRA: Chỉ cập nhật nếu chưa có API call nào có ID
+          const hasApiCallsWithIds = nextCalls.some((call) => call.id);
+          if (!hasApiCallsWithIds) {
+            setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+          }
         } else {
+          // ✅ KIỂM TRA: Chỉ fallback nếu chưa có API call nào có ID
+          const hasApiCallsWithIds = nextCalls.some((call) => call.id);
+          if (!hasApiCallsWithIds) {
+            setNewApiCallAvailableStatusCodes([
+              { code: "500", description: "Internal Server Error." },
+              { code: "501", description: "Not Implemented." },
+              { code: "502", description: "Bad Gateway." },
+              { code: "503", description: "Service Unavailable." },
+              { code: "504", description: "Gateway Timeout." },
+              { code: "505", description: "HTTP Version Not Supported." },
+            ]);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch status codes from endpoint responses:",
+          error
+        );
+        // ✅ KIỂM TRA: Chỉ fallback nếu chưa có API call nào có ID
+        const hasApiCallsWithIds = nextCalls.some((call) => call.id);
+        if (!hasApiCallsWithIds) {
           setNewApiCallAvailableStatusCodes([
             { code: "500", description: "Internal Server Error." },
             { code: "501", description: "Not Implemented." },
@@ -371,23 +397,30 @@ const DashboardPage = () => {
             { code: "505", description: "HTTP Version Not Supported." },
           ]);
         }
-      })
-      .catch((error) => {
-        console.error(
-          "Failed to fetch status codes from endpoint responses:",
-          error
-        );
-        // Fallback về default 500 codes
-        setNewApiCallAvailableStatusCodes([
-          { code: "500", description: "Internal Server Error." },
-          { code: "501", description: "Not Implemented." },
-          { code: "502", description: "Bad Gateway." },
-          { code: "503", description: "Service Unavailable." },
-          { code: "504", description: "Gateway Timeout." },
-          { code: "505", description: "HTTP Version Not Supported." },
-        ]);
       });
-  }, [currentEndpointId, isStateful]);
+  }, [currentEndpointId, isStateful, nextCalls]);
+
+  // ✅ CẬP NHẬT: Cập nhật status condition options khi method hoặc nextCalls thay đổi
+  useEffect(() => {
+    // Kiểm tra có API call nào đã có ID trong nextCalls không
+    const hasApiCallsWithIds = nextCalls.some((call) => call.id);
+
+    if (hasApiCallsWithIds) {
+      // Có API call đã có ID → sử dụng quy luật theo method
+      setNewApiCallAvailableStatusCodes(
+        getStatusCodesByMethod(newApiCallMethod || "GET")
+      );
+    } else {
+      // Chưa có API call nào có ID → sử dụng endpoint responses nếu có
+      if (newApiCallAvailableStatusCodes.length === 0) {
+        // Nếu chưa có endpoint responses, sử dụng quy luật method
+        setNewApiCallAvailableStatusCodes(
+          getStatusCodesByMethod(newApiCallMethod || "GET")
+        );
+      }
+      // Nếu đã có endpoint responses, giữ nguyên
+    }
+  }, [newApiCallMethod, nextCalls, newApiCallAvailableStatusCodes.length]);
 
   // ✅ ĐỞN GIẢN HÓA: Bỏ filter logic, hiển thị tất cả endpoints
   const getFilteredEndpoints = () => {
@@ -486,7 +519,7 @@ const DashboardPage = () => {
         return;
       }
 
-      // ✅ CẬP NHẬT: Lấy full target endpoint bằng ID
+      // Lấy full target endpoint
       const fullTargetEndpoint = getNewApiCallFullTargetEndpoint(
         newApiCallTargetEndpointId
       );
@@ -495,6 +528,10 @@ const DashboardPage = () => {
         toast.error("Please select a valid endpoint");
         return;
       }
+
+      // ✅ KIỂM TRA LẠI ID nhỏ nhất trước khi tạo
+      const minimumId = getMinimumId(nextCalls);
+      console.log(`Current minimum ID: ${minimumId}`);
 
       // Chuẩn bị payload (bao gồm id cho các API Call hiện có)
       const payload = {
@@ -675,6 +712,80 @@ const DashboardPage = () => {
           toast.error("Failed to copy path");
         });
     }
+  };
+
+  // ✅ THÊM: Hàm tìm ID nhỏ nhất trong nextCalls
+  const getMinimumId = (calls) => {
+    if (!calls || calls.length === 0) return null;
+
+    const validIds = calls
+      .filter((call) => call.id && typeof call.id === "number")
+      .map((call) => call.id);
+
+    return validIds.length > 0 ? Math.min(...validIds) : null;
+  };
+
+  // ✅ THÊM: Hàm lấy status codes theo method (trừ ID nhỏ nhất)
+  const getStatusCodesByMethod = (method) => {
+    const default500Codes = [
+      { code: "500", description: "Internal Server Error." },
+      { code: "501", description: "Not Implemented." },
+      { code: "502", description: "Bad Gateway." },
+      { code: "503", description: "Service Unavailable." },
+      { code: "504", description: "Gateway Timeout." },
+      { code: "505", description: "HTTP Version Not Supported." },
+    ];
+
+    switch (method) {
+      case "GET":
+        return [
+          { code: "200", description: "OK." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      case "POST":
+        return [
+          { code: "201", description: "Created." },
+          { code: "400", description: "Bad Request." },
+          { code: "409", description: "Conflict." },
+          ...default500Codes,
+        ];
+      case "PUT":
+        return [
+          { code: "200", description: "OK." },
+          { code: "400", description: "Bad Request." },
+          { code: "409", description: "Conflict." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      case "DELETE":
+        return [
+          { code: "200", description: "OK." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      default:
+        return default500Codes;
+    }
+  };
+
+  // ✅ THÊM: Hàm lấy status codes cho New API Call dialog
+  const getNewApiCallStatusConditionOptions = () => {
+    // KIỂM TRA: Có API call nào đã có ID trong nextCalls không
+    const hasApiCallsWithIds = nextCalls.some((call) => call.id);
+
+    // Nếu có API call đã có ID, sử dụng quy luật theo method
+    if (hasApiCallsWithIds) {
+      return getStatusCodesByMethod(newApiCallMethod);
+    }
+
+    // Nếu nextCalls rỗng hoặc không có ID nào, sử dụng endpoint responses
+    if (newApiCallAvailableStatusCodes.length > 0) {
+      return newApiCallAvailableStatusCodes;
+    }
+
+    // Fallback về quy luật method nếu chưa có endpoint responses
+    return getStatusCodesByMethod(newApiCallMethod);
   };
 
   // Thêm state cho dialog xác nhận reset
@@ -4048,8 +4159,8 @@ const DashboardPage = () => {
                           />
                         </SelectTrigger>
                         <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
-                          {/* Sử dụng status codes từ endpoint responses + 500 default */}
-                          {newApiCallAvailableStatusCodes
+                          {/* ✅ CẬP NHẬT: Sử dụng logic mới */}
+                          {getNewApiCallStatusConditionOptions()
                             .sort((a, b) => parseInt(a.code) - parseInt(b.code))
                             .map((status) => (
                               <SelectItem key={status.code} value={status.code}>

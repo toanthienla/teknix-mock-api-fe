@@ -50,6 +50,10 @@ export const ApiCallEditor = ({
   const [isTargetEndpointSuggestionsOpen, setIsTargetEndpointSuggestionsOpen] =
     useState({});
 
+  // ✅ THÊM: State riêng cho Status Condition validation
+  const [endpointValidationErrors, setEndpointValidationErrors] = useState({});
+  const [statusConditionErrors, setStatusConditionErrors] = useState({});
+
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -108,6 +112,61 @@ export const ApiCallEditor = ({
     }
   };
 
+  // ✅ THÊM: Hàm tìm ID nhỏ nhất trong nextCalls
+  const getMinimumId = (calls) => {
+    if (!calls || calls.length === 0) return null;
+
+    const validIds = calls
+      .filter((call) => call.id && typeof call.id === "number")
+      .map((call) => call.id);
+
+    return validIds.length > 0 ? Math.min(...validIds) : null;
+  };
+
+  // ✅ THÊM: Hàm lấy status codes theo method (trừ ID nhỏ nhất)
+  const getStatusCodesByMethod = (method) => {
+    const default500Codes = [
+      { code: "500", description: "Internal Server Error." },
+      { code: "501", description: "Not Implemented." },
+      { code: "502", description: "Bad Gateway." },
+      { code: "503", description: "Service Unavailable." },
+      { code: "504", description: "Gateway Timeout." },
+      { code: "505", description: "HTTP Version Not Supported." },
+    ];
+
+    switch (method) {
+      case "GET":
+        return [
+          { code: "200", description: "OK." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      case "POST":
+        return [
+          { code: "201", description: "Created." },
+          { code: "400", description: "Bad Request." },
+          { code: "409", description: "Conflict." },
+          ...default500Codes,
+        ];
+      case "PUT":
+        return [
+          { code: "200", description: "OK." },
+          { code: "400", description: "Bad Request." },
+          { code: "409", description: "Conflict." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      case "DELETE":
+        return [
+          { code: "200", description: "OK." },
+          { code: "404", description: "Not Found." },
+          ...default500Codes,
+        ];
+      default:
+        return default500Codes;
+    }
+  };
+
   // Thêm hàm chèn template cho Request Body (copy to clipboard)
   const insertRequestBodyTemplate = async (template) => {
     try {
@@ -162,12 +221,21 @@ export const ApiCallEditor = ({
     );
   };
 
-  // Cập nhật Status condition dropdown để sử dụng availableStatusCodes
-  const getStatusConditionOptions = () => {
-    // Sắp xếp theo thứ tự status code tăng dần
-    return [...availableStatusCodes].sort(
-      (a, b) => parseInt(a.code) - parseInt(b.code)
-    );
+  // ✅ CẬP NHẬT: Hàm lấy status condition options dựa trên ID
+  const getStatusConditionOptions = (callIndex) => {
+    const minimumId = getMinimumId(nextCalls);
+    const currentCall = nextCalls[callIndex];
+
+    // Nếu call hiện tại có ID nhỏ nhất hoặc chưa có ID, sử dụng availableStatusCodes
+    if (!currentCall.id || currentCall.id === minimumId) {
+      // Sắp xếp theo thứ tự status code tăng dần
+      return [...availableStatusCodes].sort(
+        (a, b) => parseInt(a.code) - parseInt(b.code)
+      );
+    }
+
+    // Nếu không phải ID nhỏ nhất, sử dụng quy luật theo method
+    return getStatusCodesByMethod(currentCall.method);
   };
 
   // ✅ CẬP NHẬT: Sử dụng hàm helper để tạo full path
@@ -230,6 +298,39 @@ export const ApiCallEditor = ({
   };
 
   const handleRemoveNextCall = (index) => {
+    // ✅ KIỂM TRA: API call có ID nhỏ nhất trước khi xóa không
+    const callToRemove = nextCalls[index];
+    const minimumId = getMinimumId(nextCalls);
+    const isRemovingMinimumId =
+      callToRemove.id && callToRemove.id === minimumId;
+
+    // Lưu thông tin để xử lý sau khi xóa
+    let newMinimumId = null;
+    let newMinimumIdCallIndex = null;
+
+    if (isRemovingMinimumId) {
+      // Tạo danh sách IDs còn lại sau khi xóa
+      const remainingCalls = nextCalls.filter((_, i) => i !== index);
+      const remainingIds = remainingCalls
+        .filter((call) => call.id && typeof call.id === "number")
+        .map((call) => call.id);
+
+      if (remainingIds.length > 0) {
+        newMinimumId = Math.min(...remainingIds);
+        // Tìm index của call có ID nhỏ nhất mới
+        newMinimumIdCallIndex = remainingCalls.findIndex(
+          (call) => call.id === newMinimumId
+        );
+        if (newMinimumIdCallIndex !== -1) {
+          newMinimumIdCallIndex =
+            newMinimumIdCallIndex < index
+              ? newMinimumIdCallIndex
+              : newMinimumIdCallIndex;
+        }
+      }
+    }
+
+    // Thực hiện xóa call
     const updatedCalls = [...nextCalls];
     updatedCalls.splice(index, 1);
     setNextCalls(updatedCalls);
@@ -238,14 +339,72 @@ export const ApiCallEditor = ({
     setJsonStrings((prev) => {
       const newStrings = { ...prev };
       delete newStrings[index];
-      return newStrings;
+
+      // Re-index các keys sau index bị xóa
+      const reindexedStrings = {};
+      Object.keys(newStrings).forEach((key) => {
+        const keyIndex = parseInt(key);
+        if (keyIndex > index) {
+          reindexedStrings[keyIndex - 1] = newStrings[key];
+        } else {
+          reindexedStrings[keyIndex] = newStrings[key];
+        }
+      });
+      return reindexedStrings;
     });
 
     setJsonErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[index];
-      return newErrors;
+
+      // Re-index các errors sau index bị xóa
+      const reindexedErrors = {};
+      Object.keys(newErrors).forEach((key) => {
+        const keyIndex = parseInt(key);
+        if (keyIndex > index) {
+          reindexedErrors[keyIndex - 1] = newErrors[key];
+        } else {
+          reindexedErrors[keyIndex] = newErrors[key];
+        }
+      });
+      return reindexedErrors;
     });
+
+    // ✅ XỬ LÝ: Reset status condition nếu xóa ID nhỏ nhất
+    if (
+      isRemovingMinimumId &&
+      newMinimumId !== null &&
+      newMinimumIdCallIndex !== null
+    ) {
+      // Set status condition về rỗng cho call mới có ID nhỏ nhất
+      const finalUpdatedCalls = [...updatedCalls];
+      finalUpdatedCalls[newMinimumIdCallIndex] = {
+        ...finalUpdatedCalls[newMinimumIdCallIndex],
+        condition: "", // Reset về rỗng
+      };
+      setNextCalls(finalUpdatedCalls);
+
+      // ✅ THÊM: Cập nhật validation errors để hiển thị lỗi cho call mới
+      setEndpointValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        // Xóa lỗi cũ và thêm lỗi mới cho call có ID nhỏ nhất mới
+        Object.keys(newErrors).forEach((key) => {
+          const keyIndex = parseInt(key);
+          if (keyIndex >= index) {
+            delete newErrors[keyIndex];
+          }
+        });
+        // Thêm lỗi cho call mới có ID nhỏ nhất
+        newErrors[newMinimumIdCallIndex] = "Status condition is required";
+        return newErrors;
+      });
+
+      // Hiển thị thông báo cho user
+      toast.info(
+        `API call with ID ${newMinimumId} is now the minimum ID. Please select a new status condition.`,
+        { autoClose: 5000 }
+      );
+    }
   };
 
   const handleNextCallChange = (index, field, value) => {
@@ -262,10 +421,22 @@ export const ApiCallEditor = ({
         validateTargetEndpointsForDisplay(updatedCalls);
       }, 0);
     }
-  };
 
-  // Thêm state để lưu trữ lỗi validation
-  const [endpointValidationErrors, setEndpointValidationErrors] = useState({});
+    // ✅ THÊM: Clear validation error khi user chọn status condition
+    if (field === "condition" && value && value !== "") {
+      setEndpointValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+
+      setStatusConditionErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[index];
+        return newErrors;
+      });
+    }
+  };
 
   // Thêm state để theo dõi các calls đã được save (original calls)
   const [savedCalls, setSavedCalls] = useState([]);
@@ -354,9 +525,15 @@ export const ApiCallEditor = ({
 
   // ✅ CẬP NHẬT: Validation sử dụng ID thay vì path
   const validateTargetEndpoints = () => {
-    const errors = {};
+    const endpointErrors = {};
+    const statusConditionErr = {};
 
     nextCalls.forEach((call, index) => {
+      // ✅ THÊM: Kiểm tra status condition không được rỗng
+      if (!call.condition || call.condition === "") {
+        statusConditionErr[index] = "Status condition is required";
+      }
+
       // Kiểm tra format /workspace/project/path
       const targetEndpoint = (() => {
         const selectedEp = getSelectedEndpoint(index);
@@ -372,13 +549,14 @@ export const ApiCallEditor = ({
       // ✅ VALIDATION: Kiểm tra có endpoint nào được chọn không
       const selectedEp = getSelectedEndpoint(index);
       if (!selectedEp) {
-        errors[index] = "Please select a valid endpoint";
+        endpointErrors[index] = "Please select a valid endpoint";
         return;
       }
 
       // ✅ VALIDATION: Kiểm tra format /workspace/project/path
       if (!targetEndpoint.match(/^\/[^/]+\/[^/]+\/.+/)) {
-        errors[index] = "Endpoint must follow format /workspace/project/path";
+        endpointErrors[index] =
+          "Endpoint must follow format /workspace/project/path";
         return;
       }
 
@@ -388,12 +566,17 @@ export const ApiCallEditor = ({
       });
 
       if (!matchingEndpoint) {
-        errors[index] = "Invalid endpoint. Please select from suggestions.";
+        endpointErrors[index] =
+          "Invalid endpoint. Please select from suggestions.";
       }
     });
 
-    setEndpointValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setEndpointValidationErrors(endpointErrors);
+    setStatusConditionErrors(statusConditionErr);
+    return (
+      Object.keys(endpointErrors).length === 0 &&
+      Object.keys(statusConditionErr).length === 0
+    );
   };
 
   // ✅ THÊM: useEffect để handle click outside cho suggestions dropdown
@@ -440,6 +623,10 @@ export const ApiCallEditor = ({
       toast.error("Please select valid endpoints for all API calls");
       return; // Không tiếp tục nếu có lỗi validate endpoint
     }
+
+    // ✅ KIỂM TRA LẠI ID nhỏ nhất sau khi validate
+    const minimumId = getMinimumId(nextCalls);
+    console.log(`Minimum ID in nextCalls: ${minimumId}`);
 
     // Chuẩn bị payload với full target endpoints
     const payload = {
@@ -845,7 +1032,7 @@ export const ApiCallEditor = ({
                       </div>
                     )}
 
-                  {/* Hiển thị lỗi validation */}
+                  {/* Hiển thị lỗi validation cho Target Endpoint */}
                   {endpointValidationErrors[index] && (
                     <div className="text-red-400 text-xs mt-1">
                       {endpointValidationErrors[index]}
@@ -964,18 +1151,29 @@ export const ApiCallEditor = ({
                       handleNextCallChange(index, "condition", value)
                     }
                   >
-                    <SelectTrigger className="h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1">
+                    <SelectTrigger
+                      className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                        statusConditionErrors[index] ? "border-red-500" : ""
+                      }`}
+                    >
                       <SelectValue placeholder="Select condition" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60 overflow-y-auto">
-                      {/* Sử dụng availableStatusCodes thay vì statusCodes từ constants */}
-                      {getStatusConditionOptions().map((status) => (
+                      {/* ✅ CẬP NHẬT: Sử dụng logic mới */}
+                      {getStatusConditionOptions(index).map((status) => (
                         <SelectItem key={status.code} value={status.code}>
                           {status.code} - {status.description.split("–")[0]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* ✅ HIỂN THỊ LỖI VALIDATION CHO STATUS CONDITION */}
+                  {statusConditionErrors[index] && (
+                    <div className="text-red-400 text-xs mt-1">
+                      {statusConditionErrors[index]}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
