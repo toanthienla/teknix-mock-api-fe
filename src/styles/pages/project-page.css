@@ -32,6 +32,28 @@
     background-color: var(--button-bg-hover);
 }
 
+.project-page .custom-btn {
+    background-color: var(--button-bg) !important;
+    color: var(--button-text) !important;
+    border: 1px solid var(--input-border);
+    transition: background-color 0.2s ease;
+}
+
+.project-page .custom-btn:hover {
+    background-color: var(--button-bg-hover) !important;
+}
+
+.project-page .custom-btn-outline {
+    background-color: transparent !important;
+    color: var(--button-text) !important;
+    border: 1px solid var(--button-bg);
+}
+
+.project-page .custom-btn-outline:hover {
+    background-color: var(--button-bg-hover) !important;
+    color: var(--button-text) !important;
+}
+
 /* Footer */
 .project-page-content footer {
     background-color: var(--card);

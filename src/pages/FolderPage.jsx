@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.jsx";
 
+import 'spoilerjs/spoiler-span';
 import Topbar from "@/components/Topbar.jsx";
 import {toast} from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
@@ -2266,7 +2267,7 @@ export default function FolderPage() {
                     className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
-                        `ws://localhost:3000/ws/${currentWorkspace.name}/${currentProject.name}`
+                        `ws://${API_ROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
                       )
                     }
                   >
@@ -2274,11 +2275,11 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span>
+                  <span className="border-b-2 border-gray-300 px-2 py-1">
                     Your Unsecured URL:{" "}
-                    <span className="text-blue-600">
-                      “ws://localhost:3000/ws/{currentWorkspace.name}/{currentProject.name}”
-                    </span>
+                    <spoiler-span>
+                      “ws://{API_ROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
+                    </spoiler-span>
                   </span>
                 </div>
               </div>
@@ -2291,7 +2292,7 @@ export default function FolderPage() {
                     className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
-                        `ws://localhost:3000/ws/${currentWorkspace.name}/${currentProject.name}`
+                        `ws://${API_ROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
                       )
                     }
                   >
@@ -2299,11 +2300,11 @@ export default function FolderPage() {
                   </button>
                 </div>
                 <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span>
+                  <span className="border-b-2 border-gray-300 px-2 py-1">
                     Your Secured URL:{" "}
-                    <span className="text-blue-600">
-                      “wss://localhost:3000/ws/{currentWorkspace.name}/{currentProject.name}”
-                    </span>
+                    <spoiler-span>
+                      “wss://{API_ROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
+                    </spoiler-span>
                   </span>
                 </div>
               </div>
