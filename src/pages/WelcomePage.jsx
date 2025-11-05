@@ -55,14 +55,14 @@ export default function WelcomePage() {
               </div>
             </h1>
 
-            <p className="text-sm font-semibold mt-6">Join the community</p>
+            <p className="text-sm mt-6 opacity-80">Join the community</p>
 
             <Button
               size="lg"
               onClick={() => navigate("/login")}
               className="mt-4 inline-flex items-center rounded-full py-4 text-md font-medium shadow-md auth-button"
             >
-              <span>Start Project</span>
+              <span>Start Now</span>
               <ChevronRight size={36} />
             </Button>
           </div>

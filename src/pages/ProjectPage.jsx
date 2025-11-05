@@ -58,7 +58,7 @@ import statelessIcon from "@/assets/light/stateless.svg";
 import statefulIcon from "@/assets/light/stateful.svg";
 import trashIcon from "@/assets/light/Trash Icon.svg";
 import "@/styles/pages/project-page.css";
-import {useTheme} from "@/services/useTheme.js";
+// import {useTheme} from "@/services/useTheme.js";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
@@ -969,12 +969,14 @@ export default function ProjectPage() {
               </div>
               <DialogFooter>
                 <Button
+                  className="custom-btn-outline"
                   variant="outline"
                   onClick={() => setOpenNewProject(false)}
                 >
                   Cancel
                 </Button>
                 <Button
+                  className="custom-btn"
                   onClick={handleCreateProject}
                 >
                   Create
