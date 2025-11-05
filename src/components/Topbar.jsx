@@ -305,7 +305,7 @@ export default function Topbar({
               <img src={openWorkspaceIcon} className="w-4 h-4 " alt="edit"/>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 max-h-120 overflow-y-auto">
+          <DropdownMenuContent className="dropdown-menu-content w-56 max-h-120 overflow-y-auto">
             {workspaces?.map((ws) => (
               <div
                 key={ws.id}
@@ -316,20 +316,20 @@ export default function Topbar({
                 }`}
               >
                 <DropdownMenuItem
-                  className="flex-1 cursor-pointer"
+                  className="dropdown-menu-item flex-1 cursor-pointer"
                   onSelect={() => handleSelectWorkspace(ws.id)}
                 >
                   {ws.name}
                 </DropdownMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-1 rounded">
-                      <MoreHorizontal className="w-4 h-4 text-slate-500"/>
+                    <button className="action-btn p-1 rounded">
+                      <MoreHorizontal className="w-4 h-4"/>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-44">
+                  <DropdownMenuContent className="dropdown-menu-content w-44">
                     <DropdownMenuItem onSelect={() => onEditWorkspace?.(ws)}>
-                      <img src={editIcon} className="w-4 h-4 mr-2" alt="edit"/>
+                      <img src={editIcon} className="dropdown-menu-item w-4 h-4 mr-2 dark:brightness-0 dark:invert" alt="edit"/>
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -337,7 +337,7 @@ export default function Topbar({
                     >
                       <img
                         src={deleteIcon}
-                        className="w-4 h-4 mr-2"
+                        className="w-4 h-4 mr-2 dark:brightness-0 dark:invert"
                         alt="delete"
                       />
                       Delete
@@ -346,13 +346,13 @@ export default function Topbar({
                 </DropdownMenu>
               </div>
             ))}
-            <div
-              className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-slate-100 text-slate-600"
+            <button
+              className="workspace-btn flex items-center w-full gap-2 px-2 py-2 cursor-pointer"
               onClick={() => setOpenNewWs?.(true)}
             >
               <Plus className="w-4 h-4"/>
               <span>New workspace</span>
-            </div>
+            </button>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

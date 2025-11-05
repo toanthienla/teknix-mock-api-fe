@@ -18,6 +18,10 @@
     --input-text: #2f3136;
     --input-placeholder: #94a3b8;
 
+    /* Workspace button */
+    --workspace-btn-bg: #FFFFFF;
+    --workspace-btn-bg-hover: #EDEDEC;
+
     /* Nút */
     --button-bg: #fbeb6b;         /* yellow-300 */
     --button-bg-hover: #fde047;   /* yellow-400 */
@@ -50,6 +54,8 @@
     --input-border: #475569;
     --input-text: #f8fafc;
     --input-placeholder: #94a3b8;
+    --workspace-btn-bg: #53555B;
+    --workspace-btn-bg-hover: #2F3136;
     --button-bg: #5865f2;
     --button-bg-hover: #4752c4;
     --button-text: #fefce8;

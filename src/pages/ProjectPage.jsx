@@ -756,23 +756,23 @@ export default function ProjectPage() {
                       {/* ==== Header ==== */}
                       <TableHeader>
                         <TableRow className="border-none">
-                          <TableHead className="w-1/4 font-semibold text-sm">
+                          <TableHead className="w-1/3 font-semibold text-sm">
                             Project Name
                           </TableHead>
                           <TableHead className="w-1/3 font-semibold text-sm">
                             Folders
                           </TableHead>
-                          <TableHead className="text-center font-semibold text-sm">
+                          <TableHead className="w-1/6 text-center font-semibold text-sm">
                             Endpoints
                           </TableHead>
-                          <TableHead className=" text-right font-semibold text-sm">
+                          <TableHead className="w-1/6 font-semibold text-sm">
                             Date Created
                           </TableHead>
-                          <TableHead className="text-right font-semibold text-sm">
+                          <TableHead className="w-1/6 text-right font-semibold text-sm">
                             Action
                           </TableHead>
                         </TableRow>
-                        <TableRow>
+                        <TableRow className="border-b custom-border">
                           <TableHead colSpan={5}>
                             <div className="flex items-center gap-2 w-1/4">
                               <div className="relative w-full">
@@ -899,13 +899,13 @@ export default function ProjectPage() {
                           setCurrentPage(1);
                         }}
                       >
-                        <SelectTrigger className="w-[80px] h-8 text-sm">
+                        <SelectTrigger className="custom-btn w-[70px] h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="15">15</SelectItem>
+                          <SelectItem className="text-sm" value="5">5</SelectItem>
+                          <SelectItem className="text-sm" value="10">10</SelectItem>
+                          <SelectItem className="text-sm" value="15">15</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

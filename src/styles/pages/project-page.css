@@ -3,6 +3,17 @@
     color: var(--foreground);
 }
 
+.project-page .custom-btn {
+    background-color: var(--card-border);
+    color: var(--button-text);
+    border: 1px solid var(--input-border);
+    transition: background-color 0.2s ease;
+}
+
+.project-page .custom-btn:hover {
+    background-color: var(--input-bg);
+}
+
 /* Thẻ chính */
 .project-page-content main {
     background-color: var(--card);
@@ -12,9 +23,8 @@
 /* Input, Search box */
 .project-page-content input,
 .project-page-content textarea {
-    background-color: var(--input-bg);
+    background-color: var(--card);
     color: var(--input-text);
-    border: 1px solid var(--input-border);
 }
 
 .project-page-content input::placeholder,
@@ -32,27 +42,20 @@
     background-color: var(--button-bg-hover);
 }
 
-.project-page .custom-btn {
-    background-color: var(--button-bg) !important;
-    color: var(--button-text) !important;
-    border: 1px solid var(--input-border);
-    transition: background-color 0.2s ease;
+.project-page-content .custom-border {
+    border-color: var(--card-border);
 }
 
-.project-page .custom-btn:hover {
-    background-color: var(--button-bg-hover) !important;
-}
+/*.project-page .custom-btn-outline {*/
+/*    background-color: transparent !important;*/
+/*    color: var(--button-text) !important;*/
+/*    border: 1px solid var(--button-bg);*/
+/*}*/
 
-.project-page .custom-btn-outline {
-    background-color: transparent !important;
-    color: var(--button-text) !important;
-    border: 1px solid var(--button-bg);
-}
-
-.project-page .custom-btn-outline:hover {
-    background-color: var(--button-bg-hover) !important;
-    color: var(--button-text) !important;
-}
+/*.project-page .custom-btn-outline:hover {*/
+/*    background-color: var(--button-bg-hover) !important;*/
+/*    color: var(--button-text) !important;*/
+/*}*/
 
 /* Footer */
 .project-page-content footer {
@@ -69,7 +72,7 @@
 
 .project-page-content th,
 .project-page-content td {
-    border-color: var(--border);
+    border-color: var(--card-border);
 }
 
 /* Scrollbar */
