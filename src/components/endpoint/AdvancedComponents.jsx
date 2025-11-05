@@ -1028,7 +1028,7 @@ export const ApiCallEditor = ({
             </div>
 
             {/* Target Endpoint */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col mb-2">
               <div className="flex justify-between items-center">
                 <label className="w-[130px] text-sm font-medium text-[#000000]">
                   Target Endpoint
@@ -1178,7 +1178,7 @@ export const ApiCallEditor = ({
               </div>
             </div>
             {/* Method */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col mb-2">
               <div className="flex justify-between items-center">
                 <label className="w-[130px] text-sm font-medium text-[#000000]">
                   Method
@@ -1208,7 +1208,7 @@ export const ApiCallEditor = ({
               </div>
             </div>
             {/* Request Body */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col mb-2">
               <div className="flex justify-between items-start">
                 <label className="w-[130px] text-sm font-medium text-[#000000]">
                   Request Body
