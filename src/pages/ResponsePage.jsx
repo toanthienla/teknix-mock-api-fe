@@ -78,7 +78,7 @@ import {
   BaseSchemaEditor,
 } from "@/components/endpoint/SchemaComponents";
 import { statusCodes } from "@/components/endpoint/constants";
-import {WSConfig} from "@/components/endpoint/WSConfig.jsx";
+import { WSConfig } from "@/components/endpoint/WSConfig.jsx";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -172,7 +172,6 @@ const DashboardPage = () => {
   ] = useState(false);
 
   const [config, setConfig] = useState(null);
-
 
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
@@ -782,9 +781,19 @@ const DashboardPage = () => {
     // KIỂM TRA: Có API call nào đã có ID trong nextCalls không
     const hasApiCallsWithIds = nextCalls.some((call) => call.id);
 
-    // Nếu có API call đã có ID → sử dụng quy luật theo method
     if (hasApiCallsWithIds) {
-      return getStatusCodesByMethod(newApiCallMethod);
+      // ✅ TÌM CALL ID LỚN NHẤT
+      const maximumId = Math.max(
+        ...nextCalls.filter((call) => call.id).map((call) => call.id)
+      );
+      const maximumIdCall = nextCalls.find((call) => call.id === maximumId);
+
+      console.log(
+        `New API Call - Maximum ID: ${maximumId}, Method: ${maximumIdCall.method}`
+      );
+
+      // ✅ SỬ DỤNG METHOD CỦA CALL ID LỚN NHẤT
+      return getStatusCodesByMethod(maximumIdCall.method);
     }
 
     // Nếu nextCalls rỗng hoặc không có ID nào → sử dụng endpoint responses + 500 codes
@@ -793,7 +802,7 @@ const DashboardPage = () => {
     }
 
     // Fallback về quy luật method nếu chưa có endpoint responses
-    return getStatusCodesByMethod(newApiCallMethod);
+    return getStatusCodesByMethod(newApiCallMethod || "GET");
   };
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
@@ -3339,7 +3348,11 @@ const DashboardPage = () => {
                       <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
-                        {renderTabButton("wsConfig", "WS Configuration", ws_config_icon)}
+                        {renderTabButton(
+                          "wsConfig",
+                          "WS Configuration",
+                          ws_config_icon
+                        )}
                       </div>
 
                       {/* Dropdown chọn response - Tab bar (chỉ hiển thị khi stateless) */}
@@ -3403,7 +3416,11 @@ const DashboardPage = () => {
                           Request_Response_icon
                         )}
                       {renderTabButton("advanced", "Advanced", Advanced_icon)}
-                      {renderTabButton("wsConfig", "WS Configuration", ws_config_icon)}
+                      {renderTabButton(
+                        "wsConfig",
+                        "WS Configuration",
+                        ws_config_icon
+                      )}
                     </div>
                   )}
                 </div>
@@ -3823,7 +3840,6 @@ const DashboardPage = () => {
                       />
                     </div>
                   )}
-
                 </div>
               </div>
             </div>

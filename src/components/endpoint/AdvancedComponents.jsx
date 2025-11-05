@@ -225,12 +225,13 @@ export const ApiCallEditor = ({
   const getStatusConditionOptions = (callIndex) => {
     const minimumId = getMinimumId(nextCalls);
     const currentCall = nextCalls[callIndex];
+    const currentIndex = callIndex;
 
     // ✅ KIỂM TRA: Có API call nào đã có ID trong nextCalls không
     const hasApiCallsWithIds = nextCalls.some((call) => call.id);
 
     if (hasApiCallsWithIds) {
-      // Nếu đã có API call với ID → ID nhỏ nhất dùng endpoint response, các ID khác dùng quy luật method
+      // Nếu đã có API call với ID
       if (currentCall.id === minimumId) {
         // ✅ ID nhỏ nhất → dùng endpoint response
         console.log(
@@ -247,12 +248,25 @@ export const ApiCallEditor = ({
         // Fallback về quy luật method nếu không có endpoint response
         return getStatusCodesByMethod(currentCall.method);
       } else {
-        // ✅ ID không phải nhỏ nhất → dùng quy luật method
-        console.log(
-          "API Call Editor - Non-minimum ID using method rules:",
-          currentCall.method
-        );
-        return getStatusCodesByMethod(currentCall.method);
+        // ✅ CÁC ID KHÔNG PHẢI NHỎ NHẤT: Dùng method của call liền trước
+        const previousCall = nextCalls[currentIndex - 1];
+
+        if (previousCall) {
+          console.log(
+            "API Call Editor - Non-minimum ID using previous call method:",
+            `Call ${currentIndex + 1} uses method ${
+              previousCall.method
+            } from call ${currentIndex}`
+          );
+          return getStatusCodesByMethod(previousCall.method);
+        } else {
+          // Fallback về method của chính nó nếu không có previous call
+          console.log(
+            "API Call Editor - No previous call, using own method:",
+            currentCall.method
+          );
+          return getStatusCodesByMethod(currentCall.method);
+        }
       }
     } else {
       // ✅ Chưa có API call nào có ID → tất cả dùng endpoint response
@@ -364,6 +378,27 @@ export const ApiCallEditor = ({
       }
     }
 
+    // ✅ THÊM MỚI: Reset status condition của call tiếp theo nếu xóa call giữa chừng
+    const hasCallAfter = index + 1 < nextCalls.length;
+    let callAfterMethodChanged = null;
+
+    if (hasCallAfter) {
+      // Lưu thông tin method cũ của call sau để so sánh
+      const callAfter = nextCalls[index + 1];
+      const previousCall = index > 0 ? nextCalls[index - 1] : null;
+
+      if (previousCall) {
+        // Nếu có previous call, call sau sẽ dùng method của previous call thay vì method của call bị xóa
+        if (callAfter.method !== previousCall.method) {
+          callAfterMethodChanged = {
+            newIndex: index, // Index mới sau khi xóa
+            oldMethod: callAfter.method,
+            newMethod: previousCall.method,
+          };
+        }
+      }
+    }
+
     // Thực hiện xóa call
     const updatedCalls = [...nextCalls];
     updatedCalls.splice(index, 1);
@@ -439,8 +474,45 @@ export const ApiCallEditor = ({
         { autoClose: 5000 }
       );
     }
+
+    // ✅ XỬ LÝ MỚI: Reset status condition của call sau nếu method chain thay đổi
+    if (callAfterMethodChanged) {
+      const finalUpdatedCalls = [...updatedCalls];
+      finalUpdatedCalls[callAfterMethodChanged.newIndex] = {
+        ...finalUpdatedCalls[callAfterMethodChanged.newIndex],
+        condition: "", // Reset về rỗng
+      };
+      setNextCalls(finalUpdatedCalls);
+
+      // Clear validation error cũ và thêm lỗi mới
+      setStatusConditionErrors((prev) => {
+        const newErrors = { ...prev };
+        // Xóa lỗi cũ ở vị trí sau index bị xóa
+        Object.keys(newErrors).forEach((key) => {
+          const keyIndex = parseInt(key);
+          if (keyIndex > index) {
+            delete newErrors[keyIndex];
+          }
+        });
+        // Thêm lỗi mới cho call sau
+        newErrors[callAfterMethodChanged.newIndex] =
+          "Status condition is required";
+        return newErrors;
+      });
+
+      // Hiển thị thông báo cho user
+      toast.info(
+        `API Call #${callAfterMethodChanged.newIndex + 1} will now use method ${
+          callAfterMethodChanged.newMethod
+        } (was ${
+          callAfterMethodChanged.oldMethod
+        }). Please select a new status condition.`,
+        { autoClose: 6000 }
+      );
+    }
   };
 
+  // ✅ CẬP NHẬT: Reset status condition của call tiếp theo khi method thay đổi
   const handleNextCallChange = (index, field, value) => {
     const updatedCalls = [...nextCalls];
     updatedCalls[index] = {
@@ -449,18 +521,34 @@ export const ApiCallEditor = ({
     };
     setNextCalls(updatedCalls);
 
-    // ✅ THÊM: Reset status condition về rỗng khi thay đổi method
+    // ✅ Bỏ RESET của chính call đó, CHỈ RESET call tiếp theo
     if (field === "method") {
-      // Reset condition về rỗng
-      updatedCalls[index].condition = "";
-      setNextCalls([...updatedCalls]);
-      
-      // Clear validation errors cho status condition của call này
-      setStatusConditionErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[index];
-        return newErrors;
-      });
+      // ✅ THÊM MỚI: Reset status condition của call tiếp theo
+      if (index + 1 < nextCalls.length) {
+        const finalUpdatedCalls = [...updatedCalls];
+        finalUpdatedCalls[index + 1] = {
+          ...finalUpdatedCalls[index + 1],
+          condition: "", // Reset condition về rỗng
+        };
+        setNextCalls(finalUpdatedCalls);
+
+        // Clear validation error cho call tiếp theo (không clear cho call hiện tại)
+        setStatusConditionErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[index + 1]; // Chỉ xóa lỗi của call tiếp theo
+          return newErrors;
+        });
+
+        // ✅ THÊM: Hiển thị thông báo cho user
+        toast.info(
+          `Method changed for API Call #${
+            index + 1
+          }. Status condition of API Call #${
+            index + 2
+          } has been reset. Please select a new status condition.`,
+          { autoClose: 5000 }
+        );
+      }
     }
 
     // Validate ngay khi thay đổi target_endpoint hoặc method
