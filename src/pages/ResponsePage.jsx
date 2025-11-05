@@ -173,8 +173,7 @@ const DashboardPage = () => {
 
   const [config, setConfig] = useState(null);
 
-  // Thêm state filter mode
-  const [newApiCallFilterMode, setNewApiCallFilterMode] = useState("external");
+
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
