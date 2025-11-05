@@ -1,63 +1,136 @@
 /* ===============================
-    GLOBAL THEME VARIABLES
+   GLOBAL THEME VARIABLES
    =============================== */
 
 /* Light theme (default) */
 :root {
-    /* Nền & chữ */
+    /* ===== Base ===== */
     --background: #ffffff;
-    --foreground: #2f3136;        /* slate-900 */
-
-    /* Thẻ, card */
+    --foreground: #1e293b;
     --card: #ffffff;
     --card-border: #e2e8f0;
+    --border: #cbd5e1;
+    --ring: #94a3b8;
 
-    /* Input */
+    /* ===== Input ===== */
     --input-bg: #ffffff;
     --input-border: #cbd5e1;
-    --input-text: #2f3136;
+    --input-text: #1e293b;
     --input-placeholder: #94a3b8;
 
-    /* Nút */
-    --button-bg: #fbeb6b;         /* yellow-300 */
-    --button-bg-hover: #fde047;   /* yellow-400 */
-    --button-text: #1e1b4b;       /* indigo-950 */
+    /* ===== Button ===== */
+    --button-bg: #fbeb6b;
+    --button-bg-hover: #fde047;
+    --button-text: #1e1b4b;
 
-    /* Link */
-    --link: #000000;              /* blue-600 */
+    /* ===== Link ===== */
+    --link: #000000;
     --link-hover: #1d4ed8;
 
-    /* Border, icon */
-    --border: #cbd5e1;
-    --icon: #334155;
+    /* ===== Workspace button ===== */
+    --workspace-btn-bg: #f8fafc;
+    --workspace-btn-bg-hover: #e2e8f0;
 
-    /* Scrollbar */
+    /* ===== Scrollbar ===== */
     --scrollbar-track: #f8fafc;
     --scrollbar-thumb: #cbd5e1;
     --scrollbar-thumb-hover: #94a3b8;
 
-    /* Font */
-    --font-family: 'Be Vietnam Pro', sans-serif;
+    /* ===== Colors used by Tailwind plugin system ===== */
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #1e293b;
+    --muted: #f8fafc;
+    --muted-foreground: #475569;
+    --accent: #f9fafb;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    /* ===== Sidebar ===== */
+    --sidebar: #f9fafb;
+    --sidebar-foreground: #0f172a;
+    --sidebar-primary: #f3f4f6;
+    --sidebar-primary-foreground: #1e293b;
+    --sidebar-accent: #e2e8f0;
+    --sidebar-accent-foreground: #1e293b;
+    --sidebar-border: #cbd5e1;
+    --sidebar-ring: #94a3b8;
+
+    /* ===== Chart colors ===== */
+    --chart-1: #60a5fa;
+    --chart-2: #34d399;
+    --chart-3: #fbbf24;
+    --chart-4: #f87171;
+    --chart-5: #a78bfa;
+
+    /* ===== Font ===== */
+    --font-family: "Be Vietnam Pro", sans-serif;
 }
 
-/* Ghi đè dark mode */
+/* ===============================
+   DARK THEME OVERRIDE
+   =============================== */
 .dark {
+    /* ===== Base ===== */
     --background: #2f3136;
     --foreground: #f8fafc;
     --card: #36393f;
     --card-border: #42454a;
+    --border: #475569;
+    --ring: #64748b;
+
+    /* ===== Input ===== */
     --input-bg: #334155;
     --input-border: #475569;
     --input-text: #f8fafc;
-    --input-placeholder: #94a3b8;
+    --input-placeholder: #cbd5e1;
+
+    /* ===== Button ===== */
     --button-bg: #5865f2;
     --button-bg-hover: #4752c4;
     --button-text: #fefce8;
+
+    /* ===== Link ===== */
     --link: #ffffff;
     --link-hover: #818cf8;
-    --border: #475569;
-    --icon: #e2e8f0;
+
+    /* ===== Workspace button ===== */
+    --workspace-btn-bg: #53555b;
+    --workspace-btn-bg-hover: #475569;
+
+    /* ===== Scrollbar ===== */
     --scrollbar-track: #1e293b;
     --scrollbar-thumb: #475569;
     --scrollbar-thumb-hover: #64748b;
+
+    /* ===== Colors used by Tailwind plugin system ===== */
+    --primary: #818cf8;
+    --primary-foreground: #1e1b4b;
+    --secondary: #475569;
+    --secondary-foreground: #f1f5f9;
+    --muted: #334155;
+    --muted-foreground: #94a3b8;
+    --accent: #3f3f46;
+    --accent-foreground: #f1f5f9;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    /* ===== Sidebar ===== */
+    --sidebar: #1e1f22;
+    --sidebar-foreground: #e2e8f0;
+    --sidebar-primary: #2f3136;
+    --sidebar-primary-foreground: #f1f5f9;
+    --sidebar-accent: #3f4248;
+    --sidebar-accent-foreground: #f1f5f9;
+    --sidebar-border: #42454a;
+    --sidebar-ring: #5865f2;
+
+    /* ===== Chart colors ===== */
+    --chart-1: #60a5fa;
+    --chart-2: #34d399;
+    --chart-3: #fbbf24;
+    --chart-4: #f87171;
+    --chart-5: #a78bfa;
 }

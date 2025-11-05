@@ -1388,7 +1388,7 @@ export default function FolderPage() {
 
           {/* Main Content */}
           <main className="flex justify-center min-h-full items-center bg-white transition-all duration-300">
-            <div className="w-full px-2 pt-2 pb-4">
+            <div className="w-full px-2 pt-2 pb-4 rounded-lg">
               <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
                 <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
                   <button
