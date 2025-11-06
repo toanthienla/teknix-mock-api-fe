@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/table";
 import detailIconLight from "@/assets/light/view_detail.svg";
 import detailIconDark from "@/assets/dark/view_detail.svg";
-import {useTheme} from "@/services/useTheme.js";
+import {useTheme} from "@/services/ThemeContext.jsx";
 
 export default function ProjectCard({ project, folders, endpoints, onView, onClick }) {
   const { id, name, created_at } = project;

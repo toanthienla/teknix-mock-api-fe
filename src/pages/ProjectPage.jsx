@@ -58,12 +58,12 @@ import statelessIcon from "@/assets/light/stateless.svg";
 import statefulIcon from "@/assets/light/stateful.svg";
 import trashIcon from "@/assets/light/Trash Icon.svg";
 import "@/styles/pages/project-page.css";
-// import {useTheme} from "@/services/useTheme.js";
+// import {themeContext} from "@/services/ThemeContext.jsx";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-  // const { isDark } = useTheme();
+  // const { isDark } = themeContext();
 
   const [workspaces, setWorkspaces] = useState([]);
   const [projects, setProjects] = useState([]);

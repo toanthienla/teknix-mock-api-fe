@@ -1,3 +1,4 @@
+import "@/styles/pages/folder-page.css";
 import React, {useEffect, useMemo, useState} from "react";
 import {getCurrentUser} from "@/services/api.js";
 import {Button} from "@/components/ui/button";
@@ -1329,19 +1330,19 @@ export default function FolderPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-slate-800">
+    <div className="folder-page flex flex-col min-h-screen">
       {isLoading ? (
         // Loading screen
-        <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <div className="flex flex-col justify-center items-center h-screen">
           <span className="loader"></span>
-          <p className="text-lg mt-2 font-medium text-gray-700">
+          <p className="text-lg mt-2 font-medium">
             Loading folders...
           </p>
         </div>
       ) : (
         // Main content
         <>
-          <div className="mt-8 w-full bg-white shadow-sm z-20">
+          <div className="mt-8 w-full shadow-sm z-20">
             {/* Top Navbar */}
             <Topbar
               workspaces={workspaces}
@@ -1385,16 +1386,16 @@ export default function FolderPage() {
           </div>
 
           {/* Main Content */}
-          <main className="flex justify-center min-h-full items-center bg-white transition-all duration-300">
+          <main className="folder-page-content flex justify-center min-h-full items-center transition-all duration-300">
             <div className="w-full px-2 pt-2 pb-4 rounded-lg">
-              <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
-                <div className="flex rounded-t-lg bg-gray-200 mb-4 text-stone-500">
+              <div className="card flex flex-col h-fit border-2 rounded-lg">
+                <div className="tab-header flex rounded-t-lg">
                   <button
                     onClick={() => setActiveTab("folders")}
-                    className={`flex rounded-tl-lg px-4 py-2 -mb-px ${
+                    className={`tab-button flex rounded-tl-lg px-4 py-2 -mb-px ${
                       activeTab === "folders"
-                        ? "bg-white text-stone-900"
-                        : "bg-gray-200 text-stone-500"
+                        ? "active"
+                        : ""
                     }`}
                   >
                     <div className="flex items-center">
@@ -1403,8 +1404,8 @@ export default function FolderPage() {
                         alt="folder"
                         className={`w-4 h-4 mr-2 ${
                           activeTab === "folders"
-                            ? "brightness-0"
-                            : ""
+                            ? "brightness-0 dark:invert"
+                            : "dark:invert"
                         }`}
                       />
                       <span className="text-md font-semibold">Folders</span>
@@ -1415,10 +1416,10 @@ export default function FolderPage() {
                       setActiveTab("logs");
                       setPage(1);
                     }}
-                    className={`rounded-none px-4 py-2 -mb-px ${
+                    className={`tab-button rounded-none px-4 py-2 -mb-px ${
                       activeTab === "logs"
-                        ? "bg-white text-stone-900"
-                        : "bg-gray-200 text-stone-500"
+                        ? "active"
+                        : ""
                     }`}
                   >
                     <div className="flex items-center">
@@ -1427,7 +1428,7 @@ export default function FolderPage() {
                         alt="logs"
                         className={`w-4 h-4 mr-2 ${
                           activeTab === "logs"
-                            ? "brightness-0"
+                            ? "brightness-0 dark:invert"
                             : ""
                         }`}
                       />
@@ -1439,10 +1440,10 @@ export default function FolderPage() {
                 {activeTab === "folders" ? (
                   <>
                     <div className="flex flex-col items-center justify-center w-full">
-                      <div className="w-full max-w-7xl bg-white rounded-lg px-8 py-4">
+                      <div className="w-full max-w-7xl rounded-lg px-8 py-4">
                         <div className="flex items-center justify-between mb-6">
                           {/* Project name */}
-                          <h2 className="text-xl font-semibold text-gray-800">
+                          <h2 className="text-xl font-semibold">
                             {currentProject?.name} —{" "}
                             {
                               folders.filter(
@@ -1457,14 +1458,14 @@ export default function FolderPage() {
                             {!currentProject.websocket_enabled ? (
                               <Button
                                 onClick={() => handleEnableWSChannel(currentProject.id)}
-                                className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                                className="btn-primary rounded-xs"
                               >
                                 Create WS Channel
                               </Button>
                             ) : (
                               <Button
                                 onClick={() => setOpenWSDialog(true)}
-                                className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                                className="rounded-xs"
                               >
                                 View WS Channel
                               </Button>
@@ -1472,7 +1473,7 @@ export default function FolderPage() {
 
                             {/* New Folder button */}
                             <Button
-                              className="bg-yellow-200 hover:bg-yellow-300 rounded-xs text-black"
+                              className="btn-primary rounded-xs"
                               onClick={() => {
                                 setOpenNewFolder(true);
                                 setNewFolderName("");
@@ -1567,26 +1568,26 @@ export default function FolderPage() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="w-1/4 text-black">
+                              <TableHead className="w-1/4">
                                 Matched Response
                               </TableHead>
-                              <TableHead className="w-1/12 text-black">
+                              <TableHead className="w-1/12">
                                 Method
                               </TableHead>
-                              <TableHead className="w-1/3 text-black">
+                              <TableHead className="w-1/3">
                                 Path
                               </TableHead>
-                              <TableHead className="w-1/12 text-black">
+                              <TableHead className="w-1/12">
                                 Status
                               </TableHead>
-                              <TableHead className="w-1/12 text-black">
+                              <TableHead className="w-1/12">
                                 Latency
                               </TableHead>
-                              <TableHead className="w-1/6 text-black">
+                              <TableHead className="w-1/6">
                                 Time & Date
                               </TableHead>
                             </TableRow>
-                            <TableRow className="border-b border-slate-200">
+                            <TableRow className="border-b">
                               <TableHead colSpan={5}>
                                 <div className="flex items-center gap-2 w-1/4">
                                   <div className="relative w-full">
@@ -1610,7 +1611,7 @@ export default function FolderPage() {
 
                               <TableHead colSpan={1} className="text-right">
                                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                                  <SelectTrigger className="w-full bg-white border-none shadow-none">
+                                  <SelectTrigger className="w-full border-none shadow-none">
                                     <SelectValue placeholder="Recent logs"/>
                                   </SelectTrigger>
                                   <SelectContent>
@@ -1635,11 +1636,11 @@ export default function FolderPage() {
                               <TableRow>
                                 <TableCell
                                   colSpan={6}
-                                  className="text-center text-slate-500 py-4"
+                                  className="text-center py-4"
                                 >
                                   {/* Loading screen */}
                                   <span className="loader"></span>
-                                  <p className="mt-2 font-medium text-gray-700">
+                                  <p className="mt-2 font-medium">
                                     Loading logs...
                                   </p>
                                 </TableCell>
@@ -1648,7 +1649,7 @@ export default function FolderPage() {
                               <TableRow>
                                 <TableCell
                                   colSpan={6}
-                                  className="text-center text-slate-500 py-4"
+                                  className="text-center py-4"
                                 >
                                   No logs available.
                                 </TableCell>
@@ -1657,7 +1658,7 @@ export default function FolderPage() {
                               <TableRow>
                                 <TableCell
                                   colSpan={6}
-                                  className="text-center text-slate-500 py-4"
+                                  className="text-center py-4"
                                 >
                                   No logs found.
                                 </TableCell>
@@ -1701,7 +1702,6 @@ export default function FolderPage() {
                                 const newLimit = Number(val);
                                 setRowsPerPage(newLimit);
                                 setPage(1);
-                                fetchLogs(projectId, 1, newLimit);
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
@@ -1730,12 +1730,12 @@ export default function FolderPage() {
 
           {/* footer */}
           <footer
-            className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+            className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
             <span>© Teknix Corp. All rights reserved.</span>
-            <div className="flex items-center gap-3 text-gray-700">
-              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4"/>
-              <img src={fbIcon} alt="facebook" className="w-4 h-4"/>
-              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4"/>
+            <div className="flex items-center gap-3">
+              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert"/>
+              <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert"/>
+              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert"/>
               <a className="hover:underline font-semibold" href="">
                 About
               </a>
@@ -1775,7 +1775,7 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className=""
               onClick={() => {
                 handleAddWorkspace(newWsName);
               }}
@@ -1788,15 +1788,15 @@ export default function FolderPage() {
 
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-800">
+            <DialogTitle className="text-lg font-semibold">
               Edit Workspace
             </DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">
+              <label className="text-sm font-medium block mb-1">
                 Workspace Name
               </label>
               <Input
@@ -1824,7 +1824,7 @@ export default function FolderPage() {
             </Button>
             <Button
               type="button"
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className=""
               onClick={handleEditWorkspace}
             >
               Update
@@ -1838,7 +1838,7 @@ export default function FolderPage() {
         open={!!confirmDeleteWs}
         onOpenChange={() => setConfirmDeleteWs(null)}
       >
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
@@ -1850,7 +1850,8 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 text-white hover:bg-red-700"
+              className=""
+              variant="destructive"
               onClick={() => {
                 handleDeleteWorkspace(confirmDeleteWs);
                 setConfirmDeleteWs(null);
@@ -1883,7 +1884,7 @@ export default function FolderPage() {
 
             {/* Folder Mode Selection */}
             <div className="mt-2">
-              <p className="text-sm font-medium text-slate-700 mb-1">Folder Mode</p>
+              <p className="text-sm font-medium mb-1">Folder Mode</p>
               <div className="flex items-center gap-6">
                 {/* Private */}
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1906,7 +1907,7 @@ export default function FolderPage() {
                       }`}
                     />
                   </div>
-                  <span className="text-sm text-slate-700">Private</span>
+                  <span className="text-sm">Private</span>
                 </label>
 
                 {/* Public */}
@@ -1930,7 +1931,7 @@ export default function FolderPage() {
                       }`}
                     />
                   </div>
-                  <span className="text-sm text-slate-700">Public</span>
+                  <span className="text-sm">Public</span>
                 </label>
               </div>
             </div>
@@ -1966,7 +1967,7 @@ export default function FolderPage() {
             <Button
               onClick={handleUpdateFolder}
               disabled={!hasChanges()}
-              className={`bg-yellow-300 hover:bg-yellow-400 text-indigo-950 ${
+              className={` ${
                 !hasChanges() ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -1992,7 +1993,7 @@ export default function FolderPage() {
               method={"PUT"}
             />
           ) : (
-            <div className="text-gray-500 text-center py-6">
+            <div className="text-center py-6">
               Loading schema...
             </div>
           )}
@@ -2019,7 +2020,7 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="destructive"
               onClick={async () => {
                 try {
                   if (!selectedFolder?.id)
@@ -2076,13 +2077,12 @@ export default function FolderPage() {
                 setOpenDeleteFolder(false);
                 setDeleteFolderId(null);
               }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
             </Button>
             <Button
               onClick={confirmDeleteFolder}
-              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors font-medium"
+              variant="destructive"
             >
               Delete
             </Button>
@@ -2094,7 +2094,7 @@ export default function FolderPage() {
       {/* New Endpoint Button + Dialog */}
       <Dialog open={openNew} onOpenChange={setOpenNew}>
         <DialogContent
-          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          className="sm:max-w-lg shadow-lg rounded-lg"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -2104,7 +2104,7 @@ export default function FolderPage() {
         >
           <DialogHeader>
             <DialogTitle>New Endpoint</DialogTitle>
-            <DialogDescription className="text-sm text-slate-500">
+            <DialogDescription className="text-sm">
               Endpoint details
             </DialogDescription>
           </DialogHeader>
@@ -2112,7 +2112,7 @@ export default function FolderPage() {
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 Name
               </h3>
               <Input
@@ -2124,7 +2124,7 @@ export default function FolderPage() {
 
             {/* Folder select - only folders for current project */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 Folder
               </h3>
               <Select
@@ -2151,7 +2151,7 @@ export default function FolderPage() {
 
             {/* Path */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 Path
               </h3>
               <Input
@@ -2163,7 +2163,7 @@ export default function FolderPage() {
 
             {/* Method */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 Method
               </h3>
               <Select
@@ -2188,7 +2188,6 @@ export default function FolderPage() {
 
           <DialogFooter className="mt-4">
             <Button
-              className="text-black hover:text-red-600"
               variant="outline"
               onClick={() => {
                 setOpenNew(false);
@@ -2203,7 +2202,7 @@ export default function FolderPage() {
             </Button>
 
             <Button
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className=""
               onClick={handleCreateEndpoint}
             >
               Create
@@ -2215,7 +2214,7 @@ export default function FolderPage() {
       {/* Edit Endpoint Dialog */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent
-          className="bg-white text-slate-800 sm:max-w-lg shadow-lg rounded-lg"
+          className="sm:max-w-lg shadow-lg rounded-lg"
           onKeyDown={(e) => {
             if (e.key === "Enter" && hasEdited) {
               e.preventDefault();
@@ -2226,13 +2225,13 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Edit Endpoint</DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-sm text-slate-800">
+          <DialogDescription className="text-sm">
             Endpoint details
           </DialogDescription>
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 Name
               </h3>
               <Input
@@ -2244,7 +2243,6 @@ export default function FolderPage() {
           </div>
           <DialogFooter>
             <Button
-              className="text-black hover:text-red-600"
               variant="outline"
               onClick={() => setOpenEdit(false)}
             >
@@ -2252,7 +2250,7 @@ export default function FolderPage() {
             </Button>
             <Button
               onClick={handleUpdateEndpoint}
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className=""
               disabled={!hasEdited}
             >
               Update
@@ -2275,10 +2273,10 @@ export default function FolderPage() {
               {/* Unsecured URL */}
               <div className="relative">
                 <div
-                  className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                  className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
                   bash
                   <button
-                    className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
+                    className="text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
                         `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
@@ -2288,7 +2286,7 @@ export default function FolderPage() {
                     Copy
                   </button>
                 </div>
-                <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
+                <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
                   <span className="px-2 py-1">
                     Your Unsecured URL:{" "}
                     <spoiler-span>
@@ -2301,10 +2299,10 @@ export default function FolderPage() {
               {/* Secured URL */}
               <div className="relative">
                 <div
-                  className="text-xs font-mono bg-gray-100 px-4 py-1.5 rounded-t border flex justify-between items-center">
+                  className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
                   bash
                   <button
-                    className="bg-yellow-200 hover:bg-yellow-300 text-xs px-2 py-1 rounded-xs"
+                    className="text-xs px-2 py-1 rounded-xs"
                     onClick={() =>
                       handleCopyURL(
                         `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
@@ -2314,7 +2312,7 @@ export default function FolderPage() {
                     Copy
                   </button>
                 </div>
-                <div className="relative bg-white border border-t-0 rounded-b p-4 font-mono text-sm break-all">
+                <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
                   <span className="px-2 py-1">
                     Your Secured URL:{" "}
                     <spoiler-span>
@@ -2357,7 +2355,7 @@ export default function FolderPage() {
           <div className="mt-4 flex flex-col space-y-2">
             {/* Delete button */}
             <Button
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md py-2"
+              variant="destructive"
               onClick={() => {
                 handleDeleteWSChannel(currentProject.id);
                 setOpenDeleteConfirm(false);
@@ -2369,7 +2367,7 @@ export default function FolderPage() {
             {/* Cancel button */}
             <Button
               variant="outline"
-              className="bg-gray-50 hover:bg-gray-100 font-semibold text-black rounded-md py-2"
+              className="font-semibold rounded-md py-2"
               onClick={() => setOpenDeleteConfirm(false)}
             >
               Cancel

@@ -1,0 +1,161 @@
+.folder-page {
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* ===== Card & Container ===== */
+.folder-page-content .card,
+.folder-page-content main,
+.folder-page-content .folder-list,
+.folder-page-content .folder-item {
+    background-color: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--foreground);
+}
+
+/* ===== Tabs (Folders / Logs) ===== */
+.folder-page-content .tab-header {
+    background-color: var(--lightgray-bg);
+}
+
+.folder-page-content .tab-button {
+    background-color: var(--lightgray-bg);
+    color: var(--muted-foreground);
+    transition: all 0.3s;
+}
+
+.folder-page-content .tab-button.active {
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+/* ===== Input, Select, Search ===== */
+.folder-page-content input,
+.folder-page-content select,
+.folder-page-content textarea {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+}
+
+.folder-page-content input::placeholder,
+.folder-page-content textarea::placeholder {
+    color: var(--input-placeholder);
+}
+
+/* ===== Buttons ===== */
+.folder-page-content .btn-primary {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.folder-page-content .btn-primary:hover {
+    background-color: var(--button-bg-hover);
+}
+
+.folder-page-content .btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+}
+
+.folder-page-content .btn-outline:hover {
+    background-color: var(--muted);
+}
+
+.folder-page-content .btn-new-endpoint {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--lightgray-tb-border);
+    opacity: 0.8;
+}
+
+.folder-page-content .btn-new-endpoint:hover {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--lightgray-tb-border);
+    opacity: 1;
+}
+
+/* ===== Table ===== */
+.folder-page-content table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0.5rem 0.5rem;
+}
+
+.folder-page-content th {
+    background-color: var(--card);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+}
+
+.folder-page-content td {
+    border-bottom: 1px solid var(--border);
+}
+
+.folder-page-content tbody tr:hover {
+    background-color: var(--muted);
+}
+
+/* ===== Dialog ===== */
+.folder-page-content .dialog {
+    background-color: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ===== Scrollbar ===== */
+.folder-page-content ::-webkit-scrollbar {
+    width: 8px;
+}
+
+.folder-page-content ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.folder-page-content ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+.folder-page-content ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* ===== Switch (shadcn/ui override) ===== */
+.folder-page-content .switch {
+    --switch-bg-off: var(--input-placeholder);
+    --switch-bg-on: var(--button-bg);
+}
+
+/* Track (vỏ ngoài) */
+.folder-page-content .switch[data-state="unchecked"] {
+    background-color: var(--switch-bg-off) !important;
+}
+
+.folder-page-content .switch[data-state="checked"] {
+    background-color: var(--switch-bg-on) !important;
+}
+
+/* Thumb (nút tròn) */
+.folder-page-content .switch span {
+    background-color: #ffffff !important; /* luôn trắng ở cả light và dark */
+}
+
+/* ===== Plus / Minus icon trong FolderCard ===== */
+.folder-page-content .toggle-icon {
+    background-color: var(--lightgray-tb-header);
+    border-radius: 50%;
+    transition: background-color 0.25s ease, filter 0.25s ease;
+}
+
+/* ===== Footer ===== */
+.folder-page-content footer {
+    background-color: var(--card);
+    color: var(--muted-foreground);
+    border-top: 1px solid var(--border);
+}
+

@@ -8,7 +8,7 @@ import blueLogo from "@/assets/dark/logo.svg";
 import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
-import {useTheme} from "@/services/useTheme.js";
+import {useTheme} from "@/services/ThemeContext.jsx";
 import "@/styles/pages/auth.css"
 
 export default function WelcomePage() {
