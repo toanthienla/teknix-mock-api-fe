@@ -1754,8 +1754,9 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>New Workspace</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium opacity-70">
               Name
             </label>
             <Input
@@ -1775,7 +1776,7 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className=""
+              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
               onClick={() => {
                 handleAddWorkspace(newWsName);
               }}
@@ -1794,6 +1795,7 @@ export default function FolderPage() {
               Edit Workspace
             </DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
           <div className="mt-2 space-y-4">
             <div>
               <label className="text-sm font-medium block mb-1">
@@ -1824,7 +1826,7 @@ export default function FolderPage() {
             </Button>
             <Button
               type="button"
-              className=""
+              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
               onClick={handleEditWorkspace}
             >
               Update
@@ -1842,9 +1844,9 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
-          <p>
+          <DialogDescription>
             Are you sure you want to delete this workspace and all its projects?
-          </p>
+          </DialogDescription>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
@@ -1865,10 +1867,11 @@ export default function FolderPage() {
 
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-[#36393F]">
           <DialogHeader>
             <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <div className="space-y-3">
             <Input
@@ -1898,12 +1901,14 @@ export default function FolderPage() {
                   />
                   <div
                     className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                      !newFolderMode ? "border-black" : "border-gray-400"
+                      !newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
                     }`}
                   >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border ${
-                        !newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                        !newFolderMode 
+                          ? "border-white bg-yellow-300 dark:border-[#36393F] dark:bg-[#5865F2]" 
+                          : "border-gray-200 bg-white dark:border-[#36393F] dark:bg-[#36393F]"
                       }`}
                     />
                   </div>
@@ -1922,12 +1927,14 @@ export default function FolderPage() {
                   />
                   <div
                     className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                      newFolderMode ? "border-black" : "border-gray-400"
+                      newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
                     }`}
                   >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border ${
-                        newFolderMode ? "border-white bg-yellow-300" : "border-gray-200 bg-white"
+                        newFolderMode
+                          ? "border-white bg-yellow-300 dark:border-[#36393F] dark:bg-[#5865F2]"
+                          : "border-gray-200 bg-white dark:border-[#36393F] dark:bg-[#36393F]"
                       }`}
                     />
                   </div>
@@ -1938,8 +1945,13 @@ export default function FolderPage() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setOpenNewFolder(false)}>Cancel</Button>
-            <Button onClick={handleCreateFolder}>Create</Button>
+            <Button variant="outline" onClick={() => setOpenNewFolder(false)}>Cancel</Button>
+            <Button
+              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              onClick={handleCreateFolder}
+            >
+              Create
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1950,6 +1962,7 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Edit Folder</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
           <Input
             placeholder="Folder name"
             value={editFolderName}
@@ -1963,11 +1976,11 @@ export default function FolderPage() {
             }}
           />
           <DialogFooter>
-            <Button onClick={() => setOpenEditFolder(false)}>Cancel</Button>
+            <Button className="outline" onClick={() => setOpenEditFolder(false)}>Cancel</Button>
             <Button
               onClick={handleUpdateFolder}
               disabled={!hasChanges()}
-              className={` ${
+              className={`text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2] ${
                 !hasChanges() ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2006,6 +2019,7 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Delete Folder</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <p className="mt-2 text-gray-600">
             Are you sure you want to delete{" "}
@@ -2062,6 +2076,7 @@ export default function FolderPage() {
               Delete Folder
             </DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <div className="py-2">
             <p className="text-sm text-gray-600">
@@ -2108,6 +2123,7 @@ export default function FolderPage() {
               Endpoint details
             </DialogDescription>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <div className="space-y-4">
             {/* Name */}
@@ -2202,7 +2218,7 @@ export default function FolderPage() {
             </Button>
 
             <Button
-              className=""
+              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
               onClick={handleCreateEndpoint}
             >
               Create
@@ -2250,7 +2266,7 @@ export default function FolderPage() {
             </Button>
             <Button
               onClick={handleUpdateEndpoint}
-              className=""
+              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
               disabled={!hasEdited}
             >
               Update
@@ -2267,7 +2283,7 @@ export default function FolderPage() {
               Real-time Updates via WebSocket
             </DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-sm text-slate-500">Click to reveal</DialogDescription>
+          <DialogDescription className="text-sm opacity-50">Click to reveal</DialogDescription>
           {currentProject && currentWorkspace && (
             <div className="mt-4 space-y-4 text-sm">
               {/* Unsecured URL */}

@@ -64,18 +64,18 @@ export default function LogCard({log}) {
       </TableCell>
 
       <TableCell className="text-sm">
-        <div className="bg-[#EDEDEC] px-1.5 py-0.5 rounded-xs font-semibold">
+        <div className="bg-[#EDEDEC] dark:bg-[#202225] px-1.5 py-0.5 rounded-xs font-semibold">
           {request_path}
         </div>
       </TableCell>
 
       <TableCell>
-        <div className="flex ml-auto items-center bg-[#EDEDEC] rounded-sm px-2 py-1 w-fit">
+        <div className="flex ml-auto items-center bg-[#EDEDEC] dark:bg-[#2A2840] rounded-sm px-2 py-1 w-fit">
           <span
             className="w-2.5 h-2.5 rounded-full mr-2"
             style={{ backgroundColor: statusColor }}
           ></span>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium">
             {response_status_code || "-"}
           </span>
         </div>

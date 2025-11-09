@@ -135,10 +135,10 @@ button:hover,
     height: 48px;
     display: inline-block;
     position: relative;
-    border: 4px solid #000000;
+    border: 4px solid var(--foreground);
     box-sizing: border-box;
     animation: fill 2s linear infinite alternate;
-    color: #FBEB6B;
+    color: var(--button-bg);
     border-radius: 0 0 4px 4px;
 }
 .loader::after {
@@ -148,7 +148,7 @@ button:hover,
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    border: 4px solid #000000;
+    border: 4px solid var(--foreground);
     width: 20px;
     height: 25px;
     border-radius: 0 4px 4px 0;

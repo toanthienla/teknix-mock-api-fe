@@ -14,9 +14,14 @@
     color: var(--foreground);
 }
 
+.folder-page-content .folder-card {
+    border-bottom: 2px solid var(--lightgray-border);
+}
+
 /* ===== Tabs (Folders / Logs) ===== */
 .folder-page-content .tab-header {
     background-color: var(--lightgray-bg);
+    border-color: var(--card-border);
 }
 
 .folder-page-content .tab-button {
@@ -67,14 +72,14 @@
 .folder-page-content .btn-new-endpoint {
     background-color: var(--button-bg);
     color: var(--button-text);
-    border-color: var(--lightgray-tb-border);
+    border-color: var(--lightgray-border);
     opacity: 0.8;
 }
 
 .folder-page-content .btn-new-endpoint:hover {
     background-color: var(--button-bg);
     color: var(--button-text);
-    border-color: var(--lightgray-tb-border);
+    border-color: var(--lightgray-border);
     opacity: 1;
 }
 
@@ -88,11 +93,10 @@
 .folder-page-content th {
     background-color: var(--card);
     color: var(--foreground);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--card-border);
 }
 
 .folder-page-content td {
-    border-bottom: 1px solid var(--border);
 }
 
 .folder-page-content tbody tr:hover {
@@ -100,12 +104,12 @@
 }
 
 /* ===== Dialog ===== */
-.folder-page-content .dialog {
-    background-color: var(--card);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
+/*.folder-page .dialog {*/
+/*    background-color: var(--card);*/
+/*    color: var(--foreground);*/
+/*    border: 1px solid var(--card-border);*/
+/*    box-shadow: 0 4px 12px rgba(0,0,0,0.15);*/
+/*}*/
 
 /* ===== Scrollbar ===== */
 .folder-page-content ::-webkit-scrollbar {
@@ -147,7 +151,7 @@
 
 /* ===== Plus / Minus icon trong FolderCard ===== */
 .folder-page-content .toggle-icon {
-    background-color: var(--lightgray-tb-header);
+    background-color: var(--lightgray-header);
     border-radius: 50%;
     transition: background-color 0.25s ease, filter 0.25s ease;
 }

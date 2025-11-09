@@ -86,8 +86,8 @@ export default function FolderCard({
     <div className="tab-header rounded-2xl border mb-6 overflow-hidden">
       {/* Folder Header */}
       <div
-        className={`flex items-center justify-between px-8 py-2 mx-6 my-2 rounded-t-2xl cursor-pointer ${
-          expanded ? 'border-b' : ''
+        className={`flex items-center justify-between py-2 mx-14 mb-2 rounded-t-2xl cursor-pointer ${
+          expanded ? 'folder-card mt-6' : 'mt-2'
         }`}
         onClick={handleToggleExpand}
       >
@@ -95,7 +95,7 @@ export default function FolderCard({
           <h2 className="font-medium">
             {folder.name}
           </h2>
-          <span className="font-medium">
+          <span className="font-medium opacity-50">
             {folderEndpoints.length}
           </span>
 
