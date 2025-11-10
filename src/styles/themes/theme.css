@@ -18,6 +18,10 @@
     --input-text: #1e293b;
     --input-placeholder: #94a3b8;
 
+    /* ===== JSON ===== */
+    --custom-json-key: #0051D9;
+    --custom-json-value: #4093ff;
+
     /* ===== Button ===== */
     --button-bg: #fbeb6b;
     --button-bg-hover: #fde047;
@@ -28,8 +32,8 @@
     --link-hover: #1d4ed8;
 
     /* ===== Workspace button ===== */
-    --workspace-btn-bg: #f8fafc;
-    --workspace-btn-bg-hover: #e2e8f0;
+    --lightgray-button-bg: #f8fafc;
+    --lightgray-bg-hover: #e2e8f0;
 
     /* ===== Scrollbar ===== */
     --scrollbar-track: #f8fafc;
@@ -67,6 +71,14 @@
 
     /* ===== Font ===== */
     --font-family: "Be Vietnam Pro", sans-serif;
+
+    /* ===== Additional ===== */
+    --lightgray-ws-header: #F7F9FB;
+    --lightgray-bg: #F2F2F2;
+    --lightgray-border: #F4F5F7;
+    --path-background: #EDEDEC;
+    --folder-header-bg: #BFBFBF;
+    --folder-header-text: #4F5E74;
 }
 
 /* ===============================
@@ -85,20 +97,24 @@
     --input-bg: #334155;
     --input-border: #475569;
     --input-text: #f8fafc;
-    --input-placeholder: #cbd5e1;
+    --input-placeholder: #72767D;
+
+    /* ===== JSON ===== */
+    --custom-json-key: #6CACE5;
+    --custom-json-value: #A5D6FF;
+
+    /* ===== Workspace button ===== */
+    --lightgray-button-bg: #53555B;
+    --lightgray-bg-hover: #475569;
 
     /* ===== Button ===== */
     --button-bg: #5865f2;
     --button-bg-hover: #4752c4;
-    --button-text: #fefce8;
+    --button-text: #ffffff;
 
     /* ===== Link ===== */
     --link: #ffffff;
     --link-hover: #818cf8;
-
-    /* ===== Workspace button ===== */
-    --workspace-btn-bg: #53555b;
-    --workspace-btn-bg-hover: #475569;
 
     /* ===== Scrollbar ===== */
     --scrollbar-track: #1e293b;
@@ -133,4 +149,17 @@
     --chart-3: #fbbf24;
     --chart-4: #f87171;
     --chart-5: #a78bfa;
+
+    /* ===== Additional ===== */
+    --lightgray-bg: #53555b;
+
+    --lightgray-header: #72767D;
+    --lightgray-border: #B8B8B8;
+
+    --path-background: #202225;
+
+    --lightgray-ws-header: #42454A;
+
+    --folder-header-bg: #72767D;
+    --folder-header-text: #ffffff;
 }

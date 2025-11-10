@@ -21,22 +21,22 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
   const { id, name, path, method } = endpoint;
 
   return (
-    <TableRow className="hover:bg-gray-50 transition-colors">
+    <TableRow className="transition-colors">
       {/* Endpoint Name */}
       <TableCell className="py-3">
         <div className="flex flex-col">
           <span
-            className="font-semibold text-gray-900 cursor-pointer"
+            className="font-semibold cursor-pointer"
             onClick={onClick}
           >
             {name}
           </span>
-          <span className="text-sm text-gray-400">{path}</span>
+          <span className="text-sm">{path}</span>
         </div>
       </TableCell>
 
       {/* State */}
-      <TableCell className="py-3 text-gray-800 font-medium text-center">
+      <TableCell className="py-3 font-medium text-center">
         {endpoint.is_stateful ? "stateful" : "stateless"}
       </TableCell>
 
@@ -67,7 +67,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
       </TableCell>
 
       {/* Time & Date */}
-      <TableCell className="py-3 text-slate-500 font-medium whitespace-nowrap text-sm text-center">
+      <TableCell className="py-3 font-medium whitespace-nowrap text-sm text-center">
         {new Date(endpoint.created_at).toLocaleString("en-US", {
           year: "numeric",
           month: "long",
@@ -84,10 +84,10 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-600 hover:text-gray-800"
+            className=""
             onClick={() => onEdit(endpoint)}
           >
-            <img src={editIcon} alt="edit" className="w-4 h-4" />
+            <img src={editIcon} alt="edit" className="w-4 h-4 dark:brightness-0 dark:invert" />
           </Button>
 
           <AlertDialog>
@@ -95,9 +95,9 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-gray-500 hover:text-red-600"
+                className="h-7 w-7"
               >
-                <img src={deleteIcon} alt="delete" className="w-4 h-4" />
+                <img src={deleteIcon} alt="delete" className="w-4 h-4 dark:brightness-0 dark:invert" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent

@@ -7,7 +7,7 @@ import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
 import { LoginForm } from "@/components/LoginForm.jsx";
 import "@/styles/pages/auth.css";
-import {useTheme} from "@/services/useTheme.js";
+import {useTheme} from "@/services/ThemeContext.jsx";
 
 export default function LoginPage() {
   const { isDark, toggleTheme } = useTheme();

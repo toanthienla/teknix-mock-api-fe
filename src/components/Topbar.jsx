@@ -38,7 +38,7 @@ import {Button} from "@/components/ui/button.jsx";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 import {getCurrentUser, logout} from "@/services/api.js";
-import {useTheme} from "@/services/useTheme.js";
+import {useTheme} from "@/services/ThemeContext.jsx";
 import "@/styles/components/topbar.css";
 // import {API_ROOT} from "@/utils/constants.js";
 // import Notifications from "../components/Notifications.jsx";
