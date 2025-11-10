@@ -417,9 +417,9 @@ const DashboardPage = () => {
     }
   }, [newApiCallMethod]); // ✅ Chỉ phụ thuộc vào method
 
-  // ✅ ĐỞN GIẢN HÓA: Bỏ filter logic, hiển thị tất cả endpoints
+  // ✅ CẬP NHẬT: ĐỞN GIẢN HÓA - Cho phép cả external URLs
   const getFilteredEndpoints = () => {
-    // Hiển thị tất cả available endpoints không cần filter
+    // Hiển thị tất cả available endpoints
     return newApiCallAvailableEndpoints.filter(
       (ep) => ep && typeof ep === "object" && ep.path
     );
@@ -429,20 +429,32 @@ const DashboardPage = () => {
   const [newApiCallTargetEndpointId, setNewApiCallTargetEndpointId] =
     useState(null);
 
-  // ✅ THÊM: Hàm để format full path
+  // ✅ CẬP NHẬT: Hàm format full path để xử lý cả external URLs
   const formatFullPath = (endpoint) => {
     if (!endpoint) return "";
 
-    const cleanWorkspaceName = endpoint.workspaceName.replace(/^\/+|\/+$/g, "");
-    const cleanProjectName = endpoint.projectName.replace(/^\/+|\/+$/g, "");
-    const cleanPath = endpoint.path.startsWith("/")
+    // Kiểm tra nếu endpoint đã là external URL
+    if (
+      endpoint.path &&
+      (endpoint.path.startsWith("http://") ||
+        endpoint.path.startsWith("https://"))
+    ) {
+      return endpoint.path;
+    }
+
+    // Xử lý internal endpoint
+    const cleanWorkspaceName =
+      endpoint.workspaceName?.replace(/^\/+|\/+$/g, "") || "";
+    const cleanProjectName =
+      endpoint.projectName?.replace(/^\/+|\/+$/g, "") || "";
+    const cleanPath = endpoint.path?.startsWith("/")
       ? endpoint.path.substring(1)
-      : endpoint.path;
+      : endpoint.path || "";
 
     return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
   };
 
-  // ✅ CẬP NHẬT: Logic tạo full target endpoint giống API Call Editor
+  // ✅ CẬP NHẬT: Hàm lấy full target endpoint cho New API Call
   const getNewApiCallFullTargetEndpoint = (targetEndpointId) => {
     if (!targetEndpointId) return "";
 
@@ -458,13 +470,47 @@ const DashboardPage = () => {
     return "";
   };
 
-  // ✅ CẬP NHẬT: Validation giống API Call Editor
+  // ✅ CẬP NHẬT: Validation để chấp nhận external URLs và kiểm tra internal endpoint tồn tại
   const validateNewApiCall = () => {
     const errors = {};
 
-    // ✅ VALIDATION: Kiểm tra có endpoint nào được chọn không
-    if (!newApiCallTargetEndpointId) {
-      errors.targetEndpoint = "Please select a valid endpoint";
+    // ✅ VALIDATION: Kiểm tra có endpoint nào được chọn hoặc nhập external URL không
+    const targetEndpointValue = (() => {
+      const selectedEndpoint = newApiCallAvailableEndpoints.find(
+        (ep) => ep.id === newApiCallTargetEndpointId
+      );
+      if (selectedEndpoint) {
+        return formatFullPath(selectedEndpoint);
+      } else if (newApiCallTargetEndpointDisplay) {
+        return newApiCallTargetEndpointDisplay;
+      } else {
+        return "";
+      }
+    })();
+
+    if (!targetEndpointValue) {
+      errors.targetEndpoint = "Please enter a valid endpoint or external URL";
+    } else {
+      // Kiểm tra format hợp lệ (internal path hoặc external URL)
+      const isValidInternalPath =
+        targetEndpointValue.match(/^\/[^/]+\/[^/]+\/.+/);
+      const isValidExternalUrl = targetEndpointValue.match(/^https?:\/\/.+/);
+
+      if (!isValidInternalPath && !isValidExternalUrl) {
+        errors.targetEndpoint =
+          "Please enter a valid endpoint (e.g., /workspace/project/path or https://domain.com/path)";
+      } else if (isValidInternalPath) {
+        // ✅ THÊM MỚI: Kiểm tra internal endpoint có tồn tại trong danh sách không
+        const matchingEndpoint = newApiCallAvailableEndpoints.find((ep) => {
+          return formatFullPath(ep) === targetEndpointValue;
+        });
+
+        if (!matchingEndpoint) {
+          errors.targetEndpoint =
+            "Invalid internal endpoint. Please select from suggestions.";
+        }
+      }
+      // External URLs không cần kiểm tra trong availableEndpoints
     }
 
     if (!newApiCallMethod) {
@@ -520,7 +566,7 @@ const DashboardPage = () => {
     }
   }, [newApiCallMethod]);
 
-  // Sửa lại hàm handleCreateNewApiCall
+  // Cập nhật hàm handleCreateNewApiCall để xử lý external URLs
   const handleCreateNewApiCall = async () => {
     try {
       // Validate dữ liệu
@@ -529,12 +575,12 @@ const DashboardPage = () => {
       }
 
       // Lấy full target endpoint
-      const fullTargetEndpoint = getNewApiCallFullTargetEndpoint(
-        newApiCallTargetEndpointId
-      );
+      const fullTargetEndpoint =
+        getNewApiCallFullTargetEndpoint(newApiCallTargetEndpointId) ||
+        newApiCallTargetEndpointDisplay; // Sử dụng input field nếu không có ID
 
       if (!fullTargetEndpoint) {
-        toast.error("Please select a valid endpoint");
+        toast.error("Please enter a valid endpoint or external URL");
         return;
       }
 
@@ -556,7 +602,7 @@ const DashboardPage = () => {
             })),
             // Thêm API Call mới (không có id)
             {
-              target_endpoint: fullTargetEndpoint,
+              target_endpoint: fullTargetEndpoint, // Có thể là external URL
               method: newApiCallMethod,
               body: JSON.parse(newApiCallRequestBody || "{}"),
               condition: Number(newApiCallStatusCondition),
@@ -2466,7 +2512,9 @@ const DashboardPage = () => {
       });
 
       if (!res.ok) throw new Error("Failed to update WebSocket config");
-      toast.success(`WebSocket ${checked ? "enabled" : "disabled"} successfully`);
+      toast.success(
+        `WebSocket ${checked ? "enabled" : "disabled"} successfully`
+      );
     } catch (err) {
       console.error("Update failed:", err);
       toast.error("Failed to update WebSocket config");
@@ -2984,7 +3032,8 @@ const DashboardPage = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
@@ -3007,7 +3056,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="border-[#E5E5E1]"
+                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={() => {
                                     if (selectedResponse) {
                                       setDefaultResponse(selectedResponse.id);
@@ -3042,7 +3092,8 @@ const DashboardPage = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={() => {
                                   const canEdit =
                                     !isStateful ||
@@ -3457,7 +3508,8 @@ const DashboardPage = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="border-[#E5E5E1] hover:bg-yellow-50"
+                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
@@ -3557,7 +3609,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={() =>
                                     setIsInitialValuePopoverOpen(
                                       !isInitialValuePopoverOpen
@@ -3656,7 +3709,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="border-[#E5E5E1] hover:bg-yellow-50"
+                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={handleSaveInitialValue}
                                   onMouseEnter={() =>
                                     setSaveTooltipVisible(true)
@@ -3860,7 +3914,7 @@ const DashboardPage = () => {
                       <Input
                         id="target-endpoint"
                         value={(() => {
-                          // ✅ CẬP NHẬT: Hiển thị full path /workspace/project/path
+                          // ✅ CẬP NHẬT: Hiển thị full path /workspace/project/path hoặc external URL
                           const selectedEndpoint =
                             newApiCallAvailableEndpoints.find(
                               (ep) => ep.id === newApiCallTargetEndpointId
@@ -3878,17 +3932,60 @@ const DashboardPage = () => {
                           const newValue = e.target.value;
 
                           setNewApiCallTargetEndpointDisplay(newValue);
+
                           // Reset ID khi user tự nhập
                           setNewApiCallTargetEndpointId(null);
 
-                          // Mở dropdown khi user nhập
+                          // Kiểm tra nếu nhập external URL (có protocol)
+                          if (
+                            newValue &&
+                            (newValue.startsWith("http://") ||
+                              newValue.startsWith("https://"))
+                          ) {
+                            // External URL - không cần tìm kiếm trong available endpoints
+                            setIsTargetEndpointSuggestionsOpen(false);
+                            return;
+                          }
+
+                          // ✅ CẬP NHẬT: Tìm endpoint match với full path user nhập
                           if (newValue) {
+                            const matchingEndpoint =
+                              newApiCallAvailableEndpoints.find((ep) => {
+                                return formatFullPath(ep) === newValue;
+                              });
+
+                            if (matchingEndpoint) {
+                              // Nếu tìm thấy match, lưu ID
+                              setNewApiCallTargetEndpointId(
+                                matchingEndpoint.id
+                              );
+                            }
+                            // Mở dropdown khi user nhập
                             setIsTargetEndpointSuggestionsOpen(true);
                           }
                         }}
                         onFocus={() => {
-                          // Mở dropdown khi focus vào input (nếu có data)
-                          if (getFilteredEndpoints().length > 0) {
+                          // Mở dropdown khi focus vào input (nếu có data và không phải external URL)
+                          const currentValue = (() => {
+                            const selectedEndpoint =
+                              newApiCallAvailableEndpoints.find(
+                                (ep) => ep.id === newApiCallTargetEndpointId
+                              );
+                            if (selectedEndpoint) {
+                              return formatFullPath(selectedEndpoint);
+                            } else if (newApiCallTargetEndpointDisplay) {
+                              return newApiCallTargetEndpointDisplay;
+                            } else {
+                              return "";
+                            }
+                          })();
+
+                          if (
+                            getFilteredEndpoints().length > 0 &&
+                            currentValue &&
+                            !currentValue.startsWith("http://") &&
+                            !currentValue.startsWith("https://")
+                          ) {
                             setIsTargetEndpointSuggestionsOpen(true);
                           }
                         }}
@@ -3898,7 +3995,7 @@ const DashboardPage = () => {
                             setIsTargetEndpointSuggestionsOpen(false);
                           }, 200);
                         }}
-                        placeholder="Enter endpoint path (e.g., /workspace/project/path)"
+                        placeholder="Enter endpoint path (e.g., /workspace/project/path or https://domain.com/path)"
                         className={`w-full max-w-[400px] ${
                           newApiCallValidationErrors.targetEndpoint
                             ? "border-red-500"
@@ -4514,7 +4611,7 @@ const DashboardPage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-5 items-center gap-1">
+            <div>
               <Label
                 htmlFor="new-status-code"
                 className="text-right text-sm font-medium text-[#000000]"
