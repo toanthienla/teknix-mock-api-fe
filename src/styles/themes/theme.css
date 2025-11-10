@@ -32,7 +32,7 @@
     --link-hover: #1d4ed8;
 
     /* ===== Workspace button ===== */
-    --lightgray-bg: #f8fafc;
+    --lightgray-button-bg: #f8fafc;
     --lightgray-bg-hover: #e2e8f0;
 
     /* ===== Scrollbar ===== */
@@ -74,8 +74,11 @@
 
     /* ===== Additional ===== */
     --lightgray-ws-header: #F7F9FB;
+    --lightgray-bg: #F2F2F2;
     --lightgray-border: #F4F5F7;
     --path-background: #EDEDEC;
+    --folder-header-bg: #BFBFBF;
+    --folder-header-text: #4F5E74;
 }
 
 /* ===============================
@@ -99,6 +102,10 @@
     /* ===== JSON ===== */
     --custom-json-key: #6CACE5;
     --custom-json-value: #A5D6FF;
+
+    /* ===== Workspace button ===== */
+    --lightgray-button-bg: #53555B;
+    --lightgray-bg-hover: #475569;
 
     /* ===== Button ===== */
     --button-bg: #5865f2;
@@ -145,11 +152,14 @@
 
     /* ===== Additional ===== */
     --lightgray-bg: #53555b;
-    --lightgray-bg-hover: #475569;
+
     --lightgray-header: #72767D;
     --lightgray-border: #B8B8B8;
 
     --path-background: #202225;
 
     --lightgray-ws-header: #42454A;
+
+    --folder-header-bg: #72767D;
+    --folder-header-text: #ffffff;
 }

@@ -1390,7 +1390,7 @@ export default function FolderPage() {
                 <div className="tab-header flex rounded-t-lg">
                   <button
                     onClick={() => setActiveTab("folders")}
-                    className={`tab-button flex rounded-tl-lg px-4 py-2 -mb-px ${
+                    className={`tab-button flex rounded-tl-lg px-4 py-2 ${
                       activeTab === "folders"
                         ? "active"
                         : ""
@@ -1403,7 +1403,7 @@ export default function FolderPage() {
                         className={`w-4 h-4 mr-2 ${
                           activeTab === "folders"
                             ? "brightness-0 dark:invert"
-                            : "dark:invert"
+                            : ""
                         }`}
                       />
                       <span className="text-md font-semibold">Folders</span>
@@ -1414,7 +1414,7 @@ export default function FolderPage() {
                       setActiveTab("logs");
                       setPage(1);
                     }}
-                    className={`tab-button rounded-none px-4 py-2 -mb-px ${
+                    className={`tab-button rounded-none px-4 py-2 ${
                       activeTab === "logs"
                         ? "active"
                         : ""

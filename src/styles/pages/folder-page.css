@@ -1,7 +1,11 @@
 .folder-page {
     background-color: var(--background);
     color: var(--foreground);
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.folder-page-content * {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ===== Card & Container ===== */
@@ -97,7 +101,6 @@
 .folder-page-content th {
     background-color: var(--card);
     color: var(--foreground);
-    border-bottom: 1px solid var(--card-border);
 }
 
 .folder-page-content td {
@@ -105,16 +108,13 @@
 }
 
 .folder-page-content tbody tr:hover {
-    background-color: var(--muted);
+    background-color: var(--accent);
 }
 
-/* ===== Dialog ===== */
-/*.folder-page .dialog {*/
-/*    background-color: var(--card);*/
-/*    color: var(--foreground);*/
-/*    border: 1px solid var(--card-border);*/
-/*    box-shadow: 0 4px 12px rgba(0,0,0,0.15);*/
-/*}*/
+.folder-page-content .endpoint-header {
+    background-color: var(--folder-header-bg);
+    color: var(--folder-header-text);
+}
 
 /* ===== Scrollbar ===== */
 .folder-page-content ::-webkit-scrollbar {
@@ -151,7 +151,7 @@
 
 /* Thumb (nút tròn) */
 .folder-page-content .switch span {
-    background-color: #ffffff !important; /* luôn trắng ở cả light và dark */
+    background-color: #ffffff !important;
 }
 
 /* ===== Plus / Minus icon trong FolderCard ===== */

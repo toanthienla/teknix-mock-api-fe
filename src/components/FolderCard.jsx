@@ -178,22 +178,22 @@ export default function FolderCard({
             <table className="w-full border-separate border-spacing-x-2 border-spacing-y-0">
               <thead>
               <tr>
-                <th className="text-xs font-semibold py-2 px-3 text-left rounded-md w-1/2">
+                <th className="endpoint-header text-xs font-semibold py-2 px-3 text-left rounded-md w-1/2">
                   ENDPOINT NAME
                 </th>
-                <th className="text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
+                <th className="endpoint-header text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
                   STATE
                 </th>
-                <th className="text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
+                <th className="endpoint-header text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
                   METHOD
                 </th>
-                <th className="text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
+                <th className="endpoint-header text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
                   STATUS
                 </th>
-                <th className="text-xs font-semibold text-center py-2 px-3 rounded-md w-1/6">
+                <th className="endpoint-header text-xs font-semibold text-center py-2 px-3 rounded-md w-1/6">
                   TIME & DATE
                 </th>
-                <th className="text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
+                <th className="endpoint-header text-xs font-semibold text-center py-2 px-3 rounded-md w-1/12">
                   ACTION
                 </th>
               </tr>
