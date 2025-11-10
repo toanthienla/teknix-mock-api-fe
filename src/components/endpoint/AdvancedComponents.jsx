@@ -1774,18 +1774,18 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             </div>
           </div>
           {/* Expected Value */}
-          <div className="absolute w-[440.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
+          <div className="absolute w-[440.47px] h-[27.46px] right-[120.49px] top-[5.49px] flex items-center pl-2">
             <div className="font-inter font-bold text-[12px] text-black">
               Equal
             </div>
           </div>
           {/* Expected Value */}
-          <div className="absolute w-[150.47px] h-[27.46px] right-[250.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
+          <div className="absolute w-[150.47px] h-[27.46px] right-[365.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
             <div className="font-inter font-bold text-[14px] text-black">
               Expected Value
             </div>
           </div>
-          <div className="absolute w-[212.47px] h-[27.46px] right-[5.49px] top-[5.49px] flex items-center pl-2">
+          <div className="absolute w-[212.47px] h-[27.46px] right-[119.49px] top-[5.49px] flex items-center pl-2">
             <div className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
               ?
             </div>
