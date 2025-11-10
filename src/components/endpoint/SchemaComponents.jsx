@@ -361,7 +361,8 @@ export const SchemaBodyEditor = ({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                 onClick={handleSave}
                 onMouseEnter={() => setSaveTooltipVisible(true)}
                 onMouseLeave={() => setSaveTooltipVisible(false)}
@@ -372,7 +373,7 @@ export const SchemaBodyEditor = ({
                 visible={saveTooltipVisible}
                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
               >
-                Save API Calls
+                Save button
               </Tooltip>
             </div>
           </div>
@@ -401,7 +402,6 @@ export const SchemaBodyEditor = ({
               </div>
             </div>
             <div>Type</div>
-
             {/* Ẩn cột Required nếu là GET */}
             {method !== "GET" && <div>Required</div>}{" "}
           </div>
@@ -454,11 +454,15 @@ export const SchemaBodyEditor = ({
                 </div>
 
                 {/* Type */}
-                <div className="px-2 py-1 rounded-xs text-sm font-normal bg-[#EDEDEC] w-fit">{fieldType}</div>
+                <div className="px-2 py-1 rounded-xs text-sm font-normal bg-[#EDEDEC] w-fit">
+                  {fieldType}
+                </div>
 
                 {/* Required (chỉ hiển thị nếu không phải GET) */}
                 {method !== "GET" && (
-                  <div className="text-right">{fieldRequired ? "Yes" : "No"}</div>
+                  <div className="text-right">
+                    {fieldRequired ? "Yes" : "No"}
+                  </div>
                 )}
               </div>
             );

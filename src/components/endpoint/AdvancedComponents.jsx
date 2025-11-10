@@ -286,7 +286,7 @@ export const ApiCallEditor = ({
     }
   };
 
-  // ✅ CẬP NHẬT: Sử dụng hàm helper để tạo full path
+  // ✅ CẬP NHẬT: Hàm lấy full target endpoint để xử lý external URLs
   const getFullTargetEndpoint = (callIndex) => {
     const selectedEndpoint = getSelectedEndpoint(callIndex);
 
@@ -296,7 +296,11 @@ export const ApiCallEditor = ({
 
     // ✅ FALLBACK: Nếu không có endpoint được chọn, dùng target_endpoint hiện tại
     const call = nextCalls[callIndex];
-    return call?.target_endpoint || "";
+    if (call?.target_endpoint) {
+      return call.target_endpoint;
+    }
+
+    return "";
   };
 
   // Khởi tạo JSON strings từ nextCalls
@@ -590,15 +594,27 @@ export const ApiCallEditor = ({
     }
   }, [nextCalls]);
 
-  // ✅ THÊM: Hàm để format full path
+  // ✅ THÊM: Hàm để format full path (xử lý cả external URLs)
   const formatFullPath = (endpoint) => {
     if (!endpoint) return "";
 
-    const cleanWorkspaceName = endpoint.workspaceName.replace(/^\/+|\/+$/g, "");
-    const cleanProjectName = endpoint.projectName.replace(/^\/+|\/+$/g, "");
-    const cleanPath = endpoint.path.startsWith("/")
+    // Kiểm tra nếu endpoint đã là external URL
+    if (
+      endpoint.path &&
+      (endpoint.path.startsWith("http://") ||
+        endpoint.path.startsWith("https://"))
+    ) {
+      return endpoint.path;
+    }
+
+    // Xử lý internal endpoint
+    const cleanWorkspaceName =
+      endpoint.workspaceName?.replace(/^\/+|\/+$/g, "") || "";
+    const cleanProjectName =
+      endpoint.projectName?.replace(/^\/+|\/+$/g, "") || "";
+    const cleanPath = endpoint.path?.startsWith("/")
       ? endpoint.path.substring(1)
-      : endpoint.path;
+      : endpoint.path || "";
 
     return `/${cleanWorkspaceName}/${cleanProjectName}/${cleanPath}`;
   };
@@ -659,7 +675,7 @@ export const ApiCallEditor = ({
     return true;
   };
 
-  // ✅ CẬP NHẬT: Validation sử dụng ID thay vì path
+  // ✅ CẬP NHẬT: Validation để chấp nhận external URLs
   const validateTargetEndpoints = () => {
     const endpointErrors = {};
     const statusConditionErr = {};
@@ -670,7 +686,7 @@ export const ApiCallEditor = ({
         statusConditionErr[index] = "Status condition is required";
       }
 
-      // Kiểm tra format /workspace/project/path
+      // Kiểm tra format /workspace/project/path hoặc external URL
       const targetEndpoint = (() => {
         const selectedEp = getSelectedEndpoint(index);
         if (selectedEp) {
@@ -682,29 +698,33 @@ export const ApiCallEditor = ({
         }
       })();
 
-      // ✅ VALIDATION: Kiểm tra có endpoint nào được chọn không
-      const selectedEp = getSelectedEndpoint(index);
-      if (!selectedEp) {
-        endpointErrors[index] = "Please select a valid endpoint";
+      if (!targetEndpoint) {
+        endpointErrors[index] = "Please enter a valid endpoint or external URL";
         return;
       }
 
-      // ✅ VALIDATION: Kiểm tra format /workspace/project/path
-      if (!targetEndpoint.match(/^\/[^/]+\/[^/]+\/.+/)) {
+      // Kiểm tra format hợp lệ (internal path hoặc external URL)
+      const isValidInternalPath = targetEndpoint.match(/^\/[^/]+\/[^/]+\/.+/);
+      const isValidExternalUrl = targetEndpoint.match(/^https?:\/\/.+/);
+
+      if (!isValidInternalPath && !isValidExternalUrl) {
         endpointErrors[index] =
-          "Endpoint must follow format /workspace/project/path";
+          "Please enter a valid endpoint (e.g., /workspace/project/path or https://domain.com/path)";
         return;
       }
 
-      // ✅ VALIDATION: Kiểm tra endpoint có tồn tại trong danh sách không
-      const matchingEndpoint = availableEndpoints.find((ep) => {
-        return formatFullPath(ep) === targetEndpoint;
-      });
+      // ✅ VALIDATION: Chỉ kiểm tra internal endpoint có tồn tại trong danh sách không
+      if (isValidInternalPath) {
+        const matchingEndpoint = availableEndpoints.find((ep) => {
+          return formatFullPath(ep) === targetEndpoint;
+        });
 
-      if (!matchingEndpoint) {
-        endpointErrors[index] =
-          "Invalid endpoint. Please select from suggestions.";
+        if (!matchingEndpoint) {
+          endpointErrors[index] =
+            "Invalid internal endpoint. Please select from suggestions.";
+        }
       }
+      // External URLs không cần kiểm tra trong availableEndpoints
     });
 
     setEndpointValidationErrors(endpointErrors);
@@ -860,7 +880,8 @@ export const ApiCallEditor = ({
             <Button
               variant="outline"
               onClick={() => setIsNewApiCallDialogOpen(true)}
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+              style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
               onMouseEnter={() => setAddTooltipVisible(true)}
               onMouseLeave={() => setAddTooltipVisible(false)}
             >
@@ -880,7 +901,8 @@ export const ApiCallEditor = ({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                 onClick={() =>
                   setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
                 }
@@ -981,7 +1003,8 @@ export const ApiCallEditor = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+              style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+              className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
               onClick={handleSave}
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
@@ -1040,7 +1063,7 @@ export const ApiCallEditor = ({
                   <Input
                     id={`target-endpoint-${index}`}
                     value={(() => {
-                      // Hiển thị full path /workspace/project/path
+                      // Hiển thị full path /workspace/project/path hoặc external URL
                       const selectedEp = getSelectedEndpoint(index);
                       if (selectedEp) {
                         return formatFullPath(selectedEp);
@@ -1053,37 +1076,83 @@ export const ApiCallEditor = ({
                     onChange={(e) => {
                       const newValue = e.target.value;
 
-                      // ✅ CẬP NHẬT: Tìm endpoint match với full path user nhập
-                      const matchingEndpoint = availableEndpoints.find((ep) => {
-                        return formatFullPath(ep) === newValue;
-                      });
-
-                      if (matchingEndpoint) {
-                        // Nếu tìm thấy match, lưu ID
-                        updateSelectedEndpointId(index, matchingEndpoint.id);
-                        handleNextCallChange(
-                          index,
-                          "target_endpoint",
-                          newValue
+                      // ✅ CẬP NHẬT: Tìm endpoint match với full path user nhập (chỉ cho internal endpoints)
+                      if (
+                        newValue &&
+                        !newValue.startsWith("http://") &&
+                        !newValue.startsWith("https://")
+                      ) {
+                        const matchingEndpoint = availableEndpoints.find(
+                          (ep) => {
+                            return formatFullPath(ep) === newValue;
+                          }
                         );
-                      } else {
-                        // Nếu không match, reset ID và lưu giá trị user nhập
+
+                        if (matchingEndpoint) {
+                          // Nếu tìm thấy match, lưu ID
+                          updateSelectedEndpointId(index, matchingEndpoint.id);
+                          handleNextCallChange(
+                            index,
+                            "target_endpoint",
+                            newValue
+                          );
+                        } else {
+                          // Nếu không match, reset ID và lưu giá trị user nhập
+                          updateSelectedEndpointId(index, null);
+                          handleNextCallChange(
+                            index,
+                            "target_endpoint",
+                            newValue
+                          );
+                        }
+
+                        // Mở dropdown khi user nhập
+                        if (newValue) {
+                          updateSuggestionsOpen(index, true);
+                        }
+                      } else if (
+                        newValue &&
+                        (newValue.startsWith("http://") ||
+                          newValue.startsWith("https://"))
+                      ) {
+                        // External URL - không cần tìm kiếm trong available endpoints
                         updateSelectedEndpointId(index, null);
                         handleNextCallChange(
                           index,
                           "target_endpoint",
                           newValue
                         );
-                      }
-
-                      // Mở dropdown khi user nhập
-                      if (newValue) {
-                        updateSuggestionsOpen(index, true);
+                        updateSuggestionsOpen(index, false); // Đóng dropdown
+                      } else {
+                        // Empty value
+                        updateSelectedEndpointId(index, null);
+                        handleNextCallChange(
+                          index,
+                          "target_endpoint",
+                          newValue
+                        );
+                        updateSuggestionsOpen(index, false);
                       }
                     }}
                     onFocus={() => {
-                      // Mở dropdown khi focus vào input (nếu có data)
-                      if (getFilteredEndpoints(index).length > 0) {
+                      // Mở dropdown khi focus vào input (nếu có data và không phải external URL)
+                      const currentValue = (() => {
+                        const selectedEp = getSelectedEndpoint(index);
+                        if (selectedEp) {
+                          return selectedEp.path;
+                        } else if (call.target_endpoint) {
+                          return call.target_endpoint;
+                        } else {
+                          return "";
+                        }
+                      })();
+
+                      if (
+                        getFilteredEndpoints(index).length > 0 &&
+                        currentValue &&
+                        !currentValue.startsWith("http://") &&
+                        !currentValue.startsWith("https://")
+                      ) {
                         updateSuggestionsOpen(index, true);
                       }
                     }}
@@ -1093,14 +1162,14 @@ export const ApiCallEditor = ({
                         updateSuggestionsOpen(index, false);
                       }, 200);
                     }}
-                    placeholder="Enter endpoint path (e.g., /workspace/project/path)"
+                    placeholder="Enter endpoint path (e.g., /workspace/project/path or https://domain.com/path)"
                     className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
                       endpointValidationErrors[index] ? "border-red-500" : ""
                     }`}
                   />
-
-                  {/* ✅ Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
                   {getSuggestionsOpen(index) &&
+                    !call.target_endpoint?.startsWith("http://") &&
+                    !call.target_endpoint?.startsWith("https://") &&
                     getFilteredEndpoints(index).length > 0 && (
                       <div
                         data-dropdown={`target-endpoint-${index}`}
@@ -1167,7 +1236,6 @@ export const ApiCallEditor = ({
                           ))}
                       </div>
                     )}
-
                   {/* Hiển thị lỗi validation cho Target Endpoint */}
                   {endpointValidationErrors[index] && (
                     <div className="text-red-400 text-xs mt-1">
@@ -1654,7 +1722,8 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
           <Button
             variant="outline"
             onClick={handleAddRule}
-            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50"
+            style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
             onMouseEnter={() => setFrameAddTooltipVisible(true)}
             onMouseLeave={() => setFrameAddTooltipVisible(false)}
           >
@@ -1672,7 +1741,8 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 border-[#E5E5E1] hover:bg-yellow-50"
+            style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+            className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
             onClick={handleSave}
             onMouseEnter={() => setFrameSaveTooltipVisible(true)}
             onMouseLeave={() => setFrameSaveTooltipVisible(false)}
