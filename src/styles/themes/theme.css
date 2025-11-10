@@ -18,6 +18,10 @@
     --input-text: #1e293b;
     --input-placeholder: #94a3b8;
 
+    /* ===== JSON ===== */
+    --custom-json-key: #0051D9;
+    --custom-json-value: #4093ff;
+
     /* ===== Button ===== */
     --button-bg: #fbeb6b;
     --button-bg-hover: #fde047;
@@ -69,7 +73,7 @@
     --font-family: "Be Vietnam Pro", sans-serif;
 
     /* ===== Additional ===== */
-    /*--lightgray-bg: #F7F9FB;*/
+    --lightgray-ws-header: #F7F9FB;
     --lightgray-border: #F4F5F7;
     --path-background: #EDEDEC;
 }
@@ -91,6 +95,10 @@
     --input-border: #475569;
     --input-text: #f8fafc;
     --input-placeholder: #72767D;
+
+    /* ===== JSON ===== */
+    --custom-json-key: #6CACE5;
+    --custom-json-value: #A5D6FF;
 
     /* ===== Button ===== */
     --button-bg: #5865f2;
@@ -142,4 +150,6 @@
     --lightgray-border: #B8B8B8;
 
     --path-background: #202225;
+
+    --lightgray-ws-header: #42454A;
 }

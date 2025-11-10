@@ -18,6 +18,10 @@
     border-bottom: 2px solid var(--lightgray-border);
 }
 
+.folder-page-content .ws-header {
+    background-color: var(--lightgray-ws-header);
+}
+
 /* ===== Tabs (Folders / Logs) ===== */
 .folder-page-content .tab-header {
     background-color: var(--lightgray-bg);

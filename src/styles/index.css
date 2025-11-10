@@ -241,19 +241,19 @@ button:hover,
 /* === Custom JSON Viewer: Initial Value === */
 /* Key */
 .custom-initial-value .token.property {
-    color: #0051D9 !important; /* xanh dương đậm */
+    color: var(--custom-json-key) !important; /* xanh dương đậm */
 }
 
 /* String & Value */
 .custom-initial-value .token.string {
-    color: #4093ff !important; /* xanh nhạt */
+    color: var(--custom-json-value) !important; /* xanh nhạt */
 }
 
 /* Number, Boolean, Null */
 .custom-initial-value .token.number,
 .custom-initial-value .token.boolean,
 .custom-initial-value .token.null {
-    color: #4093ff !important;
+    color: var(--custom-json-value) !important;
 }
 
 .custom-initial-value .token.punctuation,
@@ -261,7 +261,7 @@ button:hover,
 .custom-initial-value span[style*=":"],
 .custom-initial-value .token.punctuation:has(+ .token.string),
 .custom-initial-value .token.string + .token.punctuation {
-    color: #000000 !important;
+    color: var(--foreground) !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;

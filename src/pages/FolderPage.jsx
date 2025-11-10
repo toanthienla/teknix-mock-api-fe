@@ -46,7 +46,7 @@ import folderIcon from "@/assets/light/folder-icon.svg";
 import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
-import deleteIcon from "@/assets/light/delete.svg";
+import WSChannelSheet from "@/components/WSChannel.jsx";
 
 const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -397,8 +397,6 @@ export default function FolderPage() {
   const [openEdit, setOpenEdit] = useState(false);
 
   const [openWSDialog, setOpenWSDialog] = useState(false);
-  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
-  const cleanAPIROOT = API_ROOT.replace(/^https?:\/\//, "");
 
   const checkUserLogin = async () => {
     try {
@@ -1465,7 +1463,7 @@ export default function FolderPage() {
                             ) : (
                               <Button
                                 onClick={() => setOpenWSDialog(true)}
-                                className="rounded-xs"
+                                className="btn-primary rounded-xs"
                               >
                                 View WS Channel
                               </Button>
@@ -2275,122 +2273,132 @@ export default function FolderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* View WS Channel Dialog */}
-      <Dialog open={openWSDialog} onOpenChange={setOpenWSDialog}>
-        <DialogContent className="max-w-lg rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">
-              Real-time Updates via WebSocket
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription className="text-sm opacity-50">Click to reveal</DialogDescription>
-          {currentProject && currentWorkspace && (
-            <div className="mt-4 space-y-4 text-sm">
-              {/* Unsecured URL */}
-              <div className="relative">
-                <div
-                  className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
-                  bash
-                  <button
-                    className="text-xs px-2 py-1 rounded-xs"
-                    onClick={() =>
-                      handleCopyURL(
-                        `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
-                      )
-                    }
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="px-2 py-1">
-                    Your Unsecured URL:{" "}
-                    <spoiler-span>
-                      “ws://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
-                    </spoiler-span>
-                  </span>
-                </div>
-              </div>
+      {/* View WS Channel */}
+      <WSChannelSheet
+        open={openWSDialog}
+        onOpenChange={setOpenWSDialog}
+        project={currentProject}
+        workspace={currentWorkspace}
+        apiRoot={API_ROOT}
+        onDeleteWSChannel={handleDeleteWSChannel}
+        onCopyURL={handleCopyURL}
+      />
 
-              {/* Secured URL */}
-              <div className="relative">
-                <div
-                  className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
-                  bash
-                  <button
-                    className="text-xs px-2 py-1 rounded-xs"
-                    onClick={() =>
-                      handleCopyURL(
-                        `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`
-                      )
-                    }
-                  >
-                    Copy
-                  </button>
-                </div>
-                <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                  <span className="px-2 py-1">
-                    Your Secured URL:{" "}
-                    <spoiler-span>
-                      “wss://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”
-                    </spoiler-span>
-                  </span>
-                </div>
-              </div>
+      {/*<Dialog open={openWSDialog} onOpenChange={setOpenWSDialog}>*/}
+      {/*  <DialogContent className="max-w-lg rounded-2xl">*/}
+      {/*    <DialogHeader>*/}
+      {/*      <DialogTitle className="text-lg font-semibold">*/}
+      {/*        Real-time Updates via WebSocket*/}
+      {/*      </DialogTitle>*/}
+      {/*    </DialogHeader>*/}
+      {/*    <DialogDescription className="text-sm opacity-50">Click to reveal</DialogDescription>*/}
+      {/*    {currentProject && currentWorkspace && (*/}
+      {/*      <div className="mt-4 space-y-4 text-sm">*/}
+      {/*        /!* Unsecured URL *!/*/}
+      {/*        <div className="relative">*/}
+      {/*          <div*/}
+      {/*            className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">*/}
+      {/*            bash*/}
+      {/*            <button*/}
+      {/*              className="text-xs px-2 py-1 rounded-xs"*/}
+      {/*              onClick={() =>*/}
+      {/*                handleCopyURL(*/}
+      {/*                  `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`*/}
+      {/*                )*/}
+      {/*              }*/}
+      {/*            >*/}
+      {/*              Copy*/}
+      {/*            </button>*/}
+      {/*          </div>*/}
+      {/*          <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">*/}
+      {/*            <span className="px-2 py-1">*/}
+      {/*              Your Unsecured URL:{" "}*/}
+      {/*              <spoiler-span>*/}
+      {/*                “ws://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”*/}
+      {/*              </spoiler-span>*/}
+      {/*            </span>*/}
+      {/*          </div>*/}
+      {/*        </div>*/}
 
-              {/* Delete Button */}
-              <div className="pt-2">
-                <Button
-                  variant="destructive"
-                  className="group w-full flex items-center gap-2 justify-center text-black hover:text-white bg-white
-                    border border-red-500 hover:bg-red-500 transition-colors duration-200"
-                  onClick={() => setOpenDeleteConfirm(true)}
-                >
-                  <img
-                    src={deleteIcon}
-                    alt="Delete"
-                    className="w-4 h-4 transition duration-200 group-hover:brightness-0 group-hover:invert"
-                  />
-                  <span>Delete WS Channel</span>
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/*        /!* Secured URL *!/*/}
+      {/*        <div className="relative">*/}
+      {/*          <div*/}
+      {/*            className="text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">*/}
+      {/*            bash*/}
+      {/*            <button*/}
+      {/*              className="text-xs px-2 py-1 rounded-xs"*/}
+      {/*              onClick={() =>*/}
+      {/*                handleCopyURL(*/}
+      {/*                  `ws://${cleanAPIROOT}/ws/${currentWorkspace.name}/${currentProject.name}`*/}
+      {/*                )*/}
+      {/*              }*/}
+      {/*            >*/}
+      {/*              Copy*/}
+      {/*            </button>*/}
+      {/*          </div>*/}
+      {/*          <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">*/}
+      {/*            <span className="px-2 py-1">*/}
+      {/*              Your Secured URL:{" "}*/}
+      {/*              <spoiler-span>*/}
+      {/*                “wss://{cleanAPIROOT}/ws/{currentWorkspace.name}/{currentProject.name}”*/}
+      {/*              </spoiler-span>*/}
+      {/*            </span>*/}
+      {/*          </div>*/}
+      {/*        </div>*/}
+
+      {/*        /!* Delete Button *!/*/}
+      {/*        <div className="pt-2">*/}
+      {/*          <Button*/}
+      {/*            variant="destructive"*/}
+      {/*            className="group w-full flex items-center gap-2 justify-center text-black hover:text-white bg-white*/}
+      {/*              border border-red-500 hover:bg-red-500 transition-colors duration-200"*/}
+      {/*            onClick={() => setOpenDeleteConfirm(true)}*/}
+      {/*          >*/}
+      {/*            <img*/}
+      {/*              src={deleteIcon}*/}
+      {/*              alt="Delete"*/}
+      {/*              className="w-4 h-4 transition duration-200 group-hover:brightness-0 group-hover:invert"*/}
+      {/*            />*/}
+      {/*            <span>Delete WS Channel</span>*/}
+      {/*          </Button>*/}
+      {/*        </div>*/}
+      {/*      </div>*/}
+      {/*    )}*/}
+      {/*  </DialogContent>*/}
+      {/*</Dialog>*/}
 
       {/* Delete Confirm Dialog */}
-      <Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
-        <DialogContent className="max-w-xs rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-center">
-              Delete Confirm
-            </DialogTitle>
-          </DialogHeader>
+      {/*<Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>*/}
+      {/*  <DialogContent className="max-w-xs rounded-2xl">*/}
+      {/*    <DialogHeader>*/}
+      {/*      <DialogTitle className="text-lg font-semibold text-center">*/}
+      {/*        Delete Confirm*/}
+      {/*      </DialogTitle>*/}
+      {/*    </DialogHeader>*/}
 
-          <div className="mt-4 flex flex-col space-y-2">
-            {/* Delete button */}
-            <Button
-              variant="destructive"
-              onClick={() => {
-                handleDeleteWSChannel(currentProject.id);
-                setOpenDeleteConfirm(false);
-              }}
-            >
-              Delete
-            </Button>
+      {/*    <div className="mt-4 flex flex-col space-y-2">*/}
+      {/*      /!* Delete button *!/*/}
+      {/*      <Button*/}
+      {/*        variant="destructive"*/}
+      {/*        onClick={() => {*/}
+      {/*          handleDeleteWSChannel(currentProject.id);*/}
+      {/*          setOpenDeleteConfirm(false);*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        Delete*/}
+      {/*      </Button>*/}
 
-            {/* Cancel button */}
-            <Button
-              variant="outline"
-              className="font-semibold rounded-md py-2"
-              onClick={() => setOpenDeleteConfirm(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/*      /!* Cancel button *!/*/}
+      {/*      <Button*/}
+      {/*        variant="outline"*/}
+      {/*        className="font-semibold rounded-md py-2"*/}
+      {/*        onClick={() => setOpenDeleteConfirm(false)}*/}
+      {/*      >*/}
+      {/*        Cancel*/}
+      {/*      </Button>*/}
+      {/*    </div>*/}
+      {/*  </DialogContent>*/}
+      {/*</Dialog>*/}
     </div>
   );
 }
