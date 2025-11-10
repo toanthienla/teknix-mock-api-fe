@@ -69,7 +69,9 @@
     --font-family: "Be Vietnam Pro", sans-serif;
 
     /* ===== Additional ===== */
+    /*--lightgray-bg: #F7F9FB;*/
     --lightgray-border: #F4F5F7;
+    --path-background: #EDEDEC;
 }
 
 /* ===============================
@@ -88,7 +90,7 @@
     --input-bg: #334155;
     --input-border: #475569;
     --input-text: #f8fafc;
-    --input-placeholder: #cbd5e1;
+    --input-placeholder: #72767D;
 
     /* ===== Button ===== */
     --button-bg: #5865f2;
@@ -138,4 +140,6 @@
     --lightgray-bg-hover: #475569;
     --lightgray-header: #72767D;
     --lightgray-border: #B8B8B8;
+
+    --path-background: #202225;
 }

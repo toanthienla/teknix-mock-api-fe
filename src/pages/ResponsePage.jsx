@@ -4,17 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { API_ROOT } from "../utils/constants";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Plus,
   Star,
@@ -63,7 +54,10 @@ import workspaceIcon from "@/assets/light/workspace-icon.svg";
 import projectIcon from "@/assets/light/project-icon.svg";
 import folderIcon from "@/assets/light/folder-icon.svg";
 import endpointIcon from "@/assets/light/endpoint.svg";
-import dot_background from "@/assets/light/dot_rows.svg";
+import dot_backgroundLight from "@/assets/light/dot_rows.svg";
+import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
+import hashtagIcon from "@/assets/light/hashtag.svg";
+import searchIcon from "@/assets/light/search.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
@@ -79,8 +73,12 @@ import {
 } from "@/components/endpoint/SchemaComponents";
 import { statusCodes } from "@/components/endpoint/constants";
 import { WSConfig } from "@/components/endpoint/WSConfig.jsx";
+import "@/styles/pages/response-page.css"
+import {useTheme} from "@/services/ThemeContext.jsx";
 
 const DashboardPage = () => {
+  const { isDark } = useTheme();
+  const dot_background = isDark ? dot_backgroundDark : dot_backgroundLight;
   const navigate = useNavigate();
   // Thêm state để quản lý data default
   const [endpointData, setEndpointData] = useState(null);
@@ -2477,7 +2475,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 flex">
+    <div className="response-page min-h-screen flex">
       {/* Main Content */}
       <div className="pt-8 flex-1 relative">
         {/* Header */}
@@ -2581,7 +2579,7 @@ const DashboardPage = () => {
         />
 
         <div
-          className="flex flex-col px-16 py-4"
+          className="response-page-content flex flex-col px-16 py-4"
           style={{
             backgroundImage: `url(${dot_background})`,
             backgroundRepeat: "no-repeat",
@@ -2590,7 +2588,7 @@ const DashboardPage = () => {
         >
           {/* Phần bên trái - Display Endpoint Name and Method */}
           <div className="flex items-center flex-shrink-0 mb-2">
-            <h2 className="text-4xl font-bold text-[#37352F] mr-4">
+            <h2 className="text-4xl font-bold opacity-80 mr-4">
               {endpoints.find(
                 (ep) => String(ep.id) === String(currentEndpointId)
               )?.name || "Endpoint"}
@@ -2599,12 +2597,16 @@ const DashboardPage = () => {
 
           {/* Phần bên phải - Form Status Info */}
           <div className="flex items-center gap-2 ml-1 flex-1 flex-wrap">
-            <div className="text-black bg-white font-semibold text-lg flex items-center ">
-              <Hash className="w-4 h-4" /> {/* Icon route thay cho chữ # */}
+            <div className="font-semibold text-lg flex items-center ">
+              <img
+                src={hashtagIcon}
+                alt="Hashtag"
+                className="w-5 h-5 mr-1 object-contain dark:brightness-0 dark:invert"
+              />
               <span>Path</span>
             </div>
 
-            <div className="flex items-center gap-2 w-full max-w-2xl bg-gray-100 border border-gray-300 rounded-md px-2 py-1">
+            <div className="path flex items-center gap-2 w-full max-w-2xl rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
@@ -2622,7 +2624,7 @@ const DashboardPage = () => {
                 {method}
               </Badge>
 
-              <div className="flex-1 text-black font-semibold text-base truncate min-w-0">
+              <div className="flex-1 font-semibold text-base truncate min-w-0">
                 {endpoints.find(
                   (ep) => String(ep.id) === String(currentEndpointId)
                 )?.path || "-"}
@@ -2632,7 +2634,7 @@ const DashboardPage = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-6 h-6 flex-shrink-0"
+                className="w-6 h-6 flex-shrink-0 dark:brightness-0 dark:invert"
                 onClick={handleCopyPath}
                 title="Copy path"
               >
@@ -2649,7 +2651,7 @@ const DashboardPage = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-6 h-6 flex-shrink-0"
+                className="w-6 h-6 flex-shrink-0 dark:brightness-0 dark:invert"
                 onClick={() => setShowResetConfirmDialog(true)}
               >
                 <img
@@ -2662,34 +2664,33 @@ const DashboardPage = () => {
 
             {/* State Mode Toggle */}
             <div className="ml-4 flex items-center gap-2">
-              <span className="font-inter font-semibold text-base text-black select-none">
+              <span className="font-inter font-semibold text-base select-none">
                 {isStateful ? "Stateful" : "Stateless"}
               </span>
 
               <Switch
                 checked={isStateful}
                 onCheckedChange={handleStateModeChange}
-                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+                className="switch"
               />
             </div>
 
-
             <div className="flex items-center gap-3">
               <Label htmlFor="ws-enable" className="text-base font-inter font-semibold">
-                Connect WS
+                Notification
               </Label>
               <Switch
                 id="ws-enable"
                 checked={wsEnabled}
                 onCheckedChange={handleToggleWebSocket}
-                className="data-[state=checked]:bg-yellow-300 data-[state=unchecked]:bg-gray-300"
+                className="switch"
               />
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className={`transition-all duration-300 px-16 pt-4 pb-4 w-full`}>
+        <div className={`response-page-content transition-all duration-300 px-16 pt-4 pb-4 w-full`}>
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
@@ -2731,13 +2732,13 @@ const DashboardPage = () => {
             {/* Cột trái - Response Configuration */}
             <div className="w-1/4">
               {/* Header với nút Add và Search */}
-              <div className="flex flex-col bg-white rounded-lg ">
-                <div className="flex items-center justify-between p-2.5 bg-[#F7F9FB] rounded-t-lg border border-[#EDEFF1] border-b-0">
+              <div className="response-header flex flex-col rounded-t-lg ">
+                <div className="flex items-center justify-between p-2.5 rounded-t-lg border border-b-0">
                   <div className="flex items-center gap-3.5">
                     {!isStateful && (
                       <div className="relative">
                         <button
-                          className="w-6 h-6 flex items-center justify-center rounded-lg bg-white border border-[#EDEFF1]"
+                          className="w-6 h-6 flex items-center justify-center rounded-lg border dark:border-none"
                           onClick={handleNewResponse}
                           disabled={isStateful}
                           title={
@@ -2748,7 +2749,7 @@ const DashboardPage = () => {
                           onMouseEnter={() => setAddTooltipVisible(true)}
                           onMouseLeave={() => setAddTooltipVisible(false)}
                         >
-                          <Plus className="w-4 h-4 text-[#1C1C1C]" />
+                          <Plus className="w-4 h-4 text-black dark:invert" />
                         </button>
                         <Tooltip
                           visible={addTooltipVisible}
@@ -2758,32 +2759,17 @@ const DashboardPage = () => {
                         </Tooltip>
                       </div>
                     )}
-                    <div className="flex items-center bg-white border border-[#EDEFF1] rounded-lg px-1.5 py-1 w-[146px] h-[26px]">
+                    <div className="flex items-center rounded-lg border px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
-                        <div className="w-[14.65px] h-[14.65px]">
-                          <svg
-                            width="14.65"
-                            height="14.65"
-                            viewBox="0 0 14.65 14.65"
-                            fill="none"
-                          >
-                            <path
-                              d="M6.5 11.5C9.26142 11.5 11.5 9.26142 11.5 6.5C11.5 3.73858 9.26142 1.5 6.5 1.5C3.73858 1.5 1.5 3.73858 1.5 6.5C1.5 9.26142 3.73858 11.5 6.5 11.5Z"
-                              stroke="rgba(28, 28, 28, 0.2)"
-                              strokeWidth="1.5"
-                            />
-                            <path
-                              d="M10.5 10.5L13.5 13.5"
-                              stroke="rgba(28, 28, 28, 0.2)"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </div>
+                        <img
+                          src={searchIcon}
+                          alt="Search"
+                          className="w-4 h-4 object-contain opacity-30 dark:brightness-0 dark:invert"
+                        />
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-[87.88px] h-[19px] text-[12.8152px] text-[rgb(28,28,28)] bg-transparent border-none focus:outline-none"
+                          className="placeholder w-[87.88px] h-[19px] text-[12.8152px] bg-transparent border-none focus:outline-none"
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
@@ -2793,7 +2779,7 @@ const DashboardPage = () => {
               </div>
 
               {/* Response Configuration Table */}
-              <div className="square-lg border border-[#EDEFF1] bg-white overflow-hidden">
+              <div className="square-lg border overflow-hidden rounded-b-lg">
                 <div className="overflow-y-auto max-h-[400px]">
                   {filteredStatusData.length > 0 ? (
                     filteredStatusData.map((status, index) => {
@@ -2816,10 +2802,10 @@ const DashboardPage = () => {
                       return (
                         <div
                           key={status.id || status.code}
-                          className={`group flex items-center justify-between p-3 border-b border-[#EDEFF1] cursor-pointer ${
+                          className={`group response-card flex items-center justify-between p-3 cursor-pointer ${
                             selectedResponse?.id === status.id
-                              ? "bg-gray-100"
-                              : "hover:bg-gray-50"
+                              ? "active"
+                              : ""
                           } ${
                             index === filteredStatusData.length - 1
                               ? "border-b-0"
@@ -2856,7 +2842,8 @@ const DashboardPage = () => {
                           <div className="flex items-center gap-1">
                             {/* Icon GripVertical chỉ hiện khi hover */}
                             {!isStateful && !searchTerm && (
-                              <GripVertical className="h-4 w-4 text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <GripVertical className="h-4 w-4 text-gray-400 dark:text-white cursor-move opacity-0
+                                group-hover:opacity-100 transition-opacity" />
                             )}
 
                             <div className="flex items-center gap-2">
@@ -2866,7 +2853,7 @@ const DashboardPage = () => {
                               >
                                 {status.code}
                               </span>
-                              <span className="text-[12px] text-[#212121]">
+                              <span className="text-[12px]">
                                 {status.name}
                               </span>
                             </div>
@@ -2897,7 +2884,7 @@ const DashboardPage = () => {
                                 }}
                                 title="Delete response"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 dark:brightness-0 dark:invert" />
                               </Button>
                             )}
                           </div>
@@ -4268,12 +4255,12 @@ const DashboardPage = () => {
           </div>
         </div>
         {/* footer */}
-        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold text-gray-700">
+        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
           <span>© Teknix Corp. All rights reserved.</span>
-          <div className="flex items-center gap-3 text-gray-700">
-            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4" />
-            <img src={fbIcon} alt="facebook" className="w-4 h-4" />
-            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert" />
+            <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
+            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert" />
             <a className="hover:underline font-semibold" href="">
               About
             </a>

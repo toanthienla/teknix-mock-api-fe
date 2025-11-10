@@ -1,0 +1,201 @@
+.response-page {
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ====== Card ====== */
+.response-page-content .card {
+    background-color: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.response-page-content .response-card {
+    background-color: var(--background);
+}
+.response-page-content .response-card:hover,
+.response-page-content .response-card.active {
+    background-color: var(--card-border);
+}
+
+.response-page-content .response-header {
+    background-color: var(--card-border);
+}
+
+/* ====== Input & Textarea ====== */
+.response-page-content input,
+.response-page-content textarea {
+    color: var(--input-text);
+}
+
+.response-page-content input::placeholder,
+.response-page-content textarea::placeholder {
+    color: var(--input-placeholder);
+}
+
+.response-page-content .path {
+    background-color: var(--path-background);
+}
+
+/* ====== Buttons ====== */
+.response-page-content .btn {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.response-page-content button:hover,
+.response-page-content .btn:hover {
+    background-color: var(--button-bg-hover);
+}
+
+/* ====== Tabs ====== */
+.response-page-content .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+}
+
+.response-page-content .tabs button {
+    background: none;
+    border: none;
+    color: var(--muted-foreground);
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.response-page-content .tabs button.active {
+    color: var(--foreground);
+    border-bottom: 2px solid var(--primary);
+}
+
+/* ===== Switch (shadcn/ui override) ===== */
+.response-page-content .switch {
+    --switch-bg-off: var(--input-placeholder);
+    --switch-bg-on: var(--button-bg);
+}
+
+/* Track (vỏ ngoài) */
+.response-page-content .switch[data-state="unchecked"] {
+    background-color: var(--switch-bg-off) !important;
+}
+
+.response-page-content .switch[data-state="checked"] {
+    background-color: var(--switch-bg-on) !important;
+}
+
+/* Thumb (nút tròn) */
+.response-page-content .switch span {
+    background-color: #ffffff !important; /* luôn trắng ở cả light và dark */
+}
+
+/* ====== Table ====== */
+.response-page-content table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+}
+
+.response-page-content th,
+.response-page-content td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.response-page-content th {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.response-page-content tr:hover {
+    background-color: var(--accent);
+}
+
+/* ====== Scrollbar ====== */
+.response-page-content ::-webkit-scrollbar {
+    width: 10px;
+}
+
+.response-page-content ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.response-page-content ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 6px;
+}
+
+.response-page-content ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+}
+
+/* ====== Link ====== */
+.response-page-content a {
+    color: var(--link);
+    text-decoration: none;
+}
+
+.response-page-content a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+}
+
+/* ====== Dialog ====== */
+.response-page-content .dialog {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* ====== Code editor ====== */
+.response-page-content .editor {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    font-family: monospace;
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 200px;
+}
+
+/* ====== Badge / Label ====== */
+.response-page-content .badge {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ====== Utility classes ====== */
+.response-page-content .border {
+    border-color: var(--border);
+}
+
+.response-page-content .highlight {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.response-page-content .muted {
+    color: var(--muted-foreground);
+}
+
+/* ====== Animation for theme switch ====== */
+.response-page-content,
+.response-page-content * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
