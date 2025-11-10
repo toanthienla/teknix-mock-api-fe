@@ -19,19 +19,26 @@ import "jsoneditor/dist/jsoneditor.css";
 import deleteIcon from "@/assets/light/delete.svg";
 import lightningIcon from "@/assets/light/lightning.svg";
 import serverResponseIcon from "@/assets/light/server-response.svg";
-import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs/components/prism-core.js";
+
+import { Centrifuge } from "centrifuge";
+import { getProjectConnectToken } from "@/services/api.js";
+import { API_WS_ROOT } from "@/utils/constants.js";
 
 export default function WSChannelSheet({
                                          open,
                                          onOpenChange,
                                          project,
                                          workspace,
-                                         apiRoot,
                                          onDeleteWSChannel,
                                          onCopyURL,
                                        }) {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [projectToken, setProjectToken] = useState(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const centrifugeRef = useRef(null);
+
   const [responseBody, setResponseBody] = useState({
     result: {
       channel: "project:acme",
@@ -67,11 +74,30 @@ export default function WSChannelSheet({
     };
   }, [open, responseBody]);
 
-  if (!project || !workspace) return null;
+  useEffect(() => {
+    if (open && project) {
+      (async () => {
+        try {
+          const data = await getProjectConnectToken(project.id);
+          setProjectToken(data.token);
+          setResponseBody({
+            result: {
+              message: "Project token retrieved successfully",
+              ...data
+            }
+          });
+        } catch (error) {
+          console.error("Failed to get project connect token:", error);
+          setResponseBody({
+            error: "Failed to fetch project token",
+            details: error.message
+          });
+        }
+      })();
+    }
+  }, [open, project]);
 
-  const cleanAPIROOT = apiRoot.replace(/^https?:\/\//, "");
-  const unsecuredURL = `ws://${cleanAPIROOT}/ws/${workspace.name}/${project.name}`;
-  const securedURL = `wss://${cleanAPIROOT}/ws/${workspace.name}/${project.name}`;
+  if (!project || !workspace) return null;
 
   const handleCopy = (url) => {
     onCopyURL(url);
@@ -90,46 +116,29 @@ export default function WSChannelSheet({
               Real-time Updates via WebSocket
             </SheetTitle>
             <SheetDescription>
-              Click to reveal the WebSocket URL for this channel.
+              Click to reveal the WebSocket token for this channel.
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 mt-4 overflow-y-auto space-y-4 text-sm pr-4">
             {/* Unsecured URL */}
+            {/* Project Token */}
             <div className="relative">
               <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
-                bash
+                token
                 <button
                   className="btn-primary text-xs px-2 py-1 rounded-xs"
-                  onClick={() => handleCopy(unsecuredURL)}
+                  onClick={() => handleCopy(projectToken || "")}
                 >
                   Copy
                 </button>
               </div>
-              <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                <span className="px-2 py-1">
-                  Your Unsecured URL:{" "}
-                  <spoiler-span>“{unsecuredURL}”</spoiler-span>
-                </span>
-              </div>
-            </div>
-
-            {/* Secured URL */}
-            <div className="relative">
-              <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
-                bash
-                <button
-                  className="btn-primary text-xs px-2 py-1 rounded-xs"
-                  onClick={() => handleCopy(securedURL)}
-                >
-                  Copy
-                </button>
-              </div>
-              <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
-                <span className="px-2 py-1">
-                  Your Secured URL:{" "}
-                  <spoiler-span>“{securedURL}”</spoiler-span>
-                </span>
+              <div className="relative border border-t-0 rounded-b p-4 font-mono text-xs break-all">
+                {projectToken ? (
+                  <spoiler-span>{projectToken}</spoiler-span>
+                ) : (
+                  <span className="opacity-70">Fetching project token...</span>
+                )}
               </div>
             </div>
 
@@ -140,7 +149,76 @@ export default function WSChannelSheet({
                 alt="Websocket"
                 className="transition duration-200 group-hover:brightness-0 group-hover:invert"
               />
-              <button className="text-lg mt-2">Test</button>
+              <button
+                className="text-lg mt-2 btn-primary px-4 py-1.5 rounded-md"
+                disabled={!projectToken || isTesting}
+                onClick={async () => {
+                  if (isConnected && centrifugeRef.current) {
+                    // 👉 Ngắt kết nối khi đang connected
+                    centrifugeRef.current.disconnect();
+                    setIsConnected(false);
+                    setResponseBody({
+                      result: {
+                        status: "disconnected",
+                        message: "Connection closed manually."
+                      }
+                    });
+                    return;
+                  }
+
+                  // 👉 Nếu chưa kết nối, tiến hành test
+                  setIsTesting(true);
+                  try {
+                    const centrifuge = new Centrifuge(API_WS_ROOT, { token: projectToken });
+                    centrifugeRef.current = centrifuge;
+
+                    centrifuge.on("connected", (ctx) => {
+                      setResponseBody({
+                        result: {
+                          status: "connected",
+                          details: ctx
+                        }
+                      });
+                      setIsConnected(true);
+                      setIsTesting(false);
+                    });
+
+                    centrifuge.on("error", (err) => {
+                      setResponseBody({
+                        error: "Connection error",
+                        details: err
+                      });
+                      setIsTesting(false);
+                    });
+
+                    centrifuge.on("disconnected", (ctx) => {
+                      setResponseBody({
+                        result: {
+                          status: "disconnected",
+                          details: ctx
+                        }
+                      });
+                      setIsConnected(false);
+                    });
+
+                    centrifuge.connect();
+                  } catch (err) {
+                    console.error("Centrifugo test failed:", err);
+                    setResponseBody({
+                      error: "Centrifugo test failed",
+                      details: err.message
+                    });
+                    setIsTesting(false);
+                  }
+                }}
+              >
+                {isTesting
+                  ? "Testing..."
+                  : isConnected
+                    ? "Disconnect"
+                    : "Test Connection"}
+              </button>
+
             </div>
 
             {/* Server Response */}
