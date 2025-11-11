@@ -224,7 +224,6 @@ export default function WSChannelSheet({
                     ? "Disconnect"
                     : "Test Connection"}
               </button>
-
             </div>
 
             {/* === Connect Format (JSON style) === */}
@@ -286,7 +285,7 @@ export default function WSChannelSheet({
                 </div>
                 {/* JSON Viewer (read-only, có highlight + format) */}
                 <div
-                  className="custom-initial-value font-mono text-sm h-fit border border-t-0
+                  className="custom-initial-value font-mono text-sm h-40 border border-t-0
                   rounded-b-md p-2 overflow-auto"
                   dangerouslySetInnerHTML={{
                     __html: (() => {
