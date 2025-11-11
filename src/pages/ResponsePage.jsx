@@ -2375,18 +2375,20 @@ const DashboardPage = () => {
   const renderTabButton = (value, label, icon) => {
     const isActive = activeTab === value;
     const isDataDefault = label === "Data Default";
+    const isRules = label === "Rules";
 
     return (
       <button
         onClick={() => setActiveTab(value)}
-        className={`flex px-4 py-2 -mb-px ${
+        className={`response-card-header flex px-4 py-2 ${
           isActive
-            ? "bg-white text-stone-900 border-l border-t border-r border-[#EDEFF1]"
-            : "bg-gray-200 text-stone-500 hover:bg-gray-100"
-        } ${isDataDefault ? "rounded-tl-md" : ""}`}
+            ? "active"
+            : "opacity-50"
+        } ${isDataDefault ? "rounded-tl-md" : ""}
+        ${isRules ? "rounded-tl-md" : ""}`}
       >
         <div className="flex items-center">
-          <img src={icon} alt={label} className="w-4 h-4 mr-2" />
+          <img src={icon} alt={label} className="w-4 h-4 mr-2 dark:brightness-0 dark:invert" />
           <span className="text-md font-semibold">{label}</span>
         </div>
       </button>
@@ -2482,9 +2484,9 @@ const DashboardPage = () => {
   // Thêm UI loading
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white">
+      <div className="flex flex-col justify-center items-center h-screen">
         <span className="loader"></span>
-        <p className="text-lg mt-2 font-medium text-gray-700">
+        <p className="text-lg mt-2 font-medium">
           Loading endpoint data...
         </p>
       </div>
@@ -2967,19 +2969,19 @@ const DashboardPage = () => {
             </div>
 
             {/* Cột phải - Navigation và Content */}
-            <div className="w-3/4 flex flex-col gap-6">
+            <div className="w-3/4 flex flex-col gap-1">
               {/* Phần trên - Header & Body */}
               <div className="flex flex-col w-full">
                 {/* Nội dung phần Header & Body */}
-                <div className="flex flex-col h-fit border-2 border-gray-200 rounded-lg bg-white">
+                <div className="card flex flex-col h-fit border-2 rounded-lg">
                   {/* Thanh tiêu đề và dropdown nằm cùng hàng */}
-                  <div className="flex justify-between items-center bg-gray-200 rounded-t-lg">
-                    <button className="flex px-4 py-2 -mb-px bg-white text-stone-900 rounded-tl-lg">
+                  <div className="response-header flex justify-between items-center rounded-t-lg">
+                    <button className="response-card-header active px-4 py-2 -mb-px rounded-tl-lg">
                       <div className="flex items-center">
                         <img
                           src={Header_Body}
                           alt="folder"
-                          className="w-4 h-4 mr-2"
+                          className="w-4 h-4 mr-2 dark:brightness-0 dark:invert"
                         />
                         <span className="text-md font-semibold">
                           Response Detail
@@ -2993,7 +2995,7 @@ const DashboardPage = () => {
                         onClick={() =>
                           setIsResponseDropdownOpen(!isResponseDropdownOpen)
                         }
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors"
                       >
                         <span className="truncate max-w-[150px]">
                           {selectedResponse
@@ -3004,13 +3006,13 @@ const DashboardPage = () => {
                       </button>
 
                       {isResponseDropdownOpen && (
-                        <div className="absolute z-50 right-0 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                        <div className="absolute z-50 right-0 mt-1 w-64 border rounded-md shadow-lg max-h-32 overflow-y-auto">
                           {endpointResponses.map((response) => (
                             <button
                               key={response.id}
-                              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                              className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${
                                 selectedResponse?.id === response.id
-                                  ? "bg-gray-200"
+                                  ? "active"
                                   : ""
                               }`}
                               onClick={() => {
@@ -3131,15 +3133,15 @@ const DashboardPage = () => {
                               {isPopoverOpen && (
                                 <div
                                   ref={popoverRef}
-                                  className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
-                                      <div className="font-semibold text-sm text-gray-800">
+                                      <div className="font-semibold text-sm">
                                         Variable Picker
                                       </div>
                                       <X
-                                        className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                        className="w-4 h-4 opacity-60 cursor-pointer hover:opacity-80"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setIsPopoverOpen(false);
@@ -3201,7 +3203,7 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="response-name"
-                              className="text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium"
                             >
                               Name
                             </Label>
@@ -3209,7 +3211,7 @@ const DashboardPage = () => {
                               id="response-name"
                               value={responseName}
                               onChange={(e) => setResponseName(e.target.value)}
-                              className="col-span-5 border-[#CBD5E1] rounded-md"
+                              className="col-span-5 rounded-md"
                               placeholder="Enter response name"
                             />
                           </div>
@@ -3218,7 +3220,7 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="status-code"
-                              className="text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium"
                             >
                               Code
                             </Label>
@@ -3232,7 +3234,7 @@ const DashboardPage = () => {
                               >
                                 <SelectTrigger
                                   id="status-code"
-                                  className={`border-[#CBD5E1] rounded-md ${
+                                  className={`rounded-md ${
                                     isStateful
                                       ? "bg-gray-100 cursor-not-allowed"
                                       : ""
@@ -3240,7 +3242,7 @@ const DashboardPage = () => {
                                 >
                                   <SelectValue placeholder="Select status code" />
                                 </SelectTrigger>
-                                <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                                <SelectContent className="max-h-80 overflow-y-auto border rounded-md">
                                   {statusCodes.map((status) => (
                                     <SelectItem
                                       key={status.code}
@@ -3257,13 +3259,13 @@ const DashboardPage = () => {
 
                           {/* Response Header */}
                           <div className="grid grid-cols-6 items-center gap-4 my-2">
-                            <div className="text-sm font-medium text-[#000000] py-2">
+                            <div className="text-sm font-medium py-2">
                               Header
                             </div>
-                            <div className="col-span-1 px-2 pl-2 text-sm text-[#000000]">
+                            <div className="col-span-1 px-2 pl-2 text-sm">
                               Content-Type
                             </div>
-                            <div className="col-span-4 border border-[#CBD5E1] rounded-md p-2 bg-gray-100">
+                            <div className="col-span-4 border rounded-md p-2">
                               application/json
                             </div>
                           </div>
@@ -3272,7 +3274,7 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-6 gap-4 my-2">
                             <Label
                               htmlFor="response-body"
-                              className="pt-2 text-sm font-medium text-[#000000]"
+                              className="pt-2 text-sm font-medium"
                             >
                               Body
                             </Label>
@@ -3305,7 +3307,7 @@ const DashboardPage = () => {
                                     minHeight: "200px",
                                     maxHeight: "400px",
                                     overflow: "auto",
-                                    border: "1px solid #CBD5E1",
+                                    border: "1px solid var(--border)",
                                     borderRadius: "0.375rem",
                                     backgroundColor: "#101728",
                                   }}
@@ -3322,7 +3324,7 @@ const DashboardPage = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="border-[#E5E5E1] px-1 rounded-sm"
+                                    className="px-1 rounded-sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       const canEdit =
@@ -3354,7 +3356,7 @@ const DashboardPage = () => {
                           <div className="grid grid-cols-6 items-center gap-4 my-2">
                             <Label
                               htmlFor="delay"
-                              className="text-sm font-medium text-[#000000]"
+                              className="text-sm font-medium"
                             >
                               Delay (ms)
                             </Label>
@@ -3370,7 +3372,7 @@ const DashboardPage = () => {
                                     setDelayError(error);
                                   }
                                 }}
-                                className={`border-[#CBD5E1] rounded-md ${
+                                className={`rounded-md ${
                                   delayError ? "border-red-500" : ""
                                 }`}
                                 placeholder="0"
@@ -3398,11 +3400,11 @@ const DashboardPage = () => {
               </div>
 
               {/* Khung bao xám cho tab bar */}
-              <div className="flex flex-col border-2 border-gray-200 rounded-lg bg-white">
+              <div className="card flex flex-col border-2 rounded-lg">
                 {/* Tab bar header */}
-                <div className="flex rounded-t-lg bg-gray-200 mb-0 text-stone-500">
+                <div className="flex rounded-t-lg mb-0">
                   {!isStateful ? (
-                    <div className="flex justify-between items-center bg-gray-200 w-full">
+                    <div className="flex justify-between items-center rounded-t-md w-full">
                       <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
@@ -3419,7 +3421,7 @@ const DashboardPage = () => {
                           onClick={() =>
                             setIsTabBarDropdownOpen(!isTabBarDropdownOpen)
                           }
-                          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                          className="flex items-center gap-1 px-2 py-1 text-xs opacity-70 hover:opacity-100 rounded transition-colors"
                         >
                           <span className="truncate max-w-[150px]">
                             {selectedResponse
@@ -3430,13 +3432,13 @@ const DashboardPage = () => {
                         </button>
 
                         {isTabBarDropdownOpen && (
-                          <div className="absolute z-50 right-0 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto">
+                          <div className="absolute z-50 right-0 mt-1 w-64 border rounded-md shadow-lg max-h-32 overflow-y-auto">
                             {endpointResponses.map((response) => (
                               <button
                                 key={response.id}
-                                className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                                className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${
                                   selectedResponse?.id === response.id
-                                    ? "bg-gray-200"
+                                    ? "active"
                                     : ""
                                 }`}
                                 onClick={() => {
@@ -3452,7 +3454,7 @@ const DashboardPage = () => {
                             ))}
 
                             {endpointResponses.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-gray-500">
+                              <div className="px-3 py-2 text-sm opacity-50">
                                 No responses available
                               </div>
                             )}
@@ -3515,22 +3517,22 @@ const DashboardPage = () => {
                       {selectedResponse ? (
                         <Card className="p-6 border-0 rounded-none shadow-none w-[85%]">
                           <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-md  text-[#37352F]">
+                            <h2 className="text-md">
                               Forward Proxy URL
                             </h2>
                             <div className="relative">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
                                 }
                               >
-                                <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                <SaveIcon className="h-5 w-5 opacity-70" />
                               </Button>
                               <Tooltip
                                 visible={saveTooltipVisible}
@@ -3549,18 +3551,18 @@ const DashboardPage = () => {
                                   placeholder="Enter proxy URL (e.g. https://api.example.com/{{params.id}}))"
                                   value={proxyUrl}
                                   onChange={(e) => setProxyUrl(e.target.value)}
-                                  className="flex-1 py-2 border-[#CBD5E1] rounded-md bg-white placeholder:text-[#9CA3AF]"
+                                  className="flex-1 py-2 rounded-md "
                                 />
                               </div>
                               <div className="flex flex-col gap-[8px] w-full">
-                                <span className="text-md text-[#374151]">
+                                <span className="text-md">
                                   Method
                                 </span>
                                 <Select
                                   value={proxyMethod}
                                   onValueChange={setProxyMethod}
                                 >
-                                  <SelectTrigger className="w-[120px] h-[36px] border-[#CBD5E1] rounded-md">
+                                  <SelectTrigger className="w-[120px] h-[36px] rounded-md">
                                     <SelectValue placeholder="Method" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -3609,7 +3611,7 @@ const DashboardPage = () => {
                         <div className="space-y-6">
                           {/* Đưa Current Value lên trên */}
                           <div className="flex justify-between items-center mb-2">
-                            <div className="text-xl font-medium text-[#000000] self-start pt-1 mb-1">
+                            <div className="text-xl font-medium self-start pt-1 mb-1">
                               Current Value
                             </div>
 
@@ -3623,8 +3625,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={() =>
                                     setIsInitialValuePopoverOpen(
                                       !isInitialValuePopoverOpen
@@ -3632,19 +3634,19 @@ const DashboardPage = () => {
                                   }
                                   title="Variable Picker"
                                 >
-                                  <FileCode className="h-5 w-5 text-[#898883]" />
+                                  <FileCode className="h-5 w-5 opacity-70" />
                                 </Button>
 
                                 {/* Popover cho Initial Value */}
                                 {isInitialValuePopoverOpen && (
-                                  <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                                  <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
                                     <div className="flex flex-col items-center gap-2 p-3.5">
                                       <div className="w-full flex justify-between items-center">
-                                        <div className="font-semibold text-sm text-gray-800">
+                                        <div className="font-semibold text-sm">
                                           Variable Picker
                                         </div>
                                         <X
-                                          className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                          className="w-4 h-4 opacity-40 cursor-pointer hover:opacity-80"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setIsInitialValuePopoverOpen(false);
@@ -3723,8 +3725,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={handleSaveInitialValue}
                                   onMouseEnter={() =>
                                     setSaveTooltipVisible(true)
@@ -3733,7 +3735,7 @@ const DashboardPage = () => {
                                     setSaveTooltipVisible(false)
                                   }
                                 >
-                                  <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                  <SaveIcon className="h-5 w-5" />
                                 </Button>
                                 <Tooltip
                                   visible={saveTooltipVisible}

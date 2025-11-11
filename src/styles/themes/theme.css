@@ -79,6 +79,8 @@
     --path-background: #EDEDEC;
     --folder-header-bg: #BFBFBF;
     --folder-header-text: #4F5E74;
+    --rules-header-bg: #F2F2F2;
+    --response-border: #CBD5E1;
 }
 
 /* ===============================
@@ -162,4 +164,7 @@
 
     --folder-header-bg: #72767D;
     --folder-header-text: #ffffff;
+
+    --rules-header-bg: #42454A;
+    --response-border: #72767D;
 }
