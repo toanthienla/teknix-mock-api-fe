@@ -67,17 +67,17 @@ export const WSConfig = ({config, endpointId}) => {
         <div className="space-y-2">
           {/* --- Header --- */}
           <div className="flex justify-between items-center">
-            <h2 className="font-medium text-[#000000]">WS Message</h2>
+            <h2 className="font-medium">WS Message</h2>
             <Button
               variant="outline"
               size="icon"
               disabled={isSaving}
-              className="border-[#E5E5E1] hover:bg-yellow-50"
+              className="btn-primary"
               onClick={handleSave}
             >
               <SaveIcon
                 className={`h-5 w-5 ${
-                  isSaving ? "animate-spin text-gray-400" : "text-[#898883]"
+                  isSaving ? "animate-spin" : ""
                 }`}
               />
             </Button>

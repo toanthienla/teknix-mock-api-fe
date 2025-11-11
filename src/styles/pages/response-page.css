@@ -6,14 +6,17 @@
     flex-direction: column;
 }
 
+.response-page-content * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 /* ====== Card ====== */
 .response-page-content .card {
     background-color: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border-color: var(--card-border);
 }
 
+/* ====== Select Response ====== */
 .response-page-content .response-card {
     background-color: var(--background);
 }
@@ -22,8 +25,43 @@
     background-color: var(--card-border);
 }
 
+/* ====== Response Content ====== */
 .response-page-content .response-header {
     background-color: var(--card-border);
+}
+
+.response-page-content .response-card-header {
+    background-color: var(--lightgray-bg);
+    color: var(--muted-foreground);
+}
+.response-page-content .response-card-header:hover {
+    background-color: var(--card-border);
+}
+.response-page-content .response-card-header.active {
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+.response-page-content .select-response {
+    background-color: var(--background);
+    color: var(--foreground);
+}
+.response-page-content .select-response:hover {
+    background-color: var(--card-border);
+    color: var(--foreground);
+}
+.response-page-content .select-response.active {
+    background-color: var(--card-border);
+    color: var(--foreground);
+}
+
+.response-page-content .response-card-content {
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+.response-page-content .response-rules-header {
+    background-color: var(--rules-header-bg);
 }
 
 /* ====== Input & Textarea ====== */
@@ -53,10 +91,14 @@
     transition: background-color 0.2s ease;
 }
 
-.response-page-content button:hover,
-.response-page-content .btn:hover {
-    background-color: var(--button-bg-hover);
+.response-page-content .btn-primary {
+    background-color: var(--button-bg);
+    color: var(--button-text);
 }
+/*.response-page-content button:hover,*/
+/*.response-page-content .btn:hover {*/
+/*    background-color: var(--button-bg-hover);*/
+/*}*/
 
 /* ====== Tabs ====== */
 .response-page-content .tabs {
@@ -183,6 +225,10 @@
 /* ====== Utility classes ====== */
 .response-page-content .border {
     border-color: var(--border);
+}
+
+.response-page-content .response-content-border {
+    border-color: var(--response-border);
 }
 
 .response-page-content .highlight {

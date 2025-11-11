@@ -165,17 +165,17 @@ button:hover,
 
 /* === Custom JSON Viewer === */
 .custom-json-editor .token.property {
-    color: #6CACE5 !important; /* key JSON */
+    color: var(--custom-json-key) !important; /* key JSON */
 }
 
 .custom-json-editor .token.string {
-    color: #A5D6FF !important; /* value JSON */
+    color: var(--custom-json-value) !important; /* value JSON */
 }
 
 .custom-json-editor .token.number,
 .custom-json-editor .token.boolean,
 .custom-json-editor .token.null {
-    color: #A5D6FF !important; /* các giá trị khác như số, true/false/null */
+    color: var(--custom-json-value) !important; /* các giá trị khác như số, true/false/null */
 }
 
 /* Đảm bảo dấu : luôn có màu trắng */
@@ -184,7 +184,7 @@ button:hover,
 .custom-json-editor span[style*=":"],
 .custom-json-editor .token.punctuation:has(+ .token.string),
 .custom-json-editor .token.string + .token.punctuation {
-    color: #FFFFFF !important;
+    color: var(--foreground) !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;
@@ -201,13 +201,13 @@ button:hover,
 .custom-json-editor *,
 .custom-json-editor .token,
 .custom-json-editor .token * {
-    --json-punctuation-color: #FFFFFF !important;
+    --json-punctuation-color: var(--foreground) !important;
 }
 
 .custom-json-editor .token.punctuation,
 .custom-json-editor .jsoneditor-punctuation,
 .custom-json-editor .jsoneditor-separator {
-    color: #FFFFFF !important;
+    color: var(--foreground) !important;
 }
 
 /* Ngăn bất kỳ style nào có thể override màu trắng */
@@ -219,7 +219,7 @@ button:hover,
 
 /* Tuỳ chỉnh: màu mặc định của text */
 .custom-json-editor {
-    color: #A5D6FF !important;
+    color: var(--custom-json-value) !important;
 }
 
 /* Ngăn jsoneditor.css can thiệp vào editor của bạn */
@@ -233,7 +233,7 @@ button:hover,
 /* Đảm bảo ký tự : thật hiển thị đúng màu trắng */
 .custom-json-editor .token.punctuation,
 .custom-json-editor .jsoneditor-colon {
-    color: #FFFFFF !important;
+    color: var(--foreground) !important;
     font-variant-ligatures: none !important;
     font-feature-settings: normal !important;
 }

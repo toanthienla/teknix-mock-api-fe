@@ -18,6 +18,7 @@ import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 import equalIcon from "@/assets/light/equal.svg";
+import questionIcon from "@/assets/light/question-mark.svg";
 
 export const ApiCallEditor = ({
   endpointId,
@@ -1723,8 +1724,8 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
           <Button
             variant="outline"
             onClick={handleAddRule}
-            style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-            className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+            // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+            className="w-9 h-9 border btn-primary rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
             onMouseEnter={() => setFrameAddTooltipVisible(true)}
             onMouseLeave={() => setFrameAddTooltipVisible(false)}
           >
@@ -1742,13 +1743,13 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
           <Button
             variant="outline"
             size="icon"
-            style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-            className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+            // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+            className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
             onClick={handleSave}
             onMouseEnter={() => setFrameSaveTooltipVisible(true)}
             onMouseLeave={() => setFrameSaveTooltipVisible(false)}
           >
-            <SaveIcon className="h-5 w-5 text-[#898883]" />
+            <SaveIcon className="h-5 w-5" />
           </Button>
           <Tooltip
             visible={frameSaveTooltipVisible}
@@ -1762,18 +1763,18 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
       {/* Phần nội dung chính */}
       <Card className="p-6 border-0 rounded-lg shadow-none overflow-visible">
         {/* Header frame for parameters */}
-        <div className="w-full bg-[#F2F2F2] rounded-md p-1.5 mb-3">
+        <div className="response-rules-header w-full rounded-md p-1.5 mb-3">
           <div className="grid grid-cols-12 items-center">
             {/* Parameter Type */}
-            <div className="col-span-3 border border-r-0 border-[#CBD5E1] rounded-l-md px-3 py-[6px] bg-[#F2F2F2]">
-              <span className="font-inter font-semibold text-xs">
+            <div className="response-content-border col-span-3 border border-r-0 rounded-l-md px-3 py-[6px]">
+              <span className="font-inter font-semibold text-sm flex items-center">
                 Parameter Type
               </span>
             </div>
 
             {/* Parameter Name */}
-            <div className="col-span-3 col-start-4 border border-l-0 border-[#CBD5E1] rounded-r-md px-3 py-[6px] bg-[#F2F2F2]">
-              <span className="font-inter font-semibold text-xs">
+            <div className="response-content-border col-span-3 col-start-4 border border-l-0 rounded-r-md px-3 py-[6px]">
+              <span className="font-inter font-semibold text-sm flex items-center">
                 Parameter Name
               </span>
             </div>
@@ -1786,17 +1787,19 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             </div>
 
             {/* Expected Value */}
-            <div className="col-span-4 col-start-8 border border-[#CBD5E1] rounded-md px-3 py-[6px] bg-[#F2F2F2]">
-              <span className="font-inter font-semibold text-xs">
+            <div className="response-content-border col-span-4 col-start-8 border rounded-md px-3 py-[6px]">
+              <span className="font-inter font-semibold text-sm flex items-center">
                 Expected Value
               </span>
             </div>
 
             {/* Question mark */}
             <div className="col-start-12 flex justify-center">
-              <div className="flex items-center justify-center w-[22px] h-[22px] border border-[#111827] rounded-full text-[#111827] font-inter font-bold text-[13px]">
-                ?
-              </div>
+              <img
+                src={questionIcon}
+                alt="Question mark"
+                className="h-6 w-6 dark:invert"
+              />
             </div>
           </div>
         </div>
@@ -1808,17 +1811,17 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
               key={row.id}
               onClick={(e) => handleRuleClick(row.id, e)}
               className={`flex flex-col px-1 py-1.5 rounded-md border cursor-pointer ${
-                row.id === selectedRuleId ? "border-blue-600" : "border-slate-300"
+                row.id === selectedRuleId ? "border-blue-600" : "response-content-border"
               }`}
             >
               <div className="grid grid-cols-12 items-center gap-2">
                 {/* Parameter Type */}
-                <div className="col-span-3">
+                <div className="response-content-border col-span-3">
                   <Select
                     value={row.type}
                     onValueChange={(value) => handleTypeChange(row.id, value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="response-content-border">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1841,7 +1844,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
                     name={`rule-name-${row.id}`}
                     value={row.name}
                     onChange={(e) => handleNameChange(row.id, e.target.value)}
-                    className={`${errors[row.id]?.name ? "border-red-500" : ""}`}
+                    className={`${errors[row.id]?.name ? "border-red-500" : "response-content-border"}`}
                     placeholder={getPlaceholderText(row.type)}
                   />
                 </div>
@@ -1862,13 +1865,13 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
                     name={`rule-value-${row.id}`}
                     value={row.value}
                     onChange={(e) => handleValueChange(row.id, e.target.value)}
-                    className={`${errors[row.id]?.value ? "border-red-500" : ""}`}
+                    className={`${errors[row.id]?.value ? "border-red-500" : "response-content-border"}`}
                     placeholder="value"
                   />
                 </div>
 
                 {/* Trash button */}
-                <div className="col-start-12 flex justify-center border-l border-[#CBD5E1]">
+                <div className="response-content-border col-start-12 flex justify-center border-l">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1891,7 +1894,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
           ))}
 
           {parameterRows.length === 0 && (
-            <div className="text-gray-500 text-sm mt-2 pl-2">
+            <div className="opacity-60 text-sm mt-2 pl-2">
               No rules are available.
             </div>
           )}
