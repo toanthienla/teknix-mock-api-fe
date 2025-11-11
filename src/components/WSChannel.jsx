@@ -39,18 +39,7 @@ export default function WSChannelSheet({
   const [isConnected, setIsConnected] = useState(false);
   const centrifugeRef = useRef(null);
 
-  const [responseBody, setResponseBody] = useState({
-    result: {
-      channel: "project:acme",
-      data: {
-        event: "DEPLOYED",
-        service: "auth-service",
-        version: "v1.3.0",
-        status: "success",
-        timestamp: "2025-11-07T14:01:00Z",
-      },
-    },
-  });
+  const [responseBody, setResponseBody] = useState(null);
 
   const jsonViewerRef = useRef(null);
   const jsonEditor = useRef(null);
@@ -83,7 +72,8 @@ export default function WSChannelSheet({
           setResponseBody({
             result: {
               message: "Project token retrieved successfully",
-              ...data
+              channels: data.channels,
+              mode: data.mode,
             }
           });
         } catch (error) {
@@ -105,7 +95,6 @@ export default function WSChannelSheet({
 
   return (
     <>
-      {/* === Main WS Channel Sheet === */}
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="right"
@@ -122,9 +111,26 @@ export default function WSChannelSheet({
 
           <div className="flex-1 mt-4 overflow-y-auto space-y-4 text-sm pr-4">
             {/* Unsecured URL */}
-            {/* Project Token */}
             <div className="relative">
               <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
+                link
+                <button
+                  className="btn-primary text-xs px-2 py-1 rounded-xs"
+                  onClick={() => handleCopy(API_WS_ROOT || "")}
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
+                <span>
+                  Websocket URL (Unsecured): <spoiler-span>{API_WS_ROOT}</spoiler-span>
+                </span>
+              </div>
+            </div>
+
+            {/* Project Token */}
+            <div className="relative">
+              <div className="ws-header text-sm font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
                 token
                 <button
                   className="btn-primary text-xs px-2 py-1 rounded-xs"
@@ -221,6 +227,41 @@ export default function WSChannelSheet({
 
             </div>
 
+            {/* === Connect Format (JSON style) === */}
+            <div className="rounded-lg">
+              <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
+                <span className="opacity-70">connect format</span>
+                <button
+                  className="btn-primary text-xs px-2 py-1 rounded-xs"
+                  onClick={() =>
+                    handleCopy(JSON.stringify({ id: 1, connect: { token: "..." } }, null, 2))
+                  }
+                >
+                  Copy
+                </button>
+              </div>
+              <div
+                className="custom-initial-value font-mono text-sm h-fit border border-t-0
+                rounded-b-md p-2 overflow-auto"
+                dangerouslySetInnerHTML={{
+                  __html: (() => {
+                    try {
+                      const formatted = JSON.stringify(
+                        { id: 1, connect: { token: "..." } },
+                        null,
+                        2
+                      );
+                      const highlighted = highlight(formatted, languages.json, "json");
+                      return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
+                    } catch (err) {
+                      console.error("JSON format error:", err);
+                      return "<pre style='color:red'>Invalid JSON</pre>";
+                    }
+                  })(),
+                }}
+              />
+            </div>
+
             {/* Server Response */}
             <div className="rounded-lg">
               <div className="btn-primary px-4 py-2 rounded-lg flex items-center mb-3">
@@ -245,7 +286,7 @@ export default function WSChannelSheet({
                 </div>
                 {/* JSON Viewer (read-only, có highlight + format) */}
                 <div
-                  className="custom-initial-value font-mono text-sm h-60 border border-t-0
+                  className="custom-initial-value font-mono text-sm h-fit border border-t-0
                   rounded-b-md p-2 overflow-auto"
                   dangerouslySetInnerHTML={{
                     __html: (() => {
