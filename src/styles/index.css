@@ -165,17 +165,17 @@ button:hover,
 
 /* === Custom JSON Viewer === */
 .custom-json-editor .token.property {
-    color: var(--custom-json-key) !important; /* key JSON */
+    color: #0051D9 !important; /* key JSON */
 }
 
 .custom-json-editor .token.string {
-    color: var(--custom-json-value) !important; /* value JSON */
+    color: #4093FF !important; /* value JSON */
 }
 
 .custom-json-editor .token.number,
 .custom-json-editor .token.boolean,
 .custom-json-editor .token.null {
-    color: var(--custom-json-value) !important; /* các giá trị khác như số, true/false/null */
+    color: #4093FF !important; /* các giá trị khác như số, true/false/null */
 }
 
 /* Đảm bảo dấu : luôn có màu trắng */
@@ -184,7 +184,7 @@ button:hover,
 .custom-json-editor span[style*=":"],
 .custom-json-editor .token.punctuation:has(+ .token.string),
 .custom-json-editor .token.string + .token.punctuation {
-    color: var(--foreground) !important;
+    color: #000000 !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;
@@ -196,64 +196,22 @@ button:hover,
     outline: none !important;
 }
 
-/* Tổng quát: đảm bảo tất cả dấu punctuation trong JSON editor có màu trắng */
-.custom-json-editor,
-.custom-json-editor *,
-.custom-json-editor .token,
-.custom-json-editor .token * {
-    --json-punctuation-color: var(--foreground) !important;
-}
-
-.custom-json-editor .token.punctuation,
-.custom-json-editor .jsoneditor-punctuation,
-.custom-json-editor .jsoneditor-separator {
-    color: var(--foreground) !important;
-}
-
-/* Ngăn bất kỳ style nào có thể override màu trắng */
-.custom-json-editor [style*="color:"],
-.custom-json-editor [class*="colon"],
-.custom-json-editor [class*="operator"] {
-    color: inherit !important;
-}
-
-/* Tuỳ chỉnh: màu mặc định của text */
-.custom-json-editor {
-    color: var(--custom-json-value) !important;
-}
-
-/* Ngăn jsoneditor.css can thiệp vào editor của bạn */
-.custom-json-editor .jsoneditor-field::before,
-.custom-json-editor .jsoneditor-field::after,
-.custom-json-editor .jsoneditor-value::before,
-.custom-json-editor .jsoneditor-value::after {
-    content: none !important;
-}
-
-/* Đảm bảo ký tự : thật hiển thị đúng màu trắng */
-.custom-json-editor .token.punctuation,
-.custom-json-editor .jsoneditor-colon {
-    color: var(--foreground) !important;
-    font-variant-ligatures: none !important;
-    font-feature-settings: normal !important;
-}
-
 /* === Custom JSON Viewer: Initial Value === */
 /* Key */
 .custom-initial-value .token.property {
-    color: var(--custom-json-key) !important; /* xanh dương đậm */
+    color: #6CACE5 !important; /* xanh dương đậm */
 }
 
 /* String & Value */
 .custom-initial-value .token.string {
-    color: var(--custom-json-value) !important; /* xanh nhạt */
+    color: #A5D6FF !important; /* xanh nhạt */
 }
 
 /* Number, Boolean, Null */
 .custom-initial-value .token.number,
 .custom-initial-value .token.boolean,
 .custom-initial-value .token.null {
-    color: var(--custom-json-value) !important;
+    color: #A5D6FF !important;
 }
 
 .custom-initial-value .token.punctuation,
@@ -261,7 +219,7 @@ button:hover,
 .custom-initial-value span[style*=":"],
 .custom-initial-value .token.punctuation:has(+ .token.string),
 .custom-initial-value .token.string + .token.punctuation {
-    color: var(--foreground) !important;
+    color: #FFFFFF !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;

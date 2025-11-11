@@ -6,6 +6,14 @@
     flex-direction: column;
 }
 
+.response-page .btn-primary {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+
+
+
 .response-page-content * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
@@ -229,6 +237,17 @@
 
 .response-page-content .response-content-border {
     border-color: var(--response-border);
+}
+
+.response-page-content .variable {
+    border-color: var(--background);
+    color: var(--foreground);
+}
+.response-page-content .variable:hover {
+    background-color: var(--card-border);
+}
+.response-page-content .variable.active {
+    background-color: var(--variable-bg);
 }
 
 .response-page-content .highlight {

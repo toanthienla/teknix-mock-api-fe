@@ -98,7 +98,6 @@ export const WSConfig = ({config, endpointId}) => {
                   minHeight: "120px",
                   backgroundColor: "#101728",
                   color: "white",
-                  border: "1px solid #CBD5E1",
                   borderRadius: "0.375rem",
                   width: "100%",
                 }}

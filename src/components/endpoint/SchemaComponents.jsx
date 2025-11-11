@@ -361,13 +361,13 @@ export const SchemaBodyEditor = ({
               <Button
                 variant="outline"
                 size="icon"
-                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                 onClick={handleSave}
                 onMouseEnter={() => setSaveTooltipVisible(true)}
                 onMouseLeave={() => setSaveTooltipVisible(false)}
               >
-                <SaveIcon className="h-5 w-5 text-[#898883]" />
+                <SaveIcon className="h-5 w-5" />
               </Button>
               <Tooltip
                 visible={saveTooltipVisible}
@@ -385,7 +385,7 @@ export const SchemaBodyEditor = ({
           <div
             className={`grid ${
               method === "GET" ? "grid-cols-4" : "grid-cols-5"
-            } gap-4 font-semibold text-gray-700 border-b pb-2 mb-2`}
+            } gap-4 font-semibold border-b pb-2 mb-2`}
           >
             <div>Select</div>
             <div className="flex flex-col col-span-2">
@@ -419,7 +419,7 @@ export const SchemaBodyEditor = ({
                 key={fieldName}
                 className={`grid ${
                   method === "GET" ? "grid-cols-4" : "grid-cols-5"
-                } gap-4 items-center py-2 hover:bg-gray-100 ${
+                } gap-4 items-center py-2${
                   searchTerm &&
                   !fieldName.toLowerCase().includes(searchTerm.toLowerCase())
                     ? "opacity-50"
@@ -432,8 +432,8 @@ export const SchemaBodyEditor = ({
                     type="checkbox"
                     checked={isChecked}
                     disabled={fieldName === "id"}
-                    className={`w-5 h-5 accent-black cursor-pointer ${
-                      fieldName === "id" ? "opacity-50" : ""
+                    className={`w-5 h-5 accent-black dark:accent-white cursor-pointer ${
+                      fieldName === "id" ? "opacity-60" : ""
                     }`}
                     onChange={() => handleFieldToggle(fieldName)}
                   />
@@ -442,7 +442,7 @@ export const SchemaBodyEditor = ({
                 {/* Field Name */}
                 <div
                   className={`cursor-pointer col-span-2 ${
-                    fieldName === "id" ? "text-gray-500" : ""
+                    fieldName === "id" ? "opacity-60" : ""
                   }`}
                   onClick={() => {
                     if (fieldName !== "id") {
@@ -454,7 +454,7 @@ export const SchemaBodyEditor = ({
                 </div>
 
                 {/* Type */}
-                <div className="px-2 py-1 rounded-xs text-sm font-normal bg-[#EDEDEC] w-fit">
+                <div className="px-2 py-1 rounded-xs text-sm font-normal bg-[#EDEDEC] dark:bg-[#2F3136] w-fit">
                   {fieldType}
                 </div>
 
