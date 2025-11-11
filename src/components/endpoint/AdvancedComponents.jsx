@@ -882,8 +882,8 @@ export const ApiCallEditor = ({
             <Button
               variant="outline"
               onClick={() => setIsNewApiCallDialogOpen(true)}
-              style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="w-9 h-9 border border-slate-300 text-slate-700 rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+              className="w-9 h-9 border btn-primary rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
               onMouseEnter={() => setAddTooltipVisible(true)}
               onMouseLeave={() => setAddTooltipVisible(false)}
             >
@@ -897,121 +897,18 @@ export const ApiCallEditor = ({
             </Tooltip>
           </div>
 
-          {/* Thêm nút popover bên cạnh nút save */}
-          <div className="relative" ref={requestBodyPopoverRef}>
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="icon"
-                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
-                onClick={() =>
-                  setIsRequestBodyPopoverOpen(!isRequestBodyPopoverOpen)
-                }
-                onMouseEnter={() => setTemplateTooltipVisible(true)}
-                onMouseLeave={() => setTemplateTooltipVisible(false)}
-              >
-                <FileCode className="h-5 w-5 text-[#898883]" />
-              </Button>
-              <Tooltip
-                visible={templateTooltipVisible}
-                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-              >
-                Variable Picker
-              </Tooltip>
-            </div>
-
-            {/* Popover */}
-            {isRequestBodyPopoverOpen && (
-              <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
-                <div className="flex flex-col items-center gap-2 p-3.5">
-                  <div className="w-full flex justify-between items-center">
-                    <div className="font-semibold text-sm text-gray-800">
-                      Variable Picker
-                    </div>
-                    <X
-                      className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsRequestBodyPopoverOpen(false);
-                      }}
-                    />
-                  </div>
-
-                  <div className="w-full flex justify-between">
-                    <div
-                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                        selectedSection === "url"
-                          ? "bg-[#EDEDEC] text-[#374151]"
-                          : "text-[#374151] hover:bg-gray-100"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSection("url");
-                      }}
-                    >
-                      URL Parameters
-                    </div>
-                    <div
-                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                        selectedSection === "query"
-                          ? "bg-[#EDEDEC] text-[#374151]"
-                          : "text-[#374151] hover:bg-gray-100"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSection("query");
-                      }}
-                    >
-                      Query Parameters
-                    </div>
-                    <div
-                      className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
-                        selectedSection === "state"
-                          ? "bg-[#EDEDEC] text-[#374151]"
-                          : "text-[#374151] hover:bg-gray-100"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSection("state");
-                      }}
-                    >
-                      Project State
-                    </div>
-                  </div>
-
-                  <div
-                    className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const templateText = getTemplateText().template;
-                      insertRequestBodyTemplate(templateText);
-                    }}
-                  >
-                    <div className="font-mono text-[12px] text-black mb-[-5px]">
-                      {getTemplateText().template}
-                    </div>
-                    <div className="text-[12px] text-gray-500">
-                      {getTemplateText().description}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Save button */}
           <div className="relative">
             <Button
               variant="outline"
               size="icon"
-              style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+              className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
               onClick={handleSave}
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
             >
-              <SaveIcon className="h-5 w-5 text-[#898883]" />
+              <SaveIcon className="h-5 w-5" />
             </Button>
             <Tooltip
               visible={saveTooltipVisible}
@@ -1036,7 +933,7 @@ export const ApiCallEditor = ({
                 <span className="mr-2 flex items-center justify-center text-lg font-medium">
                   #{index + 1}
                 </span>
-                <span className="font-bold text-[#37352F]">Next API Call</span>
+                <span className="font-bold ">Next API Call</span>
               </div>
 
               {/* Text "External call" và nút toggle, delete */}
@@ -1044,7 +941,7 @@ export const ApiCallEditor = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 dark:text-white dark:hover:text-red-500"
                   onClick={() => handleRemoveNextCall(index)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1055,7 +952,7 @@ export const ApiCallEditor = ({
             {/* Target Endpoint */}
             <div className="flex flex-col mb-2">
               <div className="flex justify-between items-center">
-                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                <label className="w-[130px] text-sm font-medium">
                   Target Endpoint
                 </label>
 
@@ -1165,7 +1062,7 @@ export const ApiCallEditor = ({
                       }, 200);
                     }}
                     placeholder="Enter endpoint path (e.g., /workspace/project/path or https://domain.com/path)"
-                    className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                    className={`h-[36px] rounded-md pl-3 pr-1 ${
                       endpointValidationErrors[index] ? "border-red-500" : ""
                     }`}
                   />
@@ -1175,7 +1072,7 @@ export const ApiCallEditor = ({
                     getFilteredEndpoints(index).length > 0 && (
                       <div
                         data-dropdown={`target-endpoint-${index}`}
-                        className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                        className="absolute z-50 mt-1 w-full border rounded-md shadow-lg max-h-48 overflow-y-auto"
                       >
                         {getFilteredEndpoints(index)
                           .filter((endpoint) => {
@@ -1203,7 +1100,7 @@ export const ApiCallEditor = ({
                             <button
                               key={endpoint.id}
                               type="button"
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                              className="w-full text-left px-3 py-2 focus:outline-none border-b last:border-b-0"
                               onClick={() => {
                                 const fullPath = formatFullPath(endpoint);
 
@@ -1250,7 +1147,7 @@ export const ApiCallEditor = ({
             {/* Method */}
             <div className="flex flex-col mb-2">
               <div className="flex justify-between items-center">
-                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                <label className="w-[130px] text-sm font-medium">
                   Method
                 </label>
                 <div className="relative flex-1 max-w-[801px]">
@@ -1261,7 +1158,7 @@ export const ApiCallEditor = ({
                     }
                   >
                     <SelectTrigger
-                      className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                      className={`h-[36px] rounded-md pl-3 pr-1 ${
                         endpointValidationErrors[index] ? "border-red-500" : ""
                       }`}
                     >
@@ -1280,7 +1177,7 @@ export const ApiCallEditor = ({
             {/* Request Body */}
             <div className="flex flex-col mb-2">
               <div className="flex justify-between items-start">
-                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                <label className="w-[130px] mb-1 text-sm font-medium">
                   Request Body
                 </label>
               </div>
@@ -1294,7 +1191,7 @@ export const ApiCallEditor = ({
                     onValueChange={(code) => handleJsonChange(index, code)}
                     highlight={(code) => highlight(code, languages.json)}
                     padding={10}
-                    className="custom-json-editor"
+                    className="custom-initial-value"
                     style={{
                       fontFamily: '"Fira code", "Fira Mono", monospace',
                       fontSize: 12,
@@ -1316,7 +1213,7 @@ export const ApiCallEditor = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                      className="w-fit h-[29px] rounded-[6px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         try {
@@ -1347,7 +1244,7 @@ export const ApiCallEditor = ({
             {/* Status condition */}
             <div className="flex flex-col space-y-2">
               <div className="flex justify-between items-center">
-                <label className="w-[130px] text-sm font-medium text-[#000000]">
+                <label className="w-[130px] text-sm font-medium">
                   Status condition
                 </label>
                 <div className="relative flex-1 max-w-[801px]">
@@ -1358,7 +1255,7 @@ export const ApiCallEditor = ({
                     }
                   >
                     <SelectTrigger
-                      className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 ${
+                      className={`h-[36px] rounded-md pl-3 pr-1 ${
                         statusConditionErrors[index] ? "border-red-500" : ""
                       }`}
                     >

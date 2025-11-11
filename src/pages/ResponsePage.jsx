@@ -3048,15 +3048,15 @@ const DashboardPage = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
                                 }
                               >
-                                <SaveIcon className="h-5 w-5 text-[#898883]" />
+                                <SaveIcon className="h-5 w-5" />
                               </Button>
                               <Tooltip
                                 visible={saveTooltipVisible}
@@ -3072,8 +3072,8 @@ const DashboardPage = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                  className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={() => {
                                     if (selectedResponse) {
                                       setDefaultResponse(selectedResponse.id);
@@ -3090,7 +3090,7 @@ const DashboardPage = () => {
                                     className={`h-4 w-4 ${
                                       selectedResponse?.is_default
                                         ? "text-yellow-500 fill-yellow-500"
-                                        : "text-[#898883]"
+                                        : ""
                                     }`}
                                   />
                                 </Button>
@@ -3108,8 +3108,8 @@ const DashboardPage = () => {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="h-9 w-9 border-[#E5E5E1] hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={() => {
                                   const canEdit =
                                     !isStateful ||
@@ -3126,14 +3126,14 @@ const DashboardPage = () => {
                                 }
                                 title="Variable Picker"
                               >
-                                <FileCode className="h-5 w-5 text-[#898883]" />
+                                <FileCode className="h-5 w-5" />
                               </Button>
 
                               {/* Popover */}
                               {isPopoverOpen && (
                                 <div
                                   ref={popoverRef}
-                                  className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
@@ -3154,10 +3154,10 @@ const DashboardPage = () => {
                                         (section) => (
                                           <div
                                             key={section}
-                                            className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                            className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                               selectedSection === section
-                                                ? "bg-[#EDEDEC] text-[#374151]"
-                                                : "text-[#374151] hover:bg-gray-100"
+                                                ? "active"
+                                                : "opacity-80"
                                             }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -3175,7 +3175,7 @@ const DashboardPage = () => {
                                     </div>
 
                                     <div
-                                      className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                      className="w-full p-1 rounded-md mt-2 cursor-pointer transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const templateText =
@@ -3183,10 +3183,10 @@ const DashboardPage = () => {
                                         insertTemplate(templateText);
                                       }}
                                     >
-                                      <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                      <div className="font-mono text-[12px] mb-[-5px]">
                                         {getTemplateText().template}
                                       </div>
-                                      <div className="text-[12px] text-gray-500">
+                                      <div className="text-[12px]">
                                         {getTemplateText().description}
                                       </div>
                                     </div>
@@ -3236,7 +3236,7 @@ const DashboardPage = () => {
                                   id="status-code"
                                   className={`rounded-md ${
                                     isStateful
-                                      ? "bg-gray-100 cursor-not-allowed"
+                                      ? "muted cursor-not-allowed"
                                       : ""
                                   }`}
                                 >
@@ -3299,7 +3299,7 @@ const DashboardPage = () => {
                                     highlight(code, languages.json)
                                   }
                                   padding={10}
-                                  className="custom-json-editor"
+                                  className="custom-initial-value"
                                   style={{
                                     fontFamily:
                                       '"Consolas", "Menlo", "Cascadia Code", monospace',
@@ -3639,7 +3639,7 @@ const DashboardPage = () => {
 
                                 {/* Popover cho Initial Value */}
                                 {isInitialValuePopoverOpen && (
-                                  <div className="absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                                  <div className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
                                     <div className="flex flex-col items-center gap-2 p-3.5">
                                       <div className="w-full flex justify-between items-center">
                                         <div className="font-semibold text-sm">
@@ -3656,10 +3656,10 @@ const DashboardPage = () => {
 
                                       <div className="w-full flex justify-between">
                                         <div
-                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                             selectedSection === "url"
-                                              ? "bg-[#EDEDEC] text-[#374151]"
-                                              : "text-[#374151] hover:bg-gray-100"
+                                              ? "active"
+                                              : "opacity-80"
                                           }`}
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -3669,10 +3669,10 @@ const DashboardPage = () => {
                                           URL Parameters
                                         </div>
                                         <div
-                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                             selectedSection === "query"
-                                              ? "bg-[#EDEDEC] text-[#374151]"
-                                              : "text-[#374151] hover:bg-gray-100"
+                                              ? "active"
+                                              : "opacity-80"
                                           }`}
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -3682,10 +3682,10 @@ const DashboardPage = () => {
                                           Query Parameters
                                         </div>
                                         <div
-                                          className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                             selectedSection === "state"
-                                              ? "bg-[#EDEDEC] text-[#374151]"
-                                              : "text-[#374151] hover:bg-gray-100"
+                                              ? "active"
+                                              : "opacity-80"
                                           }`}
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -3697,7 +3697,7 @@ const DashboardPage = () => {
                                       </div>
 
                                       <div
-                                        className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                                        className="w-full p-1 rounded-md mt-2 cursor-pointer transition-colors"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           // Đảm bảo sử dụng selectedSection hiện tại
@@ -3708,10 +3708,10 @@ const DashboardPage = () => {
                                           );
                                         }}
                                       >
-                                        <div className="font-mono text-[12px] text-black mb-[-5px]">
+                                        <div className="font-mono text-[12px] mb-[-5px]">
                                           {getTemplateText().template}
                                         </div>
-                                        <div className="text-[12px] text-gray-500">
+                                        <div className="text-[12px]">
                                           {getTemplateText().description}
                                         </div>
                                       </div>
@@ -3752,7 +3752,7 @@ const DashboardPage = () => {
                               <div className="relative">
                                 {/* JSON Viewer (read-only, có highlight + format) */}
                                 <div
-                                  className="custom-initial-value font-mono text-sm h-60 border border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto text-white"
+                                  className="custom-json-editor font-mono text-sm h-60 border border-[#CBD5E1] rounded-md p-2 bg-[#F2F2F2] overflow-auto text-white"
                                   dangerouslySetInnerHTML={{
                                     __html: (() => {
                                       try {
@@ -3789,7 +3789,7 @@ const DashboardPage = () => {
                           </div>
                           {/* Đưa Initial Value xuống dưới */}
                           <div className="flex justify-between items-center mb-1">
-                            <h2 className="text-xl font-medium text-[#37352F]">
+                            <h2 className="text-xl font-medium">
                               Initial Value
                             </h2>
                           </div>
@@ -3801,7 +3801,7 @@ const DashboardPage = () => {
                                   ref={initialValueEditorRef}
                                 >
                                   <Editor
-                                    className="custom-json-editor"
+                                    className="custom-initial-value"
                                     value={tempDataDefaultString}
                                     onValueChange={(code) => {
                                       setTempDataDefaultString(code);
@@ -3823,7 +3823,6 @@ const DashboardPage = () => {
                                       minHeight: "200px",
                                       maxHeight: "400px",
                                       overflow: "auto",
-                                      border: "1px solid #CBD5E1",
                                       borderRadius: "0.375rem",
                                       backgroundColor: "#101728",
                                       color: "white",
@@ -3841,7 +3840,7 @@ const DashboardPage = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                                      className="w-[77px] h-[29px] rounded-[6px]"
                                       onClick={() => {
                                         try {
                                           const formatted = JSON.stringify(
@@ -3911,14 +3910,14 @@ const DashboardPage = () => {
               open={isNewApiCallDialogOpen}
               onOpenChange={setIsNewApiCallDialogOpen}
             >
-              <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg max-w-[500px]">
+              <DialogContent className="sm:max-w-md shadow-lg rounded-lg max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold text-slate-800">
+                  <DialogTitle className="text-lg font-semibold">
                     New API Call
                   </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 mt-4">
+                <div className="response-page-content space-y-6 mt-4">
                   {/* Target Endpoint - ĐỞN GIẢN HÓA */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -4022,7 +4021,7 @@ const DashboardPage = () => {
                       {/* Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
                       {isTargetEndpointSuggestionsOpen &&
                         getFilteredEndpoints().length > 0 && (
-                          <div className="absolute z-50 mt-1 w-full max-w-[400px] bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-50 mt-1 w-full max-w-[400px] rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {getFilteredEndpoints()
                               .filter((endpoint) => {
                                 // Lọc gợi ý dựa trên input
@@ -4055,7 +4054,7 @@ const DashboardPage = () => {
                                 <button
                                   key={endpoint.id}
                                   type="button"
-                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                                  className="w-full text-left px-3 py-2 focus:outline-none border-b last:border-b-0"
                                   onClick={() => {
                                     const fullPath = formatFullPath(endpoint);
 
@@ -4078,7 +4077,7 @@ const DashboardPage = () => {
                                       {formatFullPath(endpoint)}{" "}
                                       {/* ✅ HIỂN THỊ full path */}
                                     </span>
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs opacity-60">
                                       {endpoint.workspaceName} /{" "}
                                       {endpoint.projectName}
                                     </span>
@@ -4105,7 +4104,7 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallMethod}
                       >
                         <SelectTrigger
-                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                          className={`h-[36px] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
                             newApiCallValidationErrors.method
                               ? "border-red-500"
                               : ""
@@ -4171,7 +4170,7 @@ const DashboardPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"
+                          className="w-fit h-[29px] rounded-[6px]"
                           onClick={(e) => {
                             e.stopPropagation();
                             try {
@@ -4193,7 +4192,7 @@ const DashboardPage = () => {
                       {/* Bottom right icon */}
                       <div className="absolute bottom-2 right-2 flex space-x-2">
                         <FileCode
-                          className="text-gray-400 cursor-pointer hover:text-gray-600"
+                          className="cursor-pointer text-white opacity-80 hover:opacity-100"
                           size={20}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -4215,15 +4214,15 @@ const DashboardPage = () => {
                       {isNewApiCallRequestBodyPopoverOpen && (
                         <div
                           ref={newApiCallRequestBodyPopoverRef}
-                          className="absolute z-50 bottom-2 right-0 w-[392px] h-[120px] bg-white rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                          className="card absolute z-50 bottom-2 right-0 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                         >
                           <div className="flex flex-col items-center gap-2 p-3.5">
                             <div className="w-full flex justify-between items-center">
-                              <div className="font-semibold text-sm text-gray-800">
+                              <div className="font-semibold text-sm">
                                 Variable Picker
                               </div>
                               <X
-                                className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600"
+                                className="w-4 h-4 cursor-pointer"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setIsNewApiCallRequestBodyPopoverOpen(false);
@@ -4233,10 +4232,10 @@ const DashboardPage = () => {
 
                             <div className="w-full flex justify-between">
                               <div
-                                className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                   selectedSection === "url"
-                                    ? "bg-[#EDEDEC] text-[#374151]"
-                                    : "text-[#374151] hover:bg-gray-100"
+                                    ? "active"
+                                    : "opacity-80"
                                 }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -4246,10 +4245,10 @@ const DashboardPage = () => {
                                 URL Parameters
                               </div>
                               <div
-                                className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                   selectedSection === "query"
-                                    ? "bg-[#EDEDEC] text-[#374151]"
-                                    : "text-[#374151] hover:bg-gray-100"
+                                    ? "active"
+                                    : "opacity-80"
                                 }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -4259,10 +4258,10 @@ const DashboardPage = () => {
                                 Query Parameters
                               </div>
                               <div
-                                className={`px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
                                   selectedSection === "state"
-                                    ? "bg-[#EDEDEC] text-[#374151]"
-                                    : "text-[#374151] hover:bg-gray-100"
+                                    ? "active"
+                                    : "opacity-80"
                                 }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -4274,7 +4273,7 @@ const DashboardPage = () => {
                             </div>
 
                             <div
-                              className="w-full bg-[#EDEDEC] p-1 rounded-md mt-2 cursor-pointer hover:bg-[#D1D5DB] transition-colors"
+                              className="w-full p-1 rounded-md mt-2 cursor-pointer transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const templateText = getTemplateText().template;
@@ -4283,10 +4282,10 @@ const DashboardPage = () => {
                                 );
                               }}
                             >
-                              <div className="font-mono text-[12px] text-black mb-[-5px]">
+                              <div className="font-mono text-[12px] mb-[-5px]">
                                 {getTemplateText().template}
                               </div>
-                              <div className="text-[12px] text-gray-500">
+                              <div className="text-[12px] opacity-60">
                                 {getTemplateText().description}
                               </div>
                             </div>
@@ -4352,12 +4351,13 @@ const DashboardPage = () => {
                       setNewApiCallValidationErrors({});
                       setIsTargetEndpointSuggestionsOpen(false); // ✅ Reset dropdown state
                     }}
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                    className="w-[80px] h-[40px] rounded-[8px]"
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950 w-[90px] h-[40px] rounded-[8px]"
+                    className="w-[90px] h-[40px] rounded-[8px]
+                    bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                     onClick={handleCreateNewApiCall}
                   >
                     Create
@@ -4602,7 +4602,7 @@ const DashboardPage = () => {
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Create New Response</DialogTitle>
           </DialogHeader>
@@ -4630,7 +4630,7 @@ const DashboardPage = () => {
             <div>
               <Label
                 htmlFor="new-status-code"
-                className="text-right text-sm font-medium text-[#000000]"
+                className="text-right text-sm font-medium"
               >
                 Status Code
               </Label>
@@ -4638,11 +4638,11 @@ const DashboardPage = () => {
                 <Select value={statusCode} onValueChange={setStatusCode}>
                   <SelectTrigger
                     id="new-status-code"
-                    className="border-[#CBD5E1] rounded-md"
+                    className="rounded-md"
                   >
                     <SelectValue placeholder="Select status code" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-80 overflow-y-auto border border-[#CBD5E1] rounded-md">
+                  <SelectContent className="max-h-80 overflow-y-auto border rounded-md">
                     {statusCodes.map((status) => (
                       <SelectItem key={status.code} value={status.code}>
                         {status.code} - {status.description.split("–")[0]}
@@ -4655,13 +4655,13 @@ const DashboardPage = () => {
 
             <div className="space-y-4">
               <div>
-                <div className="font-medium text-sm text-[#000000]">Header</div>
+                <div className="font-medium text-sm">Header</div>
               </div>
-              <div className="grid grid-cols-4 items-start gap-2">
-                <div className="text-right text-sm font-medium text-[#000000]">
+              <div className="grid grid-cols-8 items-center">
+                <div className="col-span-3 text-sm">
                   Content-Type:
                 </div>
-                <div className="col-span-3 border-[#CBD5E1] rounded-md p-2 bg-gray-50">
+                <div className="text-sm opacity-60 col-span-5 border rounded-md p-2">
                   application/json
                 </div>
               </div>
@@ -4678,11 +4678,11 @@ const DashboardPage = () => {
                   className="h-32 font-mono pb-16"
                 />
                 {/* Nhóm nút trên cùng bên phải */}
-                <div className="absolute top-2 right-2 flex space-x-2">
+                <div className="absolute top-2 right-4 flex space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px]"
+                    className="w-fit h-[29px] rounded-[6px]"
                     onClick={(e) => {
                       e.stopPropagation();
                       try {
@@ -4746,7 +4746,7 @@ const DashboardPage = () => {
               </Button>
               <Button
                 onClick={handleCreateResponse}
-                className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+                className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               >
                 Create
               </Button>
