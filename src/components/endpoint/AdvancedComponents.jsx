@@ -17,6 +17,7 @@ import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
+import equalIcon from "@/assets/light/equal.svg";
 
 export const ApiCallEditor = ({
   endpointId,
@@ -1761,50 +1762,58 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
       {/* Phần nội dung chính */}
       <Card className="p-6 border-0 rounded-lg shadow-none overflow-visible">
         {/* Header frame for parameters */}
-        <div className="relative w-full h-[37.53px] mb-2">
-          <div className="absolute w-full h-full bg-[#F2F2F2] rounded-[5.49px]"></div>
+        <div className="w-full bg-[#F2F2F2] rounded-md p-1.5 mb-3">
+          <div className="grid grid-cols-12 items-center">
+            {/* Parameter Type */}
+            <div className="col-span-3 border border-r-0 border-[#CBD5E1] rounded-l-md px-3 py-[6px] bg-[#F2F2F2]">
+              <span className="font-inter font-semibold text-xs">
+                Parameter Type
+              </span>
+            </div>
 
-          {/* Parameter Type và Parameter Name */}
-          <div className="absolute w-[361.15px] h-[27.46px] left-[9.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center">
-            <div className="w-[153.78px] pl-2 font-inter font-bold text-[14px] text-black">
-              Parameter Type
+            {/* Parameter Name */}
+            <div className="col-span-3 col-start-4 border border-l-0 border-[#CBD5E1] rounded-r-md px-3 py-[6px] bg-[#F2F2F2]">
+              <span className="font-inter font-semibold text-xs">
+                Parameter Name
+              </span>
             </div>
-            <div className="w-[200.04px] pl-10 border-[#CBD5E1] font-inter font-bold text-[14px] text-black">
-              Parameter Name
+
+            {/* Equal */}
+            <div className="col-span-1 col-start-7 text-center">
+              <span className="font-semibold text-[10px]">
+                EQUAL
+              </span>
             </div>
-          </div>
-          {/* Expected Value */}
-          <div className="absolute w-[440.47px] h-[27.46px] right-[120.49px] top-[5.49px] flex items-center pl-2">
-            <div className="font-inter font-bold text-[12px] text-black">
-              Equal
+
+            {/* Expected Value */}
+            <div className="col-span-4 col-start-8 border border-[#CBD5E1] rounded-md px-3 py-[6px] bg-[#F2F2F2]">
+              <span className="font-inter font-semibold text-xs">
+                Expected Value
+              </span>
             </div>
-          </div>
-          {/* Expected Value */}
-          <div className="absolute w-[150.47px] h-[27.46px] right-[365.49px] top-[5.49px] border border-[#CBD5E1] rounded-[5.49px] flex items-center pl-1">
-            <div className="font-inter font-bold text-[14px] text-black">
-              Expected Value
-            </div>
-          </div>
-          <div className="absolute w-[212.47px] h-[27.46px] right-[119.49px] top-[5.49px] flex items-center pl-2">
-            <div className="flex items-center justify-center w-5 h-5 border-2 border-black rounded-full text-black font-inter font-bold text-[15px]">
-              ?
+
+            {/* Question mark */}
+            <div className="col-start-12 flex justify-center">
+              <div className="flex items-center justify-center w-[22px] h-[22px] border border-[#111827] rounded-full text-[#111827] font-inter font-bold text-[13px]">
+                ?
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Parameter rows */}
         <div className="space-y-4">
           {parameterRows.map((row) => (
             <div
               key={row.id}
               onClick={(e) => handleRuleClick(row.id, e)}
-              className={`flex flex-col p-3 rounded-md border cursor-pointer ${
-                row.id === selectedRuleId
-                  ? "border-blue-600"
-                  : "border-slate-300"
+              className={`flex flex-col px-1 py-1.5 rounded-md border cursor-pointer ${
+                row.id === selectedRuleId ? "border-blue-600" : "border-slate-300"
               }`}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-[168px]">
+              <div className="grid grid-cols-12 items-center gap-2">
+                {/* Parameter Type */}
+                <div className="col-span-3">
                   <Select
                     value={row.type}
                     onValueChange={(value) => handleTypeChange(row.id, value)}
@@ -1825,57 +1834,54 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
                   </Select>
                 </div>
 
-                <Input
-                  id={`rule-name-${row.id}`}
-                  name={`rule-name-${row.id}`}
-                  value={row.name}
-                  onChange={(e) => handleNameChange(row.id, e.target.value)}
-                  className={`w-[184px] ${
-                    errors[row.id]?.name ? "border-red-500" : ""
-                  }`}
-                  placeholder={getPlaceholderText(row.type)}
-                />
-                <div className="box-border relative w-[31px] h-[29px] bg-blue-500/10 border border-blue-600 rounded-[6px] flex items-center justify-center">
-                  <span
-                    className="text-[32px] text-black"
-                    style={{
-                      fontFamily: "Inter",
-                      position: "absolute",
-                      left: "4px",
-                      top: "1px",
-                      lineHeight: "23px",
+                {/* Parameter Name */}
+                <div className="col-span-3 col-start-4">
+                  <Input
+                    id={`rule-name-${row.id}`}
+                    name={`rule-name-${row.id}`}
+                    value={row.name}
+                    onChange={(e) => handleNameChange(row.id, e.target.value)}
+                    className={`${errors[row.id]?.name ? "border-red-500" : ""}`}
+                    placeholder={getPlaceholderText(row.type)}
+                  />
+                </div>
+
+                {/* Equal */}
+                <div className="col-span-1 col-start-7 flex justify-center">
+                  <img
+                    src={equalIcon}
+                    alt="Equal"
+                    className="w-9 h-9"
+                  />
+                </div>
+
+                {/* Expected Value */}
+                <div className="col-span-4 col-start-8">
+                  <Input
+                    id={`rule-value-${row.id}`}
+                    name={`rule-value-${row.id}`}
+                    value={row.value}
+                    onChange={(e) => handleValueChange(row.id, e.target.value)}
+                    className={`${errors[row.id]?.value ? "border-red-500" : ""}`}
+                    placeholder="value"
+                  />
+                </div>
+
+                {/* Trash button */}
+                <div className="col-start-12 flex justify-center border-l border-[#CBD5E1]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteRule(row.id);
                     }}
                   >
-                    =
-                  </span>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <Input
-                  id={`rule-value-${row.id}`}
-                  name={`rule-value-${row.id}`}
-                  value={row.value}
-                  onChange={(e) => handleValueChange(row.id, e.target.value)}
-                  className={`w-[151px] ${
-                    errors[row.id]?.value ? "border-red-500" : ""
-                  }`}
-                  placeholder="value"
-                />
-
-                {/* Gạch dọc trước thùng rác */}
-                <div className="w-[1px] bg-[#CBD5E1] mx-2 self-stretch" />
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteRule(row.id);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
               </div>
 
-              {/* Hiển thị lỗi */}
               {(errors[row.id]?.name || errors[row.id]?.value) && (
                 <div className="text-red-500 text-xs mt-1 pl-2">
                   {errors[row.id]?.name || errors[row.id]?.value}
@@ -1884,7 +1890,6 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             </div>
           ))}
 
-          {/* Thêm thông báo khi không có rule nào */}
           {parameterRows.length === 0 && (
             <div className="text-gray-500 text-sm mt-2 pl-2">
               No rules are available.
