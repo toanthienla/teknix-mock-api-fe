@@ -39,7 +39,7 @@
 }
 
 .response-page-content .response-card-header {
-    background-color: var(--lightgray-bg);
+    background-color: var(--rules-header-bg);
     color: var(--muted-foreground);
 }
 .response-page-content .response-card-header:hover {
