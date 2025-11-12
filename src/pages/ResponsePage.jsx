@@ -3402,7 +3402,7 @@ const DashboardPage = () => {
               {/* Khung bao xám cho tab bar */}
               <div className="card flex flex-col border-2 rounded-lg">
                 {/* Tab bar header */}
-                <div className="flex rounded-t-lg mb-0">
+                <div className="response-header flex rounded-t-lg mb-0">
                   {!isStateful ? (
                     <div className="flex justify-between items-center rounded-t-md w-full">
                       <div className="flex items-center">
@@ -4143,7 +4143,7 @@ const DashboardPage = () => {
                         onValueChange={(code) => setNewApiCallRequestBody(code)}
                         highlight={(code) => highlight(code, languages.json)}
                         padding={10}
-                        className="custom-json-editor"
+                        className="custom-initial-value"
                         style={{
                           fontFamily: '"Fira code", "Fira Mono", monospace',
                           fontSize: 12,
@@ -4153,7 +4153,7 @@ const DashboardPage = () => {
                           overflowY: "auto",
                           border: newApiCallValidationErrors.requestBody
                             ? "1px solid #ef4444"
-                            : "1px solid #CBD5E1",
+                            : "",
                           borderRadius: "0.375rem",
                           backgroundColor: "#101728",
                           width: "100%",

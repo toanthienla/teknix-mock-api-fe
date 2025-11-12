@@ -201,13 +201,13 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
   return (
     <div className="max-h-[70vh] overflow-y-auto">
-      <Card className="p-4 border border-slate-300 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          Folder Base Schema
+      <Card className="folder-page-content p-4 border-none rounded-lg">
+        <h2 className="text-xl font-semibold mb-4">
+          Schema Configuration
         </h2>
 
         {/* Header */}
-        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+        <div className="schema-header grid grid-cols-3 gap-4 font-semibold border rounded-lg px-4 py-2 mb-2">
           <div>Field Name</div>
           <div>Type</div>
           <div>Required</div>
@@ -216,7 +216,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
         {/* Fields */}
         <div className="space-y-3">
           {schemaFields.map((field) => (
-            <div key={field.id} className="grid grid-cols-3 gap-4 items-center">
+            <div key={field.id} className="schema-body grid grid-cols-3 gap-4 border rounded-lg p-1 items-center">
               <Input
                 value={field.name}
                 onChange={(e) => handleChange(field.id, "name", e.target.value)}
@@ -254,8 +254,8 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                     <SelectValue/>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="true">true</SelectItem>
-                    <SelectItem value="false">false</SelectItem>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -267,7 +267,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                 >
                   <Trash2
                     className={`w-4 h-4 ${
-                      field.name === "id" ? "text-gray-400" : "text-red-500"
+                      field.name === "id" ? "opacity-70" : "text-red-500"
                     }`}
                   />
                 </Button>
@@ -288,7 +288,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
             <Plus className="w-4 h-4 mr-2"/> Add Field
           </Button>
           <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
             onClick={handleSave}
           >
             Save Changes
@@ -314,7 +314,8 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 text-white hover:bg-red-700"
+              variant="destructive"
+              className="dark:hover:bg-red-500"
               onClick={confirmSave}
             >
               Yes, Save Anyway
@@ -1746,7 +1747,7 @@ export default function FolderPage() {
         </>
       )}
 
-      {/* Dialog components luôn hiển thị bên ngoài loading */}
+      {/* Dialog New Workspace */}
       <Dialog open={openNewWs} onOpenChange={setOpenNewWs}>
         <DialogContent>
           <DialogHeader>
@@ -1774,7 +1775,7 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={() => {
                 handleAddWorkspace(newWsName);
               }}
@@ -1816,7 +1817,6 @@ export default function FolderPage() {
           </div>
           <DialogFooter className="mt-4">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setOpenEditWs(false)}
             >
@@ -1824,7 +1824,7 @@ export default function FolderPage() {
             </Button>
             <Button
               type="button"
-              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleEditWorkspace}
             >
               Update
@@ -1850,7 +1850,7 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              className=""
+              className="dark:hover:bg-red-500"
               variant="destructive"
               onClick={() => {
                 handleDeleteWorkspace(confirmDeleteWs);
@@ -1865,7 +1865,7 @@ export default function FolderPage() {
 
       {/* New Folder Dialog */}
       <Dialog open={openNewFolder} onOpenChange={setOpenNewFolder}>
-        <DialogContent className="bg-white dark:bg-[#36393F]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
@@ -1945,7 +1945,7 @@ export default function FolderPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNewFolder(false)}>Cancel</Button>
             <Button
-              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleCreateFolder}
             >
               Create
@@ -1974,11 +1974,11 @@ export default function FolderPage() {
             }}
           />
           <DialogFooter>
-            <Button className="outline" onClick={() => setOpenEditFolder(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpenEditFolder(false)}>Cancel</Button>
             <Button
               onClick={handleUpdateFolder}
               disabled={!hasChanges()}
-              className={`text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2] ${
+              className={`bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white ${
                 !hasChanges() ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2019,7 +2019,7 @@ export default function FolderPage() {
           </DialogHeader>
           <DialogDescription></DialogDescription>
 
-          <p className="mt-2 text-gray-600">
+          <p className="opacity-70">
             Are you sure you want to delete{" "}
             <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
             <span className="text-red-500 text-sm">
@@ -2027,7 +2027,7 @@ export default function FolderPage() {
             </span>
           </p>
 
-          <DialogFooter className="mt-4 flex justify-end gap-2">
+          <DialogFooter className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
@@ -2068,16 +2068,16 @@ export default function FolderPage() {
 
       {/* Delete Folder Dialog */}
       <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-xl rounded-xl border-0">
+        <DialogContent className="sm:max-w-md shadow-xl rounded-xl border-0">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-lg font-semibold text-gray-900">
+            <DialogTitle className="text-lg font-semibold">
               Delete Folder
             </DialogTitle>
           </DialogHeader>
           <DialogDescription></DialogDescription>
 
           <div className="py-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm opacity-70">
               Are you sure you want to delete this folder and all its endpoints?
               This action cannot be undone.
             </p>
@@ -2216,7 +2216,7 @@ export default function FolderPage() {
             </Button>
 
             <Button
-              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleCreateEndpoint}
             >
               Create
@@ -2264,7 +2264,7 @@ export default function FolderPage() {
             </Button>
             <Button
               onClick={handleUpdateEndpoint}
-              className="text-black bg-[#FBEB6B] dark:text-white dark:bg-[#5865F2]"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               disabled={!hasEdited}
             >
               Update
