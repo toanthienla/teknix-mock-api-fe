@@ -169,37 +169,32 @@
 }
 
 /* ===== WS Sheet ===== */
-/* Cho phép spoiler hiển thị bình thường trong SheetContent */
-.sheet-content {
-    isolation: unset !important;
-    overflow: visible !important;
-}
+/*!* Cho phép spoiler hiển thị bình thường trong SheetContent *!*/
+/*.sheet-content {*/
+/*    isolation: unset !important;*/
+/*    overflow: visible !important;*/
+/*}*/
 
-/* Mở rộng ra ngoài lớp che (Shadcn Sheet có overflow hidden) */
-.sheet-content > div {
-    overflow: visible !important;
-}
+/*!* Đảm bảo lớp nền spoiler hiển thị trên mọi layer *!*/
+/*spoiler-span,*/
+/*.spoiler-span {*/
+/*    position: relative;*/
+/*    z-index: 9999;*/
+/*}*/
 
-/* Đảm bảo lớp nền spoiler hiển thị trên mọi layer */
-spoiler-span,
-.spoiler-span {
-    position: relative;
-    z-index: 9999;
-}
+/*!* Nếu thư viện spoilerjs dùng ::before để làm nền che *!*/
+/*spoiler-span::before,*/
+/*.spoiler-span::before {*/
+/*    z-index: 9999 !important;*/
+/*    position: absolute !important;*/
+/*}*/
 
-/* Nếu thư viện spoilerjs dùng ::before để làm nền che */
-spoiler-span::before,
-.spoiler-span::before {
-    z-index: 9999 !important;
-    position: absolute !important;
-}
-
-/* Đảm bảo vùng cha không cắt mất lớp overlay */
-.spoiler-container,
-div[class*="json"],
-div[class*="border"] {
-    overflow: visible !important;
-}
+/*!* Đảm bảo vùng cha không cắt mất lớp overlay *!*/
+/*.spoiler-container,*/
+/*div[class*="json"],*/
+/*div[class*="border"] {*/
+/*    overflow: visible !important;*/
+/*}*/
 
 /* ===== Footer ===== */
 .folder-page-content footer {
