@@ -1442,7 +1442,6 @@ export default function FolderPage() {
                       <div className="w-full max-w-7xl rounded-lg px-8 py-4">
                         <div className="flex items-center justify-between mb-6">
                           {/* Project name */}
-                          <spoiler-span>
                           <h2 className="text-xl font-semibold">
                             {currentProject?.name} —{" "}
                             {
@@ -1453,7 +1452,6 @@ export default function FolderPage() {
                             }{" "}
                             Folder(s)
                           </h2>
-                          </spoiler-span>
 
                           <div className="flex items-center gap-2">
                             {!currentProject.websocket_enabled ? (
