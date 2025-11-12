@@ -114,3 +114,32 @@ export async function getProjectConnectToken(projectId) {
   if (!res.ok) throw new Error("Failed to get project connect token");
   return await res.json(); // { token, user_id, channels, ... }
 }
+
+export async function testWsConnection({ projectId, endpointId, note }) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+  try {
+    const res = await fetch(`${API_ROOT}/api/centrifugo/test-connection`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        project_id: projectId,
+        endpoint_id: endpointId || undefined, // optional
+        note
+      }),
+      credentials: "include",
+      signal: controller.signal
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return await res.json();
+    // => json.channel: "pj:23" hoặc "pj:23-ep-72"
+    // => json.payload: { type:"connection_test", ok:true, ... }
+  } finally {
+    clearTimeout(timer);
+  }
+}
