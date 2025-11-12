@@ -169,7 +169,7 @@
 }
 
 /* ===== WS Sheet ===== */
-/*!* Cho phép spoiler hiển thị bình thường trong SheetContent *!*/
+/* Cho phép spoiler hiển thị bình thường trong SheetContent */
 /*.sheet-content {*/
 /*    isolation: unset !important;*/
 /*    overflow: visible !important;*/
