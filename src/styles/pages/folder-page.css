@@ -175,11 +175,6 @@
     overflow: visible !important;
 }
 
-/* Mở rộng ra ngoài lớp che (Shadcn Sheet có overflow hidden) */
-.sheet-content > div {
-    overflow: visible !important;
-}
-
 /* Đảm bảo lớp nền spoiler hiển thị trên mọi layer */
 spoiler-span,
 .spoiler-span {
