@@ -22,7 +22,7 @@ import serverResponseIcon from "@/assets/light/server-response.svg";
 import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import { Centrifuge } from "centrifuge";
-import { getProjectConnectToken } from "@/services/api.js";
+import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
 import { API_WS_ROOT } from "@/utils/constants.js";
 
 export default function WSChannelSheet({
@@ -36,8 +36,6 @@ export default function WSChannelSheet({
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [projectToken, setProjectToken] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const centrifugeRef = useRef(null);
 
   const [responseBody, setResponseBody] = useState(null);
 
@@ -159,70 +157,34 @@ export default function WSChannelSheet({
                 className="text-lg mt-2 btn-primary px-4 py-1.5 rounded-md"
                 disabled={!projectToken || isTesting}
                 onClick={async () => {
-                  if (isConnected && centrifugeRef.current) {
-                    // 👉 Ngắt kết nối khi đang connected
-                    centrifugeRef.current.disconnect();
-                    setIsConnected(false);
-                    setResponseBody({
-                      result: {
-                        status: "disconnected",
-                        message: "Connection closed manually."
-                      }
-                    });
-                    return;
-                  }
-
-                  // 👉 Nếu chưa kết nối, tiến hành test
                   setIsTesting(true);
                   try {
-                    const centrifuge = new Centrifuge(API_WS_ROOT, { token: projectToken });
-                    centrifugeRef.current = centrifuge;
-
-                    centrifuge.on("connected", (ctx) => {
-                      setResponseBody({
-                        result: {
-                          status: "connected",
-                          details: ctx
-                        }
-                      });
-                      setIsConnected(true);
-                      setIsTesting(false);
+                    const r = await testWsConnection({
+                      projectId: project.id,
+                      note: "UI Test Connection",
                     });
 
-                    centrifuge.on("error", (err) => {
-                      setResponseBody({
-                        error: "Connection error",
-                        details: err
-                      });
-                      setIsTesting(false);
-                    });
-
-                    centrifuge.on("disconnected", (ctx) => {
-                      setResponseBody({
-                        result: {
-                          status: "disconnected",
-                          details: ctx
-                        }
-                      });
-                      setIsConnected(false);
-                    });
-
-                    centrifuge.connect();
-                  } catch (err) {
-                    console.error("Centrifugo test failed:", err);
+                    // toast.success(`Published to ${r.channel}`);
                     setResponseBody({
-                      error: "Centrifugo test failed",
-                      details: err.message
+                      result: {
+                        status: "success",
+                        channel: r.channel,
+                        message: r.message || "Test connection successful",
+                        payload: r.payload || {},
+                      },
                     });
+                  } catch (e) {
+                    // toast.error(`Test failed: ${e.message}`);
+                    setResponseBody({
+                      error: "Test failed",
+                      details: e.message,
+                    });
+                  } finally {
                     setIsTesting(false);
                   }
                 }}
               >
-                {isTesting
-                  ? "Testing..."
-                  : isConnected
-                    ? "Disconnect"
-                    : "Test Connection"}
+                {isTesting ? "Testing..." : "Test Connection"}
               </button>
             </div>
 
@@ -233,14 +195,14 @@ export default function WSChannelSheet({
                 <button
                   className="btn-primary text-xs px-2 py-1 rounded-xs"
                   onClick={() =>
-                    handleCopy(JSON.stringify({ id: 1, connect: { token: "..." } }, null, 2))
+                    handleCopy(JSON.stringify({ "id": 1, "connect": { "token": "..." } }))
                   }
                 >
                   Copy
                 </button>
               </div>
               <div
-                className="custom-initial-value font-mono text-sm h-fit border border-t-0
+                className="custom-ws-json font-mono text-sm h-fit border border-t-0
                 rounded-b-md p-2 overflow-auto"
                 dangerouslySetInnerHTML={{
                   __html: (() => {
@@ -285,7 +247,7 @@ export default function WSChannelSheet({
                 </div>
                 {/* JSON Viewer (read-only, có highlight + format) */}
                 <div
-                  className="custom-initial-value font-mono text-sm h-40 border border-t-0
+                  className="custom-ws-json font-mono text-sm h-40 border border-t-0
                   rounded-b-md p-2 overflow-auto"
                   dangerouslySetInnerHTML={{
                     __html: (() => {

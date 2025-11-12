@@ -231,4 +231,38 @@ button:hover,
     outline: none !important;
 }
 
+/* === Custom JSON Viewer: Initial Value === */
+/* Key */
+.custom-ws-json .token.property {
+    color: var(--custom-json-key) !important; /* xanh dương đậm */
+}
+
+/* String & Value */
+.custom-ws-json .token.string {
+    color: var(--custom-json-value) !important; /* xanh nhạt */
+}
+
+/* Number, Boolean, Null */
+.custom-ws-json .token.number,
+.custom-ws-json .token.boolean,
+.custom-ws-json .token.null {
+    color: var(--custom-json-value) !important;
+}
+
+.custom-ws-json .token.punctuation,
+.custom-ws-json .token.operator,
+.custom-ws-json span[style*=":"],
+.custom-ws-json .token.punctuation:has(+ .token.string),
+.custom-ws-json .token.string + .token.punctuation {
+    color: var(--foreground) !important;
+    font-feature-settings: normal !important;
+    font-variant-ligatures: none !important;
+    content: none !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    text-shadow: none !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+}
 
