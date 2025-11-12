@@ -1231,13 +1231,13 @@ export default function ProjectPage() {
                         <img
                           src={pDesc}
                           alt="description"
-                          className="w-4 h-4"
+                          className="w-4 h-4 dark:brightness-0 dark:invert"
                         />
                         <h3 className="font-semibold">
                           Description
                         </h3>
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm opacity-70">
                         {selectedProject.description ||
                           "No description provided."}
                       </p>
@@ -1250,13 +1250,13 @@ export default function ProjectPage() {
                           <img
                             src={folderIcon}
                             alt="folders"
-                            className="w-4 h-4"
+                            className="w-4 h-4 dark:brightness-0 dark:invert"
                           />
-                          <h3 className="font-semibold">
+                          <h3 className="text-sm font-semibold">
                             FOLDERS
                           </h3>
                         </div>
-                        <h3 className="font-semibold">
+                        <h3 className="text-sm dark:opacity-70">
                           ENDPOINTS
                         </h3>
                       </div>
@@ -1280,7 +1280,7 @@ export default function ProjectPage() {
                                 className="flex justify-between items-center"
                               >
                                 {/* Folder name */}
-                                <span className="text-gray-900 font-medium">
+                                <span className="dark:opacity-70 ">
                                   {f.name}
                                 </span>
 
@@ -1325,11 +1325,11 @@ export default function ProjectPage() {
                         <img
                           src={dateIcon}
                           alt="calendar"
-                          className="w-4 h-4"
+                          className="w-4 h-4 dark:brightness-0 dark:invert"
                         />
-                        <span>Date</span>
+                        <span className="font-semibold">DATE</span>
                       </div>
-                      <div className="text-right text-sm">
+                      <div className="text-right text-sm dark:opacity-70">
                         {new Date(
                           selectedProject.created_at
                         ).toLocaleDateString()}{" "}
@@ -1350,7 +1350,8 @@ export default function ProjectPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        className="hover:bg-red-400"
+                        variant="destructive"
+                        className="hover:bg-red-500 dark:hover:bg-red-500"
                         onClick={() => {
                           openDeleteProjectDialog(selectedProject?.id);
                         }}
@@ -1358,10 +1359,11 @@ export default function ProjectPage() {
                         <img
                           src={trashIcon}
                           alt="trash"
-                          className="w-5 h-5 brightness-0"
+                          className="w-5 h-5 brightness-0 dark:invert"
                         />
                       </Button>
                       <Button
+                        className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                         onClick={() => {
                           openEditProjectDialog(selectedProject);
                         }}

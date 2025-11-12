@@ -44,15 +44,6 @@ export default function WSChannelSheet({
   const jsonEditor = useRef(null);
 
   useEffect(() => {
-    if (open) {
-      import("spoilerjs").then(({ default: Spoiler }) => {
-        Spoiler.init(); // hoặc Spoiler.initAll()
-      });
-    }
-  }, [open]);
-
-
-  useEffect(() => {
     if (jsonViewerRef.current && open) {
       // Destroy old instance before re-render
       if (jsonEditor.current) jsonEditor.current.destroy();
@@ -293,14 +284,16 @@ export default function WSChannelSheet({
                 />
               </div>
             </div>
+          </div>
 
+          <SheetFooter className="!justify-center !w-full">
             {/* Delete Button */}
             <div className="">
               <Button
                 variant="destructive"
                 className="group w-full flex items-center gap-2 justify-center
                 text-red-500 hover:text-white bg-white hover:bg-red-500
-
+                dark:text-red-500 dark:bg-white dark:hover:text-white dark:hover:bg-red-500
                         border border-red-500 transition-colors duration-200"
                 onClick={() => setOpenDeleteConfirm(true)}
               >
@@ -312,9 +305,6 @@ export default function WSChannelSheet({
                 <span>Delete WS Channel</span>
               </Button>
             </div>
-          </div>
-
-          <SheetFooter>
           </SheetFooter>
         </SheetContent>
       </Sheet>

@@ -232,6 +232,21 @@ button:hover,
 }
 
 /* === Custom JSON Viewer: Initial Value === */
+.custom-ws-json {
+    max-height: 400px;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    border-radius: 6px;
+}
+
+/* Bên trong Prism highlight (giữ format JSON) */
+.custom-ws-json pre {
+    margin: 0 !important;
+    white-space: pre-wrap !important; /* cho phép xuống dòng */
+    word-break: break-word !important;
+    line-height: 1.5;
+}
+
 /* Key */
 .custom-ws-json .token.property {
     color: var(--custom-json-key) !important; /* xanh dương đậm */
