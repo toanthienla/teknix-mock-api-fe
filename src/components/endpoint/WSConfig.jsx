@@ -87,7 +87,7 @@ export const WSConfig = ({config, endpointId}) => {
             <div className="relative">
               {/* --- JSON Editor for message --- */}
               <Editor
-                className="custom-json-editor"
+                className="custom-initial-value"
                 value={message}
                 onValueChange={(code) => setMessage(code)}
                 highlight={(code) => highlight(code, languages.json)}

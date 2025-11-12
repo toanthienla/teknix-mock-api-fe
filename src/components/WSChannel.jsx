@@ -23,7 +23,7 @@ import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import { Centrifuge } from "centrifuge";
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
-import { API_WS_ROOT } from "@/utils/constants.js";
+// import { API_WS_ROOT } from "@/utils/constants.js";
 
 export default function WSChannelSheet({
                                          open,
@@ -34,6 +34,7 @@ export default function WSChannelSheet({
                                          onCopyURL,
                                        }) {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [wsURL, setWsURL] = useState(null);
   const [projectToken, setProjectToken] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
 
@@ -41,6 +42,15 @@ export default function WSChannelSheet({
 
   const jsonViewerRef = useRef(null);
   const jsonEditor = useRef(null);
+
+  useEffect(() => {
+    if (open) {
+      import("spoilerjs").then(({ default: Spoiler }) => {
+        Spoiler.init(); // hoặc Spoiler.initAll()
+      });
+    }
+  }, [open]);
+
 
   useEffect(() => {
     if (jsonViewerRef.current && open) {
@@ -66,6 +76,7 @@ export default function WSChannelSheet({
       (async () => {
         try {
           const data = await getProjectConnectToken(project.id);
+          setWsURL(data.ws_url);
           setProjectToken(data.token);
           setResponseBody({
             result: {
@@ -96,7 +107,7 @@ export default function WSChannelSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="right"
-          className="folder-page-content !max-w-none w-[420px] sm:w-[500px] md:w-[600px] flex flex-col max-h-[100vh]"
+          className="sheet-content folder-page-content !max-w-none w-[420px] sm:w-[500px] md:w-[600px] flex flex-col max-h-[100vh]"
         >
           <SheetHeader className={"shrink-0"}>
             <SheetTitle className="text-2xl font-bold">
@@ -114,14 +125,14 @@ export default function WSChannelSheet({
                 link
                 <button
                   className="btn-primary text-xs px-2 py-1 rounded-xs"
-                  onClick={() => handleCopy(API_WS_ROOT || "")}
+                  onClick={() => handleCopy(wsURL || "")}
                 >
                   Copy
                 </button>
               </div>
               <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
                 <span>
-                  Websocket URL (Unsecured): <spoiler-span>{API_WS_ROOT}</spoiler-span>
+                  Websocket URL (Unsecured): <spoiler-span>{wsURL}</spoiler-span>
                 </span>
               </div>
             </div>
