@@ -26,6 +26,14 @@
     background-color: var(--lightgray-ws-header);
 }
 
+.folder-page-content .schema-header {
+    background-color: var(--lightgray-ws-header);
+    border-color: var(--response-border);
+}
+.folder-page-content .schema-body {
+    border-color: var(--response-border);
+}
+
 /* ===== Tabs (Folders / Logs) ===== */
 .folder-page-content .tab-header {
     background-color: var(--lightgray-bg);
@@ -47,7 +55,6 @@
 .folder-page-content input,
 .folder-page-content select,
 .folder-page-content textarea {
-    background-color: var(--input-bg);
     color: var(--input-text);
     border: 1px solid var(--input-border);
 }
