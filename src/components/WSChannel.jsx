@@ -261,8 +261,8 @@ export default function WSChannelSheet({
                 </div>
                 {/* JSON Viewer (read-only, có highlight + format) */}
                 <div
-                  className="custom-ws-json font-mono text-sm h-40 border border-t-0
-                  rounded-b-md p-2 overflow-auto"
+                  className="custom-ws-json font-mono text-sm h-fit border border-t-0
+                  rounded-b-md p-2"
                   dangerouslySetInnerHTML={{
                     __html: (() => {
                       try {
