@@ -21,9 +21,7 @@ import lightningIcon from "@/assets/light/lightning.svg";
 import serverResponseIcon from "@/assets/light/server-response.svg";
 import {highlight, languages} from "prismjs/components/prism-core.js";
 
-import { Centrifuge } from "centrifuge";
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
-// import { API_WS_ROOT } from "@/utils/constants.js";
 
 export default function WSChannelSheet({
                                          open,
@@ -42,15 +40,6 @@ export default function WSChannelSheet({
 
   const jsonViewerRef = useRef(null);
   const jsonEditor = useRef(null);
-
-  useEffect(() => {
-    if (open) {
-      import("spoilerjs").then(({ default: Spoiler }) => {
-        Spoiler.init(); // hoặc Spoiler.initAll()
-      });
-    }
-  }, [open]);
-
 
   useEffect(() => {
     if (jsonViewerRef.current && open) {
@@ -132,7 +121,7 @@ export default function WSChannelSheet({
               </div>
               <div className="relative border border-t-0 rounded-b p-4 font-mono text-sm break-all">
                 <span>
-                  Websocket URL (Unsecured): <spoiler-span>{wsURL}</spoiler-span>
+                  Websocket URL (Unsecured): {wsURL}
                 </span>
               </div>
             </div>
@@ -150,7 +139,9 @@ export default function WSChannelSheet({
               </div>
               <div className="relative border border-t-0 rounded-b p-4 font-mono text-xs break-all">
                 {projectToken ? (
-                  <spoiler-span>{projectToken}</spoiler-span>
+                  <span>
+                    {projectToken}
+                  </span>
                 ) : (
                   <span className="opacity-70">Fetching project token...</span>
                 )}
