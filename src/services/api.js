@@ -132,13 +132,23 @@ export async function testWsConnection({ projectId, endpointId, note }) {
       signal: controller.signal
     });
 
+    // If HTTP error
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${res.status}`);
+      return {
+        ok: false,
+        error: `HTTP ${res.status} – ${res.statusText}`,
+      };
     }
+
+    // Try parse JSON
     return await res.json();
     // => json.channel: "pj:23" hoặc "pj:23-ep-72"
     // => json.payload: { type:"connection_test", ok:true, ... }
+  } catch (e) {
+    return {
+      ok: false,
+      error: e.message, // network error / json parse error
+    };
   } finally {
     clearTimeout(timer);
   }

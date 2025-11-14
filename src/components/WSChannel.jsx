@@ -160,13 +160,24 @@ export default function WSChannelSheet({
                 disabled={!projectToken || isTesting}
                 onClick={async () => {
                   setIsTesting(true);
+
                   try {
                     const r = await testWsConnection({
                       projectId: project.id,
                       note: "UI Test Connection",
                     });
 
-                    // toast.success(`Published to ${r.channel}`);
+                    // --- Nếu server trả về lỗi ---
+                    if (!r.ok) {
+                      setResponseBody({
+                        result: null,
+                        error: "Test failed",
+                        details: r.error || "Unknown error",
+                      });
+                      return;
+                    }
+
+                    // --- Nếu thành công ---
                     setResponseBody({
                       result: {
                         status: "success",
@@ -175,8 +186,9 @@ export default function WSChannelSheet({
                         payload: r.payload || {},
                       },
                     });
+
                   } catch (e) {
-                    // toast.error(`Test failed: ${e.message}`);
+                    // fallback nếu testWsConnection ném exception thật
                     setResponseBody({
                       error: "Test failed",
                       details: e.message,
@@ -254,29 +266,27 @@ export default function WSChannelSheet({
                   dangerouslySetInnerHTML={{
                     __html: (() => {
                       try {
-                        const formatted =
-                          responseBody?.result &&
-                          Object.keys(responseBody.result)
-                            .length > 0
-                            ? JSON.stringify(
-                              responseBody.result,
-                              null,
-                              2
-                            )
-                            : "[]";
+                        let formattedData;
 
-                        // Prism highlight có format giữ nguyên
-                        const highlighted = highlight(
-                          formatted,
-                          languages.json,
-                          "json"
-                        );
+                        if (responseBody?.error) {
+                          formattedData = JSON.stringify(
+                            {
+                              error: responseBody.error,
+                              details: responseBody.details,
+                            },
+                            null,
+                            2
+                          );
+                        } else if (responseBody?.result) {
+                          formattedData = JSON.stringify(responseBody.result, null, 2);
+                        } else {
+                          formattedData = "[]";
+                        }
+
+                        const highlighted = highlight(formattedData, languages.json, "json");
                         return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
                       } catch (err) {
-                        console.error(
-                          "JSON format error:",
-                          err
-                        );
+                        console.error("JSON format error:", err);
                         return "<pre style='color:red'>Invalid JSON</pre>";
                       }
                     })(),
