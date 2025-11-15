@@ -86,19 +86,19 @@ export const getCurrentUser = () => API.get("/auth/me"); // check user hiá»‡n tá
 //   return await res.json(); // { token, user_id, channel, exp }
 // }
 
-export async function getEndpointToken(endpointId) {
-  const res = await fetch(`${API_ROOT}/centrifugo/endpoint-connect-token`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint_id: Number(endpointId) })
-    }
-  );
-
-  if (!res.ok) throw new Error("Failed to get endpoint token");
-  return await res.json();
-}
+// export async function getEndpointToken(endpointId) {
+//   const res = await fetch(`${API_ROOT}/centrifugo/endpoint-connect-token`,
+//     {
+//       method: "POST",
+//       credentials: "include",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ endpoint_id: Number(endpointId) })
+//     }
+//   );
+//
+//   if (!res.ok) throw new Error("Failed to get endpoint token");
+//   return await res.json();
+// }
 
 export async function getProjectConnectToken(projectId) {
   const res = await fetch(`http://localhost:3000/centrifugo/project-connect-token`, {
