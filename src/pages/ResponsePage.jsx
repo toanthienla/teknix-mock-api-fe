@@ -63,7 +63,7 @@ import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism-okaidia.css";
 import "jsoneditor/dist/jsoneditor.css";
-import {getCurrentUser, getEndpointToken} from "@/services/api.js";
+import {getCurrentUser} from "@/services/api.js";
 import { Switch } from "@/components/ui/switch.jsx";
 
 import { ApiCallEditor, Frame } from "@/components/endpoint/AdvancedComponents";
@@ -2518,19 +2518,19 @@ const DashboardPage = () => {
         `WebSocket ${checked ? "enabled" : "disabled"} successfully`
       );
 
-      // Nếu bật Notification, gọi API lấy websocket token
-      if (checked) {
-        try {
-          const tokenData = await getEndpointToken(Number(endpointId));
-          console.log("WebSocket token:", tokenData);
-          toast.success("WebSocket token retrieved successfully!");
-          // 👉 tại đây bạn có thể lưu token vào state nếu cần, ví dụ:
-          // setWsToken(tokenData.token);
-        } catch (tokenErr) {
-          console.error("Failed to get endpoint token:", tokenErr);
-          toast.error("Failed to get WebSocket token");
-        }
-      }
+      // // Nếu bật Notification, gọi API lấy websocket token
+      // if (checked) {
+      //   try {
+      //     const tokenData = await getEndpointToken(Number(endpointId));
+      //     console.log("WebSocket token:", tokenData);
+      //     toast.success("WebSocket token retrieved successfully!");
+      //     // 👉 tại đây bạn có thể lưu token vào state nếu cần, ví dụ:
+      //     // setWsToken(tokenData.token);
+      //   } catch (tokenErr) {
+      //     console.error("Failed to get endpoint token:", tokenErr);
+      //     toast.error("Failed to get WebSocket token");
+      //   }
+      // }
     } catch (err) {
       console.error("Update failed:", err);
       toast.error("Failed to update WebSocket config");
