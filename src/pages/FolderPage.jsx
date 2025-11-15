@@ -1,8 +1,8 @@
 import "@/styles/pages/folder-page.css";
-import React, {useEffect, useMemo, useState} from "react";
-import {getCurrentUser} from "@/services/api.js";
-import {Button} from "@/components/ui/button";
-import {ChevronLeftIcon, ChevronRightIcon} from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { getCurrentUser } from "@/services/api.js";
+import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -11,8 +11,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import {useNavigate, useParams} from "react-router-dom";
-import {API_ROOT} from "@/utils/constants.js";
+import { useNavigate, useParams } from "react-router-dom";
+import { API_ROOT } from "@/utils/constants.js";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input.jsx";
+import { Input } from "@/components/ui/input.jsx";
 import {
   Select,
   SelectContent,
@@ -34,10 +34,10 @@ import {
 
 import 'spoilerjs/spoiler-span';
 import Topbar from "@/components/Topbar.jsx";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
-import {Card} from "@/components/ui/card";
-import {Plus, Trash2} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2 } from "lucide-react";
 
 import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
@@ -48,7 +48,7 @@ import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
 import WSChannelSheet from "@/components/WSChannel.jsx";
 
-const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
+const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -69,7 +69,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
-        id: {type: "number", required: false},
+        id: { type: "number", required: false },
       };
       const fields = Object.entries(defaultSchema).map(
         ([name, config], index) => ({
@@ -156,7 +156,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
-      const newErrors = {...prev};
+      const newErrors = { ...prev };
       delete newErrors[id];
       return newErrors;
     });
@@ -164,7 +164,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
   const handleChange = (id, key, value) => {
     setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? {...f, [key]: value} : f))
+      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
     );
   };
 
@@ -231,7 +231,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                 disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
-                  <SelectValue/>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="string">string</SelectItem>
@@ -251,7 +251,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                   disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
-                    <SelectValue/>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">Yes</SelectItem>
@@ -266,9 +266,8 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
                   disabled={field.name === "id"}
                 >
                   <Trash2
-                    className={`w-4 h-4 ${
-                      field.name === "id" ? "opacity-70" : "text-red-500"
-                    }`}
+                    className={`w-4 h-4 ${field.name === "id" ? "opacity-70" : "text-red-500"
+                      }`}
                   />
                 </Button>
               </div>
@@ -285,7 +284,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
         {/* Actions */}
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2"/> Add Field
+            <Plus className="w-4 h-4 mr-2" /> Add Field
           </Button>
           <Button
             className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
@@ -304,7 +303,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
             <DialogDescription>
               Updating this folder's schema will <b>delete all endpoint data</b>{" "}
               that no longer fits the new schema.
-              <br/> <br/>
+              <br /> <br />
               Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>
@@ -329,7 +328,7 @@ const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
 export default function FolderPage() {
   const navigate = useNavigate();
-  const {projectId} = useParams();
+  const { projectId } = useParams();
   const [activeTab, setActiveTab] = useState("folders");
 
   const [logs, setLogs] = useState([]);
@@ -564,8 +563,8 @@ export default function FolderPage() {
     setLoadingLogs(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/project_request_logs/by_project?project_id=${pid}&page=${page}&limit=${limit}`,
-        {credentials: "include"}
+        `${API_ROOT}/project_request_logs/by_project?project_id=${pid}&page=${page}&limit=${limit}`,
+        { credentials: "include" }
       );
 
       if (res.status === 401) {
@@ -594,7 +593,7 @@ export default function FolderPage() {
       const enrichedLogs = await Promise.all(
         logsArray.map(async (log) => {
           if (!log || !log.endpoint_id)
-            return {...log, project_id: log?.project_id ?? pid};
+            return { ...log, project_id: log?.project_id ?? pid };
 
           const endpoint = endpointMap.get(String(log.endpoint_id));
           const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
@@ -602,7 +601,7 @@ export default function FolderPage() {
           try {
             const r2 = await fetch(
               `${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`,
-              {credentials: "include"}
+              { credentials: "include" }
             );
             if (!r2.ok) throw new Error("Responses not ok");
             const payload = await r2.json();
@@ -743,7 +742,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders`, {
         method: "POST",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(folderData),
       });
 
@@ -769,7 +768,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editFolderName.trim(),
         }),
@@ -939,7 +938,7 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/endpoints`, {
         method: "POST",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newEndpoint),
       });
 
@@ -995,20 +994,20 @@ export default function FolderPage() {
     const isValid = await validateEditEndpoint(editId, editEName, editEState);
     if (!isValid) return;
 
-    const updated = {name: editEName};
+    const updated = { name: editEName };
 
     try {
       const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),
       });
 
       if (!res.ok) throw new Error("Failed to update endpoint");
 
       setEndpoints((prev) =>
-        prev.map((ep) => (ep.id === editId ? {...ep, ...updated} : ep))
+        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
       );
 
       setOpenEdit(false);
@@ -1058,7 +1057,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         created_at: new Date().toISOString(),
@@ -1085,7 +1084,7 @@ export default function FolderPage() {
     }
     fetch(`${API_ROOT}/workspaces/${editWsId}`, {
       method: "PUT",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: editWsName.trim(),
         updated_at: new Date().toISOString(),
@@ -1094,7 +1093,7 @@ export default function FolderPage() {
       .then(() => {
         setWorkspaces((prev) =>
           prev.map((w) =>
-            w.id === editWsId ? {...w, name: editWsName.trim()} : w
+            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
           )
         );
         setOpenEditWs(false);
@@ -1135,26 +1134,26 @@ export default function FolderPage() {
       // 4. Delete all endpoints first
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
         )
       );
 
       // 5. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
         )
       );
 
       // 6. Delete all projects
       await Promise.all(
         projectsToDelete.map((p) =>
-          fetch(`${API_ROOT}/projects/${p.id}`, {method: "DELETE"})
+          fetch(`${API_ROOT}/projects/${p.id}`, { method: "DELETE" })
         )
       );
 
       // 7. Finally delete the workspace
-      await fetch(`${API_ROOT}/workspaces/${id}`, {method: "DELETE"});
+      await fetch(`${API_ROOT}/workspaces/${id}`, { method: "DELETE" });
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -1262,8 +1261,8 @@ export default function FolderPage() {
       const res = await fetch(`${API_ROOT}/folders/${selectedFolder.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({base_schema: newSchema}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_schema: newSchema }),
       });
 
       if (!res.ok) throw new Error("Failed to update folder schema");
@@ -1280,15 +1279,15 @@ export default function FolderPage() {
     try {
       const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({websocket_enabled: true}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ websocket_enabled: true }),
       });
 
       if (!res.ok) throw new Error("Failed to enable WebSocket");
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === projectId ? {...p, websocket_enabled: true} : p
+          p.id === projectId ? { ...p, websocket_enabled: true } : p
         )
       );
 
@@ -1303,15 +1302,15 @@ export default function FolderPage() {
     try {
       const res = await fetch(`${API_ROOT}/projects/${projectId}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({websocket_enabled: false}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ websocket_enabled: false }),
       });
 
       if (!res.ok) throw new Error("Failed to delete WebSocket Channel");
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === projectId ? {...p, websocket_enabled: false} : p
+          p.id === projectId ? { ...p, websocket_enabled: false } : p
         )
       );
 
@@ -1391,21 +1390,19 @@ export default function FolderPage() {
                 <div className="tab-header flex rounded-t-lg">
                   <button
                     onClick={() => setActiveTab("folders")}
-                    className={`tab-button flex rounded-tl-lg px-4 py-2 ${
-                      activeTab === "folders"
+                    className={`tab-button flex rounded-tl-lg px-4 py-2 ${activeTab === "folders"
                         ? "active"
                         : ""
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center">
                       <img
                         src={folderIcon}
                         alt="folder"
-                        className={`w-4 h-4 mr-2 ${
-                          activeTab === "folders"
+                        className={`w-4 h-4 mr-2 ${activeTab === "folders"
                             ? "brightness-0 dark:invert"
                             : ""
-                        }`}
+                          }`}
                       />
                       <span className="text-md font-semibold">Folders</span>
                     </div>
@@ -1415,21 +1412,19 @@ export default function FolderPage() {
                       setActiveTab("logs");
                       setPage(1);
                     }}
-                    className={`tab-button rounded-none px-4 py-2 ${
-                      activeTab === "logs"
+                    className={`tab-button rounded-none px-4 py-2 ${activeTab === "logs"
                         ? "active"
                         : ""
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center">
                       <img
                         src={logsIcon}
                         alt="logs"
-                        className={`w-4 h-4 mr-2 ${
-                          activeTab === "logs"
+                        className={`w-4 h-4 mr-2 ${activeTab === "logs"
                             ? "brightness-0 dark:invert"
                             : ""
-                        }`}
+                          }`}
                       />
                       <span className="text-md font-semibold">Logs</span>
                     </div>
@@ -1530,7 +1525,7 @@ export default function FolderPage() {
                                     setFolders((prev) =>
                                       prev.map((ff) =>
                                         ff.id === f.id
-                                          ? {...ff, is_public: newVal}
+                                          ? { ...ff, is_public: newVal }
                                           : ff
                                       )
                                     );
@@ -1611,7 +1606,7 @@ export default function FolderPage() {
                               <TableHead colSpan={1} className="text-right">
                                 <Select value={timeFilter} onValueChange={setTimeFilter}>
                                   <SelectTrigger className="w-full border-none shadow-none">
-                                    <SelectValue placeholder="Recent logs"/>
+                                    <SelectValue placeholder="Recent logs" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="Recent logs">Recent logs</SelectItem>
@@ -1664,7 +1659,7 @@ export default function FolderPage() {
                               </TableRow>
                             ) : (
                               logs.map((log, i) => (
-                                <LogCard key={i} log={log}/>
+                                <LogCard key={i} log={log} />
                               ))
                             )}
                           </TableBody>
@@ -1678,7 +1673,7 @@ export default function FolderPage() {
                               disabled={page <= 1}
                               onClick={() => setPage((p) => Math.max(p - 1, 1))}
                             >
-                              <ChevronLeftIcon className="w-4 h-4"/>
+                              <ChevronLeftIcon className="w-4 h-4" />
                             </Button>
                             <span className="text-sm font-semibold">
                               {page} / {totalPages || 1}
@@ -1689,7 +1684,7 @@ export default function FolderPage() {
                               disabled={page >= totalPages}
                               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                             >
-                              <ChevronRightIcon className="w-4 h-4"/>
+                              <ChevronRightIcon className="w-4 h-4" />
                             </Button>
                           </div>
 
@@ -1704,7 +1699,7 @@ export default function FolderPage() {
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
-                                <SelectValue/>
+                                <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 {[5, 10, 20, 50].map((size) => (
@@ -1732,9 +1727,9 @@ export default function FolderPage() {
             className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
             <span>© Teknix Corp. All rights reserved.</span>
             <div className="flex items-center gap-3">
-              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert"/>
-              <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert"/>
-              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert"/>
+              <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert" />
+              <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
+              <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert" />
               <a className="hover:underline font-semibold" href="">
                 About
               </a>
@@ -1898,16 +1893,14 @@ export default function FolderPage() {
                     className="hidden"
                   />
                   <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                      !newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
-                    }`}
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${!newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
+                      }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border ${
-                        !newFolderMode 
-                          ? "border-white bg-yellow-300 dark:border-[#36393F] dark:bg-[#5865F2]" 
+                      className={`w-3.5 h-3.5 rounded-full border ${!newFolderMode
+                          ? "border-white bg-yellow-300 dark:border-[#36393F] dark:bg-[#5865F2]"
                           : "border-gray-200 bg-white dark:border-[#36393F] dark:bg-[#36393F]"
-                      }`}
+                        }`}
                     />
                   </div>
                   <span className="text-sm">Private</span>
@@ -1924,16 +1917,14 @@ export default function FolderPage() {
                     className="hidden"
                   />
                   <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                      newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
-                    }`}
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${newFolderMode ? "border-black dark:border-[#B9BBBE]" : "border-gray-400"
+                      }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border ${
-                        newFolderMode
+                      className={`w-3.5 h-3.5 rounded-full border ${newFolderMode
                           ? "border-white bg-yellow-300 dark:border-[#36393F] dark:bg-[#5865F2]"
                           : "border-gray-200 bg-white dark:border-[#36393F] dark:bg-[#36393F]"
-                      }`}
+                        }`}
                     />
                   </div>
                   <span className="text-sm">Public</span>
@@ -1978,9 +1969,8 @@ export default function FolderPage() {
             <Button
               onClick={handleUpdateFolder}
               disabled={!hasChanges()}
-              className={`bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white ${
-                !hasChanges() ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white ${!hasChanges() ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Update
             </Button>
@@ -1998,7 +1988,7 @@ export default function FolderPage() {
 
           {folderSchema ? (
             <BaseSchemaEditor
-              folderData={{schema: folderSchema}}
+              folderData={{ schema: folderSchema }}
               folderId={selectedFolder?.id}
               onSave={handleSaveFolderSchema}
               method={"PUT"}
@@ -2021,7 +2011,7 @@ export default function FolderPage() {
 
           <p className="opacity-70">
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{selectedFolder?.name}</span>?<br/>
+            <span className="font-semibold">{selectedFolder?.name}</span>?<br />
             <span className="text-red-500 text-sm">
               This action cannot be undone.
             </span>
@@ -2146,7 +2136,7 @@ export default function FolderPage() {
                 onValueChange={(v) => setNewEFolderId(v)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an option"/>
+                  <SelectValue placeholder="Select an option" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -2185,7 +2175,7 @@ export default function FolderPage() {
                 onValueChange={(v) => setNewEMethod(v)}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a method"/>
+                  <SelectValue placeholder="Select a method" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

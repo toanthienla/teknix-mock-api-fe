@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {API_ROOT} from "@/utils/constants.js";
+import { API_ROOT } from "@/utils/constants.js";
 
 const API = axios.create({
   baseURL: API_ROOT,
@@ -35,7 +35,7 @@ API.interceptors.response.use(
 
       try {
         // Gọi endpoint refresh token (cookie tự gửi kèm)
-        await axios.post(`${API_ROOT}/auth/refresh`, {}, {withCredentials: true});
+        await axios.post(`${API_ROOT}/auth/refresh`, {}, { withCredentials: true });
         isRefreshing = false;
         onRefreshed(); // gọi lại các request đang chờ
         return API(originalRequest); // retry request cũ
@@ -101,7 +101,7 @@ export const getCurrentUser = () => API.get("/auth/me"); // check user hiện t�
 // }
 
 export async function getProjectConnectToken(projectId) {
-  const res = await fetch(`http://localhost:3000/centrifugo/project-connect-token`, {
+  const res = await fetch(`${API_ROOT}/centrifugo/project-connect-token`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
