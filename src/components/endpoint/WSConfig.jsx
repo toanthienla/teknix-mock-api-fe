@@ -17,20 +17,61 @@ import React, {useState} from "react";
 import {statusCodes} from "@/components/endpoint/constants.js";
 import {API_ROOT} from "@/utils/constants.js";
 
-export const WSConfig = ({config, endpointId}) => {
+export const WSConfig = ({config, endpointId, isStateful, method}) => {
+
+  const statelessAllowed = statusCodes.map((c) => c.code); // tất cả
+
+  const statefulAllowed = [
+    "100", "101", "102",
+    "200", "201", "202",
+    "204", "206",
+    "400", "404",
+    "500", "503"
+  ];
+
+  const methodRules = {
+    GET:    ["200", "206", "404"],
+    POST:   ["200", "201", "400", "409"],
+    PUT:    ["200", "400", "404", "409"],
+    DELETE: ["200", "404"],
+  };
+
+  const getStatusCodesByMethod = (method, isStateful) => {
+    // Lấy rule theo method, nếu không có thì cho phép tất cả
+    const allowedByMethod = methodRules[method] || statusCodes.map((c) => c.code);
+
+    // Lấy rule theo stateful
+    const allowedByState = isStateful ? statefulAllowed : statelessAllowed;
+
+    // Giao 2 list (method ∩ state)
+    const finalAllowedCodes = allowedByMethod.filter((code) =>
+      allowedByState.includes(code)
+    );
+
+    // Trả về object đúng format từ statusCodes gốc
+    return statusCodes.filter((c) => finalAllowedCodes.includes(c.code));
+  };
 
   const [enabled] = useState(config.enabled ?? false);
   const [message, setMessage] = useState(
-    JSON.stringify(config.message ?? {}, null, 2)
+    JSON.stringify(
+      config.message === "" ? {} : (config.message ?? {}),
+      null,
+      2
+    )
   );
+
   const [delay, setDelay] = useState(config.delay_ms ?? 0);
   const [code, setCode] = useState(config.condition ?? 200);
   const [isSaving, setIsSaving] = useState(false);
+  const availableCodes = getStatusCodesByMethod(method, isStateful);
 
   // Gọi API PUT /endpoints/:endpointId
   const handleSave = async () => {
     try {
-      const parsedMessage = JSON.parse(message);
+      const parsedMessage =
+        message.trim() === "" ? {} : JSON.parse(message);
+
       const payload = {
         websocket_config: {
           enabled,
@@ -149,7 +190,7 @@ export const WSConfig = ({config, endpointId}) => {
                 <SelectValue placeholder="Select Code"/>
               </SelectTrigger>
               <SelectContent className="max-h-[200px] overflow-y-auto">
-                {statusCodes.map(({code, description}) => (
+                {availableCodes.map(({ code, description }) => (
                   <SelectItem key={code} value={code}>
                     {code} - {description}
                   </SelectItem>

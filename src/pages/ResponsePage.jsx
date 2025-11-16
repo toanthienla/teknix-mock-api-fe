@@ -1385,7 +1385,7 @@ const DashboardPage = () => {
       const data = await res.json();
       setConfig(data);
       setWsEnabled(data?.enabled ?? false);
-      setWsMessage(data?.message ?? "");
+      setWsMessage(data?.message === "" ? {} : data?.message ?? {});
       setWsDelay(data?.delay_ms ?? 0);
       setWsCondition(data?.condition ?? 0);
     } catch (err) {
@@ -2513,9 +2513,24 @@ const DashboardPage = () => {
       });
 
       if (!res.ok) throw new Error("Failed to update WebSocket config");
-      toast.success(
-        `WebSocket ${checked ? "enabled" : "disabled"} successfully`
-      );
+
+      if (checked) {
+        const isEmpty =
+          wsMessage === "" ||
+          wsMessage === null ||
+          (typeof wsMessage === "object" &&
+            Object.keys(wsMessage).length === 0);
+
+        if (isEmpty) {
+          toast.warning(
+            "WebSocket enabled, but message is empty. Please update it."
+          );
+        } else {
+          toast.success("WebSocket enabled successfully");
+        }
+      } else {
+        toast.success("WebSocket disabled successfully");
+      }
 
       // // Nếu bật Notification, gọi API lấy websocket token
       // if (checked) {
@@ -3886,6 +3901,8 @@ const DashboardPage = () => {
                       <WSConfig
                         config={config}
                         endpointId={currentEndpointId}
+                        isStateful={isStateful}
+                        method={method}
                       />
                     </div>
                   )}

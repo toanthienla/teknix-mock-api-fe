@@ -32,7 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select.jsx";
 
-import 'spoilerjs/spoiler-span';
 import Topbar from "@/components/Topbar.jsx";
 import { toast } from "react-toastify";
 import LogCard from "@/components/LogCard.jsx";
