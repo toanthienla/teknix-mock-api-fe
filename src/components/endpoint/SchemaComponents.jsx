@@ -632,13 +632,13 @@ export const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
 
   return (
     <div className="max-h-[70vh] overflow-y-auto">
-      <Card className="p-4 border border-slate-300 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+      <Card className="p-4 border rounded-lg">
+        <h2 className="text-xl font-semibold mb-4">
           Folder Base Schema
         </h2>
 
         {/* Header */}
-        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+        <div className="grid grid-cols-3 gap-4 font-semibold border-b pb-2 mb-2">
           <div>Field Name</div>
           <div>Type</div>
           <div>Required</div>
@@ -719,7 +719,7 @@ export const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
             <Plus className="w-4 h-4 mr-2"/> Add Field
           </Button>
           <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
             onClick={handleSave}
           >
             Save Changes

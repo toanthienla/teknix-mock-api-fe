@@ -2781,7 +2781,7 @@ const DashboardPage = () => {
               </DialogHeader>
 
               <div className="mb-6">
-                <p className="text-gray-700">
+                <p className="">
                   It will reset all Current Values back to Initial Values. Are
                   you sure you want to reset?
                 </p>
@@ -2791,7 +2791,7 @@ const DashboardPage = () => {
                 <Button
                   variant="outline"
                   onClick={() => setShowResetConfirmDialog(false)}
-                  className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                  className="w-[80px] h-[40px] rounded-[8px]"
                 >
                   Cancel
                 </Button>
@@ -4383,15 +4383,15 @@ const DashboardPage = () => {
         open={showStatefulConfirmDialog}
         onOpenChange={setShowStatefulConfirmDialog}
       >
-        <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+        <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
           <DialogHeader className="flex justify-between items-start mb-4">
-            <DialogTitle className="text-xl font-bold text-slate-800">
+            <DialogTitle className="text-xl font-bold">
               Switch to Stateful Mode
             </DialogTitle>
           </DialogHeader>
 
           <div className="mb-6">
-            <p className="text-gray-700">
+            <p className="">
               This endpoint will start storing and modifying data instead of
               returning static responses. Are you sure you want to switch to
               stateful mode?
@@ -4402,7 +4402,7 @@ const DashboardPage = () => {
             <Button
               variant="outline"
               onClick={() => setShowStatefulConfirmDialog(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className=""
             >
               Cancel
             </Button>
@@ -4432,7 +4432,7 @@ const DashboardPage = () => {
               method={"PUT"}
             />
           ) : (
-            <div className="text-gray-500 text-center py-6">
+            <div className="text-center py-6">
               Loading schema...
             </div>
           )}
@@ -4444,15 +4444,15 @@ const DashboardPage = () => {
         open={showStatelessConfirmDialog}
         onOpenChange={setShowStatelessConfirmDialog}
       >
-        <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+        <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
           <DialogHeader className="flex justify-between items-start mb-4">
-            <DialogTitle className="text-xl font-bold text-slate-800">
+            <DialogTitle className="text-xl font-bold">
               Switch to Stateless Mode
             </DialogTitle>
           </DialogHeader>
 
           <div className="mb-6">
-            <p className="text-gray-700">
+            <p className="">
               Switching to stateless mode will remove persisted state. All
               requests will respond with predefined static data only. Continue?
             </p>
@@ -4462,7 +4462,7 @@ const DashboardPage = () => {
             <Button
               variant="outline"
               onClick={() => setShowStatelessConfirmDialog(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className=""
             >
               Cancel
             </Button>
@@ -4478,15 +4478,15 @@ const DashboardPage = () => {
 
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-800">
+            <DialogTitle className="text-lg font-semibold">
               Edit Workspace
             </DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">
+              <label className="text-sm font-medium block mb-1">
                 Workspace Name
               </label>
               <Input
@@ -4514,7 +4514,7 @@ const DashboardPage = () => {
             </Button>
             <Button
               type="button"
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleEditWorkspace}
             >
               Update
@@ -4552,7 +4552,7 @@ const DashboardPage = () => {
               Cancel
             </Button>
             <Button
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -4570,7 +4570,7 @@ const DashboardPage = () => {
         open={!!confirmDeleteWs}
         onOpenChange={() => setConfirmDeleteWs(null)}
       >
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
