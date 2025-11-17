@@ -125,17 +125,15 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="relative flex flex-col items-center justify-center w-full">
       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
         <div className="space-y-2">
           {/* --- Header --- */}
-          <div className="flex justify-between items-center">
-            <h2 className="font-medium">WS Message</h2>
+          <div className="btn-primary rounded-full absolute top-2 right-4 flex space-x-2 z-10">
             <Button
-              variant="outline"
               size="icon"
               disabled={isSaving}
-              className="btn-primary"
+              className="btn-primary rounded-full my-1 shadow-none"
               onClick={handleSave}
             >
               <SaveIcon
@@ -144,6 +142,10 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
                 }`}
               />
             </Button>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium">WS Message</h2>
           </div>
 
           <div className="flex-1 w-full relative">
