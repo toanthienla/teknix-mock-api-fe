@@ -115,7 +115,7 @@
 }
 
 .folder-page-content tbody tr:hover {
-    background-color: var(--accent);
+    background-color: var(--lightgray-bg);
 }
 
 .folder-page-content .endpoint-header {
