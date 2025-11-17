@@ -166,29 +166,26 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
                 }}
               />
 
-              {/*/!* JSON Editor controls *!/*/}
-              {/*<div className="absolute top-2 right-2 flex space-x-2 z-10">*/}
-              {/*  <Button*/}
-              {/*    variant="outline"*/}
-              {/*    size="sm"*/}
-              {/*    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"*/}
-              {/*    onClick={(e) => {*/}
-              {/*      e.stopPropagation();*/}
-              {/*      try {*/}
-              {/*        const formatted = JSON.stringify(*/}
-              {/*          JSON.parse(jsonStrings[index]),*/}
-              {/*          null,*/}
-              {/*          2*/}
-              {/*        );*/}
-              {/*        handleJsonChange(index, formatted);*/}
-              {/*      } catch {*/}
-              {/*        toast.error("Invalid JSON format");*/}
-              {/*      }*/}
-              {/*    }}*/}
-              {/*  >*/}
-              {/*    <Code className="mr-1 h-4 w-4"/> Format*/}
-              {/*  </Button>*/}
-              {/*</div>*/}
+              {/* JSON Editor controls */}
+              <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-fit h-[29px] rounded-[6px]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      const formatted = JSON.stringify(JSON.parse(message), null, 2);
+                      setMessage(formatted);
+                      // toast.success("Formatted!");
+                    } catch {
+                      toast.error("Invalid JSON format");
+                    }
+                  }}
+                >
+                  <Code className="mr-1 h-4 w-4" /> Format
+                </Button>
+              </div>
             </div>
           </div>
 
