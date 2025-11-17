@@ -19,26 +19,48 @@ import {API_ROOT} from "@/utils/constants.js";
 
 export const WSConfig = ({config, endpointId, isStateful, method}) => {
 
-  const statelessAllowed = statusCodes.map((c) => c.code); // tất cả
+  const statelessAllowed = statusCodes.map((c) => c.code); // Get all codes
 
   const statefulAllowed = [
     "100", "101", "102",
-    "200", "201", "202",
-    "204", "206",
-    "400", "404",
+    "200", "201", "202", "204", "206",
+    "302",
+    "400", "401", "403", "404", "408",
+    "409",
     "500", "503"
   ];
 
+  const serverErrorCodes = ["500", "501", "502", "503", "504", "505"];
+
   const methodRules = {
-    GET:    ["200", "206", "404"],
-    POST:   ["200", "201", "400", "409"],
-    PUT:    ["200", "400", "404", "409"],
-    DELETE: ["200", "404"],
+    GET: [
+      "200", "204", "206", "304",
+      "400", "401", "403", "404",
+      ...serverErrorCodes
+    ],
+    POST: [
+      "200", "201", "202", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ],
+    PUT: [
+      "200", "201", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ],
+    DELETE: [
+      "200", "202", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ]
   };
 
   const getStatusCodesByMethod = (method, isStateful) => {
     // Lấy rule theo method, nếu không có thì cho phép tất cả
-    const allowedByMethod = methodRules[method] || statusCodes.map((c) => c.code);
+    const allowedByMethod = methodRules[method] || statelessAllowed;
 
     // Lấy rule theo stateful
     const allowedByState = isStateful ? statefulAllowed : statelessAllowed;
@@ -189,7 +211,7 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
               <SelectTrigger className="w-[70%]">
                 <SelectValue placeholder="Select Code"/>
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
+              <SelectContent className="max-h-[250px] overflow-y-auto">
                 {availableCodes.map(({ code, description }) => (
                   <SelectItem key={code} value={code}>
                     {code} - {description}
