@@ -19,26 +19,48 @@ import {API_ROOT} from "@/utils/constants.js";
 
 export const WSConfig = ({config, endpointId, isStateful, method}) => {
 
-  const statelessAllowed = statusCodes.map((c) => c.code); // tất cả
+  const statelessAllowed = statusCodes.map((c) => c.code); // Get all codes
 
   const statefulAllowed = [
     "100", "101", "102",
-    "200", "201", "202",
-    "204", "206",
-    "400", "404",
+    "200", "201", "202", "204", "206",
+    "302",
+    "400", "401", "403", "404", "408",
+    "409",
     "500", "503"
   ];
 
+  const serverErrorCodes = ["500", "501", "502", "503", "504", "505"];
+
   const methodRules = {
-    GET:    ["200", "206", "404"],
-    POST:   ["200", "201", "400", "409"],
-    PUT:    ["200", "400", "404", "409"],
-    DELETE: ["200", "404"],
+    GET: [
+      "200", "204", "206", "304",
+      "400", "401", "403", "404",
+      ...serverErrorCodes
+    ],
+    POST: [
+      "200", "201", "202", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ],
+    PUT: [
+      "200", "201", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ],
+    DELETE: [
+      "200", "202", "204",
+      "400", "401", "403", "404",
+      "409",
+      ...serverErrorCodes
+    ]
   };
 
   const getStatusCodesByMethod = (method, isStateful) => {
     // Lấy rule theo method, nếu không có thì cho phép tất cả
-    const allowedByMethod = methodRules[method] || statusCodes.map((c) => c.code);
+    const allowedByMethod = methodRules[method] || statelessAllowed;
 
     // Lấy rule theo stateful
     const allowedByState = isStateful ? statefulAllowed : statelessAllowed;
@@ -103,17 +125,15 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="relative flex flex-col items-center justify-center w-full">
       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
         <div className="space-y-2">
           {/* --- Header --- */}
-          <div className="flex justify-between items-center">
-            <h2 className="font-medium">WS Message</h2>
+          <div className="btn-primary rounded-full absolute top-2 right-4 flex space-x-2 z-10">
             <Button
-              variant="outline"
               size="icon"
               disabled={isSaving}
-              className="btn-primary"
+              className="btn-primary rounded-full my-1 shadow-none"
               onClick={handleSave}
             >
               <SaveIcon
@@ -122,6 +142,10 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
                 }`}
               />
             </Button>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <h2 className="font-medium">WS Message</h2>
           </div>
 
           <div className="flex-1 w-full relative">
@@ -144,29 +168,26 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
                 }}
               />
 
-              {/*/!* JSON Editor controls *!/*/}
-              {/*<div className="absolute top-2 right-2 flex space-x-2 z-10">*/}
-              {/*  <Button*/}
-              {/*    variant="outline"*/}
-              {/*    size="sm"*/}
-              {/*    className="border-[#E5E5E1] w-[77px] h-[29px] rounded-[6px] bg-white"*/}
-              {/*    onClick={(e) => {*/}
-              {/*      e.stopPropagation();*/}
-              {/*      try {*/}
-              {/*        const formatted = JSON.stringify(*/}
-              {/*          JSON.parse(jsonStrings[index]),*/}
-              {/*          null,*/}
-              {/*          2*/}
-              {/*        );*/}
-              {/*        handleJsonChange(index, formatted);*/}
-              {/*      } catch {*/}
-              {/*        toast.error("Invalid JSON format");*/}
-              {/*      }*/}
-              {/*    }}*/}
-              {/*  >*/}
-              {/*    <Code className="mr-1 h-4 w-4"/> Format*/}
-              {/*  </Button>*/}
-              {/*</div>*/}
+              {/* JSON Editor controls */}
+              <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-fit h-[29px] rounded-[6px]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try {
+                      const formatted = JSON.stringify(JSON.parse(message), null, 2);
+                      setMessage(formatted);
+                      // toast.success("Formatted!");
+                    } catch {
+                      toast.error("Invalid JSON format");
+                    }
+                  }}
+                >
+                  <Code className="mr-1 h-4 w-4" /> Format
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -189,7 +210,7 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
               <SelectTrigger className="w-[70%]">
                 <SelectValue placeholder="Select Code"/>
               </SelectTrigger>
-              <SelectContent className="max-h-[200px] overflow-y-auto">
+              <SelectContent className="max-h-[250px] overflow-y-auto">
                 {availableCodes.map(({ code, description }) => (
                   <SelectItem key={code} value={code}>
                     {code} - {description}

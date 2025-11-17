@@ -2781,7 +2781,7 @@ const DashboardPage = () => {
               </DialogHeader>
 
               <div className="mb-6">
-                <p className="text-gray-700">
+                <p className="">
                   It will reset all Current Values back to Initial Values. Are
                   you sure you want to reset?
                 </p>
@@ -2791,7 +2791,7 @@ const DashboardPage = () => {
                 <Button
                   variant="outline"
                   onClick={() => setShowResetConfirmDialog(false)}
-                  className="border-slate-300 text-slate-700 hover:bg-slate-50 w-[80px] h-[40px] rounded-[8px]"
+                  className="w-[80px] h-[40px] rounded-[8px]"
                 >
                   Cancel
                 </Button>
@@ -3048,18 +3048,16 @@ const DashboardPage = () => {
                   </div>
 
                   {selectedResponse ? (
-                    <div className="flex items-center justify-center w-full">
+                    <div className="relative flex items-center justify-center w-full">
                       <Card className="p-4 shadow-none rounded-none border-none w-[85%]">
                         <div className="flex justify-between items-center">
-                          <div></div>
                           {/* Tất cả nút nằm bên phải */}
-                          <div className="flex items-center gap-2">
+                          <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
                             <div className="relative">
                               <Button
-                                variant="outline"
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
@@ -3080,10 +3078,9 @@ const DashboardPage = () => {
                             {!isStateful && (
                               <div className="relative">
                                 <Button
-                                  variant="outline"
                                   size="icon"
                                   // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                  className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
                                   onClick={() => {
                                     if (selectedResponse) {
                                       setDefaultResponse(selectedResponse.id);
@@ -3115,10 +3112,9 @@ const DashboardPage = () => {
                             {/* Nút Popover - di chuyển từ trong editor ra đây */}
                             <div className="relative">
                               <Button
-                                variant="outline"
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                className="h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
                                 onClick={() => {
                                   const canEdit =
                                     !isStateful ||
@@ -3494,50 +3490,47 @@ const DashboardPage = () => {
                 <div className="w-full">
                   {/* Rules */}
                   {!isStateful && activeTab === "Rules" && (
-                    <div className="flex justify-center items-center w-full ">
-                      {selectedResponse ? (
-                        <div className="flex flex-col items-center w-[85%] ">
-                          <Frame
-                            responseName={selectedResponse?.name}
-                            selectedResponse={selectedResponse}
-                            onUpdateRules={setResponseCondition}
-                            onSave={handleSaveResponse}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px]">
-                          <img
-                            src={no_response}
-                            alt="No response selected"
-                            className="mb-4"
-                          />
-                        </div>
-                      )}
+                    <div className="relative">
+                      <div className="flex justify-center items-center w-full ">
+                        {selectedResponse ? (
+                          <div className="flex flex-col items-center w-[85%] ">
+                            <Frame
+                              responseName={selectedResponse?.name}
+                              selectedResponse={selectedResponse}
+                              onUpdateRules={setResponseCondition}
+                              onSave={handleSaveResponse}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-[400px]">
+                            <img
+                              src={no_response}
+                              alt="No response selected"
+                              className="mb-4"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
                   {/* Proxy */}
                   {!isStateful && activeTab === "proxy" && (
-                    <div className="flex justify-center items-center w-full">
+                    <div className="relative flex justify-center items-center w-full">
                       {selectedResponse ? (
                         <Card className="p-6 border-0 rounded-none shadow-none w-[85%]">
                           <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-md">
-                              Forward Proxy URL
-                            </h2>
-                            <div className="relative">
+                            <div className="btn-primary rounded-full absolute top-2 right-4 flex z-10">
                               <Button
-                                variant="outline"
                                 size="icon"
-                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+                                className="btn-primary rounded-full shadow-none my-1 hover:opacity-80"
                                 onClick={handleSaveResponse}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
                                 }
                               >
-                                <SaveIcon className="h-5 w-5 opacity-70" />
+                                <SaveIcon className="h-5 w-5" />
                               </Button>
                               <Tooltip
                                 visible={saveTooltipVisible}
@@ -3546,6 +3539,9 @@ const DashboardPage = () => {
                                 Save button
                               </Tooltip>
                             </div>
+                            <h2 className="text-md">
+                              Forward Proxy URL
+                            </h2>
                           </div>
                           <div className="space-y-2">
                             <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
@@ -3611,141 +3607,140 @@ const DashboardPage = () => {
 
                   {/* Data Default */}
                   {isStateful && activeTab === "dataDefault" && (
-                    <div className="flex flex-col items-center justify-center w-full">
+                    <div className="relative flex flex-col items-center justify-center w-full">
                       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
                         <div className="space-y-6">
+
+                          {/* Nút Save và Popover nằm cạnh nhau */}
+                          <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
+                            {/* Nút Popover */}
+                            <div
+                              className="relative"
+                              ref={initialValuePopoverRef}
+                            >
+                              <Button
+                                size="icon"
+                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
+                                onClick={() =>
+                                  setIsInitialValuePopoverOpen(
+                                    !isInitialValuePopoverOpen
+                                  )
+                                }
+                                title="Variable Picker"
+                              >
+                                <FileCode className="h-5 w-5" />
+                              </Button>
+
+                              {/* Popover cho Initial Value */}
+                              {isInitialValuePopoverOpen && (
+                                <div className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                                  <div className="flex flex-col items-center gap-2 p-3.5">
+                                    <div className="w-full flex justify-between items-center">
+                                      <div className="font-semibold text-sm">
+                                        Variable Picker
+                                      </div>
+                                      <X
+                                        className="w-4 h-4 opacity-40 cursor-pointer hover:opacity-80"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setIsInitialValuePopoverOpen(false);
+                                        }}
+                                      />
+                                    </div>
+
+                                    <div className="w-full flex justify-between">
+                                      <div
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "url"
+                                          ? "active"
+                                          : "opacity-80"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("url");
+                                        }}
+                                      >
+                                        URL Parameters
+                                      </div>
+                                      <div
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "query"
+                                          ? "active"
+                                          : "opacity-80"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("query");
+                                        }}
+                                      >
+                                        Query Parameters
+                                      </div>
+                                      <div
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "state"
+                                          ? "active"
+                                          : "opacity-80"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSection("state");
+                                        }}
+                                      >
+                                        Project State
+                                      </div>
+                                    </div>
+
+                                    <div
+                                      className="w-full p-1 rounded-md mt-2 cursor-pointer transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Đảm bảo sử dụng selectedSection hiện tại
+                                        const templateText =
+                                          getTemplateText().template;
+                                        insertInitialValueTemplate(
+                                          templateText
+                                        );
+                                      }}
+                                    >
+                                      <div className="font-mono text-[12px] mb-[-5px]">
+                                        {getTemplateText().template}
+                                      </div>
+                                      <div className="text-[12px]">
+                                        {getTemplateText().description}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Nút Save */}
+                            <div className="relative">
+                              <Button
+                                size="icon"
+                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+                                className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
+                                onClick={handleSaveInitialValue}
+                                onMouseEnter={() =>
+                                  setSaveTooltipVisible(true)
+                                }
+                                onMouseLeave={() =>
+                                  setSaveTooltipVisible(false)
+                                }
+                              >
+                                <SaveIcon className="h-5 w-5" />
+                              </Button>
+                              <Tooltip
+                                visible={saveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
+                            </div>
+                          </div>
+
                           {/* Đưa Current Value lên trên */}
                           <div className="flex justify-between items-center mb-2">
                             <div className="text-xl font-medium self-start pt-1 mb-1">
                               Current Value
-                            </div>
-
-                            {/* Nút Save và Popover nằm cạnh nhau */}
-                            <div className="flex items-center gap-2">
-                              {/* Nút Popover */}
-                              <div
-                                className="relative"
-                                ref={initialValuePopoverRef}
-                              >
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
-                                  onClick={() =>
-                                    setIsInitialValuePopoverOpen(
-                                      !isInitialValuePopoverOpen
-                                    )
-                                  }
-                                  title="Variable Picker"
-                                >
-                                  <FileCode className="h-5 w-5 opacity-70" />
-                                </Button>
-
-                                {/* Popover cho Initial Value */}
-                                {isInitialValuePopoverOpen && (
-                                  <div className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
-                                    <div className="flex flex-col items-center gap-2 p-3.5">
-                                      <div className="w-full flex justify-between items-center">
-                                        <div className="font-semibold text-sm">
-                                          Variable Picker
-                                        </div>
-                                        <X
-                                          className="w-4 h-4 opacity-40 cursor-pointer hover:opacity-80"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsInitialValuePopoverOpen(false);
-                                          }}
-                                        />
-                                      </div>
-
-                                      <div className="w-full flex justify-between">
-                                        <div
-                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "url"
-                                              ? "active"
-                                              : "opacity-80"
-                                            }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedSection("url");
-                                          }}
-                                        >
-                                          URL Parameters
-                                        </div>
-                                        <div
-                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "query"
-                                              ? "active"
-                                              : "opacity-80"
-                                            }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedSection("query");
-                                          }}
-                                        >
-                                          Query Parameters
-                                        </div>
-                                        <div
-                                          className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "state"
-                                              ? "active"
-                                              : "opacity-80"
-                                            }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedSection("state");
-                                          }}
-                                        >
-                                          Project State
-                                        </div>
-                                      </div>
-
-                                      <div
-                                        className="w-full p-1 rounded-md mt-2 cursor-pointer transition-colors"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          // Đảm bảo sử dụng selectedSection hiện tại
-                                          const templateText =
-                                            getTemplateText().template;
-                                          insertInitialValueTemplate(
-                                            templateText
-                                          );
-                                        }}
-                                      >
-                                        <div className="font-mono text-[12px] mb-[-5px]">
-                                          {getTemplateText().template}
-                                        </div>
-                                        <div className="text-[12px]">
-                                          {getTemplateText().description}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Nút Save */}
-                              <div className="relative">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
-                                  onClick={handleSaveInitialValue}
-                                  onMouseEnter={() =>
-                                    setSaveTooltipVisible(true)
-                                  }
-                                  onMouseLeave={() =>
-                                    setSaveTooltipVisible(false)
-                                  }
-                                >
-                                  <SaveIcon className="h-5 w-5" />
-                                </Button>
-                                <Tooltip
-                                  visible={saveTooltipVisible}
-                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-                                >
-                                  Save button
-                                </Tooltip>
-                              </div>
                             </div>
                           </div>
 
@@ -3873,7 +3868,7 @@ const DashboardPage = () => {
 
                   {/* Advanced */}
                   {isStateful && activeTab === "advanced" && (
-                    <div className="mt-0">
+                    <div className="relative">
                       <ApiCallEditor
                         endpointId={currentEndpointId}
                         currentEndpoint={currentEndpoint}
@@ -4024,7 +4019,7 @@ const DashboardPage = () => {
                       {/* Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
                       {isTargetEndpointSuggestionsOpen &&
                         getFilteredEndpoints().length > 0 && (
-                          <div className="absolute z-50 mt-1 w-full max-w-[400px] rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          <div className="target-endpoint absolute z-50 mt-1 w-full max-w-[400px] rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {getFilteredEndpoints()
                               .filter((endpoint) => {
                                 // Lọc gợi ý dựa trên input
@@ -4057,7 +4052,7 @@ const DashboardPage = () => {
                                 <button
                                   key={endpoint.id}
                                   type="button"
-                                  className="w-full text-left px-3 py-2 focus:outline-none border-b last:border-b-0"
+                                  className="select-response w-full text-left px-3 py-2 focus:outline-none border rounded-md"
                                   onClick={() => {
                                     const fullPath = formatFullPath(endpoint);
 
@@ -4388,15 +4383,15 @@ const DashboardPage = () => {
         open={showStatefulConfirmDialog}
         onOpenChange={setShowStatefulConfirmDialog}
       >
-        <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+        <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
           <DialogHeader className="flex justify-between items-start mb-4">
-            <DialogTitle className="text-xl font-bold text-slate-800">
+            <DialogTitle className="text-xl font-bold">
               Switch to Stateful Mode
             </DialogTitle>
           </DialogHeader>
 
           <div className="mb-6">
-            <p className="text-gray-700">
+            <p className="">
               This endpoint will start storing and modifying data instead of
               returning static responses. Are you sure you want to switch to
               stateful mode?
@@ -4407,7 +4402,7 @@ const DashboardPage = () => {
             <Button
               variant="outline"
               onClick={() => setShowStatefulConfirmDialog(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className=""
             >
               Cancel
             </Button>
@@ -4437,7 +4432,7 @@ const DashboardPage = () => {
               method={"PUT"}
             />
           ) : (
-            <div className="text-gray-500 text-center py-6">
+            <div className="text-center py-6">
               Loading schema...
             </div>
           )}
@@ -4449,15 +4444,15 @@ const DashboardPage = () => {
         open={showStatelessConfirmDialog}
         onOpenChange={setShowStatelessConfirmDialog}
       >
-        <DialogContent className="bg-white text-slate-800 max-w-[512px] p-8 rounded-2xl shadow-lg">
+        <DialogContent className="max-w-[512px] p-8 rounded-2xl shadow-lg">
           <DialogHeader className="flex justify-between items-start mb-4">
-            <DialogTitle className="text-xl font-bold text-slate-800">
+            <DialogTitle className="text-xl font-bold">
               Switch to Stateless Mode
             </DialogTitle>
           </DialogHeader>
 
           <div className="mb-6">
-            <p className="text-gray-700">
+            <p className="">
               Switching to stateless mode will remove persisted state. All
               requests will respond with predefined static data only. Continue?
             </p>
@@ -4467,7 +4462,7 @@ const DashboardPage = () => {
             <Button
               variant="outline"
               onClick={() => setShowStatelessConfirmDialog(false)}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className=""
             >
               Cancel
             </Button>
@@ -4483,15 +4478,15 @@ const DashboardPage = () => {
 
       {/* Edit Workspace */}
       <Dialog open={openEditWs} onOpenChange={setOpenEditWs}>
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-800">
+            <DialogTitle className="text-lg font-semibold">
               Edit Workspace
             </DialogTitle>
           </DialogHeader>
           <div className="mt-2 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">
+              <label className="text-sm font-medium block mb-1">
                 Workspace Name
               </label>
               <Input
@@ -4519,7 +4514,7 @@ const DashboardPage = () => {
             </Button>
             <Button
               type="button"
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleEditWorkspace}
             >
               Update
@@ -4557,7 +4552,7 @@ const DashboardPage = () => {
               Cancel
             </Button>
             <Button
-              className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={() => {
                 handleAddWorkspace(newWsName);
                 setNewWsName("");
@@ -4575,7 +4570,7 @@ const DashboardPage = () => {
         open={!!confirmDeleteWs}
         onOpenChange={() => setConfirmDeleteWs(null)}
       >
-        <DialogContent className="bg-white text-slate-800 sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { API_ROOT } from "@/utils/constants";
-import { Plus, Trash2, SaveIcon } from "lucide-react";
-import { toast } from "react-toastify";
+import React, {useState, useEffect} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Card} from "@/components/ui/card";
+import {API_ROOT} from "@/utils/constants";
+import {Plus, Trash2, SaveIcon} from "lucide-react";
+import {toast} from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -24,11 +24,11 @@ import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 
 export const SchemaBodyEditor = ({
-  endpointData,
-  endpointId,
-  onSave,
-  method,
-}) => {
+                                   endpointData,
+                                   endpointId,
+                                   onSave,
+                                   method,
+                                 }) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [availableFields, setAvailableFields] = useState([]);
   // Thêm state mới để lưu schema từ endpoints/{id}
@@ -40,7 +40,7 @@ export const SchemaBodyEditor = ({
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
 
   // Component Tooltip (thêm vào đầu file)
-  const Tooltip = ({ visible, children, className = "" }) => {
+  const Tooltip = ({visible, children, className = ""}) => {
     if (!visible) return null;
 
     return (
@@ -49,7 +49,8 @@ export const SchemaBodyEditor = ({
       >
         {children}
         {/* Mũi tên tooltip */}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+        <div
+          className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
       </div>
     );
   };
@@ -151,7 +152,7 @@ export const SchemaBodyEditor = ({
       setSchemaFields(fieldsConfig);
     } else {
       // Initialize with default schema
-      const defaultSchema = { fields: ["id"] };
+      const defaultSchema = {fields: ["id"]};
       const fieldsConfig = defaultSchema.fields.map((name, index) => ({
         id: `field-${index}`,
         name,
@@ -310,7 +311,7 @@ export const SchemaBodyEditor = ({
         .map((field) => field.name);
 
       // Always include "id" for all methods
-      return { fields: ["id", ...fields.filter((f) => f !== "id")] };
+      return {fields: ["id", ...fields.filter((f) => f !== "id")]};
     } else {
       // For POST/PUT methods, return the new format
       const schema = {};
@@ -353,29 +354,26 @@ export const SchemaBodyEditor = ({
   };
 
   return (
-    <div>
+    <div className="relative">
       <Card className="px-24 py-6 border-0 rounded-lg">
-        <div className="z-10 flex justify-end items-center mb-1">
-          <div className="flex justify-end">
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="icon"
-                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
-                onClick={handleSave}
-                onMouseEnter={() => setSaveTooltipVisible(true)}
-                onMouseLeave={() => setSaveTooltipVisible(false)}
-              >
-                <SaveIcon className="h-5 w-5" />
-              </Button>
-              <Tooltip
-                visible={saveTooltipVisible}
-                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-              >
-                Save button
-              </Tooltip>
-            </div>
+        <div className="btn-primary rounded-full absolute top-2 right-4 flex z-10">
+          <div className="relative">
+            <Button
+              size="icon"
+              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
+              className="h-9 w-9 btn-primary hover:opacity-80 rounded-full my-1" // ✅ CẬP NHẬT: Thay đổi hover
+              onClick={handleSave}
+              onMouseEnter={() => setSaveTooltipVisible(true)}
+              onMouseLeave={() => setSaveTooltipVisible(false)}
+            >
+              <SaveIcon className="h-5 w-5"/>
+            </Button>
+            <Tooltip
+              visible={saveTooltipVisible}
+              className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+            >
+              Save button
+            </Tooltip>
           </div>
         </div>
 
@@ -480,7 +478,7 @@ export const SchemaBodyEditor = ({
   );
 };
 
-export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
+export const BaseSchemaEditor = ({folderData, folderId, onSave}) => {
   const [schemaFields, setSchemaFields] = useState([]);
   const [errors, setErrors] = useState({});
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -501,7 +499,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
     } else {
       // Mặc định có sẵn "id"
       const defaultSchema = {
-        id: { type: "number", required: false },
+        id: {type: "number", required: false},
       };
       const fields = Object.entries(defaultSchema).map(
         ([name, config], index) => ({
@@ -588,7 +586,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
     setSchemaFields((prev) => prev.filter((f) => f.id !== id));
     setErrors((prev) => {
-      const newErrors = { ...prev };
+      const newErrors = {...prev};
       delete newErrors[id];
       return newErrors;
     });
@@ -596,7 +594,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
   const handleChange = (id, key, value) => {
     setSchemaFields((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, [key]: value } : f))
+      prev.map((f) => (f.id === id ? {...f, [key]: value} : f))
     );
   };
 
@@ -634,13 +632,13 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 
   return (
     <div className="max-h-[70vh] overflow-y-auto">
-      <Card className="p-4 border border-slate-300 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+      <Card className="p-4 border rounded-lg">
+        <h2 className="text-xl font-semibold mb-4">
           Folder Base Schema
         </h2>
 
         {/* Header */}
-        <div className="grid grid-cols-3 gap-4 font-semibold text-gray-700 border-b pb-2 mb-2">
+        <div className="grid grid-cols-3 gap-4 font-semibold border-b pb-2 mb-2">
           <div>Field Name</div>
           <div>Type</div>
           <div>Required</div>
@@ -664,7 +662,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                 disabled={field.name === "id"} // id luôn là number
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="string">string</SelectItem>
@@ -684,7 +682,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
                   disabled={field.name === "id"} // id luôn required = false
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue/>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">true</SelectItem>
@@ -718,10 +716,10 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
         {/* Actions */}
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleAddField}>
-            <Plus className="w-4 h-4 mr-2" /> Add Field
+            <Plus className="w-4 h-4 mr-2"/> Add Field
           </Button>
           <Button
-            className="bg-yellow-300 hover:bg-yellow-400 text-indigo-950"
+            className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
             onClick={handleSave}
           >
             Save Changes
@@ -737,7 +735,7 @@ export const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
             <DialogDescription>
               Updating this folder's schema will <b>delete all endpoint data</b>{" "}
               that no longer fits the new schema.
-              <br /> <br />
+              <br/> <br/>
               Are you sure you want to continue?
             </DialogDescription>
           </DialogHeader>

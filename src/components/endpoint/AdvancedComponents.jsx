@@ -874,16 +874,14 @@ export const ApiCallEditor = ({
 
   return (
     <Card className="px-16 py-6 border-0 rounded-lg">
-      <div className="flex justify-end items-center mb-2">
-        {/*<h2 className="text-2xl font-bold text-[#37352F]">API CALL</h2>*/}
-        <div className="flex items-center gap-2">
+      <div className="">
+        <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
           {/* New API Call */}
           <div className="relative">
             <Button
-              variant="outline"
               onClick={() => setIsNewApiCallDialogOpen(true)}
               // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="w-9 h-9 border btn-primary rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+              className="w-9 h-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1" // ✅ CẬP NHẬT: Thay đổi hover
               onMouseEnter={() => setAddTooltipVisible(true)}
               onMouseLeave={() => setAddTooltipVisible(false)}
             >
@@ -900,10 +898,9 @@ export const ApiCallEditor = ({
           {/* Save button */}
           <div className="relative">
             <Button
-              variant="outline"
               size="icon"
               // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+              className="h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1" // ✅ CẬP NHẬT: Thay đổi hover
               onClick={handleSave}
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
@@ -926,7 +923,7 @@ export const ApiCallEditor = ({
         </div>
       ) : (
         nextCalls.map((call, index) => (
-          <div key={call.id || index} className="mb-6 p-4 relative">
+          <div key={call.id || index} className="mb-6 px-4 relative">
             {/* Thêm title "Next API Call" và số thứ tự */}
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
@@ -1072,7 +1069,7 @@ export const ApiCallEditor = ({
                     getFilteredEndpoints(index).length > 0 && (
                       <div
                         data-dropdown={`target-endpoint-${index}`}
-                        className="absolute z-50 mt-1 w-full border rounded-md shadow-lg max-h-48 overflow-y-auto"
+                        className="target-endpoint absolute z-50 mt-1 w-full border rounded-md shadow-lg max-h-48 overflow-y-auto"
                       >
                         {getFilteredEndpoints(index)
                           .filter((endpoint) => {
@@ -1100,7 +1097,7 @@ export const ApiCallEditor = ({
                             <button
                               key={endpoint.id}
                               type="button"
-                              className="w-full text-left px-3 py-2 focus:outline-none border-b last:border-b-0"
+                              className="select-response w-full text-left px-3 py-2 focus:outline-none border rounded-md"
                               onClick={() => {
                                 const fullPath = formatFullPath(endpoint);
 
@@ -1198,7 +1195,7 @@ export const ApiCallEditor = ({
                       overflow: "auto",
                       border: jsonErrors[index]
                         ? "1px solid #ef4444"
-                        : "1px solid #CBD5E1",
+                        : "",
                       borderRadius: "0.375rem",
                       backgroundColor: "#101728",
                       color: "white",
@@ -1612,15 +1609,14 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
   };
 
   return (
-    <div className="relative w-full">
+    <div className="w-full">
       {/* Hai nút Add & Save ở góc trên bên phải của toàn vùng Frame */}
-      <div className="justify-end pt-2 flex items-center gap-2">
+      <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
         <div className="relative">
           <Button
-            variant="outline"
             onClick={handleAddRule}
             // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-            className="w-9 h-9 border btn-primary rounded-md hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+            className="w-9 h-9 btn-primary rounded-full shadow-none my-1 hover:opacity-80"
             onMouseEnter={() => setFrameAddTooltipVisible(true)}
             onMouseLeave={() => setFrameAddTooltipVisible(false)}
           >
@@ -1636,10 +1632,9 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
 
         <div className="relative">
           <Button
-            variant="outline"
             size="icon"
             // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-            className="h-9 w-9 btn-primary hover:opacity-80" // ✅ CẬP NHẬT: Thay đổi hover
+            className="h-9 w-9 btn-primary rounded-full shadow-none my-1 hover:opacity-80"
             onClick={handleSave}
             onMouseEnter={() => setFrameSaveTooltipVisible(true)}
             onMouseLeave={() => setFrameSaveTooltipVisible(false)}

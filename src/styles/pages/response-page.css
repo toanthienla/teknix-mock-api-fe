@@ -11,9 +11,6 @@
     color: var(--button-text);
 }
 
-
-
-
 .response-page-content * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
@@ -88,16 +85,16 @@
 }
 
 /* ====== Buttons ====== */
-.response-page-content .btn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
+/*.response-page-content .btn {*/
+/*    background-color: var(--button-bg);*/
+/*    color: var(--button-text);*/
+/*    border: 1px solid transparent;*/
+/*    border-radius: 8px;*/
+/*    padding: 8px 14px;*/
+/*    font-weight: 500;*/
+/*    cursor: pointer;*/
+/*    transition: background-color 0.2s ease;*/
+/*}*/
 
 .response-page-content .btn-primary {
     background-color: var(--button-bg);
@@ -253,6 +250,11 @@
 .response-page-content .highlight {
     background-color: var(--accent);
     color: var(--accent-foreground);
+}
+
+.response-page-content .target-endpoint {
+    background-color: var(--background);
+    color: var(--foreground);
 }
 
 .response-page-content .muted {

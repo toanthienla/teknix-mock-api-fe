@@ -221,11 +221,7 @@ export default function WSChannelSheet({
                 dangerouslySetInnerHTML={{
                   __html: (() => {
                     try {
-                      const formatted = JSON.stringify(
-                        { id: 1, connect: { token: "..." } },
-                        null,
-                        2
-                      );
+                      const formatted = JSON.stringify({ id: 1, connect: { token: "..." }});
                       const highlighted = highlight(formatted, languages.json, "json");
                       return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;
                     } catch (err) {
