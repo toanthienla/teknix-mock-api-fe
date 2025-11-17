@@ -936,12 +936,12 @@ export const ApiCallEditor = ({
                 <span className="font-bold ">Next API Call</span>
               </div>
 
-              {/* Text "External call" và nút toggle, delete */}
+              {/* Text "External call" and toggle, delete buttons */}
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-500 hover:text-red-700 dark:text-white dark:hover:text-red-500"
+                  className="text-[#828282] hover:text-red-500 dark:hover:text-red-500 transition-colors"
                   onClick={() => handleRemoveNextCall(index)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1147,9 +1147,7 @@ export const ApiCallEditor = ({
             {/* Method */}
             <div className="flex flex-col mb-2">
               <div className="flex justify-between items-center">
-                <label className="w-[130px] text-sm font-medium">
-                  Method
-                </label>
+                <label className="w-[130px] text-sm font-medium">Method</label>
                 <div className="relative flex-1 max-w-[801px]">
                   <Select
                     value={call.method}
@@ -1678,9 +1676,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
 
             {/* Equal */}
             <div className="col-span-1 col-start-7 text-center">
-              <span className="font-semibold text-[10px]">
-                EQUAL
-              </span>
+              <span className="font-semibold text-[10px]">EQUAL</span>
             </div>
 
             {/* Expected Value */}
@@ -1708,7 +1704,9 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
               key={row.id}
               onClick={(e) => handleRuleClick(row.id, e)}
               className={`flex flex-col px-1 py-1.5 rounded-md border cursor-pointer ${
-                row.id === selectedRuleId ? "border-blue-600" : "response-content-border"
+                row.id === selectedRuleId
+                  ? "border-blue-600"
+                  : "response-content-border"
               }`}
             >
               <div className="grid grid-cols-12 items-center gap-2">
@@ -1741,18 +1739,18 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
                     name={`rule-name-${row.id}`}
                     value={row.name}
                     onChange={(e) => handleNameChange(row.id, e.target.value)}
-                    className={`${errors[row.id]?.name ? "border-red-500" : "response-content-border"}`}
+                    className={`${
+                      errors[row.id]?.name
+                        ? "border-red-500"
+                        : "response-content-border"
+                    }`}
                     placeholder={getPlaceholderText(row.type)}
                   />
                 </div>
 
                 {/* Equal */}
                 <div className="col-span-1 col-start-7 flex justify-center">
-                  <img
-                    src={equalIcon}
-                    alt="Equal"
-                    className="w-9 h-9"
-                  />
+                  <img src={equalIcon} alt="Equal" className="w-9 h-9" />
                 </div>
 
                 {/* Expected Value */}
@@ -1762,7 +1760,11 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
                     name={`rule-value-${row.id}`}
                     value={row.value}
                     onChange={(e) => handleValueChange(row.id, e.target.value)}
-                    className={`${errors[row.id]?.value ? "border-red-500" : "response-content-border"}`}
+                    className={`${
+                      errors[row.id]?.value
+                        ? "border-red-500"
+                        : "response-content-border"
+                    }`}
                     placeholder="value"
                   />
                 </div>
