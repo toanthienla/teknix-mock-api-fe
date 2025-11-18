@@ -1580,46 +1580,50 @@ export default function FolderPage() {
                                 Time & Date
                               </TableHead>
                             </TableRow>
-                            <TableRow className="border-b">
-                              <TableHead colSpan={5}>
-                                <div className="flex items-center gap-2 w-1/4">
-                                  <div className="relative w-full">
-                                    <img
-                                      src={searchIcon}
-                                      alt="search"
-                                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 opacity-70"
-                                    />
-                                    <Input
-                                      type="text"
-                                      placeholder="Search..."
-                                      className="pl-5 pr-3 h-9 text-sm border-none shadow-none w-full"
-                                      value={searchTerm}
-                                      onChange={(e) =>
-                                        setSearchTerm(e.target.value)
-                                      }
-                                    />
+
+                            <TableRow>
+                              <TableHead colSpan={6} className="border-b custom-border">
+                                <div className="flex items-center justify-between gap-4">
+
+                                  {/* Left: Search */}
+                                  <div className="flex items-center gap-2 w-1/4">
+                                    <div className="relative w-full">
+                                      <img
+                                        src={searchIcon}
+                                        alt="search"
+                                        className="absolute top-1/2 -translate-y-1/2 left-1 w-4 h-4 opacity-70 dark:invert"
+                                      />
+                                      <Input
+                                        type="text"
+                                        placeholder="Search logs..."
+                                        className="pl-6 pr-3 h-9 text-sm border-none shadow-none w-full"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Select */}
+                                  <div className="w-1/6 text-right">
+                                    <Select value={timeFilter} onValueChange={setTimeFilter}>
+                                      <SelectTrigger className="w-full border-none shadow-none">
+                                        <SelectValue placeholder="Recent logs" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Recent logs">Recent logs</SelectItem>
+                                        <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
+                                        <SelectItem value="Last 7 days">Last 7 days</SelectItem>
+                                        <SelectItem value="Last 30 days">Last 30 days</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                 </div>
                               </TableHead>
-
-                              <TableHead colSpan={1} className="text-right">
-                                <Select value={timeFilter} onValueChange={setTimeFilter}>
-                                  <SelectTrigger className="w-full border-none shadow-none">
-                                    <SelectValue placeholder="Recent logs" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Recent logs">Recent logs</SelectItem>
-                                    <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
-                                    <SelectItem value="Last 7 days">Last 7 days</SelectItem>
-                                    <SelectItem value="Last 30 days">Last 30 days</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </TableHead>
                             </TableRow>
+
                             <TableRow className="border-none">
                               <TableHead
                                 colSpan={6}
-                                className="py-1"
                               ></TableHead>
                             </TableRow>
                           </TableHeader>

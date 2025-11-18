@@ -772,6 +772,7 @@ export default function ProjectPage() {
                             Action
                           </TableHead>
                         </TableRow>
+
                         <TableRow className="border-b custom-border">
                           <TableHead colSpan={5}>
                             <div className="flex items-center gap-2 w-1/4">
@@ -794,6 +795,7 @@ export default function ProjectPage() {
                             </div>
                           </TableHead>
                         </TableRow>
+
                         <TableRow className="border-none">
                           <TableHead colSpan={5} className="py-1"></TableHead>
                         </TableRow>
