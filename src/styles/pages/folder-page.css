@@ -56,7 +56,6 @@
 .folder-page-content select,
 .folder-page-content textarea {
     color: var(--input-text);
-    border: 1px solid var(--input-border);
 }
 
 .folder-page-content input::placeholder,
@@ -115,12 +114,16 @@
 }
 
 .folder-page-content tbody tr:hover {
-    background-color: var(--lightgray-bg);
+    background-color: transparent;
 }
 
 .folder-page-content .endpoint-header {
     background-color: var(--folder-header-bg);
     color: var(--folder-header-text);
+}
+
+.folder-page-content .custom-border {
+    border-color: var(--card-border);
 }
 
 /* ===== Scrollbar ===== */
@@ -167,9 +170,6 @@
     border-radius: 50%;
     transition: background-color 0.25s ease, filter 0.25s ease;
 }
-
-/* ============ Sheet ============= */
-
 
 /* ===== Footer ===== */
 .folder-page-content footer {

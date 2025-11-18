@@ -23,11 +23,13 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
   return (
     <TableRow className="transition-colors">
       {/* Endpoint Name */}
-      <TableCell className="py-3">
+      <TableCell
+        className="py-3 cursor-pointer"
+        onClick={onClick}
+      >
         <div className="flex flex-col">
           <span
-            className="font-semibold cursor-pointer"
-            onClick={onClick}
+            className="font-semibold"
           >
             {name}
           </span>
@@ -115,7 +117,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="text-black hover:text-red-600">
+                <AlertDialogCancel className="hover:text-red-600">
                   Cancel
                 </AlertDialogCancel>
                 <AlertDialogAction
