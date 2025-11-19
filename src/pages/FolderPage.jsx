@@ -45,6 +45,7 @@ import folderIcon from "@/assets/light/folder-icon.svg";
 import logsIcon from "@/assets/light/logs.svg";
 import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
+import refreshIcon from "@/assets/light/refresh.svg";
 import WSChannelSheet from "@/components/WSChannel.jsx";
 
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
@@ -328,7 +329,9 @@ const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
 export default function FolderPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
-  const [activeTab, setActiveTab] = useState("folders");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("folder_active_tab") || "folders";
+  });
 
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -389,6 +392,7 @@ export default function FolderPage() {
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
+  const [editEPath, setEditEPath] = useState("/");
   const [editEState, setEditEState] = useState(false);
 
   // dialogs
@@ -561,10 +565,27 @@ export default function FolderPage() {
     if (!pid) return;
     setLoadingLogs(true);
     try {
-      const res = await fetch(
-        `${API_ROOT}/project_request_logs/by_project?project_id=${pid}&page=${page}&limit=${limit}`,
-        { credentials: "include" }
-      );
+      // Build API URL
+      let url = `${API_ROOT}/project_request_logs?project_id=${pid}&page=${page}&limit=${limit}`;
+
+      // Convert FE time filter → backend time_range
+      let timeRange = "";
+      if (timeFilter === "24h") timeRange = "1d";
+      else if (timeFilter === "7d") timeRange = "7d";
+      else if (timeFilter === "30d") timeRange = "30d";
+
+      // Append time_range if exists
+      if (timeRange) {
+        url += `&time_range=${timeRange}`;
+      }
+
+      // Append search if exists
+      if (searchTerm && searchTerm.trim()) {
+        url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+      }
+
+      // Fetch logs
+      const res = await fetch(url, { credentials: "include" });
 
       if (res.status === 401) {
         console.warn("Unauthorized (401) - rechecking user login...");
@@ -653,6 +674,15 @@ export default function FolderPage() {
       setLoadingLogs(false);
     }
   };
+
+  useEffect(() => {
+    if (activeTab !== "logs") return;
+
+    // Reset về page 1 khi filter thay đổi
+    setPage(1);
+
+    fetchLogs(projectId, 1, rowsPerPage);
+  }, [searchTerm, timeFilter]);
 
   // -------------------- Folder --------------------
   const handleDeleteFolder = async (folderId) => {
@@ -876,7 +906,7 @@ export default function FolderPage() {
     return true;
   };
 
-  const validateEditEndpoint = async (id, name, state) => {
+  const validateEditEndpoint = async (id, name, path, state) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -885,6 +915,10 @@ export default function FolderPage() {
       toast.info(
         "Name must start with a letter and contain only letters, numbers, underscores and dashes"
       );
+      return false;
+    }
+    if (!validPath.test(path.trim())) {
+      toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
       return false;
     }
 
@@ -984,6 +1018,7 @@ export default function FolderPage() {
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
+    setEditEPath(e.path);
     setEditEState(e.is_stateful);
 
     const folderOfEndpoint = folders.find(
@@ -997,14 +1032,17 @@ export default function FolderPage() {
 
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
-    return editEName !== currentEndpoint.name;
-  }, [editEName, currentEndpoint]);
+    return editEName !== currentEndpoint.name || editEPath !== currentEndpoint.path;
+  }, [editEName, editEPath, currentEndpoint]);
 
   const handleUpdateEndpoint = async () => {
-    const isValid = await validateEditEndpoint(editId, editEName, editEState);
+    const isValid = await validateEditEndpoint(editId, editEName, editEPath, editEState);
     if (!isValid) return;
 
-    const updated = { name: editEName };
+    const updated = {
+      name: editEName,
+      path: editEPath
+    };
 
     try {
       const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
@@ -1361,6 +1399,13 @@ export default function FolderPage() {
     toast.info("Copied to clipboard!");
   };
 
+  useEffect(() => {
+    const saved = localStorage.getItem("folder_active_tab");
+    if (saved && saved !== activeTab) {
+      setActiveTab(saved);
+    }
+  }, []);
+
   return (
     <div className="folder-page flex flex-col min-h-screen">
       {isLoading ? (
@@ -1423,7 +1468,10 @@ export default function FolderPage() {
               <div className="card flex flex-col h-fit border-2 rounded-lg">
                 <div className="tab-header flex rounded-t-lg">
                   <button
-                    onClick={() => setActiveTab("folders")}
+                    onClick={() => {
+                      setActiveTab("folders");
+                      localStorage.setItem("folder_active_tab", "folders");
+                    }}
                     className={`tab-button flex rounded-tl-lg px-4 py-2 ${activeTab === "folders"
                         ? "active"
                         : ""
@@ -1444,6 +1492,7 @@ export default function FolderPage() {
                   <button
                     onClick={() => {
                       setActiveTab("logs");
+                      localStorage.setItem("folder_active_tab", "logs");
                       setPage(1);
                     }}
                     className={`tab-button rounded-none px-4 py-2 ${activeTab === "logs"
@@ -1657,9 +1706,29 @@ export default function FolderPage() {
                             </TableRow>
 
                             <TableRow className="border-none">
-                              <TableHead
-                                colSpan={6}
-                              ></TableHead>
+                              <TableHead colSpan={6}>
+                                <div className="flex justify-end">
+                                  <div className="w-1/6 text-right flex items-center">
+                                    <Button
+                                      onClick={() => {
+                                        // Reset page về 1 nếu cần
+                                        // setPage(1);
+
+                                        // Gọi lại API logs
+                                        fetchLogs(projectId, page, rowsPerPage);
+                                      }}
+                                      className="w-full btn-primary rounded-md"
+                                    >
+                                      <img
+                                        src={refreshIcon}
+                                        alt="refresh"
+                                        className="w-4 h-4 mr-1 transition-all duration-300 dark:brightness-0 dark:invert"
+                                      />
+                                      <span>Refresh</span>
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
 
@@ -2340,6 +2409,20 @@ export default function FolderPage() {
                 placeholder="Enter endpoint name"
                 value={editEName}
                 onChange={(e) => setEditEName(e.target.value)}
+              />
+            </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">
+                Path
+              </h3>
+              <Input
+                placeholder="Enter endpoint path"
+                value={editEPath}
+                onChange={(e) => {
+                  setEditEPath(e.target.value);
+                }}
               />
             </div>
           </div>

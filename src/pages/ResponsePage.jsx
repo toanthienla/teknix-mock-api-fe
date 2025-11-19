@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
-import reset_icon from "@/assets/light/reset_state_button.svg";
+// import reset_icon from "@/assets/light/reset_state_button.svg";
 import chainIcon from "@/assets/light/Chain.svg";
 import Advanced_icon from "@/assets/light/Adavanced_icon.svg";
 import Data_default from "@/assets/light/Data_default.svg";
@@ -204,6 +204,7 @@ const DashboardPage = () => {
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
+  const [editEPath, setEditEPath] = useState("/");
   const [editEState, setEditEState] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
@@ -213,6 +214,7 @@ const DashboardPage = () => {
   const openEditEndpoint = (e) => {
     setEditId(e.id);
     setEditEName(e.name);
+    setEditEPath(e.path);
     setEditEState(e.is_stateful);
 
     const folderOfEndpoint = folders.find(
@@ -226,11 +228,14 @@ const DashboardPage = () => {
 
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
-    return editEName !== currentEndpoint.name;
-  }, [editEName, currentEndpoint]);
+    return editEName !== currentEndpoint.name || editEPath !== currentEndpoint.path;
+  }, [editEName, editEPath, currentEndpoint]);
 
+  const validPath =
+    /^\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+)(?:\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+))*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
-  const validateEditEndpoint = async (id, name, state) => {
+
+  const validateEditEndpoint = async (id, name, path, state) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -239,6 +244,10 @@ const DashboardPage = () => {
       toast.info(
         "Name must start with a letter and contain only letters, numbers, underscores and dashes"
       );
+      return false;
+    }
+    if (!validPath.test(path.trim())) {
+      toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
       return false;
     }
 
@@ -288,10 +297,13 @@ const DashboardPage = () => {
   };
 
   const handleUpdateEndpoint = async () => {
-    const isValid = await validateEditEndpoint(editId, editEName, editEState);
+    const isValid = await validateEditEndpoint(editId, editEName, editEPath, editEState);
     if (!isValid) return;
 
-    const updated = { name: editEName };
+    const updated = {
+      name: editEName,
+      path: editEPath
+    };
 
     try {
       const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
@@ -2224,7 +2236,7 @@ const DashboardPage = () => {
 
   const handleNewResponse = () => {
     // Reset form khi tạo mới
-    setSelectedResponse(null);
+    // setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
     setResponseBody("{}");
@@ -4921,6 +4933,21 @@ const DashboardPage = () => {
                 onChange={(e) => setEditEName(e.target.value)}
               />
             </div>
+
+            {/* Path */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">
+                Path
+              </h3>
+              <Input
+                placeholder="Enter endpoint path"
+                value={editEPath}
+                onChange={(e) => {
+                  setEditEPath(e.target.value);
+                }}
+              />
+            </div>
+
           </div>
           <DialogFooter>
             <Button
