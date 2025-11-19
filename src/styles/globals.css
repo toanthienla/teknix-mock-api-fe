@@ -14,18 +14,6 @@ html, body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Liên kết mặc định */
-a {
-    color: var(--link);
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-a:hover {
-    color: var(--link-hover);
-    text-decoration: underline;
-}
-
 /* Input, button, select, textarea chung */
 input,
 button,

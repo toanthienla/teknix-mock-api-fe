@@ -3114,7 +3114,9 @@ const DashboardPage = () => {
                               <Button
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
+                                className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1 transition-all
+                                ${isPopoverOpen ? "shadow-xl" : ""}
+                                `}
                                 onClick={() => {
                                   const canEdit =
                                     !isStateful ||
@@ -3138,7 +3140,7 @@ const DashboardPage = () => {
                               {isPopoverOpen && (
                                 <div
                                   ref={popoverRef}
-                                  className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  className="card absolute z-100 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
@@ -3391,11 +3393,10 @@ const DashboardPage = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[400px]">
-                      <img
-                        src={no_response}
-                        alt="No response selected"
-                        className="mb-4"
-                      />
+                      <span className="rs-loader"></span>
+                      <p className="mt-8 opacity-70">
+                        Loading responses...
+                      </p>
                     </div>
                   )}
                 </div>
@@ -3503,11 +3504,10 @@ const DashboardPage = () => {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center h-[400px]">
-                            <img
-                              src={no_response}
-                              alt="No response selected"
-                              className="mb-4"
-                            />
+                            <span className="rs-loader"></span>
+                            <p className="mt-8 opacity-70">
+                              Loading responses...
+                            </p>
                           </div>
                         )}
                       </div>
@@ -3581,11 +3581,12 @@ const DashboardPage = () => {
                         </Card>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-[400px]">
-                          <img
-                            src={no_response}
-                            alt="No response selected"
-                            className="mb-4"
-                          />
+                          <div className="flex flex-col items-center justify-center h-[400px]">
+                            <span className="rs-loader"></span>
+                            <p className="mt-8 opacity-70">
+                              Loading responses...
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>
