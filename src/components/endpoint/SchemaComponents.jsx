@@ -55,6 +55,15 @@ export const SchemaBodyEditor = ({
     );
   };
 
+  const [buttonShadow, setButtonShadow] = useState(false);
+  function handleClick(callback, setShadow, duration = 50) {
+    setShadow(true);
+
+    callback();
+
+    setTimeout(() => setShadow(false), duration);
+  }
+
   // Tạo danh sách fields đã được filter theo search term
   const getFilteredFields = () => {
     if (!searchTerm.trim()) {
@@ -346,7 +355,7 @@ export const SchemaBodyEditor = ({
       setRefreshTrigger((prev) => prev + 1);
 
       // Hiển thị thông báo thành công
-      toast.success("Schema updated and tags refreshed successfully!");
+      // toast.success("Schema updated and tags refreshed successfully!");
     } catch (error) {
       console.error("Failed to save schema:", error);
       // Error is already handled in handleSaveSchema
@@ -356,13 +365,14 @@ export const SchemaBodyEditor = ({
   return (
     <div className="relative">
       <Card className="px-24 py-6 border-0 rounded-lg">
-        <div className="btn-primary rounded-full absolute top-2 right-4 flex z-10">
+        <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex z-10">
           <div className="relative">
             <Button
               size="icon"
-              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="h-9 w-9 btn-primary hover:opacity-80 rounded-full my-1" // ✅ CẬP NHẬT: Thay đổi hover
-              onClick={handleSave}
+              className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full my-1
+                transition-all ${buttonShadow ? "shadow-md/30" : ""}
+              `}
+              onClick={() => handleClick(handleSave, setButtonShadow)}
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
             >
