@@ -203,7 +203,17 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
               type="number"
               min={0}
               value={delay}
-              onChange={(e) => setDelay(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+
+                // Chặn null, NaN, '-' và âm
+                if (v === "" || v === "-" || Number(v) < 0) {
+                  setDelay(0);
+                  return;
+                }
+
+                setDelay(Number(v));
+              }}
               className="w-[70%]"
             />
           </div>

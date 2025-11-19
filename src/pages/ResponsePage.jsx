@@ -49,10 +49,6 @@ import ws_config_icon from "@/assets/light/ws-config.svg";
 import tiktokIcon from "@/assets/light/tiktok.svg";
 import fbIcon from "@/assets/light/facebook.svg";
 import linkedinIcon from "@/assets/light/linkedin.svg";
-import workspaceIcon from "@/assets/light/workspace-icon.svg";
-import projectIcon from "@/assets/light/project-icon.svg";
-import folderIcon from "@/assets/light/folder-icon.svg";
-import endpointIcon from "@/assets/light/endpoint.svg";
 import dot_backgroundLight from "@/assets/light/dot_rows.svg";
 import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
 import hashtagIcon from "@/assets/light/hashtag.svg";
@@ -2711,18 +2707,15 @@ const DashboardPage = () => {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard",
-                        icon: workspaceIcon,
                       },
                       {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
-                        icon: projectIcon,
                       },
                       {
                         label: currentFolder.name,
                         folder_id: currentFolder.id,
                         href: `/dashboard/${currentProject.id}`,
-                        icon: folderIcon,
                       },
                       {
                         label:
@@ -2731,7 +2724,6 @@ const DashboardPage = () => {
                               String(ep.id) === String(currentEndpointId)
                           )?.name || "Endpoint",
                         href: null,
-                        icon: endpointIcon,
                       },
                     ]
                     : [
@@ -2739,18 +2731,15 @@ const DashboardPage = () => {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
                         href: "/dashboard",
-                        icon: workspaceIcon,
                       },
                       {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
-                        icon: projectIcon,
                       },
                       {
                         label: currentFolder.name,
                         folder_id: currentFolder.id,
                         href: `/dashboard/${currentProject.id}`,
-                        icon: folderIcon,
                       },
                     ]
                   : [
@@ -2758,12 +2747,10 @@ const DashboardPage = () => {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
-                      icon: workspaceIcon,
                     },
                     {
                       label: currentProject.name,
                       href: `/dashboard/${currentProject.id}`,
-                      icon: projectIcon,
                     },
                   ]
                 : [
@@ -2771,7 +2758,6 @@ const DashboardPage = () => {
                     label: currentWorkspace.name,
                     WORKSPACE_ID: currentWorkspace.id,
                     href: "/dashboard",
-                    icon: workspaceIcon,
                   },
                 ]
               : []
@@ -2805,14 +2791,15 @@ const DashboardPage = () => {
             <Button
               size="icon"
               className="bg-transparent hover:bg-transparent"
-              onClick={(currentEndpoint) => openEditEndpoint(currentEndpoint)}
+              onClick={() =>
+                openEditEndpoint(
+                  endpoints.find(ep => String(ep.id) === String(currentEndpointId))
+                )
+              }
             >
-              <img
-                src={editIcon}
-                alt="Edit Endpoint"
-                className="w-5 h-5 cursor-pointer"
-              />
+              <img src={editIcon} alt="Edit Endpoint" className="w-5 h-5 cursor-pointer dark:invert" />
             </Button>
+
           </div>
 
           {/* Phần bên phải - Form Status Info */}
@@ -2826,7 +2813,7 @@ const DashboardPage = () => {
               <span>Path</span>
             </div>
 
-            <div className="path flex items-center gap-2 w-full max-w-2xl rounded-md px-2 py-1">
+            <div className="path flex items-center gap-2 w-full max-w-md rounded-md px-2 py-1">
               <Badge
                 variant="outline"
                 className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${method === "GET"
@@ -2865,21 +2852,21 @@ const DashboardPage = () => {
               </Button>
             </div>
 
-            {/* reset state button */}
-            {isStateful && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-6 h-6 flex-shrink-0 dark:brightness-0 dark:invert"
-                onClick={() => setShowResetConfirmDialog(true)}
-              >
-                <img
-                  src={reset_icon}
-                  alt="Reset state"
-                  className="w-5 h-5 object-contain"
-                />
-              </Button>
-            )}
+            {/*/!* reset state button *!/*/}
+            {/*{isStateful && (*/}
+            {/*  <Button*/}
+            {/*    variant="ghost"*/}
+            {/*    size="icon"*/}
+            {/*    className="w-6 h-6 flex-shrink-0 dark:brightness-0 dark:invert"*/}
+            {/*    onClick={() => setShowResetConfirmDialog(true)}*/}
+            {/*  >*/}
+            {/*    <img*/}
+            {/*      src={reset_icon}*/}
+            {/*      alt="Reset state"*/}
+            {/*      className="w-5 h-5 object-contain"*/}
+            {/*    />*/}
+            {/*  </Button>*/}
+            {/*)}*/}
 
             {/* State Mode Toggle */}
             <div className="ml-4 flex items-center gap-2">

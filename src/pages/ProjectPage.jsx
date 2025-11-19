@@ -971,14 +971,13 @@ export default function ProjectPage() {
               </div>
               <DialogFooter>
                 <Button
-                  className="custom-btn-outline"
                   variant="outline"
                   onClick={() => setOpenNewProject(false)}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="custom-btn"
+                  className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={handleCreateProject}
                 >
                   Create
@@ -1070,6 +1069,7 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
+                  className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={handleUpdateProject}
                   disabled={
                     editTitle.trim() ===
@@ -1132,6 +1132,7 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
+                  className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={() => {
                     handleAddWorkspace(newWsName);
                   }}
@@ -1149,7 +1150,7 @@ export default function ProjectPage() {
                 <DialogTitle>Edit Workspace</DialogTitle>
               </DialogHeader>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium opacity-70">
                   Name
                 </label>
                 <Input
@@ -1163,6 +1164,7 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
+                  className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={handleEditWorkspace}
                   disabled={
                     editWsName.trim() ===

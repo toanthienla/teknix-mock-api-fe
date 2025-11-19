@@ -1184,30 +1184,46 @@ export default function FolderPage() {
   };
 
   // Filter logs
+  // Filter + Search logs
   const filteredLogs = logs.filter((log) => {
-    const projectOk = String(log.project_id) === String(projectId);
+    if (String(log.project_id) !== String(projectId)) return false;
 
+    // --- Filter TIME ---
     let timeOk = true;
-    if (timeFilter && timeFilter !== "Recent logs") {
-      const logTime = new Date(log.created_at);
-      if (!isNaN(logTime)) {
-        const now = Date.now();
-        if (timeFilter === "Last 24 hours") {
-          timeOk = logTime.getTime() >= now - 24 * 60 * 60 * 1000;
-        } else if (timeFilter === "Last 7 days") {
-          timeOk = logTime.getTime() >= now - 7 * 24 * 60 * 60 * 1000;
-        } else if (timeFilter === "Last 30 days") {
-          timeOk = logTime.getTime() >= now - 30 * 24 * 60 * 60 * 1000;
-        }
+    if (timeFilter !== "Recent logs") {
+      const logTime = new Date(log.created_at).getTime();
+      const now = Date.now();
+
+      if (timeFilter === "Last 24 hours") {
+        timeOk = logTime >= now - 24 * 60 * 60 * 1000;
+      } else if (timeFilter === "Last 7 days") {
+        timeOk = logTime >= now - 7 * 24 * 60 * 60 * 1000;
+      } else if (timeFilter === "Last 30 days") {
+        timeOk = logTime >= now - 30 * 24 * 60 * 60 * 1000;
       }
     }
-    return projectOk && timeOk;
+
+    if (!timeOk) return false;
+
+    // --- Search text ---
+    const text = searchTerm.toLowerCase();
+
+    if (!text) return true;
+
+    return (
+      log.endpointResponseName?.toLowerCase().includes(text) ||
+      log.method?.toLowerCase().includes(text) ||
+      log.path?.toLowerCase().includes(text) ||
+      String(log.status_code || "").includes(text) ||
+      JSON.stringify(log.request_body || "").toLowerCase().includes(text) ||
+      JSON.stringify(log.response_body || "").toLowerCase().includes(text)
+    );
   });
 
   // filter + sort endpoints
-  let filteredEndpoints = endpoints.filter((e) =>
-    e.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // let filteredEndpoints = endpoints.filter((e) =>
+  //   e.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   // Nếu có folderId → chỉ lấy folder đó
   // if (folderId) {
@@ -1217,21 +1233,21 @@ export default function FolderPage() {
   // }
 
   // sort endpoints based on sortOption
-  let sortedEndpoints = [...filteredEndpoints];
-
-  if (sortOption === "Recently created") {
-    sortedEndpoints.sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    );
-  } else if (sortOption === "Oldest first") {
-    sortedEndpoints.sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
-    );
-  } else if (sortOption === "Alphabetical (A-Z)") {
-    sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sortOption === "Alphabetical (Z-A)") {
-    sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
-  }
+  // let sortedEndpoints = [...filteredEndpoints];
+  //
+  // if (sortOption === "Recently created") {
+  //   sortedEndpoints.sort(
+  //     (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  //   );
+  // } else if (sortOption === "Oldest first") {
+  //   sortedEndpoints.sort(
+  //     (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  //   );
+  // } else if (sortOption === "Alphabetical (A-Z)") {
+  //   sortedEndpoints.sort((a, b) => a.name.localeCompare(b.name));
+  // } else if (sortOption === "Alphabetical (Z-A)") {
+  //   sortedEndpoints.sort((a, b) => b.name.localeCompare(a.name));
+  // }
 
   useEffect(() => {
     if (!selectedFolder?.id || !openSchemaDialog) return;
@@ -1661,7 +1677,7 @@ export default function FolderPage() {
                                 </TableCell>
                               </TableRow>
                             ) : (
-                              logs.map((log, i) => (
+                              filteredLogs.map((log, i) => (
                                 <LogCard key={i} log={log} />
                               ))
                             )}
