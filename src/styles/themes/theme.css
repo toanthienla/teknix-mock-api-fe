@@ -82,6 +82,7 @@
     --rules-header-bg: #F2F2F2;
     --response-border: #CBD5E1;
     --variable-bg: #EDEDEC;
+    --rs-loader-holder: #9095A1;
 }
 
 /* ===============================
@@ -170,4 +171,6 @@
     --response-border: #72767D;
 
     --variable-bg: #53555B;
+
+    --rs-loader-holder: #FFFFFF;
 }

@@ -1194,6 +1194,15 @@ export default function FolderPage() {
     }
   };
 
+  const [pageInput, setPageInput] = useState(page);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (!isTyping) {
+      setPageInput(page);
+    }
+  }, [page]);
+
   // Filter + Search logs
   const filteredLogs = logs.filter((log) => {
     if (String(log.project_id) !== String(projectId)) return false;
@@ -1706,41 +1715,67 @@ export default function FolderPage() {
                             </Button>
                             <div className="flex items-center gap-1">
                               <Input
-                                // type="number"
-                                min={1}
-                                max={totalPages || 1}
-                                value={page}
+                                value={pageInput}
                                 onChange={(e) => {
-                                  let value = Number(e.target.value);
+                                  setIsTyping(true);
 
+                                  const raw = e.target.value;
+
+                                  // Cho phép xoá hết
+                                  if (raw === "") {
+                                    setPageInput("");
+                                    return;
+                                  }
+
+                                  let value = Number(raw);
                                   if (value < 1) value = 1;
 
                                   if (!isNaN(value)) {
-                                    setPage(value);
+                                    setPageInput(value);
                                   }
                                 }}
-                                onBlur={(e) => {
-                                  let value = Number(e.target.value);
+                                onBlur={() => {
+                                  let value = Number(pageInput);
+
+                                  setIsTyping(false);
+
+                                  if (!pageInput) {
+                                    setPageInput(page);
+                                    return;
+                                  }
+
                                   if (value < 1) value = 1;
                                   if (value > totalPages) value = totalPages;
+
+                                  setPageInput(value);
                                   setPage(value);
                                 }}
                                 onKeyDown={(e) => {
+                                  if (e.key === "-" || e.key === "e") e.preventDefault();
+
                                   if (e.key === "Enter") {
-                                    let value = Number(e.target.value);
+                                    setIsTyping(false);
+
+                                    let value = Number(pageInput);
+
+                                    if (!pageInput) {
+                                      setPageInput(page);
+                                      return;
+                                    }
+
                                     if (value < 1) value = 1;
                                     if (value > totalPages) value = totalPages;
-                                    setPage(value);
-                                  }
 
-                                  if (e.key === "-" || e.key === "e") {
-                                    e.preventDefault();
+                                    setPageInput(value);
+                                    setPage(value);
                                   }
                                 }}
                                 className="w-10 h-7 text-center text-sm shadow-none"
                               />
+
                               <span className="text-sm opacity-80">/ {totalPages || 1}</span>
                             </div>
+
                             <Button
                               variant="outline"
                               size="sm"

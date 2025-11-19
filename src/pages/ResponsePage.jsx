@@ -3528,7 +3528,7 @@ const DashboardPage = () => {
                     <div className="flex flex-col items-center justify-center h-[400px]">
                       <span className="rs-loader"></span>
                       <p className="mt-8 opacity-70">
-                        Loading responses...
+                        Target a response
                       </p>
                     </div>
                   )}
@@ -3639,7 +3639,7 @@ const DashboardPage = () => {
                           <div className="flex flex-col items-center justify-center h-[400px]">
                             <span className="rs-loader"></span>
                             <p className="mt-8 opacity-70">
-                              Loading responses...
+                              Target a response
                             </p>
                           </div>
                         )}
@@ -3721,7 +3721,7 @@ const DashboardPage = () => {
                           <div className="flex flex-col items-center justify-center h-[400px]">
                             <span className="rs-loader"></span>
                             <p className="mt-8 opacity-70">
-                              Loading responses...
+                              Target a response
                             </p>
                           </div>
                         </div>
