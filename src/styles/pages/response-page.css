@@ -266,7 +266,7 @@
     position: relative;
     height: 32px;
     width: 120px;
-    border-bottom: 5px solid var(--foreground);
+    border-bottom: 8px solid var(--rs-loader-holder);
     box-sizing: border-box;
     animation: balancing 2s linear infinite alternate;
     transform-origin: 50% 100%;
@@ -287,11 +287,11 @@
     position: absolute;
     left: 50%;
     bottom: 0;
-    height: 20px;
-    width: 20px;
+    height: 34px;
+    width: 34px;
     transform: translate(-50%, 100%);
     border-radius: 50%;
-    border: 6px solid var(--foreground);
+    border: 8px solid var(--rs-loader-holder);
 }
 @keyframes ballbns {
     0% {  left: 0; transform: translateX(0%); }

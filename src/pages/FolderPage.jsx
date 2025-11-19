@@ -1195,6 +1195,13 @@ export default function FolderPage() {
   };
 
   const [pageInput, setPageInput] = useState(page);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (!isTyping) {
+      setPageInput(page);
+    }
+  }, [page]);
 
   // Filter + Search logs
   const filteredLogs = logs.filter((log) => {
@@ -1710,6 +1717,8 @@ export default function FolderPage() {
                               <Input
                                 value={pageInput}
                                 onChange={(e) => {
+                                  setIsTyping(true);
+
                                   const raw = e.target.value;
 
                                   // Cho phép xoá hết
@@ -1719,7 +1728,6 @@ export default function FolderPage() {
                                   }
 
                                   let value = Number(raw);
-
                                   if (value < 1) value = 1;
 
                                   if (!isNaN(value)) {
@@ -1729,7 +1737,8 @@ export default function FolderPage() {
                                 onBlur={() => {
                                   let value = Number(pageInput);
 
-                                  // Nếu rỗng → quay về page hiện tại
+                                  setIsTyping(false);
+
                                   if (!pageInput) {
                                     setPageInput(page);
                                     return;
@@ -1739,12 +1748,14 @@ export default function FolderPage() {
                                   if (value > totalPages) value = totalPages;
 
                                   setPageInput(value);
-                                  setPage(value); // Cập nhật page thật sự
+                                  setPage(value);
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === "-" || e.key === "e") e.preventDefault();
 
                                   if (e.key === "Enter") {
+                                    setIsTyping(false);
+
                                     let value = Number(pageInput);
 
                                     if (!pageInput) {

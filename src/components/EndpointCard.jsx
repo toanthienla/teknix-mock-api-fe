@@ -39,7 +39,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
 
       {/* State */}
       <TableCell className="py-3 font-medium text-center">
-        {endpoint.is_stateful ? "stateful" : "stateless"}
+        {endpoint.is_stateful ? "Stateful" : "Stateless"}
       </TableCell>
 
       {/* Method */}
@@ -63,9 +63,9 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
 
       {/* Status */}
       <TableCell className="py-3 text-emerald-400 font-semibold text-center">
-        {endpoint.is_stateful ? "active"
-          : endpoint.is_active ? "active"
-            : "inactive"}
+        {endpoint.is_stateful ? "Active"
+          : endpoint.is_active ? "Active"
+            : "Inactive"}
       </TableCell>
 
       {/* Time & Date */}
