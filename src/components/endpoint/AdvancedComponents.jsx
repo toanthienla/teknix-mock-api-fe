@@ -24,6 +24,7 @@ export const ApiCallEditor = ({
   endpointId,
   nextCalls,
   setNextCalls,
+  isNewApiCallDialogOpen,
   setIsNewApiCallDialogOpen,
   onSave,
   // Thêm props cho filter
@@ -70,6 +71,16 @@ export const ApiCallEditor = ({
       </div>
     );
   };
+
+  const [buttonShadow, setButtonShadow] = useState(false);
+
+  function handleClick(callback, setShadow, duration = 50) {
+    setShadow(true);
+
+    callback();
+
+    setTimeout(() => setShadow(false), duration);
+  }
 
   // Cập nhật useEffect để handle click outside popover
   useEffect(() => {
@@ -875,13 +886,14 @@ export const ApiCallEditor = ({
   return (
     <Card className="px-16 py-6 border-0 rounded-lg">
       <div className="">
-        <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
+        <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
           {/* New API Call */}
           <div className="relative">
             <Button
               onClick={() => setIsNewApiCallDialogOpen(true)}
-              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="w-9 h-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1" // ✅ CẬP NHẬT: Thay đổi hover
+              className={`w-9 h-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1
+                transition-all ${isNewApiCallDialogOpen ? "shadow-md/30" : ""}
+              `}
               onMouseEnter={() => setAddTooltipVisible(true)}
               onMouseLeave={() => setAddTooltipVisible(false)}
             >
@@ -899,9 +911,10 @@ export const ApiCallEditor = ({
           <div className="relative">
             <Button
               size="icon"
-              // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-              className="h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1" // ✅ CẬP NHẬT: Thay đổi hover
-              onClick={handleSave}
+              className={`h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1
+                transition-all ${buttonShadow ? "shadow-md/30" : ""}
+              `}
+              onClick={() => handleClick(handleSave, setButtonShadow)}
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
             >
@@ -1208,7 +1221,7 @@ export const ApiCallEditor = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-fit h-[29px] rounded-[6px]"
+                      className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         try {
@@ -1305,6 +1318,16 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
       </div>
     );
   };
+
+  const [buttonShadow, setButtonShadow] = useState(false);
+
+  function handleClick(callback, setShadow, duration = 50) {
+    setShadow(true);
+
+    callback();
+
+    setTimeout(() => setShadow(false), duration);
+  }
 
   const validateRule = (row) => {
     const newErrors = {};
@@ -1611,7 +1634,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
   return (
     <div className="w-full">
       {/* Hai nút Add & Save ở góc trên bên phải của toàn vùng Frame */}
-      <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
+      <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
         <div className="relative">
           <Button
             onClick={handleAddRule}

@@ -13,11 +13,10 @@ import {Code, SaveIcon} from "lucide-react";
 import {highlight, languages} from "prismjs/components/prism-core.js";
 import Editor from "react-simple-code-editor";
 import {toast} from "react-toastify";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {statusCodes} from "@/components/endpoint/constants.js";
-import {API_ROOT} from "@/utils/constants.js";
 
-export const WSConfig = ({config, endpointId, isStateful, method}) => {
+export const WSConfig = ({ config, isStateful, method, onSave }) => {
 
   const statelessAllowed = statusCodes.map((c) => c.code); // Get all codes
 
@@ -74,7 +73,7 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
     return statusCodes.filter((c) => finalAllowedCodes.includes(c.code));
   };
 
-  const [enabled] = useState(config.enabled ?? false);
+  const [enabled, setEnabled] = useState(config.enabled ?? false);
   const [message, setMessage] = useState(
     JSON.stringify(
       config.message === "" ? {} : (config.message ?? {}),
@@ -82,45 +81,51 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
       2
     )
   );
-
   const [delay, setDelay] = useState(config.delay_ms ?? 0);
   const [code, setCode] = useState(config.condition ?? 200);
-  const [isSaving, setIsSaving] = useState(false);
+
   const availableCodes = getStatusCodesByMethod(method, isStateful);
 
+  useEffect(() => {
+    setEnabled(config.enabled ?? false);
+
+    setMessage(
+      JSON.stringify(
+        config.message === "" ? {} : (config.message ?? {}),
+        null,
+        2
+      )
+    );
+
+    setDelay(config.delay_ms ?? 0);
+    setCode(config.condition ?? 200);
+  }, [config]);
+
+  const [buttonShadow, setButtonShadow] = useState(false);
+  function handleClick(callback, setShadow, duration = 100) {
+    setShadow(true);
+
+    callback();
+
+    setTimeout(() => setShadow(false), duration);
+  }
+
   // Gọi API PUT /endpoints/:endpointId
-  const handleSave = async () => {
+  const handleSave = () => {
     try {
-      const parsedMessage =
-        message.trim() === "" ? {} : JSON.parse(message);
+      const parsedMessage = message.trim() === "" ? {} : JSON.parse(message);
 
       const payload = {
-        websocket_config: {
-          enabled,
-          message: parsedMessage,
-          delay_ms: parseInt(delay, 10) || 0,
-          condition: parseInt(code, 10),
-        },
+        enabled,
+        message: parsedMessage,
+        delay_ms: parseInt(delay, 10) || 0,
+        condition: parseInt(code, 10),
       };
 
-      setIsSaving(true);
-      const res = await fetch(`${API_ROOT}/endpoints/${endpointId}`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        toast.success("WebSocket config updated successfully!");
-      } else {
-        const errText = await res.text();
-        toast.error(`Failed to update config: ${errText}`);
-      }
+      onSave(payload);  // <-- gửi ra cho parent
     } catch (err) {
-      console.error("Save error:", err);
-      toast.error("Invalid JSON or server error!");
-    } finally {
-      setIsSaving(false);
+      toast.error("Invalid JSON!");
+      console.error("Save WS Config error: " + err);
     }
   };
 
@@ -129,17 +134,16 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
         <div className="space-y-2">
           {/* --- Header --- */}
-          <div className="btn-primary rounded-full absolute top-2 right-4 flex space-x-2 z-10">
+          <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex space-x-2 z-10">
             <Button
               size="icon"
-              disabled={isSaving}
-              className="btn-primary rounded-full my-1 shadow-none"
-              onClick={handleSave}
+              className={`btn-primary rounded-full my-1 shadow-none 
+                transition-all ${buttonShadow ? "shadow-md/30" : ""}
+              `}
+              onClick={() => handleClick(handleSave, setButtonShadow)}
             >
               <SaveIcon
-                className={`h-5 w-5 ${
-                  isSaving ? "animate-spin" : ""
-                }`}
+                className="w-5 h-5"
               />
             </Button>
           </div>
@@ -173,7 +177,7 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-fit h-[29px] rounded-[6px]"
+                  className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     try {
@@ -197,6 +201,7 @@ export const WSConfig = ({config, endpointId, isStateful, method}) => {
             <Input
               id="delay"
               type="number"
+              min={0}
               value={delay}
               onChange={(e) => setDelay(e.target.value)}
               className="w-[70%]"

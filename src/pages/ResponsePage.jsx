@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {useState, useEffect, useRef, useMemo} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +39,6 @@ import {
 import Topbar from "@/components/Topbar.jsx";
 import reset_icon from "@/assets/light/reset_state_button.svg";
 import chainIcon from "@/assets/light/Chain.svg";
-import no_response from "@/assets/light/no_response.svg";
 import Advanced_icon from "@/assets/light/Adavanced_icon.svg";
 import Data_default from "@/assets/light/Data_default.svg";
 import Proxy_icon from "@/assets/light/Proxy_icon.svg";
@@ -58,6 +57,7 @@ import dot_backgroundLight from "@/assets/light/dot_rows.svg";
 import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
 import hashtagIcon from "@/assets/light/hashtag.svg";
 import searchIcon from "@/assets/light/search.svg";
+import editIcon from "@/assets/light/editName.svg"
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
@@ -193,6 +193,130 @@ const DashboardPage = () => {
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
       </div>
     );
+  };
+
+  const [buttonShadow, setButtonShadow] = useState(false);
+
+  function handleClick(callback, setShadow, duration = 50) {
+    setShadow(true);
+
+    callback();
+
+    setTimeout(() => setShadow(false), duration);
+  }
+
+  // edit endpoint state
+  const [editId, setEditId] = useState(null);
+  const [editEName, setEditEName] = useState("");
+  const [editEState, setEditEState] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState(null);
+  const [openEdit, setOpenEdit] = useState(false);
+
+  // edit endpoint
+  const [currentEndpoint, setCurrentEndpoint] = useState(null);
+  const openEditEndpoint = (e) => {
+    setEditId(e.id);
+    setEditEName(e.name);
+    setEditEState(e.is_stateful);
+
+    const folderOfEndpoint = folders.find(
+      (f) => String(f.id) === String(e.folder_id)
+    );
+    setSelectedFolder(folderOfEndpoint);
+
+    setCurrentEndpoint(e);
+    setOpenEdit(true);
+  };
+
+  const hasEdited = useMemo(() => {
+    if (!currentEndpoint) return false;
+    return editEName !== currentEndpoint.name;
+  }, [editEName, currentEndpoint]);
+
+  const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
+  const validateEditEndpoint = async (id, name, state) => {
+    if (!name.trim()) {
+      toast.info("Name is required");
+      return false;
+    }
+    if (!validName.test(name.trim())) {
+      toast.info(
+        "Name must start with a letter and contain only letters, numbers, underscores and dashes"
+      );
+      return false;
+    }
+
+    if (state) {
+      // Stateful
+      try {
+        const res = await fetch(
+          `${API_ROOT}/endpoints_ful?folder_id=${selectedFolder?.id}`,
+          {
+            credentials: "include",
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch stateful endpoints");
+        const data = await res.json();
+        const statefulArr = Array.isArray(data) ? data : data.data || [];
+
+        const duplicateSF = statefulArr.find(
+          (ep) =>
+            ep.origin_id !== id &&
+            String(ep.folder_id) === String(selectedFolder?.id) &&
+            ep.name.toLowerCase() === name.toLowerCase()
+        );
+        if (duplicateSF) {
+          toast.warning("Name already exists in this folder (stateful)");
+          return false;
+        }
+      } catch (err) {
+        console.error("Error checking stateful endpoints:", err);
+        toast.error("Failed to validate stateful endpoint name");
+        return false;
+      }
+    } else {
+      // Stateless
+      const duplicateSL = endpoints.find(
+        (ep) =>
+          ep.id !== id &&
+          String(ep.folder_id) === String(selectedFolder?.id) &&
+          ep.name.toLowerCase() === name.toLowerCase()
+      );
+      if (duplicateSL) {
+        toast.warning("Name already exists in this folder");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleUpdateEndpoint = async () => {
+    const isValid = await validateEditEndpoint(editId, editEName, editEState);
+    if (!isValid) return;
+
+    const updated = { name: editEName };
+
+    try {
+      const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+
+      if (!res.ok) throw new Error("Failed to update endpoint");
+
+      setEndpoints((prev) =>
+        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+      );
+
+      setOpenEdit(false);
+      toast.success("Update endpoint successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update endpoint!");
+    }
   };
 
   // Thêm ref cho editor
@@ -854,8 +978,6 @@ const DashboardPage = () => {
   };
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
-
-  const [currentEndpoint, setCurrentEndpoint] = useState(null);
 
   useEffect(() => {
     const found = endpoints.find(
@@ -2492,39 +2614,60 @@ const DashboardPage = () => {
     );
   }
 
-  const handleToggleWebSocket = async (checked) => {
+  const handleToggleWebSocket = async (input) => {
     try {
-      setWsEnabled(checked);
+      // Nếu input là boolean → toggle từ Switch
+      let finalPayload;
 
-      const payload = {
-        websocket_config: {
+      if (typeof input === "boolean") {
+        const checked = input;
+        setWsEnabled(checked);
+
+        finalPayload = {
           enabled: checked,
           message: wsMessage,
           delay_ms: wsDelay,
           condition: wsCondition,
-        },
-      };
+        };
+      }
+      // Nếu input là object → save từ WSConfig
+      else if (typeof input === "object" && input !== null) {
+        const { enabled, message, delay_ms, condition } = input;
 
+        setWsEnabled(enabled);
+        setWsMessage(message);
+        setWsDelay(delay_ms);
+        setWsCondition(condition);
+
+        finalPayload = input;
+      }
+      else {
+        console.error("Invalid payload for WebSocket update");
+        return;
+      }
+
+      // Gửi API
       const res = await fetch(`${API_ROOT}/endpoints/${endpointId}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ websocket_config: finalPayload }),
       });
 
       if (!res.ok) throw new Error("Failed to update WebSocket config");
 
-      if (checked) {
+      // await fetchWebsocketConfig();
+
+      // Toast
+      if (finalPayload.enabled) {
         const isEmpty =
-          wsMessage === "" ||
-          wsMessage === null ||
-          (typeof wsMessage === "object" &&
-            Object.keys(wsMessage).length === 0);
+          finalPayload.message === "" ||
+          finalPayload.message === null ||
+          (typeof finalPayload.message === "object" &&
+            Object.keys(finalPayload.message).length === 0);
 
         if (isEmpty) {
-          toast.warning(
-            "WebSocket enabled, but message is empty. Please update it."
-          );
+          toast.warning("WebSocket enabled, but message is empty. Please update it.");
         } else {
           toast.success("WebSocket enabled successfully");
         }
@@ -2532,23 +2675,10 @@ const DashboardPage = () => {
         toast.success("WebSocket disabled successfully");
       }
 
-      // // Nếu bật Notification, gọi API lấy websocket token
-      // if (checked) {
-      //   try {
-      //     const tokenData = await getEndpointToken(Number(endpointId));
-      //     console.log("WebSocket token:", tokenData);
-      //     toast.success("WebSocket token retrieved successfully!");
-      //     // 👉 tại đây bạn có thể lưu token vào state nếu cần, ví dụ:
-      //     // setWsToken(tokenData.token);
-      //   } catch (tokenErr) {
-      //     console.error("Failed to get endpoint token:", tokenErr);
-      //     toast.error("Failed to get WebSocket token");
-      //   }
-      // }
     } catch (err) {
       console.error("Update failed:", err);
       toast.error("Failed to update WebSocket config");
-      setWsEnabled((prev) => !prev); // rollback
+      setWsEnabled((prev) => !prev); // rollback toggle error
     }
   };
 
@@ -2666,10 +2796,21 @@ const DashboardPage = () => {
         >
           {/* Phần bên trái - Display Endpoint Name and Method */}
           <div className="flex items-center flex-shrink-0 mb-2">
-            <h2 className="text-4xl font-bold opacity-80 mr-4">
+            <h2 className="text-4xl font-bold mr-4">
               {endpoints.find(
                 (ep) => String(ep.id) === String(currentEndpointId)
               )?.name || "Endpoint"}
+              <Button
+                size="icon"
+                className="bg-transparent hover:bg-transparent ml-2"
+                onClick={(currentEndpoint) => openEditEndpoint(currentEndpoint)}
+              >
+                <img
+                  src={editIcon}
+                  alt="Edit Endpoint"
+                  className="w-6 h-6 cursor-pointer"
+                />
+              </Button>
             </h2>
           </div>
 
@@ -3052,13 +3193,16 @@ const DashboardPage = () => {
                       <Card className="p-4 shadow-none rounded-none border-none w-[85%]">
                         <div className="flex justify-between items-center">
                           {/* Tất cả nút nằm bên phải */}
-                          <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
+                          <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
                             <div className="relative">
                               <Button
                                 size="icon"
-                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
-                                onClick={handleSaveResponse}
+                                className={`
+                                  btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  transition-all
+                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                `}
+                                onClick={() => handleClick(handleSaveResponse, setButtonShadow)}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
@@ -3115,7 +3259,7 @@ const DashboardPage = () => {
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
                                 className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1 transition-all
-                                ${isPopoverOpen ? "shadow-xl" : ""}
+                                ${isPopoverOpen ? "shadow-md/30" : ""}
                                 `}
                                 onClick={() => {
                                   const canEdit =
@@ -3315,6 +3459,7 @@ const DashboardPage = () => {
                                     border: "1px solid var(--border)",
                                     borderRadius: "0.375rem",
                                     backgroundColor: "#101728",
+                                    color: "white",
                                   }}
                                   textareaClassName="focus:outline-none"
                                   disabled={
@@ -3329,7 +3474,7 @@ const DashboardPage = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="px-1 rounded-sm"
+                                    className="px-1 rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       const canEdit =
@@ -3520,11 +3665,15 @@ const DashboardPage = () => {
                       {selectedResponse ? (
                         <Card className="p-6 border-0 rounded-none shadow-none w-[85%]">
                           <div className="flex justify-between items-center mb-2">
-                            <div className="btn-primary rounded-full absolute top-2 right-4 flex z-10">
+                            <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex z-10">
                               <Button
                                 size="icon"
-                                className="btn-primary rounded-full shadow-none my-1 hover:opacity-80"
-                                onClick={handleSaveResponse}
+                                className={`
+                                  btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  transition-all duration-300
+                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                `}
+                                onClick={() => handleClick(handleSaveResponse, setButtonShadow)}
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
@@ -3613,7 +3762,7 @@ const DashboardPage = () => {
                         <div className="space-y-6">
 
                           {/* Nút Save và Popover nằm cạnh nhau */}
-                          <div className="btn-primary rounded-full border absolute top-2 right-4 flex flex-col items-center z-10">
+                          <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
                             {/* Nút Popover */}
                             <div
                               className="relative"
@@ -3622,7 +3771,9 @@ const DashboardPage = () => {
                               <Button
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
+                                className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1 transition-all
+                                ${isInitialValuePopoverOpen ? "shadow-md/30" : ""}
+                                `}
                                 onClick={() =>
                                   setIsInitialValuePopoverOpen(
                                     !isInitialValuePopoverOpen
@@ -3717,9 +3868,12 @@ const DashboardPage = () => {
                             <div className="relative">
                               <Button
                                 size="icon"
-                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
-                                onClick={handleSaveInitialValue}
+                                className={`
+                                  btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  transition-all duration-300
+                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                `}
+                                onClick={() => handleClick(handleSaveInitialValue, setButtonShadow)}
                                 onMouseEnter={() =>
                                   setSaveTooltipVisible(true)
                                 }
@@ -3838,7 +3992,7 @@ const DashboardPage = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="w-[77px] h-[29px] rounded-[6px]"
+                                      className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                                       onClick={() => {
                                         try {
                                           const formatted = JSON.stringify(
@@ -3884,6 +4038,7 @@ const DashboardPage = () => {
                         setSelectedSection={setSelectedSection}
                         getTemplateText={getTemplateText}
                         insertRequestBodyTemplate={insertRequestBodyTemplate}
+                        isNewApiCallDialogOpen={isNewApiCallDialogOpen}
                         setIsNewApiCallDialogOpen={setIsNewApiCallDialogOpen}
                         onSave={() => fetchEndpointResponses(isStateful)}
                         availableEndpoints={newApiCallAvailableEndpoints}
@@ -3896,9 +4051,9 @@ const DashboardPage = () => {
                     <div className="mt-0">
                       <WSConfig
                         config={config}
-                        endpointId={currentEndpointId}
                         isStateful={isStateful}
                         method={method}
+                        onSave={(payload) => handleToggleWebSocket(payload)}
                       />
                     </div>
                   )}
@@ -4154,13 +4309,14 @@ const DashboardPage = () => {
                             : "",
                           borderRadius: "0.375rem",
                           backgroundColor: "#101728",
+                          color: "white",
                           width: "100%",
                           maxWidth: "100%",
                           boxSizing: "border-box",
-                          whiteSpace: "pre", // Giữ nguyên format, không wrap
-                          wordBreak: "normal", // Không break word
+                          // whiteSpace: "pre", // Giữ nguyên format, không wrap
+                          // wordBreak: "normal", // Không break word
                         }}
-                        textareaClassName="focus:outline-none w-full"
+                        // textareaClassName="focus:outline-none w-full"
                       />
 
                       {/* JSON Editor controls */}
@@ -4168,7 +4324,7 @@ const DashboardPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-fit h-[29px] rounded-[6px]"
+                          className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                           onClick={(e) => {
                             e.stopPropagation();
                             try {
@@ -4675,7 +4831,7 @@ const DashboardPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-fit h-[29px] rounded-[6px]"
+                    className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                     onClick={(e) => {
                       e.stopPropagation();
                       try {
@@ -4745,6 +4901,54 @@ const DashboardPage = () => {
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Endpoint Dialog */}
+      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+        <DialogContent
+          className="sm:max-w-lg shadow-lg rounded-lg"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasEdited) {
+              e.preventDefault();
+              handleUpdateEndpoint();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Endpoint</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-sm">
+            Endpoint details
+          </DialogDescription>
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">
+                Name
+              </h3>
+              <Input
+                placeholder="Enter endpoint name"
+                value={editEName}
+                onChange={(e) => setEditEName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpenEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateEndpoint}
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
+              disabled={!hasEdited}
+            >
+              Update
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
