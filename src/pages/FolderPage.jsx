@@ -578,7 +578,7 @@ export default function FolderPage() {
 
       // Nếu không có dữ liệu hoặc items rỗng/null
       if (!raw || !raw.items || raw.items.length === 0) {
-        toast.info("Không có endpoint");
+        toast.info("Out of logs!");
         setLogs([]);
         return;
       }
@@ -612,9 +612,20 @@ export default function FolderPage() {
                   ? payload.data
                   : [];
 
-            const matched =
-              responses.find((r) => String(r.id) === String(log.response_id)) ||
-              responses[0];
+            let responseIdToMatch = null;
+
+            // If endpoint_response_id exists → stateless
+            if (log.endpoint_response_id !== null && log.endpoint_response_id !== undefined) {
+              responseIdToMatch = log.endpoint_response_id;
+            // Otherwise use stateful_endpoint_response_id
+            } else {
+              responseIdToMatch = log.stateful_endpoint_response_id;
+            }
+
+            // Find matched response
+            const matched = responses.find(
+              (r) => String(r.id) === String(responseIdToMatch)
+            );
 
             return {
               ...log,
@@ -1183,7 +1194,8 @@ export default function FolderPage() {
     }
   };
 
-  // Filter logs
+  const [pageInput, setPageInput] = useState(page);
+
   // Filter + Search logs
   const filteredLogs = logs.filter((log) => {
     if (String(log.project_id) !== String(projectId)) return false;
@@ -1694,9 +1706,65 @@ export default function FolderPage() {
                             >
                               <ChevronLeftIcon className="w-4 h-4" />
                             </Button>
-                            <span className="text-sm font-semibold">
-                              {page} / {totalPages || 1}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={pageInput}
+                                onChange={(e) => {
+                                  const raw = e.target.value;
+
+                                  // Cho phép xoá hết
+                                  if (raw === "") {
+                                    setPageInput("");
+                                    return;
+                                  }
+
+                                  let value = Number(raw);
+
+                                  if (value < 1) value = 1;
+
+                                  if (!isNaN(value)) {
+                                    setPageInput(value);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  let value = Number(pageInput);
+
+                                  // Nếu rỗng → quay về page hiện tại
+                                  if (!pageInput) {
+                                    setPageInput(page);
+                                    return;
+                                  }
+
+                                  if (value < 1) value = 1;
+                                  if (value > totalPages) value = totalPages;
+
+                                  setPageInput(value);
+                                  setPage(value); // Cập nhật page thật sự
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "-" || e.key === "e") e.preventDefault();
+
+                                  if (e.key === "Enter") {
+                                    let value = Number(pageInput);
+
+                                    if (!pageInput) {
+                                      setPageInput(page);
+                                      return;
+                                    }
+
+                                    if (value < 1) value = 1;
+                                    if (value > totalPages) value = totalPages;
+
+                                    setPageInput(value);
+                                    setPage(value);
+                                  }
+                                }}
+                                className="w-10 h-7 text-center text-sm shadow-none"
+                              />
+
+                              <span className="text-sm opacity-80">/ {totalPages || 1}</span>
+                            </div>
+
                             <Button
                               variant="outline"
                               size="sm"
