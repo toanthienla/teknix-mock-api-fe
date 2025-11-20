@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo} from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,7 +53,7 @@ import dot_backgroundLight from "@/assets/light/dot_rows.svg";
 import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
 import hashtagIcon from "@/assets/light/hashtag.svg";
 import searchIcon from "@/assets/light/search.svg";
-import editIcon from "@/assets/light/editName.svg"
+import editIcon from "@/assets/light/editName.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-json";
@@ -85,7 +85,7 @@ const DashboardPage = () => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
-  const [responseNameError, setResponseNameError] = useState("");
+  const [, setResponseNameError] = useState("");
   const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -228,7 +228,9 @@ const DashboardPage = () => {
 
   const hasEdited = useMemo(() => {
     if (!currentEndpoint) return false;
-    return editEName !== currentEndpoint.name || editEPath !== currentEndpoint.path;
+    return (
+      editEName !== currentEndpoint.name || editEPath !== currentEndpoint.path
+    );
   }, [editEName, editEPath, currentEndpoint]);
 
   const validPath =
@@ -327,7 +329,7 @@ const DashboardPage = () => {
 
     const updated = {
       name: editEName,
-      path: editEPath
+      path: editEPath,
     };
 
     try {
@@ -1214,10 +1216,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1345,10 +1347,10 @@ const DashboardPage = () => {
       prev.map((ep) =>
         String(ep.id) === String(currentEndpointId)
           ? {
-            ...ep,
-            is_stateful: newIsStateful,
-            updated_at: new Date().toISOString(),
-          }
+              ...ep,
+              is_stateful: newIsStateful,
+              updated_at: new Date().toISOString(),
+            }
           : ep
       )
     );
@@ -1458,8 +1460,8 @@ const DashboardPage = () => {
 
   const currentWorkspace = currentProject
     ? workspaces.find(
-      (w) => String(w.id) === String(currentProject.workspace_id)
-    )
+        (w) => String(w.id) === String(currentProject.workspace_id)
+      )
     : null;
 
   const method =
@@ -2262,12 +2264,7 @@ const DashboardPage = () => {
   };
 
   const handleNewResponse = () => {
-    // Reset form khi tạo mới
-    setSelectedResponse(null);
-    setResponseName("");
-    setStatusCode("200");
-    setResponseBody("{}");
-    setDelay("0");
+    // Mở dialog mà không thay đổi bất kỳ state nào
     setIsDialogOpen(true);
   };
 
@@ -2380,10 +2377,10 @@ const DashboardPage = () => {
             prev.map((s) =>
               s.id === statefulResponse.id
                 ? {
-                  ...s,
-                  code: statefulResponse.status_code.toString(),
-                  name: statefulResponse.name,
-                }
+                    ...s,
+                    code: statefulResponse.status_code.toString(),
+                    name: statefulResponse.name,
+                  }
                 : s
             )
           );
@@ -2399,11 +2396,11 @@ const DashboardPage = () => {
             prev.map((s) =>
               s.id === updatedResponse.id
                 ? {
-                  ...s,
-                  code: updatedResponse.status_code.toString(),
-                  name: updatedResponse.name,
-                  isDefault: updatedResponse.is_default,
-                }
+                    ...s,
+                    code: updatedResponse.status_code.toString(),
+                    name: updatedResponse.name,
+                    isDefault: updatedResponse.is_default,
+                  }
                 : s
             )
           );
@@ -2422,11 +2419,20 @@ const DashboardPage = () => {
       });
   };
 
-  // Tạo hàm riêng chỉ để tạo response mới
+  // Thêm state riêng cho dialog new response
+  const [newResponseName, setNewResponseName] = useState("");
+  const [newResponseStatusCode, setNewResponseStatusCode] = useState("200");
+  const [newResponseBody, setNewResponseBody] = useState("{}");
+  const [newResponseDelay, setNewResponseDelay] = useState("0");
+  const [, setNewResponseProxyUrl] = useState("");
+  const [, setNewResponseProxyMethod] = useState("GET");
+  const [newResponseNameError, setNewResponseNameError] = useState("");
+  const [newResponseDelayError, setNewResponseDelayError] = useState("");
+
   const handleCreateResponse = () => {
-    const delayValidationError = validateDelay(delay);
+    const delayValidationError = validateDelay(newResponseDelay);
     if (delayValidationError) {
-      setDelayError(delayValidationError);
+      setNewResponseDelayError(delayValidationError);
       toast.error(delayValidationError);
       return;
     }
@@ -2434,22 +2440,22 @@ const DashboardPage = () => {
     // Parse response body
     let responseBodyObj = {};
     try {
-      responseBodyObj = JSON.parse(responseBody);
+      responseBodyObj = JSON.parse(newResponseBody);
     } catch {
       toast.error("Invalid JSON in response body");
       return;
     }
 
     // Validate response name
-    const trimmedName = responseName.trim();
+    const trimmedName = newResponseName.trim();
     if (!trimmedName) {
-      setResponseNameError("Name cannot be empty");
+      setNewResponseNameError("Name cannot be empty");
       toast.error("Response name cannot be empty");
       return;
     }
 
     // Reset lỗi nếu có
-    setResponseNameError("");
+    setNewResponseNameError("");
 
     // Chỉ cho stateless mode
     if (isStateful) {
@@ -2460,12 +2466,12 @@ const DashboardPage = () => {
     // Payload cho tạo mới response (stateless only)
     const payload = {
       endpoint_id: currentEndpointId,
-      name: responseName,
-      status_code: parseInt(statusCode),
+      name: newResponseName,
+      status_code: parseInt(newResponseStatusCode),
       response_body: responseBodyObj,
       condition: {},
       is_default: endpointResponses.length === 0, // Nếu là response đầu tiên thì là default
-      delay_ms: parseInt(delay) || 0,
+      delay_ms: parseInt(newResponseDelay) || 0,
       proxy_url: null,
       proxy_method: null,
     };
@@ -2502,15 +2508,16 @@ const DashboardPage = () => {
         setResponseBody(JSON.stringify(newResponse.response_body, null, 2));
         setDelay(newResponse.delay_ms?.toString() || "0");
 
-        // Đóng dialog và reset form
+        // Đóng dialog và reset form riêng
         setIsDialogOpen(false);
-        setSelectedResponse(null);
-        setResponseName("");
-        setStatusCode("200");
-        setResponseBody("");
-        setDelay("0");
-        setResponseNameError("");
-        setDelayError("");
+        setNewResponseName("");
+        setNewResponseStatusCode("200");
+        setNewResponseBody("{}");
+        setNewResponseDelay("0");
+        setNewResponseProxyUrl("");
+        setNewResponseProxyMethod("GET");
+        setNewResponseNameError("");
+        setNewResponseDelayError("");
 
         toast.success("New response created successfully!");
       })
@@ -2537,14 +2544,17 @@ const DashboardPage = () => {
     return (
       <button
         onClick={() => setActiveTab(value)}
-        className={`response-card-header flex px-4 py-2 ${isActive
-            ? "active"
-            : "opacity-50"
-          } ${isDataDefault ? "rounded-tl-md" : ""}
+        className={`response-card-header flex px-4 py-2 ${
+          isActive ? "active" : "opacity-50"
+        } ${isDataDefault ? "rounded-tl-md" : ""}
         ${isRules ? "rounded-tl-md" : ""}`}
       >
         <div className="flex items-center">
-          <img src={icon} alt={label} className="w-4 h-4 mr-2 dark:brightness-0 dark:invert" />
+          <img
+            src={icon}
+            alt={label}
+            className="w-4 h-4 mr-2 dark:brightness-0 dark:invert"
+          />
           <span className="text-md font-semibold">{label}</span>
         </div>
       </button>
@@ -2642,9 +2652,7 @@ const DashboardPage = () => {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
         <span className="loader"></span>
-        <p className="text-lg mt-2 font-medium">
-          Loading endpoint data...
-        </p>
+        <p className="text-lg mt-2 font-medium">Loading endpoint data...</p>
       </div>
     );
   }
@@ -2675,8 +2683,7 @@ const DashboardPage = () => {
         setWsCondition(condition);
 
         finalPayload = input;
-      }
-      else {
+      } else {
         console.error("Invalid payload for WebSocket update");
         return;
       }
@@ -2702,14 +2709,15 @@ const DashboardPage = () => {
             Object.keys(finalPayload.message).length === 0);
 
         if (isEmpty) {
-          toast.warning("WebSocket enabled, but message is empty. Please update it.");
+          toast.warning(
+            "WebSocket enabled, but message is empty. Please update it."
+          );
         } else {
           toast.success("WebSocket enabled successfully");
         }
       } else {
         toast.success("WebSocket disabled successfully");
       }
-
     } catch (err) {
       console.error("Update failed:", err);
       toast.error("Failed to update WebSocket config");
@@ -2742,30 +2750,46 @@ const DashboardPage = () => {
                 ? currentFolder
                   ? currentEndpointId
                     ? [
-                      {
-                        label: currentWorkspace.name,
-                        WORKSPACE_ID: currentWorkspace.id,
-                        href: "/dashboard",
-                      },
-                      {
-                        label: currentProject.name,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label: currentFolder.name,
-                        folder_id: currentFolder.id,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
-                      {
-                        label:
-                          endpoints.find(
-                            (ep) =>
-                              String(ep.id) === String(currentEndpointId)
-                          )?.name || "Endpoint",
-                        href: null,
-                      },
-                    ]
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                        {
+                          label: currentFolder.name,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                        {
+                          label:
+                            endpoints.find(
+                              (ep) =>
+                                String(ep.id) === String(currentEndpointId)
+                            )?.name || "Endpoint",
+                          href: null,
+                        },
+                      ]
                     : [
+                        {
+                          label: currentWorkspace.name,
+                          WORKSPACE_ID: currentWorkspace.id,
+                          href: "/dashboard",
+                        },
+                        {
+                          label: currentProject.name,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                        {
+                          label: currentFolder.name,
+                          folder_id: currentFolder.id,
+                          href: `/dashboard/${currentProject.id}`,
+                        },
+                      ]
+                  : [
                       {
                         label: currentWorkspace.name,
                         WORKSPACE_ID: currentWorkspace.id,
@@ -2775,30 +2799,14 @@ const DashboardPage = () => {
                         label: currentProject.name,
                         href: `/dashboard/${currentProject.id}`,
                       },
-                      {
-                        label: currentFolder.name,
-                        folder_id: currentFolder.id,
-                        href: `/dashboard/${currentProject.id}`,
-                      },
                     ]
-                  : [
+                : [
                     {
                       label: currentWorkspace.name,
                       WORKSPACE_ID: currentWorkspace.id,
                       href: "/dashboard",
                     },
-                    {
-                      label: currentProject.name,
-                      href: `/dashboard/${currentProject.id}`,
-                    },
                   ]
-                : [
-                  {
-                    label: currentWorkspace.name,
-                    WORKSPACE_ID: currentWorkspace.id,
-                    href: "/dashboard",
-                  },
-                ]
               : []
           }
           onSearch={setSearchTerm}
@@ -2832,13 +2840,18 @@ const DashboardPage = () => {
               className="bg-transparent hover:bg-transparent"
               onClick={() =>
                 openEditEndpoint(
-                  endpoints.find(ep => String(ep.id) === String(currentEndpointId))
+                  endpoints.find(
+                    (ep) => String(ep.id) === String(currentEndpointId)
+                  )
                 )
               }
             >
-              <img src={editIcon} alt="Edit Endpoint" className="w-5 h-5 cursor-pointer dark:invert" />
+              <img
+                src={editIcon}
+                alt="Edit Endpoint"
+                className="w-5 h-5 cursor-pointer dark:invert"
+              />
             </Button>
-
           </div>
 
           {/* Phần bên phải - Form Status Info */}
@@ -2855,16 +2868,17 @@ const DashboardPage = () => {
             <div className="path flex items-center gap-2 w-full max-w-md rounded-md px-2 py-1">
               <Badge
                 variant="outline"
-                className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${method === "GET"
+                className={`px-2 py-0.5 text-xs font-semibold rounded-sm ${
+                  method === "GET"
                     ? "bg-emerald-100 text-black hover:bg-emerald-200"
                     : method === "POST"
-                      ? "bg-indigo-300 text-black hover:bg-indigo-400"
-                      : method === "PUT"
-                        ? "bg-orange-400 text-black hover:bg-orange-500"
-                        : method === "DELETE"
-                          ? "bg-red-400 text-black hover:bg-red-500"
-                          : "bg-gray-100 text-black hover:bg-gray-200"
-                  }`}
+                    ? "bg-indigo-300 text-black hover:bg-indigo-400"
+                    : method === "PUT"
+                    ? "bg-orange-400 text-black hover:bg-orange-500"
+                    : method === "DELETE"
+                    ? "bg-red-400 text-black hover:bg-red-500"
+                    : "bg-gray-100 text-black hover:bg-gray-200"
+                }`}
               >
                 {method}
               </Badge>
@@ -2921,7 +2935,10 @@ const DashboardPage = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <Label htmlFor="ws-enable" className="text-base font-inter font-semibold">
+              <Label
+                htmlFor="ws-enable"
+                className="text-base font-inter font-semibold"
+              >
                 Notification
               </Label>
               <Switch
@@ -2935,7 +2952,9 @@ const DashboardPage = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className={`response-page-content transition-all duration-300 px-16 pt-4 pb-4 w-full`}>
+        <div
+          className={`response-page-content transition-all duration-300 px-16 pt-4 pb-4 w-full`}
+        >
           {/* Dialog xác nhận reset current values */}
           <Dialog
             open={showResetConfirmDialog}
@@ -3047,13 +3066,13 @@ const DashboardPage = () => {
                       return (
                         <div
                           key={status.id || status.code}
-                          className={`group response-card flex items-center justify-between p-3 cursor-pointer ${selectedResponse?.id === status.id
-                              ? "active"
-                              : ""
-                            } ${index === filteredStatusData.length - 1
+                          className={`group response-card flex items-center justify-between p-3 cursor-pointer ${
+                            selectedResponse?.id === status.id ? "active" : ""
+                          } ${
+                            index === filteredStatusData.length - 1
                               ? "border-b-0"
                               : ""
-                            }`}
+                          }`}
                           draggable={!isStateful && !searchTerm}
                           onDragStart={
                             !isStateful && !searchTerm
@@ -3085,8 +3104,10 @@ const DashboardPage = () => {
                           <div className="flex items-center gap-1">
                             {/* Icon GripVertical chỉ hiện khi hover */}
                             {!isStateful && !searchTerm && (
-                              <GripVertical className="h-4 w-4 text-gray-400 dark:text-white cursor-move opacity-0
-                                group-hover:opacity-100 transition-opacity" />
+                              <GripVertical
+                                className="h-4 w-4 text-gray-400 dark:text-white cursor-move opacity-0
+                                group-hover:opacity-100 transition-opacity"
+                              />
                             )}
 
                             <div className="flex items-center gap-2">
@@ -3096,9 +3117,7 @@ const DashboardPage = () => {
                               >
                                 {status.code}
                               </span>
-                              <span className="text-[12px]">
-                                {status.name}
-                              </span>
+                              <span className="text-[12px]">{status.name}</span>
                             </div>
                           </div>
 
@@ -3189,10 +3208,11 @@ const DashboardPage = () => {
                           {endpointResponses.map((response) => (
                             <button
                               key={response.id}
-                              className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${selectedResponse?.id === response.id
+                              className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${
+                                selectedResponse?.id === response.id
                                   ? "active"
                                   : ""
-                                }`}
+                              }`}
                               onClick={() => {
                                 handleResponseSelect(response);
                                 setIsResponseDropdownOpen(false);
@@ -3229,7 +3249,12 @@ const DashboardPage = () => {
                                   transition-all
                                   ${buttonShadow ? "shadow-md/30" : ""}
                                 `}
-                                onClick={() => handleClick(handleSaveResponse, setButtonShadow)}
+                                onClick={() =>
+                                  handleClick(
+                                    handleSaveResponse,
+                                    setButtonShadow
+                                  )
+                                }
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
@@ -3265,10 +3290,11 @@ const DashboardPage = () => {
                                   }
                                 >
                                   <Star
-                                    className={`h-4 w-4 ${selectedResponse?.is_default
+                                    className={`h-4 w-4 ${
+                                      selectedResponse?.is_default
                                         ? "text-yellow-500 fill-yellow-500"
                                         : ""
-                                      }`}
+                                    }`}
                                   />
                                 </Button>
                                 <Tooltip
@@ -3332,10 +3358,11 @@ const DashboardPage = () => {
                                         (section) => (
                                           <div
                                             key={section}
-                                            className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === section
+                                            className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                              selectedSection === section
                                                 ? "active"
                                                 : "opacity-80"
-                                              }`}
+                                            }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setSelectedSection(section);
@@ -3344,8 +3371,8 @@ const DashboardPage = () => {
                                             {section === "url"
                                               ? "URL Parameters"
                                               : section === "query"
-                                                ? "Query Parameters"
-                                                : "Project State"}
+                                              ? "Query Parameters"
+                                              : "Project State"}
                                           </div>
                                         )
                                       )}
@@ -3411,10 +3438,9 @@ const DashboardPage = () => {
                               >
                                 <SelectTrigger
                                   id="status-code"
-                                  className={`rounded-md ${isStateful
-                                      ? "muted cursor-not-allowed"
-                                      : ""
-                                    }`}
+                                  className={`rounded-md ${
+                                    isStateful ? "muted cursor-not-allowed" : ""
+                                  }`}
                                 >
                                   <SelectValue placeholder="Select status code" />
                                 </SelectTrigger>
@@ -3549,8 +3575,9 @@ const DashboardPage = () => {
                                     setDelayError(error);
                                   }
                                 }}
-                                className={`rounded-md ${delayError ? "border-red-500" : ""
-                                  }`}
+                                className={`rounded-md ${
+                                  delayError ? "border-red-500" : ""
+                                }`}
                                 placeholder="0"
                               />
                               {delayError && (
@@ -3566,9 +3593,7 @@ const DashboardPage = () => {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[400px]">
                       <span className="rs-loader"></span>
-                      <p className="mt-8 opacity-70">
-                        Target a response
-                      </p>
+                      <p className="mt-8 opacity-70">Target a response</p>
                     </div>
                   )}
                 </div>
@@ -3611,10 +3636,11 @@ const DashboardPage = () => {
                             {endpointResponses.map((response) => (
                               <button
                                 key={response.id}
-                                className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${selectedResponse?.id === response.id
+                                className={`select-response w-full text-left px-3 py-2 text-sm focus:outline-none ${
+                                  selectedResponse?.id === response.id
                                     ? "active"
                                     : ""
-                                  }`}
+                                }`}
                                 onClick={() => {
                                   handleResponseSelect(response);
                                   setIsTabBarDropdownOpen(false);
@@ -3677,9 +3703,7 @@ const DashboardPage = () => {
                         ) : (
                           <div className="flex flex-col items-center justify-center h-[400px]">
                             <span className="rs-loader"></span>
-                            <p className="mt-8 opacity-70">
-                              Target a response
-                            </p>
+                            <p className="mt-8 opacity-70">Target a response</p>
                           </div>
                         )}
                       </div>
@@ -3700,7 +3724,12 @@ const DashboardPage = () => {
                                   transition-all duration-300
                                   ${buttonShadow ? "shadow-md/30" : ""}
                                 `}
-                                onClick={() => handleClick(handleSaveResponse, setButtonShadow)}
+                                onClick={() =>
+                                  handleClick(
+                                    handleSaveResponse,
+                                    setButtonShadow
+                                  )
+                                }
                                 onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
@@ -3715,9 +3744,7 @@ const DashboardPage = () => {
                                 Save button
                               </Tooltip>
                             </div>
-                            <h2 className="text-md">
-                              Forward Proxy URL
-                            </h2>
+                            <h2 className="text-md">Forward Proxy URL</h2>
                           </div>
                           <div className="space-y-2">
                             <div className="flex flex-col items-start gap-[10px] w-full max-w-[790px]">
@@ -3732,9 +3759,7 @@ const DashboardPage = () => {
                                 />
                               </div>
                               <div className="flex flex-col gap-[8px] w-full">
-                                <span className="text-md">
-                                  Method
-                                </span>
+                                <span className="text-md">Method</span>
                                 <Select
                                   value={proxyMethod}
                                   onValueChange={setProxyMethod}
@@ -3759,9 +3784,7 @@ const DashboardPage = () => {
                         <div className="flex flex-col items-center justify-center h-[400px]">
                           <div className="flex flex-col items-center justify-center h-[400px]">
                             <span className="rs-loader"></span>
-                            <p className="mt-8 opacity-70">
-                              Target a response
-                            </p>
+                            <p className="mt-8 opacity-70">Target a response</p>
                           </div>
                         </div>
                       )}
@@ -3787,7 +3810,6 @@ const DashboardPage = () => {
                     <div className="relative flex flex-col items-center justify-center w-full">
                       <Card className="p-6 border-0 rounded-none shadow-none w-[80%]">
                         <div className="space-y-6">
-
                           {/* Nút Save và Popover nằm cạnh nhau */}
                           <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
                             {/* Nút Popover */}
@@ -3799,7 +3821,11 @@ const DashboardPage = () => {
                                 size="icon"
                                 // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
                                 className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1 transition-all
-                                ${isInitialValuePopoverOpen ? "shadow-md/30" : ""}
+                                ${
+                                  isInitialValuePopoverOpen
+                                    ? "shadow-md/30"
+                                    : ""
+                                }
                                 `}
                                 onClick={() =>
                                   setIsInitialValuePopoverOpen(
@@ -3830,9 +3856,10 @@ const DashboardPage = () => {
 
                                     <div className="w-full flex justify-between">
                                       <div
-                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "url"
-                                          ? "active"
-                                          : "opacity-80"
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "url"
+                                            ? "active"
+                                            : "opacity-80"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3842,9 +3869,10 @@ const DashboardPage = () => {
                                         URL Parameters
                                       </div>
                                       <div
-                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "query"
-                                          ? "active"
-                                          : "opacity-80"
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "query"
+                                            ? "active"
+                                            : "opacity-80"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3854,9 +3882,10 @@ const DashboardPage = () => {
                                         Query Parameters
                                       </div>
                                       <div
-                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "state"
-                                          ? "active"
-                                          : "opacity-80"
+                                        className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                          selectedSection === "state"
+                                            ? "active"
+                                            : "opacity-80"
                                         }`}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3900,10 +3929,13 @@ const DashboardPage = () => {
                                   transition-all duration-300
                                   ${buttonShadow ? "shadow-md/30" : ""}
                                 `}
-                                onClick={() => handleClick(handleSaveInitialValue, setButtonShadow)}
-                                onMouseEnter={() =>
-                                  setSaveTooltipVisible(true)
+                                onClick={() =>
+                                  handleClick(
+                                    handleSaveInitialValue,
+                                    setButtonShadow
+                                  )
                                 }
+                                onMouseEnter={() => setSaveTooltipVisible(true)}
                                 onMouseLeave={() =>
                                   setSaveTooltipVisible(false)
                                 }
@@ -3937,13 +3969,13 @@ const DashboardPage = () => {
                                       try {
                                         const formatted =
                                           endpointData?.data_current &&
-                                            Object.keys(endpointData.data_current)
-                                              .length > 0
+                                          Object.keys(endpointData.data_current)
+                                            .length > 0
                                             ? JSON.stringify(
-                                              endpointData.data_current,
-                                              null,
-                                              2
-                                            )
+                                                endpointData.data_current,
+                                                null,
+                                                2
+                                              )
                                             : "[]";
 
                                         // Prism highlight có format giữ nguyên
@@ -4193,10 +4225,11 @@ const DashboardPage = () => {
                           }, 200);
                         }}
                         placeholder="Enter endpoint path (e.g., /workspace/project/path or https://domain.com/path)"
-                        className={`w-full max-w-[400px] ${newApiCallValidationErrors.targetEndpoint
+                        className={`w-full max-w-[400px] ${
+                          newApiCallValidationErrors.targetEndpoint
                             ? "border-red-500"
                             : ""
-                          }`}
+                        }`}
                       />
 
                       {/* Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
@@ -4285,10 +4318,11 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallMethod}
                       >
                         <SelectTrigger
-                          className={`h-[36px] rounded-md pl-3 pr-1 w-full max-w-[450px] ${newApiCallValidationErrors.method
+                          className={`h-[36px] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                            newApiCallValidationErrors.method
                               ? "border-red-500"
                               : ""
-                            }`}
+                          }`}
                         >
                           <SelectValue
                             placeholder="Select method"
@@ -4413,10 +4447,11 @@ const DashboardPage = () => {
 
                             <div className="w-full flex justify-between">
                               <div
-                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "url"
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                  selectedSection === "url"
                                     ? "active"
                                     : "opacity-80"
-                                  }`}
+                                }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedSection("url");
@@ -4425,10 +4460,11 @@ const DashboardPage = () => {
                                 URL Parameters
                               </div>
                               <div
-                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "query"
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                  selectedSection === "query"
                                     ? "active"
                                     : "opacity-80"
-                                  }`}
+                                }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedSection("query");
@@ -4437,10 +4473,11 @@ const DashboardPage = () => {
                                 Query Parameters
                               </div>
                               <div
-                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${selectedSection === "state"
+                                className={`variable px-1 py-0.5 rounded-md text-xs font-semibold cursor-pointer ${
+                                  selectedSection === "state"
                                     ? "active"
                                     : "opacity-80"
-                                  }`}
+                                }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedSection("state");
@@ -4482,10 +4519,11 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallStatusCondition}
                       >
                         <SelectTrigger
-                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${newApiCallValidationErrors.statusCondition
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                            newApiCallValidationErrors.statusCondition
                               ? "border-red-500"
                               : ""
-                            }`}
+                          }`}
                         >
                           <SelectValue
                             placeholder="Select condition"
@@ -4548,9 +4586,17 @@ const DashboardPage = () => {
         <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
           <span>© Teknix Corp. All rights reserved.</span>
           <div className="flex items-center gap-3">
-            <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert" />
+            <img
+              src={tiktokIcon}
+              alt="tiktok"
+              className="w-4 h-4 dark:invert"
+            />
             <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
-            <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 dark:invert" />
+            <img
+              src={linkedinIcon}
+              alt="linkedin"
+              className="w-4 h-4 dark:invert"
+            />
             <a className="hover:underline font-semibold" href="">
               About
             </a>
@@ -4616,9 +4662,7 @@ const DashboardPage = () => {
               method={"PUT"}
             />
           ) : (
-            <div className="text-center py-6">
-              Loading schema...
-            </div>
+            <div className="text-center py-6">Loading schema...</div>
           )}
         </DialogContent>
       </Dialog>
@@ -4790,16 +4834,19 @@ const DashboardPage = () => {
               <Input
                 id="new-response-name"
                 placeholder="Enter response name"
-                value={responseName}
+                value={newResponseName}
                 onChange={(e) => {
-                  setResponseName(e.target.value);
-                  if (responseNameError) setResponseNameError("");
+                  setNewResponseName(e.target.value);
+                  if (newResponseNameError) setNewResponseNameError("");
                 }}
-                className={`w-full ${responseNameError ? "border-red-500" : ""
-                  }`}
+                className={`w-full ${
+                  newResponseNameError ? "border-red-500" : ""
+                }`}
               />
-              {responseNameError && (
-                <p className="text-red-500 text-sm mt-1">{responseNameError}</p>
+              {newResponseNameError && (
+                <p className="text-red-500 text-sm mt-1">
+                  {newResponseNameError}
+                </p>
               )}
             </div>
 
@@ -4811,11 +4858,11 @@ const DashboardPage = () => {
                 Status Code
               </Label>
               <div className="col-span-5">
-                <Select value={statusCode} onValueChange={setStatusCode}>
-                  <SelectTrigger
-                    id="new-status-code"
-                    className="rounded-md"
-                  >
+                <Select
+                  value={newResponseStatusCode}
+                  onValueChange={setNewResponseStatusCode}
+                >
+                  <SelectTrigger id="new-status-code" className="rounded-md">
                     <SelectValue placeholder="Select status code" />
                   </SelectTrigger>
                   <SelectContent className="max-h-80 overflow-y-auto border rounded-md">
@@ -4834,9 +4881,7 @@ const DashboardPage = () => {
                 <div className="font-medium text-sm">Header</div>
               </div>
               <div className="grid grid-cols-8 items-center">
-                <div className="col-span-3 text-sm">
-                  Content-Type:
-                </div>
+                <div className="col-span-3 text-sm">Content-Type:</div>
                 <div className="text-sm opacity-60 col-span-5 border rounded-md p-2">
                   application/json
                 </div>
@@ -4849,8 +4894,8 @@ const DashboardPage = () => {
                 <Textarea
                   id="new-response-body"
                   placeholder="Enter response body"
-                  value={responseBody}
-                  onChange={(e) => setResponseBody(e.target.value)}
+                  value={newResponseBody}
+                  onChange={(e) => setNewResponseBody(e.target.value)}
                   className="h-32 font-mono pb-16 bg-[#101728] text-white"
                 />
                 {/* Nhóm nút trên cùng bên phải */}
@@ -4863,11 +4908,11 @@ const DashboardPage = () => {
                       e.stopPropagation();
                       try {
                         const formatted = JSON.stringify(
-                          JSON.parse(responseBody || "{}"),
+                          JSON.parse(newResponseBody || "{}"),
                           null,
                           2
                         );
-                        setResponseBody(formatted);
+                        setNewResponseBody(formatted);
                       } catch {
                         toast.error("Invalid JSON format");
                       }
@@ -4885,20 +4930,22 @@ const DashboardPage = () => {
                 <Input
                   id="new-delay"
                   placeholder="0"
-                  value={delay}
+                  value={newResponseDelay}
                   onChange={(e) => {
                     const value = e.target.value;
                     // Chỉ cho phép nhập số
                     if (/^\d*$/.test(value) || value === "") {
-                      setDelay(value);
+                      setNewResponseDelay(value);
                       const error = validateDelay(value);
-                      setDelayError(error);
+                      setNewResponseDelayError(error);
                     }
                   }}
-                  className={delayError ? "border-red-500" : ""}
+                  className={newResponseDelayError ? "border-red-500" : ""}
                 />
-                {delayError && (
-                  <div className="text-red-500 text-xs mt-1">{delayError}</div>
+                {newResponseDelayError && (
+                  <div className="text-red-500 text-xs mt-1">
+                    {newResponseDelayError}
+                  </div>
                 )}
               </div>
             </div>
@@ -4908,14 +4955,15 @@ const DashboardPage = () => {
                 variant="outline"
                 onClick={() => {
                   setIsDialogOpen(false);
-                  // Reset form khi hủy
-                  setSelectedResponse(null);
-                  setResponseName("");
-                  setStatusCode("200");
-                  setResponseBody("");
-                  setDelay("0");
-                  setResponseNameError("");
-                  setDelayError("");
+                  // Reset form riêng - không ảnh hưởng đến response detail bên ngoài
+                  setNewResponseName("");
+                  setNewResponseStatusCode("200");
+                  setNewResponseBody("{}");
+                  setNewResponseDelay("0");
+                  setNewResponseProxyUrl("");
+                  setNewResponseProxyMethod("GET");
+                  setNewResponseNameError("");
+                  setNewResponseDelayError("");
                 }}
               >
                 Cancel
@@ -4951,9 +4999,7 @@ const DashboardPage = () => {
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <h3 className="text-sm font-semibold mb-1">
-                Name
-              </h3>
+              <h3 className="text-sm font-semibold mb-1">Name</h3>
               <Input
                 placeholder="Enter endpoint name"
                 value={editEName}
@@ -4963,9 +5009,7 @@ const DashboardPage = () => {
 
             {/* Path */}
             <div>
-              <h3 className="text-sm font-semibold mb-1">
-                Path
-              </h3>
+              <h3 className="text-sm font-semibold mb-1">Path</h3>
               <Input
                 placeholder="Enter endpoint path"
                 value={editEPath}
@@ -4974,13 +5018,9 @@ const DashboardPage = () => {
                 }}
               />
             </div>
-
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenEdit(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenEdit(false)}>
               Cancel
             </Button>
             <Button
