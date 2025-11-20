@@ -810,7 +810,14 @@ export default function ProjectPage() {
                               project={p}
                               folders={folders}
                               endpoints={endpoints}
-                              onClick={() => navigate(`/dashboard/${p.id}`)}
+                              onClick={() => {
+                                localStorage.setItem("folder_active_tab", "folders");
+                                localStorage.setItem("logs_page", 1);
+                                localStorage.setItem("logs_search", "");
+                                localStorage.setItem("logs_timeSpan", "Recent logs");
+                                localStorage.setItem("logs_limit", 5);
+                                navigate(`/dashboard/${p.id}`);
+                              }}
                               onView={() => {
                                 setSelectedProject(p);
                                 setOpenDetail(true);
