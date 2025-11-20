@@ -172,11 +172,23 @@ const DashboardPage = () => {
   const [wsCondition, setWsCondition] = useState(0);
   // Thêm state để lưu trữ giá trị ban đầu của response
   const [initialResponseValues, setInitialResponseValues] = useState({});
-
+  // Thêm state để lưu giá trị ban đầu của data default
+  const [initialDataDefault, setInitialDataDefault] = useState(null);
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+
+  // Thêm hàm kiểm tra thay đổi cho data default
+  const hasDataDefaultChanged = () => {
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    if (initialDataDefault === null) {
+      return true;
+    }
+
+    // So sánh giá trị hiện tại với giá trị ban đầu
+    return tempDataDefaultString !== initialDataDefault;
+  };
 
   // Sửa lại hàm hasResponseChanged để chính xác hơn cho cả Rules tab
   const hasResponseChanged = () => {
@@ -2733,8 +2745,14 @@ const DashboardPage = () => {
     }
   }, [selectedResponse]);
 
-  // Hàm xử lý khi lưu initial value
+  // Sửa lại hàm handleSaveInitialValue để kiểm tra thay đổi
   const handleSaveInitialValue = () => {
+    // Kiểm tra thay đổi trước khi lưu
+    if (!hasDataDefaultChanged()) {
+      toast.info("No changes detected. Please modify the data before saving.");
+      return;
+    }
+
     const path = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     )?.path;
@@ -2769,6 +2787,8 @@ const DashboardPage = () => {
         .then((finalData) => {
           if (finalData) {
             setEndpointData(finalData);
+            // Cập nhật giá trị ban đầu sau khi lưu thành công
+            setInitialDataDefault(tempDataDefaultString);
             toast.success("Initial value updated successfully!");
           }
         })
@@ -2803,6 +2823,26 @@ const DashboardPage = () => {
       setTempDataDefault([]);
     }
   }, [endpointData]);
+
+  // Thêm useEffect để lưu giá trị ban đầu của data default khi endpointData thay đổi
+  useEffect(() => {
+    if (endpointData && endpointData.data_default) {
+      const initialValueString = JSON.stringify(
+        endpointData.data_default,
+        null,
+        2
+      );
+      setTempDataDefaultString(initialValueString);
+      setTempDataDefault(endpointData.data_default);
+      // Lưu giá trị ban đầu
+      setInitialDataDefault(initialValueString);
+    } else if (endpointData && !endpointData.data_default) {
+      setTempDataDefaultString("[]");
+      setTempDataDefault([]);
+      setInitialDataDefault("[]");
+    }
+  }, [endpointData]);
+
   // Thêm UI loading
   if (isLoading) {
     return (
@@ -4084,6 +4124,11 @@ const DashboardPage = () => {
                                   btn-primary hover:opacity-80 rounded-full shadow-none my-1
                                   transition-all duration-300
                                   ${buttonShadow ? "shadow-md/30" : ""}
+                                  ${
+                                    hasDataDefaultChanged()
+                                      ? "bg-[#FBEB6B] hover:bg-[#FDE047]"
+                                      : ""
+                                  }
                                 `}
                                 onClick={() =>
                                   handleClick(

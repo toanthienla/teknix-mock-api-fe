@@ -39,6 +39,77 @@ export const SchemaBodyEditor = ({
   // Thêm state để control tooltip visibility trong ApiCallEditor
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
 
+  // Thêm state để lưu giá trị ban đầu của schema fields
+  const [initialSchemaFields, setInitialSchemaFields] = useState([]);
+
+  // Thêm hàm kiểm tra thay đổi
+  const hasSchemaChanged = () => {
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    if (initialSchemaFields.length === 0) {
+      return true;
+    }
+
+    // So sánh các field đã chọn
+    const currentSelectedFields = schemaFields
+      .filter((field) => !field.isDefault)
+      .map((field) => field.name)
+      .sort();
+
+    const initialSelectedFields = initialSchemaFields
+      .filter((field) => !field.isDefault)
+      .map((field) => field.name)
+      .sort();
+
+    return (
+      JSON.stringify(currentSelectedFields) !==
+      JSON.stringify(initialSelectedFields)
+    );
+  };
+
+  // Sync schemaFields với endpointSchema khi endpointSchema thay đổi
+  useEffect(() => {
+    if (endpointSchema?.schema) {
+      let fieldsConfig = [];
+
+      // Xác định danh sách field từ endpointSchema
+      let fieldNames = [];
+
+      if (method === "GET" && endpointSchema.schema.fields) {
+        // Với GET, schema.fields là mảng tên field
+        fieldNames = [...endpointSchema.schema.fields];
+      } else if (
+        (method === "POST" || method === "PUT") &&
+        endpointSchema.schema
+      ) {
+        // Với POST/PUT, schema là object với key là tên field
+        fieldNames = Object.keys(endpointSchema.schema);
+      }
+
+      // Đảm bảo "id" luôn được bao gồm
+      if (!fieldNames.includes("id")) {
+        fieldNames = ["id", ...fieldNames];
+      }
+
+      // Map các field thành cấu trúc internal
+      fieldsConfig = fieldNames.map((name, index) => {
+        // Tìm config từ availableFields (base schema)
+        const fieldConfig = availableFields.find((f) => f.name === name);
+
+        return {
+          id: `field-${index}`,
+          name,
+          type: fieldConfig ? fieldConfig.type : "string",
+          required: fieldConfig ? fieldConfig.required : false,
+          isDefault: name === "id",
+        };
+      });
+
+      setSchemaFields(fieldsConfig);
+      // Lưu giá trị ban đầu sau khi dữ liệu được load
+      setInitialSchemaFields(fieldsConfig);
+    }
+  }, [endpointSchema, method, availableFields]);
+
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -338,6 +409,14 @@ export const SchemaBodyEditor = ({
   };
 
   const handleSave = async () => {
+    // Kiểm tra thay đổi trước khi lưu
+    if (!hasSchemaChanged()) {
+      toast.info(
+        "No changes detected. Please modify the schema before saving."
+      );
+      return;
+    }
+
     // Chuẩn bị schema và gọi callback onSave từ parent
     const newSchema = prepareSchema();
 
@@ -346,6 +425,9 @@ export const SchemaBodyEditor = ({
 
       // Tăng refreshTrigger để trigger useEffect fetch lại endpoint schema
       setRefreshTrigger((prev) => prev + 1);
+
+      // Cập nhật giá trị ban đầu sau khi lưu thành công
+      setInitialSchemaFields([...schemaFields]);
 
       // Hiển thị thông báo thành công
       // toast.success("Schema updated and tags refreshed successfully!");
@@ -364,6 +446,7 @@ export const SchemaBodyEditor = ({
               size="icon"
               className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full my-1
                 transition-all ${buttonShadow ? "shadow-md/30" : ""}
+                ${hasSchemaChanged() ? "bg-[#FBEB6B] hover:bg-[#FDE047]" : ""}
               `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
               onMouseEnter={() => setSaveTooltipVisible(true)}
@@ -469,7 +552,7 @@ export const SchemaBodyEditor = ({
             );
           })}
 
-{/* Xóa thông báo khi không có kết quả search */}
+          {/* Xóa thông báo khi không có kết quả search */}
           {/* {searchTerm && getFilteredFields().length === 0 && (
             <div className="text-center py-4 text-gray-500">
               No fields found matching "{searchTerm}"
