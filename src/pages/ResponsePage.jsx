@@ -2001,11 +2001,10 @@ const DashboardPage = () => {
     }
   };
 
-  const handleDeleteResponse = () => {
-    if (!selectedResponse) return;
-
-    // Thêm kiểm tra response mặc định
-    if (selectedResponse.is_default) {
+  // Thêm hàm mới để xóa response cụ thể
+  const handleDeleteSpecificResponse = (response) => {
+    // Kiểm tra response có phải là default không
+    if (response.is_default) {
       toast.warning("Cannot delete default response");
       return;
     }
@@ -2015,7 +2014,7 @@ const DashboardPage = () => {
     );
     if (!confirmed) return;
 
-    fetch(`${API_ROOT}/endpoint_responses/${selectedResponse.id}`, {
+    fetch(`${API_ROOT}/endpoint_responses/${response.id}`, {
       method: "DELETE",
       credentials: "include",
     })
@@ -3128,7 +3127,7 @@ const DashboardPage = () => {
                               </span>
                             )}
 
-                            {/* Nút Trash chỉ hiện khi hover */}
+                            {/* Nút Trash chỉ hiện when hover */}
                             {!isStateful && !status.isDefault && (
                               <Button
                                 variant="ghost"
@@ -3136,12 +3135,13 @@ const DashboardPage = () => {
                                 className="h-6 w-6 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  // Tìm response tương ứng với status đang được click
                                   const response = endpointResponses.find(
                                     (r) => r.id === status.id
                                   );
                                   if (response) {
-                                    handleResponseSelect(response);
-                                    handleDeleteResponse();
+                                    // Xóa trực tiếp response này mà không cần select trước
+                                    handleDeleteSpecificResponse(response);
                                   }
                                 }}
                                 title="Delete response"
