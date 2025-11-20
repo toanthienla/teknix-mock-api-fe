@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -35,16 +35,9 @@ export const ApiCallEditor = ({
   const [jsonStrings, setJsonStrings] = useState({});
   const [jsonErrors, setJsonErrors] = useState({});
 
-  // Thêm state cho popover
-  const [isRequestBodyPopoverOpen, setIsRequestBodyPopoverOpen] =
-    useState(false);
-  const [selectedSection, setSelectedSection] = useState("url");
-  const requestBodyPopoverRef = useRef(null);
-
   // Thêm state để control tooltip visibility trong ApiCallEditor
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
-  const [templateTooltipVisible, setTemplateTooltipVisible] = useState(false);
 
   // ✅ THÊM: State để lưu selected endpoint ID cho mỗi call
   const [selectedEndpointIds, setSelectedEndpointIds] = useState({});
@@ -81,49 +74,6 @@ export const ApiCallEditor = ({
 
     setTimeout(() => setShadow(false), duration);
   }
-
-  // Cập nhật useEffect để handle click outside popover
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        requestBodyPopoverRef.current &&
-        !requestBodyPopoverRef.current.contains(event.target)
-      ) {
-        setIsRequestBodyPopoverOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Hàm lấy text mẫu dựa trên section được chọn
-  const getTemplateText = () => {
-    switch (selectedSection) {
-      case "url":
-        return {
-          template: "{{params.<param>}}",
-          description: "Get values from URL path parameters",
-        };
-      case "query":
-        return {
-          template: "{{query.<param>}}",
-          description: "Get values from query string parameters",
-        };
-      case "state":
-        return {
-          template: "{{state.<param>}}",
-          description: "Get values from project state",
-        };
-      default:
-        return {
-          template: "{{params.<param>}}",
-          description: "Get values from URL path parameters",
-        };
-    }
-  };
 
   // ✅ THÊM: Hàm tìm ID nhỏ nhất trong nextCalls
   const getMinimumId = (calls) => {
@@ -177,18 +127,6 @@ export const ApiCallEditor = ({
         ];
       default:
         return default500Codes;
-    }
-  };
-
-  // Thêm hàm chèn template cho Request Body (copy to clipboard)
-  const insertRequestBodyTemplate = async (template) => {
-    try {
-      await navigator.clipboard.writeText(template);
-      toast.success("Template copied to clipboard!");
-      setIsRequestBodyPopoverOpen(false);
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      toast.error("Failed to copy template to clipboard");
     }
   };
 
@@ -1206,9 +1144,7 @@ export const ApiCallEditor = ({
                       minHeight: "124px",
                       maxHeight: "200px",
                       overflow: "auto",
-                      border: jsonErrors[index]
-                        ? "1px solid #ef4444"
-                        : "",
+                      border: jsonErrors[index] ? "1px solid #ef4444" : "",
                       borderRadius: "0.375rem",
                       backgroundColor: "#101728",
                       color: "white",
@@ -1318,16 +1254,6 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
       </div>
     );
   };
-
-  const [buttonShadow, setButtonShadow] = useState(false);
-
-  function handleClick(callback, setShadow, duration = 50) {
-    setShadow(true);
-
-    callback();
-
-    setTimeout(() => setShadow(false), duration);
-  }
 
   const validateRule = (row) => {
     const newErrors = {};
