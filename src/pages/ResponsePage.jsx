@@ -190,15 +190,15 @@ const DashboardPage = () => {
     return tempDataDefaultString !== initialDataDefault;
   };
 
-  // Sửa lại hàm hasResponseChanged để chính xác hơn
+  // Sửa lại hàm hasResponseChanged để chính xác hơn cho cả stateful mode
   const hasResponseChanged = () => {
     if (!selectedResponse) {
       return false;
     }
 
-    // Nếu chưa có giá trị ban đầu, coi như KHÔNG có thay đổi (không cho phép save)
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
     if (!initialResponseValues[selectedResponse.id]) {
-      return false; // THAY ĐỔI TỪ true THÀNH false
+      return true;
     }
 
     const currentValues = {
@@ -2359,6 +2359,7 @@ const DashboardPage = () => {
           setProxyMethod(data.proxy_method || "GET");
           setResponseCondition(data.condition || {});
 
+          // ✅ SỬA: Lưu giá trị ban đầu NGAY LẬP TỨC sau khi fetch data, KHÔNG dùng setTimeout
           setInitialResponseValues((prev) => ({
             ...prev,
             [response.id]: {
@@ -2368,7 +2369,7 @@ const DashboardPage = () => {
               delay: data.delay_ms?.toString() || "0",
               proxyUrl: data.proxy_url || "",
               proxyMethod: data.proxy_method || "GET",
-              condition: JSON.stringify(data.condition || {}),
+              condition: JSON.stringify(data.condition || {}), // Thêm condition
             },
           }));
         }
