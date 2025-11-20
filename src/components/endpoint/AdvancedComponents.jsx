@@ -50,6 +50,24 @@ export const ApiCallEditor = ({
   const [endpointValidationErrors, setEndpointValidationErrors] = useState({});
   const [statusConditionErrors, setStatusConditionErrors] = useState({});
 
+  // Thêm state để lưu trữ giá trị ban đầu của nextCalls
+  const [initialNextCalls, setInitialNextCalls] = useState([]);
+
+  // Thêm hàm kiểm tra thay đổi
+  const hasChanges = () => {
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    if (initialNextCalls.length === 0) {
+      return true;
+    }
+
+    // So sánh nextCalls hiện tại với giá trị ban đầu
+    try {
+      return JSON.stringify(nextCalls) !== JSON.stringify(initialNextCalls);
+    } catch {
+      return true;
+    }
+  };
+
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
     if (!visible) return null;
@@ -467,7 +485,7 @@ export const ApiCallEditor = ({
     }
   };
 
-  // ✅ CẬP NHẬT: Reset status condition của call tiếp theo khi method thay đổi
+  // Cập nhật hàm handleNextCallChange để đảm bảo hasChanges hoạt động chính xác
   const handleNextCallChange = (index, field, value) => {
     const updatedCalls = [...nextCalls];
     updatedCalls[index] = {
@@ -718,8 +736,16 @@ export const ApiCallEditor = ({
     };
   }, [isTargetEndpointSuggestionsOpen]);
 
-  // ✅ CẬP NHẬT: Logic save với full target endpoints
+  // Cập nhật hàm handleSave để kiểm tra thay đổi
   const handleSave = () => {
+    // Kiểm tra thay đổi trước khi lưu
+    if (!hasChanges()) {
+      toast.info(
+        "No changes detected. Please modify the API calls before saving."
+      );
+      return;
+    }
+
     // Kiểm tra tất cả JSON trước khi lưu
     if (!validateAllJson()) {
       return; // Không tiếp tục nếu có lỗi JSON
@@ -763,6 +789,9 @@ export const ApiCallEditor = ({
         toast.success("Advanced configuration saved successfully!");
         if (onSave) onSave();
 
+        // Cập nhật giá trị ban đầu sau khi save thành công
+        setInitialNextCalls([...nextCalls]);
+
         // Cập nhật savedCalls sau khi save thành công
         const successfullySavedCalls = nextCalls.filter((call) => call.id);
         setSavedCalls(successfullySavedCalls);
@@ -772,6 +801,14 @@ export const ApiCallEditor = ({
         toast.error(error.message);
       });
   };
+
+  // Cập nhật useEffect để lưu giá trị ban đầu khi nextCalls thay đổi
+  useEffect(() => {
+    if (nextCalls.length > 0 && initialNextCalls.length === 0) {
+      setInitialNextCalls([...nextCalls]);
+    }
+  }, [nextCalls]);
+
   // Cập nhật hàm validateTargetEndpoints khi nextCalls thay đổi
   useEffect(() => {
     validateTargetEndpointsForDisplay();
@@ -851,6 +888,7 @@ export const ApiCallEditor = ({
               size="icon"
               className={`h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1
                 transition-all ${buttonShadow ? "shadow-md/30" : ""}
+                ${hasChanges() ? "bg-[#FBEB6B] hover:bg-[#FDE047]" : ""}
               `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
               onMouseEnter={() => setSaveTooltipVisible(true)}
