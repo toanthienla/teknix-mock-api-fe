@@ -975,7 +975,7 @@ export default function FolderPage() {
 
         const duplicateSF = statefulArr.find(
           (ep) =>
-            ep.origin_id !== id &&
+            ep.endpoint_id !== id &&
             String(ep.folder_id) === String(selectedFolder?.id) &&
             ep.name.toLowerCase() === name.toLowerCase()
         );
