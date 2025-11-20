@@ -1098,8 +1098,10 @@ export default function FolderPage() {
 
       if (!res.ok) throw new Error("Failed to update endpoint");
 
+      const updatedEndpoint = await res.json();
+
       setEndpoints((prev) =>
-        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+        prev.map((ep) => (ep.id === editId ? updatedEndpoint : ep))
       );
 
       setOpenEdit(false);
@@ -1729,6 +1731,7 @@ export default function FolderPage() {
                                         onChange={(e) => {
                                           const value = e.target.value;
                                           setSearchTerm(value);
+                                          setPage(1);
                                           localStorage.setItem("logs_search", value);
                                         }}
                                       />
@@ -1741,6 +1744,7 @@ export default function FolderPage() {
                                       value={timeFilter}
                                       onValueChange={(value) => {
                                         setTimeFilter(value);
+                                        setPage(1);
                                         localStorage.setItem("logs_timeSpan", value);
                                       }}
                                     >
@@ -1900,7 +1904,7 @@ export default function FolderPage() {
                                 className="w-10 h-7 text-center text-sm shadow-none"
                               />
 
-                              <span className="text-sm opacity-80">/ {totalPages || 0}</span>
+                              <span className="text-sm mr-1">/ {totalPages || 0}</span>
                             </div>
 
                             <Button
