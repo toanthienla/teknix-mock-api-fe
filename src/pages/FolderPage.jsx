@@ -340,6 +340,7 @@ export default function FolderPage() {
   const [endpoints, setEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filtersReady, setFiltersReady] = useState(false);
 
   const [currentWsId, setCurrentWsId] = useState(
     () => localStorage.getItem("currentWorkspace") || null
@@ -434,6 +435,20 @@ export default function FolderPage() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    setSearchTerm(localStorage.getItem("logs_search") || "");
+    setTimeFilter(localStorage.getItem("logs_timeSpan") || "Recent logs");
+    setRowsPerPage(Number(localStorage.getItem("logs_limit") || 5));
+    setPage(Number(localStorage.getItem("logs_page") || 1));
+
+    setFiltersReady(true);
+  }, []);
+
+  // useEffect(() => {
+  //   fetchLogs();
+  //   toast.info("Logs loaded successfully");
+  // }, [page, rowsPerPage, searchTerm, timeFilter]);
 
   // fetch workspaces + projects + endpoints
   useEffect(() => {
@@ -556,10 +571,12 @@ export default function FolderPage() {
   };
 
   useEffect(() => {
-    if (activeTab === "logs") {
-      fetchLogs(projectId, page, rowsPerPage);
-    }
-  }, [activeTab, page, rowsPerPage, projectId]);
+    if (!filtersReady) return;
+    if (!projectId) return;
+    if (!endpoints || endpoints.length === 0) return;
+
+    fetchLogs(projectId, page, rowsPerPage);
+  }, [projectId, endpoints, page, rowsPerPage, searchTerm, timeFilter]);
 
   const fetchLogs = async (pid, page = 1, limit = 10) => {
     if (!pid) return;
@@ -586,6 +603,7 @@ export default function FolderPage() {
 
       // Fetch logs
       const res = await fetch(url, { credentials: "include" });
+      // toast.info("Logs loaded successfully");
 
       if (res.status === 401) {
         console.warn("Unauthorized (401) - rechecking user login...");
@@ -601,10 +619,11 @@ export default function FolderPage() {
       if (!raw || !raw.items || raw.items.length === 0) {
         toast.info("Out of logs!");
         setLogs([]);
+        setTotalPages(raw.totalPages || 0);
         return;
       }
 
-      setTotalPages(raw.totalPages || 1);
+      setTotalPages(raw.totalPages || 0);
       setPage(raw.page || 1);
       const logsArray = raw.items;
 
@@ -675,14 +694,14 @@ export default function FolderPage() {
     }
   };
 
-  useEffect(() => {
-    if (activeTab !== "logs") return;
-
-    // Reset về page 1 khi filter thay đổi
-    setPage(1);
-
-    fetchLogs(projectId, 1, rowsPerPage);
-  }, [searchTerm, timeFilter]);
+  // useEffect(() => {
+  //   if (activeTab !== "logs") return;
+  //
+  //   // Reset về page 1 khi filter thay đổi
+  //   setPage(1);
+  //
+  //   fetchLogs(projectId, 1, rowsPerPage);
+  // }, [searchTerm, timeFilter]);
 
   // -------------------- Folder --------------------
   const handleDeleteFolder = async (folderId) => {
@@ -1682,22 +1701,32 @@ export default function FolderPage() {
                                         placeholder="Search logs..."
                                         className="pl-6 pr-3 h-9 text-sm border-none shadow-none w-full"
                                         value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          setSearchTerm(value);
+                                          localStorage.setItem("logs_search", value);
+                                        }}
                                       />
                                     </div>
                                   </div>
 
                                   {/* Right: Select */}
                                   <div className="w-1/6 text-right">
-                                    <Select value={timeFilter} onValueChange={setTimeFilter}>
+                                    <Select
+                                      value={timeFilter}
+                                      onValueChange={(value) => {
+                                        setTimeFilter(value);
+                                        localStorage.setItem("logs_timeSpan", value);
+                                      }}
+                                    >
                                       <SelectTrigger className="w-full border-none shadow-none">
                                         <SelectValue placeholder="Recent logs" />
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="Recent logs">Recent logs</SelectItem>
-                                        <SelectItem value="Last 24 hours">Last 24 hours</SelectItem>
-                                        <SelectItem value="Last 7 days">Last 7 days</SelectItem>
-                                        <SelectItem value="Last 30 days">Last 30 days</SelectItem>
+                                        <SelectItem value="24h">Last 24 hours</SelectItem>
+                                        <SelectItem value="7d">Last 7 days</SelectItem>
+                                        <SelectItem value="30d">Last 30 days</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
@@ -1778,7 +1807,11 @@ export default function FolderPage() {
                               variant="outline"
                               size="sm"
                               disabled={page <= 1}
-                              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                              onClick={() => {
+                                const newPage = Math.max(page - 1, 1);
+                                setPage(newPage);
+                                localStorage.setItem("logs_page", newPage);
+                              }}
                             >
                               <ChevronLeftIcon className="w-4 h-4" />
                             </Button>
@@ -1842,14 +1875,18 @@ export default function FolderPage() {
                                 className="w-10 h-7 text-center text-sm shadow-none"
                               />
 
-                              <span className="text-sm opacity-80">/ {totalPages || 1}</span>
+                              <span className="text-sm opacity-80">/ {totalPages || 0}</span>
                             </div>
 
                             <Button
                               variant="outline"
                               size="sm"
                               disabled={page >= totalPages}
-                              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                              onClick={() => {
+                                const newPage = Math.min(page + 1, totalPages);
+                                setPage(newPage);
+                                localStorage.setItem("logs_page", newPage);
+                              }}
                             >
                               <ChevronRightIcon className="w-4 h-4" />
                             </Button>
@@ -1862,7 +1899,8 @@ export default function FolderPage() {
                               onValueChange={(val) => {
                                 const newLimit = Number(val);
                                 setRowsPerPage(newLimit);
-                                setPage(1);
+                                localStorage.setItem("logs_limit", newLimit);
+                                // setPage(1);
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
