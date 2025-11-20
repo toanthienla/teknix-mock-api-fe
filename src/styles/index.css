@@ -164,27 +164,29 @@ button:hover,
 }
 
 /* === Custom JSON Viewer === */
+.custom-json-editor {
+    background-color: var(--custom-json-disabled-bg);
+}
 .custom-json-editor .token.property {
-    color: #0051D9 !important; /* key JSON */
+    color: var(--custom-json-disabled-key) !important; /* key JSON */
 }
 
 .custom-json-editor .token.string {
-    color: #4093FF !important; /* value JSON */
+    color: var(--custom-json-disabled-value) !important; /* value JSON */
 }
 
 .custom-json-editor .token.number,
 .custom-json-editor .token.boolean,
 .custom-json-editor .token.null {
-    color: #4093FF !important; /* các giá trị khác như số, true/false/null */
+    color: var(--custom-json-disabled-value) !important; /* các giá trị khác như số, true/false/null */
 }
 
-/* Đảm bảo dấu : luôn có màu trắng */
 .custom-json-editor .token.punctuation,
 .custom-json-editor .token.operator,
 .custom-json-editor span[style*=":"],
 .custom-json-editor .token.punctuation:has(+ .token.string),
 .custom-json-editor .token.string + .token.punctuation {
-    color: #000000 !important;
+    color: var(--link) !important;
     font-feature-settings: normal !important;
     font-variant-ligatures: none !important;
     content: none !important;

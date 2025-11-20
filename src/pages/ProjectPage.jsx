@@ -220,7 +220,7 @@ export default function ProjectPage() {
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
         setProjects(sorted);
       })
@@ -828,18 +828,18 @@ export default function ProjectPage() {
                           </TableRow>
                         )}
 
-                        {/* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== */}
-                        {Array.from({
-                          length: Math.max(
-                            0,
-                            rowsPerPage - currentPageProjects.length
-                          ),
-                        }).map((_, i) => (
-                          <TableRow
-                            key={`empty-${i}`}
-                            className="h-[64px] border-none"
-                          ></TableRow>
-                        ))}
+                        {/*/!* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== *!/*/}
+                        {/*{Array.from({*/}
+                        {/*  length: Math.max(*/}
+                        {/*    0,*/}
+                        {/*    rowsPerPage - currentPageProjects.length*/}
+                        {/*  ),*/}
+                        {/*}).map((_, i) => (*/}
+                        {/*  <TableRow*/}
+                        {/*    key={`empty-${i}`}*/}
+                        {/*    className="h-[64px] border-none"*/}
+                        {/*  ></TableRow>*/}
+                        {/*))}*/}
                       </TableBody>
                     </Table>
                   </div>
