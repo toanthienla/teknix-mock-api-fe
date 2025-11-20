@@ -3955,7 +3955,7 @@ const DashboardPage = () => {
                               <div className="relative">
                                 {/* JSON Viewer (read-only, có highlight + format) */}
                                 <div
-                                  className="custom-json-editor  font-mono text-sm h-60 border dark:border-none rounded-md p-2 overflow-auto"
+                                  className="custom-json-editor font-mono text-sm h-60 border dark:border-none rounded-md p-2 overflow-auto"
                                   dangerouslySetInnerHTML={{
                                     __html: (() => {
                                       try {
