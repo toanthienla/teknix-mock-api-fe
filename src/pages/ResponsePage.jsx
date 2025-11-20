@@ -52,7 +52,7 @@ import linkedinIcon from "@/assets/light/linkedin.svg";
 import dot_backgroundLight from "@/assets/light/dot_rows.svg";
 import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
 import hashtagIcon from "@/assets/light/hashtag.svg";
-import searchIcon from "@/assets/light/search.svg";
+//import searchIcon from "@/assets/light/search.svg";
 import editIcon from "@/assets/light/editName.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
@@ -1446,13 +1446,15 @@ const DashboardPage = () => {
   // Thêm state để lưu condition
   const [responseCondition, setResponseCondition] = useState({});
 
-  // Thêm state cho search functionality
-  const [searchTerm, setSearchTerm] = useState("");
+  // Xóa state searchTerm
+  // const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter statusData dựa trên search term
-  const filteredStatusData = statusData.filter((status) =>
-    status.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Xóa filteredStatusData và sử dụng trực tiếp statusData
+  // const filteredStatusData = statusData.filter(
+  //   (status) =>
+  //     status.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     status.code.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -2808,7 +2810,6 @@ const DashboardPage = () => {
                   ]
               : []
           }
-          onSearch={setSearchTerm}
           onNewResponse={isStateful ? undefined : handleNewResponse}
           showNewProjectButton={false}
           showNewResponseButton={!isStateful}
@@ -3022,7 +3023,7 @@ const DashboardPage = () => {
                         </Tooltip>
                       </div>
                     )}
-                    <div className="flex items-center rounded-lg border px-1.5 py-1 w-[146px] h-[26px]">
+                    {/* <div className="flex items-center rounded-lg border px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <img
                           src={searchIcon}
@@ -3036,7 +3037,7 @@ const DashboardPage = () => {
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -3044,8 +3045,9 @@ const DashboardPage = () => {
               {/* Response Configuration Table */}
               <div className="square-lg border overflow-hidden rounded-b-lg">
                 <div className="overflow-y-auto max-h-[400px]">
-                  {filteredStatusData.length > 0 ? (
-                    filteredStatusData.map((status, index) => {
+                  {statusData.length > 0 ? (
+                    statusData.map((status, index) => {
+                      // Sử dụng statusData thay vì filteredStatusData
                       // Xác định màu sắc dựa trên status code
                       let statusColor = "#1C1C1C";
                       const statusCode = status.code.toString();
@@ -3068,28 +3070,22 @@ const DashboardPage = () => {
                           className={`group response-card flex items-center justify-between p-3 cursor-pointer ${
                             selectedResponse?.id === status.id ? "active" : ""
                           } ${
-                            index === filteredStatusData.length - 1
+                            index === statusData.length - 1 // Sử dụng statusData thay vì filteredStatusData
                               ? "border-b-0"
                               : ""
                           }`}
-                          draggable={!isStateful && !searchTerm}
+                          draggable={!isStateful}
                           onDragStart={
-                            !isStateful && !searchTerm
+                            !isStateful
                               ? (e) => handleDragStart(e, index)
                               : undefined
                           }
-                          onDragOver={
-                            !isStateful && !searchTerm
-                              ? handleDragOver
-                              : undefined
-                          }
+                          onDragOver={!isStateful ? handleDragOver : undefined}
                           onDragEnd={
-                            !isStateful && !searchTerm
-                              ? () => setDraggedItem(null)
-                              : undefined
+                            !isStateful ? () => setDraggedItem(null) : undefined
                           }
                           onDrop={
-                            !isStateful && !searchTerm
+                            !isStateful
                               ? (e) => handleDrop(e, index)
                               : undefined
                           }
@@ -3101,8 +3097,8 @@ const DashboardPage = () => {
                           }}
                         >
                           <div className="flex items-center gap-1">
-                            {/* Icon GripVertical chỉ hiện khi hover */}
-                            {!isStateful && !searchTerm && (
+                            {/* Icon GripVertical chỉ hiện when hover */}
+                            {!isStateful && (
                               <GripVertical
                                 className="h-4 w-4 text-gray-400 dark:text-white cursor-move opacity-0
                                 group-hover:opacity-100 transition-opacity"
@@ -3155,11 +3151,7 @@ const DashboardPage = () => {
                     })
                   ) : (
                     <div className="flex flex-col items-center justify-center p-8 text-gray-500">
-                      <div className="text-sm">
-                        {searchTerm
-                          ? "No responses found matching your search"
-                          : "No responses available"}
-                      </div>
+                      <div className="text-sm">No responses available</div>
                     </div>
                   )}
                 </div>
@@ -3963,7 +3955,7 @@ const DashboardPage = () => {
                               <div className="relative">
                                 {/* JSON Viewer (read-only, có highlight + format) */}
                                 <div
-                                  className="custom-json-editor  font-mono text-sm h-60 border dark:border-none rounded-md p-2 overflow-auto"
+                                  className="custom-json-editor font-mono text-sm h-60 border dark:border-none rounded-md p-2 overflow-auto"
                                   dangerouslySetInnerHTML={{
                                     __html: (() => {
                                       try {

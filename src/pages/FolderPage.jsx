@@ -627,61 +627,27 @@ export default function FolderPage() {
 
       const endpointMap = new Map(endpoints.map((e) => [String(e.id), e]));
 
-      const enrichedLogs = await Promise.all(
-        logsArray.map(async (log) => {
-          if (!log || !log.endpoint_id)
-            return { ...log, project_id: log?.project_id ?? pid };
+      const enrichedLogs = logsArray.map((log) => {
+        if (!log) return log;
 
-          const endpoint = endpointMap.get(String(log.endpoint_id));
-          const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
+        const endpoint = endpointMap.get(String(log.endpoint_id));
+        const endpointName = endpoint ? endpoint.name : "Unknown endpoint";
 
-          try {
-            const r2 = await fetch(
-              `${API_ROOT}/endpoint_responses?endpoint_id=${log.endpoint_id}`,
-              { credentials: "include" }
-            );
-            if (!r2.ok) throw new Error("Responses not ok");
-            const payload = await r2.json();
-            const responses = Array.isArray(payload)
-              ? payload
-              : Array.isArray(payload.items)
-                ? payload.items
-                : Array.isArray(payload.data)
-                  ? payload.data
-                  : [];
+        // Ưu tiên:
+        // 1. endpoint_response_name (stateless)
+        // 2. stateful_endpoint_response_name (stateful)
+        // 3. endpoint name fallback
+        const responseName =
+          log.endpoint_response_name ||
+          log.stateful_endpoint_response_name ||
+          endpointName;
 
-            let responseIdToMatch = null;
-
-            // If endpoint_response_id exists → stateless
-            if (log.endpoint_response_id !== null && log.endpoint_response_id !== undefined) {
-              responseIdToMatch = log.endpoint_response_id;
-            // Otherwise use stateful_endpoint_response_id
-            } else {
-              responseIdToMatch = log.stateful_endpoint_response_id;
-            }
-
-            // Find matched response
-            const matched = responses.find(
-              (r) => String(r.id) === String(responseIdToMatch)
-            );
-
-            return {
-              ...log,
-              project_id: endpoint ? endpoint.project_id : log.project_id ?? pid,
-              endpointResponseName: matched
-                ? `${endpointName} - ${matched.name}`
-                : endpointName,
-            };
-          } catch (err) {
-            console.error("Error fetching endpoint_responses:", err);
-            return {
-              ...log,
-              project_id: endpoint ? endpoint.project_id : log.project_id ?? pid,
-              endpointResponseName: endpointName,
-            };
-          }
-        })
-      );
+        return {
+          ...log,
+          project_id: endpoint ? endpoint.project_id : log.project_id ?? pid,
+          endpointResponseName: `${endpointName} - ${responseName}`,
+        };
+      });
 
       setLogs(enrichedLogs);
     } catch (err) {

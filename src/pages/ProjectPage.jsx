@@ -579,6 +579,7 @@ export default function ProjectPage() {
         setProjects((prev) =>
           prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
         );
+        setSelectedProject(updatedProject);
         setOpenEditProject(false);
         toast.success("Project updated successfully");
       })
