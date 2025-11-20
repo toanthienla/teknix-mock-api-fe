@@ -190,15 +190,15 @@ const DashboardPage = () => {
     return tempDataDefaultString !== initialDataDefault;
   };
 
-  // Sửa lại hàm hasResponseChanged để chính xác hơn cho cả Rules tab
+  // Sửa lại hàm hasResponseChanged để chính xác hơn
   const hasResponseChanged = () => {
     if (!selectedResponse) {
       return false;
     }
 
-    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    // Nếu chưa có giá trị ban đầu, coi như KHÔNG có thay đổi (không cho phép save)
     if (!initialResponseValues[selectedResponse.id]) {
-      return true;
+      return false; // THAY ĐỔI TỪ true THÀNH false
     }
 
     const currentValues = {
@@ -2298,7 +2298,7 @@ const DashboardPage = () => {
     setDraggedItem(null);
   };
 
-  // Cập nhật lại hàm handleResponseSelect để đảm bảo lưu giá trị ban đầu chính xác
+  // Sửa lại hàm handleResponseSelect để đảm bảo lưu giá trị ban đầu chính xác NGAY LẬP TỨC
   const handleResponseSelect = (response) => {
     // Sử dụng endpoint khác nhau cho stateful and stateless
     const url = isStateful
@@ -2332,25 +2332,23 @@ const DashboardPage = () => {
           );
           setDelay(statefulResponse.delay_ms?.toString() || "0");
 
-          // Đảm bảo cập nhật giá trị ban đầu ngay lập tức sau khi set state
-          setTimeout(() => {
-            setInitialResponseValues((prev) => ({
-              ...prev,
-              [response.id]: {
-                name: statefulResponse.name,
-                statusCode: statefulResponse.status_code.toString(),
-                responseBody: JSON.stringify(
-                  statefulResponse.response_body,
-                  null,
-                  2
-                ),
-                delay: statefulResponse.delay_ms?.toString() || "0",
-                proxyUrl: "",
-                proxyMethod: "GET",
-                condition: "", // stateful không có condition
-              },
-            }));
-          }, 0);
+          // ✅ SỬA: Lưu giá trị ban đầu NGAY LẬP TỨC sau khi fetch data, KHÔNG dùng setTimeout
+          setInitialResponseValues((prev) => ({
+            ...prev,
+            [response.id]: {
+              name: statefulResponse.name,
+              statusCode: statefulResponse.status_code.toString(),
+              responseBody: JSON.stringify(
+                statefulResponse.response_body,
+                null,
+                2
+              ),
+              delay: statefulResponse.delay_ms?.toString() || "0",
+              proxyUrl: "",
+              proxyMethod: "GET",
+              condition: "", // stateful không có condition
+            },
+          }));
         } else {
           setSelectedResponse(data);
           setResponseName(data.name);
@@ -2361,21 +2359,18 @@ const DashboardPage = () => {
           setProxyMethod(data.proxy_method || "GET");
           setResponseCondition(data.condition || {});
 
-          // Đảm bảo cập nhật giá trị ban đầu ngay lập tức sau khi set state
-          setTimeout(() => {
-            setInitialResponseValues((prev) => ({
-              ...prev,
-              [response.id]: {
-                name: data.name,
-                statusCode: data.status_code.toString(),
-                responseBody: JSON.stringify(data.response_body, null, 2),
-                delay: data.delay_ms?.toString() || "0",
-                proxyUrl: data.proxy_url || "",
-                proxyMethod: data.proxy_method || "GET",
-                condition: JSON.stringify(data.condition || {}), // Thêm condition
-              },
-            }));
-          }, 0);
+          setInitialResponseValues((prev) => ({
+            ...prev,
+            [response.id]: {
+              name: data.name,
+              statusCode: data.status_code.toString(),
+              responseBody: JSON.stringify(data.response_body, null, 2),
+              delay: data.delay_ms?.toString() || "0",
+              proxyUrl: data.proxy_url || "",
+              proxyMethod: data.proxy_method || "GET",
+              condition: JSON.stringify(data.condition || {}),
+            },
+          }));
         }
       })
       .catch(console.error);
@@ -2514,7 +2509,7 @@ const DashboardPage = () => {
 
           setSelectedResponse(statefulResponse);
         } else {
-          // Xử理 như hiện tại cho stateless
+          // Xử như hiện tại cho stateless
           setEndpointResponses((prev) =>
             prev.map((r) => (r.id === updatedResponse.id ? updatedResponse : r))
           );
