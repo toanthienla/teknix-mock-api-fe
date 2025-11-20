@@ -170,11 +170,90 @@ const DashboardPage = () => {
   const [wsMessage, setWsMessage] = useState("");
   const [wsDelay, setWsDelay] = useState(0);
   const [wsCondition, setWsCondition] = useState(0);
-
+  // Thêm state để lưu trữ giá trị ban đầu của response
+  const [initialResponseValues, setInitialResponseValues] = useState({});
+  // Thêm state để lưu giá trị ban đầu của data default
+  const [initialDataDefault, setInitialDataDefault] = useState(null);
   // Thêm state để control tooltip visibility
   const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
+
+  // Thêm hàm kiểm tra thay đổi cho data default
+  const hasDataDefaultChanged = () => {
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    if (initialDataDefault === null) {
+      return true;
+    }
+
+    // So sánh giá trị hiện tại với giá trị ban đầu
+    return tempDataDefaultString !== initialDataDefault;
+  };
+
+  // Sửa lại hàm hasResponseChanged để chính xác hơn cho cả Rules tab
+  const hasResponseChanged = () => {
+    if (!selectedResponse) {
+      return false;
+    }
+
+    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
+    if (!initialResponseValues[selectedResponse.id]) {
+      return true;
+    }
+
+    const currentValues = {
+      name: responseName,
+      statusCode: statusCode,
+      responseBody: responseBody,
+      delay: delay,
+      proxyUrl: proxyUrl,
+      proxyMethod: proxyMethod,
+      // Thêm condition để kiểm tra Rules thay đổi
+      condition: JSON.stringify(responseCondition || {}),
+    };
+
+    const initialValues = initialResponseValues[selectedResponse.id];
+
+    // So sánh từng trường một, sử dụng JSON.stringify cho các giá trị phức tạp
+    const hasNameChanged = currentValues.name !== initialValues.name;
+    const hasStatusCodeChanged =
+      currentValues.statusCode !== initialValues.statusCode;
+    const hasResponseBodyChanged =
+      currentValues.responseBody !== initialValues.responseBody;
+    const hasDelayChanged = currentValues.delay !== initialValues.delay;
+    const hasProxyUrlChanged =
+      currentValues.proxyUrl !== initialValues.proxyUrl;
+    const hasProxyMethodChanged =
+      currentValues.proxyMethod !== initialValues.proxyMethod;
+    const hasConditionChanged =
+      currentValues.condition !== (initialValues.condition || "");
+
+    const hasChanged =
+      hasNameChanged ||
+      hasStatusCodeChanged ||
+      hasResponseBodyChanged ||
+      hasDelayChanged ||
+      hasProxyUrlChanged ||
+      hasProxyMethodChanged ||
+      hasConditionChanged;
+
+    console.log("Checking changes:", {
+      hasChanged,
+      currentValues,
+      initialValues,
+      differences: {
+        name: hasNameChanged,
+        statusCode: hasStatusCodeChanged,
+        responseBody: hasResponseBodyChanged,
+        delay: hasDelayChanged,
+        proxyUrl: hasProxyUrlChanged,
+        proxyMethod: hasProxyMethodChanged,
+        condition: hasConditionChanged,
+      },
+    });
+
+    return hasChanged;
+  };
 
   // Component Tooltip
   const Tooltip = ({ visible, children, className = "" }) => {
@@ -2219,8 +2298,9 @@ const DashboardPage = () => {
     setDraggedItem(null);
   };
 
+  // Cập nhật lại hàm handleResponseSelect để đảm bảo lưu giá trị ban đầu chính xác
   const handleResponseSelect = (response) => {
-    // Sử dụng endpoint khác nhau cho stateful và stateless
+    // Sử dụng endpoint khác nhau cho stateful and stateless
     const url = isStateful
       ? `${API_ROOT}/endpoint_responses_ful/${response.id}`
       : `${API_ROOT}/endpoint_responses/${response.id}`;
@@ -2251,6 +2331,26 @@ const DashboardPage = () => {
             JSON.stringify(statefulResponse.response_body, null, 2)
           );
           setDelay(statefulResponse.delay_ms?.toString() || "0");
+
+          // Đảm bảo cập nhật giá trị ban đầu ngay lập tức sau khi set state
+          setTimeout(() => {
+            setInitialResponseValues((prev) => ({
+              ...prev,
+              [response.id]: {
+                name: statefulResponse.name,
+                statusCode: statefulResponse.status_code.toString(),
+                responseBody: JSON.stringify(
+                  statefulResponse.response_body,
+                  null,
+                  2
+                ),
+                delay: statefulResponse.delay_ms?.toString() || "0",
+                proxyUrl: "",
+                proxyMethod: "GET",
+                condition: "", // stateful không có condition
+              },
+            }));
+          }, 0);
         } else {
           setSelectedResponse(data);
           setResponseName(data.name);
@@ -2259,6 +2359,23 @@ const DashboardPage = () => {
           setDelay(data.delay_ms?.toString() || "0");
           setProxyUrl(data.proxy_url || "");
           setProxyMethod(data.proxy_method || "GET");
+          setResponseCondition(data.condition || {});
+
+          // Đảm bảo cập nhật giá trị ban đầu ngay lập tức sau khi set state
+          setTimeout(() => {
+            setInitialResponseValues((prev) => ({
+              ...prev,
+              [response.id]: {
+                name: data.name,
+                statusCode: data.status_code.toString(),
+                responseBody: JSON.stringify(data.response_body, null, 2),
+                delay: data.delay_ms?.toString() || "0",
+                proxyUrl: data.proxy_url || "",
+                proxyMethod: data.proxy_method || "GET",
+                condition: JSON.stringify(data.condition || {}), // Thêm condition
+              },
+            }));
+          }, 0);
         }
       })
       .catch(console.error);
@@ -2269,10 +2386,19 @@ const DashboardPage = () => {
     setIsDialogOpen(true);
   };
 
+  // Cập nhật lại hàm handleSaveResponse để kiểm tra thay đổi
   const handleSaveResponse = () => {
     // Chỉ cho phép cập nhật response đã có sẵn
     if (!selectedResponse) {
       toast.error("Please select a response to save");
+      return;
+    }
+
+    // Kiểm tra xem người dùng có thay đổi gì không
+    if (!hasResponseChanged()) {
+      toast.info(
+        "No changes detected. Please modify the response data before saving."
+      );
       return;
     }
 
@@ -2303,7 +2429,7 @@ const DashboardPage = () => {
     // Reset lỗi nếu có
     setResponseNameError("");
 
-    // Payload khác nhau cho stateful và stateless
+    // Payload khác nhau cho stateful and stateless
     let payload;
     if (isStateful) {
       // Chỉ gửi đúng 3 trường được yêu cầu cho stateful mode
@@ -2366,7 +2492,7 @@ const DashboardPage = () => {
             updated_at: currentStatefulResponse.updated_at,
           };
 
-          // Cập nhật state với response stateful
+          // Cập nhật state with response stateful
           setEndpointResponses((prev) =>
             prev.map((r) =>
               r.id === statefulResponse.id ? statefulResponse : r
@@ -2388,7 +2514,7 @@ const DashboardPage = () => {
 
           setSelectedResponse(statefulResponse);
         } else {
-          // Xử lý như hiện tại cho stateless
+          // Xử理 như hiện tại cho stateless
           setEndpointResponses((prev) =>
             prev.map((r) => (r.id === updatedResponse.id ? updatedResponse : r))
           );
@@ -2412,6 +2538,20 @@ const DashboardPage = () => {
           setSelectedResponse(updatedResponse);
         }
 
+        // Cập nhật giá trị ban đầu sau khi lưu thành công
+        setInitialResponseValues((prev) => ({
+          ...prev,
+          [selectedResponse.id]: {
+            name: responseName,
+            statusCode: statusCode,
+            responseBody: responseBody,
+            delay: delay,
+            proxyUrl: proxyUrl,
+            proxyMethod: proxyMethod,
+            condition: JSON.stringify(responseCondition || {}), // Thêm condition
+          },
+        }));
+
         toast.success("Response updated successfully!");
       })
       .catch((error) => {
@@ -2419,6 +2559,33 @@ const DashboardPage = () => {
         toast.error(error.message);
       });
   };
+
+  // Cập nhật useEffect để debug và đảm bảo giá trị ban đầu được cập nhật chính xác
+  useEffect(() => {
+    if (selectedResponse && responseName && statusCode && responseBody) {
+      console.log("Current response values:", {
+        id: selectedResponse.id,
+        responseName,
+        statusCode,
+        responseBody,
+        delay,
+        proxyUrl,
+        proxyMethod,
+        responseCondition,
+        initialValues: initialResponseValues[selectedResponse.id],
+      });
+    }
+  }, [
+    selectedResponse,
+    responseName,
+    statusCode,
+    responseBody,
+    delay,
+    proxyUrl,
+    proxyMethod,
+    responseCondition,
+    initialResponseValues,
+  ]);
 
   // Thêm state riêng cho dialog new response
   const [newResponseName, setNewResponseName] = useState("");
@@ -2578,8 +2745,14 @@ const DashboardPage = () => {
     }
   }, [selectedResponse]);
 
-  // Hàm xử lý khi lưu initial value
+  // Sửa lại hàm handleSaveInitialValue để kiểm tra thay đổi
   const handleSaveInitialValue = () => {
+    // Kiểm tra thay đổi trước khi lưu
+    if (!hasDataDefaultChanged()) {
+      toast.info("No changes detected. Please modify the data before saving.");
+      return;
+    }
+
     const path = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     )?.path;
@@ -2614,6 +2787,8 @@ const DashboardPage = () => {
         .then((finalData) => {
           if (finalData) {
             setEndpointData(finalData);
+            // Cập nhật giá trị ban đầu sau khi lưu thành công
+            setInitialDataDefault(tempDataDefaultString);
             toast.success("Initial value updated successfully!");
           }
         })
@@ -2648,6 +2823,26 @@ const DashboardPage = () => {
       setTempDataDefault([]);
     }
   }, [endpointData]);
+
+  // Thêm useEffect để lưu giá trị ban đầu của data default khi endpointData thay đổi
+  useEffect(() => {
+    if (endpointData && endpointData.data_default) {
+      const initialValueString = JSON.stringify(
+        endpointData.data_default,
+        null,
+        2
+      );
+      setTempDataDefaultString(initialValueString);
+      setTempDataDefault(endpointData.data_default);
+      // Lưu giá trị ban đầu
+      setInitialDataDefault(initialValueString);
+    } else if (endpointData && !endpointData.data_default) {
+      setTempDataDefaultString("[]");
+      setTempDataDefault([]);
+      setInitialDataDefault("[]");
+    }
+  }, [endpointData]);
+
   // Thêm UI loading
   if (isLoading) {
     return (
@@ -3689,7 +3884,16 @@ const DashboardPage = () => {
                               responseName={selectedResponse?.name}
                               selectedResponse={selectedResponse}
                               onUpdateRules={setResponseCondition}
-                              onSave={handleSaveResponse}
+                              onSave={() => {
+                                // Kiểm tra thay đổi trước khi lưu
+                                if (hasResponseChanged()) {
+                                  handleSaveResponse();
+                                } else {
+                                  toast.info(
+                                    "No changes detected. Please modify the response data before saving."
+                                  );
+                                }
+                              }}
                             />
                           </div>
                         ) : (
@@ -3920,6 +4124,11 @@ const DashboardPage = () => {
                                   btn-primary hover:opacity-80 rounded-full shadow-none my-1
                                   transition-all duration-300
                                   ${buttonShadow ? "shadow-md/30" : ""}
+                                  ${
+                                    hasDataDefaultChanged()
+                                      ? "bg-[#FBEB6B] hover:bg-[#FDE047]"
+                                      : ""
+                                  }
                                 `}
                                 onClick={() =>
                                   handleClick(
