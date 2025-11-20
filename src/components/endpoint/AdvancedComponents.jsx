@@ -53,18 +53,38 @@ export const ApiCallEditor = ({
   // Thêm state để lưu trữ giá trị ban đầu của nextCalls
   const [initialNextCalls, setInitialNextCalls] = useState([]);
 
-  // Thêm hàm kiểm tra thay đổi
-  const hasChanges = () => {
-    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
-    if (initialNextCalls.length === 0) {
-      return true;
-    }
-
-    // So sánh nextCalls hiện tại với giá trị ban đầu
+  // ✅ SỬA: Thay thế hàm hasChanges để so sánh trực tiếp với API data
+  const hasChanges = async () => {
     try {
-      return JSON.stringify(nextCalls) !== JSON.stringify(initialNextCalls);
-    } catch {
-      return true;
+      // Fetch dữ liệu mới nhất từ API
+      const response = await fetch(
+        `${API_ROOT}/endpoints/advanced/${endpointId}`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to fetch current advanced config");
+        return false; // Nếu không fetch được, coi như không có thay đổi
+      }
+
+      const data = await response.json();
+
+      // Lấy nextCalls từ API response
+      const apiNextCalls = data?.data?.advanced_config?.nextCalls || [];
+
+      console.log("Comparing API calls with server data:", {
+        currentNextCalls: nextCalls,
+        apiNextCalls,
+        differences: JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls),
+      });
+
+      // So sánh nextCalls hiện tại với dữ liệu từ API
+      return JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+    } catch (error) {
+      console.error("Error comparing API calls data:", error);
+      return false; // Nếu có lỗi, coi như không có thay đổi để an toàn
     }
   };
 
@@ -736,10 +756,11 @@ export const ApiCallEditor = ({
     };
   }, [isTargetEndpointSuggestionsOpen]);
 
-  // Cập nhật hàm handleSave để kiểm tra thay đổi
-  const handleSave = () => {
+  // ✅ SỬA: Cập nhật handleSave để sử dụng hàm async
+  const handleSave = async () => {
     // Kiểm tra thay đổi trước khi lưu
-    if (!hasChanges()) {
+    const hasChanged = await hasChanges();
+    if (!hasChanged) {
       toast.info(
         "No changes detected. Please modify the API calls before saving."
       );
@@ -751,7 +772,7 @@ export const ApiCallEditor = ({
       return; // Không tiếp tục nếu có lỗi JSON
     }
 
-    // Kiểm tra target endpoints và methods
+    // Kiểm tra target endpoints and methods
     if (!validateTargetEndpoints()) {
       toast.error("Please select valid endpoints for all API calls");
       return; // Không tiếp tục nếu có lỗi validate endpoint
@@ -761,7 +782,7 @@ export const ApiCallEditor = ({
     const minimumId = getMinimumId(nextCalls);
     console.log(`Minimum ID in nextCalls: ${minimumId}`);
 
-    // Chuẩn bị payload với full target endpoints
+    // Chuẩn bị payload with full target endpoints
     const payload = {
       advanced_config: {
         nextCalls: nextCalls.map((call, index) => {
@@ -788,13 +809,6 @@ export const ApiCallEditor = ({
         if (!res.ok) throw new Error("Failed to save advanced configuration");
         toast.success("Advanced configuration saved successfully!");
         if (onSave) onSave();
-
-        // Cập nhật giá trị ban đầu sau khi save thành công
-        setInitialNextCalls([...nextCalls]);
-
-        // Cập nhật savedCalls sau khi save thành công
-        const successfullySavedCalls = nextCalls.filter((call) => call.id);
-        setSavedCalls(successfullySavedCalls);
       })
       .catch((error) => {
         console.error(error);
