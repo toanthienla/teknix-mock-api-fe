@@ -53,18 +53,38 @@ export const ApiCallEditor = ({
   // Thêm state để lưu trữ giá trị ban đầu của nextCalls
   const [initialNextCalls, setInitialNextCalls] = useState([]);
 
-  // Thêm hàm kiểm tra thay đổi
-  const hasChanges = () => {
-    // Nếu chưa có giá trị ban đầu, coi như có thay đổi
-    if (initialNextCalls.length === 0) {
-      return true;
-    }
-
-    // So sánh nextCalls hiện tại với giá trị ban đầu
+  // ✅ SỬA: Thay thế hàm hasChanges để so sánh trực tiếp với API data
+  const hasChanges = async () => {
     try {
-      return JSON.stringify(nextCalls) !== JSON.stringify(initialNextCalls);
-    } catch {
-      return true;
+      // Fetch dữ liệu mới nhất từ API
+      const response = await fetch(
+        `${API_ROOT}/endpoints/advanced/${endpointId}`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to fetch current advanced config");
+        return false; // Nếu không fetch được, coi như không có thay đổi
+      }
+
+      const data = await response.json();
+
+      // Lấy nextCalls từ API response
+      const apiNextCalls = data?.data?.advanced_config?.nextCalls || [];
+
+      console.log("Comparing API calls with server data:", {
+        currentNextCalls: nextCalls,
+        apiNextCalls,
+        differences: JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls),
+      });
+
+      // So sánh nextCalls hiện tại với dữ liệu từ API
+      return JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+    } catch (error) {
+      console.error("Error comparing API calls data:", error);
+      return false; // Nếu có lỗi, coi như không có thay đổi để an toàn
     }
   };
 
@@ -272,49 +292,71 @@ export const ApiCallEditor = ({
     return "";
   };
 
-  // Khởi tạo JSON strings từ nextCalls
+  // Thêm state để lưu JSON string thay vì dùng call.body trực tiếp
+  const [jsonInputs, setJsonInputs] = useState({});
+
+  // Khởi tạo JSON inputs từ nextCalls
   useEffect(() => {
-    const initialJsonStrings = {};
+    const initialJsonInputs = {};
     nextCalls.forEach((call, index) => {
-      try {
-        initialJsonStrings[index] = JSON.stringify(call.body, null, 2);
-      } catch {
-        initialJsonStrings[index] =
+      if (call.body && typeof call.body === "string") {
+        // Nếu body là string (JSON string), dùng trực tiếp
+        initialJsonInputs[index] = call.body;
+      } else if (call.body) {
+        // Nếu body là object, stringify
+        initialJsonInputs[index] = JSON.stringify(call.body, null, 2);
+      } else {
+        // Default JSON
+        initialJsonInputs[index] =
           '{\n  "orderId": "{{response.body.orderId}}"\n}';
       }
     });
-    setJsonStrings(initialJsonStrings);
+    setJsonInputs(initialJsonInputs);
   }, [nextCalls]);
 
-  // Cập nhật hàm handleJsonChange
+  // Thay đổi cách xử lý JSON để chỉ parse khi nhấn format
   const handleJsonChange = (index, value) => {
-    // Validate JSON
+    // Cập nhật JSON input (luôn là string)
+    setJsonInputs((prev) => ({
+      ...prev,
+      [index]: value,
+    }));
+
+    // Cập nhật body với string value (không parse)
+    const updatedCalls = [...nextCalls];
+    updatedCalls[index] = {
+      ...updatedCalls[index],
+      body: value, // Giữ nguyên string
+    };
+    setNextCalls(updatedCalls);
+  };
+
+  // Thêm hàm xử lý khi nhấn nút format
+  const handleFormatJson = (index) => {
     try {
-      const parsedJson = JSON.parse(value);
-      setJsonStrings((prev) => ({
+      const currentJson = jsonInputs[index] || "";
+      if (!currentJson.trim()) return;
+
+      // Parse và format JSON
+      const parsed = JSON.parse(currentJson);
+      const formatted = JSON.stringify(parsed, null, 2);
+
+      // Cập nhật cả jsonInputs và nextCalls
+      setJsonInputs((prev) => ({
         ...prev,
-        [index]: value,
+        [index]: formatted,
       }));
 
-      setJsonErrors((prev) => ({
-        ...prev,
-        [index]: null,
-      }));
+      const updatedCalls = [...nextCalls];
+      updatedCalls[index] = {
+        ...updatedCalls[index],
+        body: parsed, // Lưu parsed object
+      };
+      setNextCalls(updatedCalls);
 
-      // Chỉ cập nhật body nếu JSON hợp lệ
-      handleNextCallChange(index, "body", parsedJson);
-    } catch (e) {
-      setJsonStrings((prev) => ({
-        ...prev,
-        [index]: value,
-      }));
-
-      setJsonErrors((prev) => ({
-        ...prev,
-        [index]: e.message,
-      }));
-
-      // KHÔNG cập nhật body nếu JSON không hợp lệ
+      toast.success("JSON formatted successfully!");
+    } catch {
+      toast.error("Invalid JSON format - cannot format");
     }
   };
 
@@ -736,10 +778,11 @@ export const ApiCallEditor = ({
     };
   }, [isTargetEndpointSuggestionsOpen]);
 
-  // Cập nhật hàm handleSave để kiểm tra thay đổi
-  const handleSave = () => {
+  // ✅ SỬA: Cập nhật handleSave để sử dụng hàm async
+  const handleSave = async () => {
     // Kiểm tra thay đổi trước khi lưu
-    if (!hasChanges()) {
+    const hasChanged = await hasChanges();
+    if (!hasChanged) {
       toast.info(
         "No changes detected. Please modify the API calls before saving."
       );
@@ -751,7 +794,7 @@ export const ApiCallEditor = ({
       return; // Không tiếp tục nếu có lỗi JSON
     }
 
-    // Kiểm tra target endpoints và methods
+    // Kiểm tra target endpoints and methods
     if (!validateTargetEndpoints()) {
       toast.error("Please select valid endpoints for all API calls");
       return; // Không tiếp tục nếu có lỗi validate endpoint
@@ -761,7 +804,7 @@ export const ApiCallEditor = ({
     const minimumId = getMinimumId(nextCalls);
     console.log(`Minimum ID in nextCalls: ${minimumId}`);
 
-    // Chuẩn bị payload với full target endpoints
+    // Chuẩn bị payload with full target endpoints
     const payload = {
       advanced_config: {
         nextCalls: nextCalls.map((call, index) => {
@@ -788,13 +831,6 @@ export const ApiCallEditor = ({
         if (!res.ok) throw new Error("Failed to save advanced configuration");
         toast.success("Advanced configuration saved successfully!");
         if (onSave) onSave();
-
-        // Cập nhật giá trị ban đầu sau khi save thành công
-        setInitialNextCalls([...nextCalls]);
-
-        // Cập nhật savedCalls sau khi save thành công
-        const successfullySavedCalls = nextCalls.filter((call) => call.id);
-        setSavedCalls(successfullySavedCalls);
       })
       .catch((error) => {
         console.error(error);
@@ -1169,7 +1205,7 @@ export const ApiCallEditor = ({
                 <div className="relative">
                   <Editor
                     value={
-                      jsonStrings[index] ||
+                      jsonInputs[index] ||
                       '{\n  "orderId": "{{response.body.orderId}}"\n}'
                     }
                     onValueChange={(code) => handleJsonChange(index, code)}
@@ -1182,7 +1218,6 @@ export const ApiCallEditor = ({
                       minHeight: "124px",
                       maxHeight: "200px",
                       overflow: "auto",
-                      border: jsonErrors[index] ? "1px solid #ef4444" : "",
                       borderRadius: "0.375rem",
                       backgroundColor: "#101728",
                       color: "white",
@@ -1198,16 +1233,7 @@ export const ApiCallEditor = ({
                       className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        try {
-                          const formatted = JSON.stringify(
-                            JSON.parse(jsonStrings[index]),
-                            null,
-                            2
-                          );
-                          handleJsonChange(index, formatted);
-                        } catch {
-                          toast.error("Invalid JSON format");
-                        }
+                        handleFormatJson(index);
                       }}
                     >
                       <Code className="mr-1 h-4 w-4" /> Format

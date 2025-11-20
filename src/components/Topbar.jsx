@@ -58,7 +58,6 @@ export default function Topbar({
   const [username, setUsername] = useState(null);
   const { isDark, toggleTheme } = useTheme();
   const [openWorkspace, setOpenWorkspace] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if (workspaces.length > 0 && !current) {
@@ -85,7 +84,6 @@ export default function Topbar({
       const res = await getCurrentUser();
 
       if (res?.data?.username) {
-        setAuthChecked(true);
         setUsername(res.data.username); // lưu toàn bộ thông tin user
         // setUserId(res.data.user_id);
         console.log("Logged in user:", res.data.username);
@@ -267,7 +265,7 @@ export default function Topbar({
                                     localStorage.setItem("openFolders", JSON.stringify(savedFolders));
                                   }
                                 }}
-                                className="flex items-center gap-1 text-slate-400"
+                                className="flex items-center gap-1 text-[#72767D]"
                               >
                                 {item.label}
                               </BreadcrumbLink>

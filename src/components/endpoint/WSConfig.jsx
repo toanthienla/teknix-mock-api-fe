@@ -86,6 +86,8 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
 
   const availableCodes = getStatusCodesByMethod(method, isStateful);
 
+  const [originalConfig, setOriginalConfig] = useState(null);
+
   useEffect(() => {
     setEnabled(config.enabled ?? false);
 
@@ -99,7 +101,23 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
 
     setDelay(config.delay_ms ?? 0);
     setCode(config.condition ?? 200);
+
+    setOriginalConfig({
+      enabled: config.enabled ?? false,
+      message: JSON.stringify(config.message ?? {}, null, 2),
+      delay_ms: config.delay_ms ?? 0,
+      condition: config.condition ?? 200
+    });
   }, [config]);
+
+  const isChanged =
+    originalConfig &&
+    (
+      originalConfig.enabled !== enabled ||
+      originalConfig.message !== message ||
+      originalConfig.delay_ms !== delay ||
+      originalConfig.condition !== code
+    );
 
   const [buttonShadow, setButtonShadow] = useState(false);
   function handleClick(callback, setShadow, duration = 100) {
@@ -137,10 +155,11 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
           <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex space-x-2 z-10">
             <Button
               size="icon"
-              className={`btn-primary rounded-full my-1 shadow-none 
-                transition-all ${buttonShadow ? "shadow-md/30" : ""}
+              className={`btn-primary rounded-full my-1 shadow-none transition-all 
+                ${buttonShadow ? "shadow-md/30" : ""}
               `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
+              disabled={!isChanged}
             >
               <SaveIcon
                 className="w-5 h-5"
