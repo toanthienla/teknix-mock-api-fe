@@ -235,7 +235,7 @@ const DashboardPage = () => {
     /^\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+)(?:\/(?:[a-zA-Z0-9\-_]+|:[a-zA-Z0-9\-_]+))*(?:\?[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+(?:&[a-zA-Z0-9\-_]+=[a-zA-Z0-9\-_]+)*)?$/;
   const validName = /^[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z0-9_-]+)*$/;
 
-  const validateEditEndpoint = async (id, name, path, state) => {
+  const validateEditEndpoint = async (id, name, path, state, method) => {
     if (!name.trim()) {
       toast.info("Name is required");
       return false;
@@ -248,6 +248,25 @@ const DashboardPage = () => {
     }
     if (!validPath.test(path.trim())) {
       toast.info("Path format is invalid. Example: /users/:id or /users?id=2");
+      return false;
+    }
+
+    const foldersInSameProject = folders.filter(
+      (f) => String(f.project_id) === String(projectId)
+    );
+    const endpointsInProject = endpoints.filter((ep) =>
+      foldersInSameProject.some((f) => String(f.id) === String(ep.folder_id))
+    );
+    const duplicatePath = endpointsInProject.some(
+      (ep) =>
+        ep.id !== id &&
+        ep.path.trim() === path.trim() &&
+        ep.method.toUpperCase() === method.toUpperCase()
+    );
+    if (duplicatePath) {
+      toast.warning(
+        `Endpoint with method ${method.toUpperCase()} and path "${path}" already exists in this project`
+      );
       return false;
     }
 
@@ -297,7 +316,13 @@ const DashboardPage = () => {
   };
 
   const handleUpdateEndpoint = async () => {
-    const isValid = await validateEditEndpoint(editId, editEName, editEPath, editEState);
+    const isValid = await validateEditEndpoint(
+      editId,
+      editEName,
+      editEPath,
+      editEState,
+      currentEndpoint.method
+    );
     if (!isValid) return;
 
     const updated = {
