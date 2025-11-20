@@ -340,8 +340,10 @@ const DashboardPage = () => {
 
       if (!res.ok) throw new Error("Failed to update endpoint");
 
+      const updatedEndpoint = await res.json();
+
       setEndpoints((prev) =>
-        prev.map((ep) => (ep.id === editId ? { ...ep, ...updated } : ep))
+        prev.map((ep) => (ep.id === editId ? updatedEndpoint : ep))
       );
 
       setOpenEdit(false);
