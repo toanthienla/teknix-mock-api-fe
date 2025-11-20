@@ -220,7 +220,7 @@ export default function ProjectPage() {
       .then((res) => res.json())
       .then((data) => {
         const sorted = data.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
         setProjects(sorted);
       })
@@ -810,7 +810,14 @@ export default function ProjectPage() {
                               project={p}
                               folders={folders}
                               endpoints={endpoints}
-                              onClick={() => navigate(`/dashboard/${p.id}`)}
+                              onClick={() => {
+                                localStorage.setItem("folder_active_tab", "folders");
+                                localStorage.setItem("logs_page", 1);
+                                localStorage.setItem("logs_search", "");
+                                localStorage.setItem("logs_timeSpan", "Recent logs");
+                                localStorage.setItem("logs_limit", 5);
+                                navigate(`/dashboard/${p.id}`);
+                              }}
                               onView={() => {
                                 setSelectedProject(p);
                                 setOpenDetail(true);
@@ -828,18 +835,18 @@ export default function ProjectPage() {
                           </TableRow>
                         )}
 
-                        {/* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== */}
-                        {Array.from({
-                          length: Math.max(
-                            0,
-                            rowsPerPage - currentPageProjects.length
-                          ),
-                        }).map((_, i) => (
-                          <TableRow
-                            key={`empty-${i}`}
-                            className="h-[64px] border-none"
-                          ></TableRow>
-                        ))}
+                        {/*/!* ==== Lấp đầy hàng trống (đảm bảo vùng hiển thị cố định) ==== *!/*/}
+                        {/*{Array.from({*/}
+                        {/*  length: Math.max(*/}
+                        {/*    0,*/}
+                        {/*    rowsPerPage - currentPageProjects.length*/}
+                        {/*  ),*/}
+                        {/*}).map((_, i) => (*/}
+                        {/*  <TableRow*/}
+                        {/*    key={`empty-${i}`}*/}
+                        {/*    className="h-[64px] border-none"*/}
+                        {/*  ></TableRow>*/}
+                        {/*))}*/}
                       </TableBody>
                     </Table>
                   </div>

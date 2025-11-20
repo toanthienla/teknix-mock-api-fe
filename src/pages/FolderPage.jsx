@@ -347,7 +347,6 @@ export default function FolderPage() {
   );
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption] = useState("Recently created");
 
   // const [targetWsId, setTargetWsId] = useState(null);
   const [targetProjectId, setTargetProjectId] = useState(null);

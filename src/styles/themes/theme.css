@@ -22,6 +22,10 @@
     --custom-json-key: #0051D9;
     --custom-json-value: #4093ff;
 
+    --custom-json-disabled-key: #0051D9;
+    --custom-json-disabled-value: #4093FF;
+    --custom-json-disabled-bg: #F2F2F2;
+
     /* ===== Button ===== */
     --button-bg: #fbeb6b;
     --button-bg-hover: #fde047;
@@ -106,6 +110,10 @@
     /* ===== JSON ===== */
     --custom-json-key: #6CACE5;
     --custom-json-value: #A5D6FF;
+
+    --custom-json-disabled-key: #A5D6FF;
+    --custom-json-disabled-value: #FFFFFF;
+    --custom-json-disabled-bg: #2F3136;
 
     /* ===== Workspace button ===== */
     --lightgray-button-bg: #53555B;
