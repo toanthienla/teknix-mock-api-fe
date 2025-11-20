@@ -1928,7 +1928,7 @@ export default function FolderPage() {
                                 const newLimit = Number(val);
                                 setRowsPerPage(newLimit);
                                 localStorage.setItem("logs_limit", newLimit);
-                                // setPage(1);
+                                setPage(1);
                               }}
                             >
                               <SelectTrigger className="w-[80px]">
