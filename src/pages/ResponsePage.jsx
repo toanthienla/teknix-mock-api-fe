@@ -2263,7 +2263,7 @@ const DashboardPage = () => {
 
   const handleNewResponse = () => {
     // Reset form khi tạo mới
-    // setSelectedResponse(null);
+    setSelectedResponse(null);
     setResponseName("");
     setStatusCode("200");
     setResponseBody("{}");
@@ -4851,7 +4851,7 @@ const DashboardPage = () => {
                   placeholder="Enter response body"
                   value={responseBody}
                   onChange={(e) => setResponseBody(e.target.value)}
-                  className="h-32 font-mono pb-16"
+                  className="h-32 font-mono pb-16 bg-[#101728] text-white"
                 />
                 {/* Nhóm nút trên cùng bên phải */}
                 <div className="absolute top-2 right-4 flex space-x-2">

@@ -1287,40 +1287,40 @@ export default function FolderPage() {
   }, [page]);
 
   // Filter + Search logs
-  const filteredLogs = logs.filter((log) => {
-    if (String(log.project_id) !== String(projectId)) return false;
-
-    // --- Filter TIME ---
-    let timeOk = true;
-    if (timeFilter !== "Recent logs") {
-      const logTime = new Date(log.created_at).getTime();
-      const now = Date.now();
-
-      if (timeFilter === "Last 24 hours") {
-        timeOk = logTime >= now - 24 * 60 * 60 * 1000;
-      } else if (timeFilter === "Last 7 days") {
-        timeOk = logTime >= now - 7 * 24 * 60 * 60 * 1000;
-      } else if (timeFilter === "Last 30 days") {
-        timeOk = logTime >= now - 30 * 24 * 60 * 60 * 1000;
-      }
-    }
-
-    if (!timeOk) return false;
-
-    // --- Search text ---
-    const text = searchTerm.toLowerCase();
-
-    if (!text) return true;
-
-    return (
-      log.endpointResponseName?.toLowerCase().includes(text) ||
-      log.method?.toLowerCase().includes(text) ||
-      log.path?.toLowerCase().includes(text) ||
-      String(log.status_code || "").includes(text) ||
-      JSON.stringify(log.request_body || "").toLowerCase().includes(text) ||
-      JSON.stringify(log.response_body || "").toLowerCase().includes(text)
-    );
-  });
+  // const filteredLogs = logs.filter((log) => {
+  //   if (String(log.project_id) !== String(projectId)) return false;
+  //
+  //   // --- Filter TIME ---
+  //   let timeOk = true;
+  //   if (timeFilter !== "Recent logs") {
+  //     const logTime = new Date(log.created_at).getTime();
+  //     const now = Date.now();
+  //
+  //     if (timeFilter === "Last 24 hours") {
+  //       timeOk = logTime >= now - 24 * 60 * 60 * 1000;
+  //     } else if (timeFilter === "Last 7 days") {
+  //       timeOk = logTime >= now - 7 * 24 * 60 * 60 * 1000;
+  //     } else if (timeFilter === "Last 30 days") {
+  //       timeOk = logTime >= now - 30 * 24 * 60 * 60 * 1000;
+  //     }
+  //   }
+  //
+  //   if (!timeOk) return false;
+  //
+  //   // --- Search text ---
+  //   const text = searchTerm.toLowerCase();
+  //
+  //   if (!text) return true;
+  //
+  //   return (
+  //     log.endpointResponseName?.toLowerCase().includes(text) ||
+  //     log.method?.toLowerCase().includes(text) ||
+  //     log.path?.toLowerCase().includes(text) ||
+  //     String(log.status_code || "").includes(text) ||
+  //     JSON.stringify(log.request_body || "").toLowerCase().includes(text) ||
+  //     JSON.stringify(log.response_body || "").toLowerCase().includes(text)
+  //   );
+  // });
 
   // filter + sort endpoints
   // let filteredEndpoints = endpoints.filter((e) =>
@@ -1812,7 +1812,7 @@ export default function FolderPage() {
                                   No logs available.
                                 </TableCell>
                               </TableRow>
-                            ) : filteredLogs.length === 0 ? (
+                            ) : logs.length === 0 ? (
                               <TableRow>
                                 <TableCell
                                   colSpan={6}
@@ -1822,7 +1822,7 @@ export default function FolderPage() {
                                 </TableCell>
                               </TableRow>
                             ) : (
-                              filteredLogs.map((log, i) => (
+                              logs.map((log, i) => (
                                 <LogCard key={i} log={log} />
                               ))
                             )}
