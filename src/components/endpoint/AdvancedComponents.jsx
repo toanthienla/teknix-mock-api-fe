@@ -95,13 +95,32 @@ export const ApiCallEditor = ({
     loadServerData();
   }, []); // Chỉ chạy 1 lần khi vào tab
 
-  // ✅ THÊM: useEffect để theo dõi thay đổi local
+  // ✅ SỬA: Cập nhật useEffect để theo dõi thay đổi local (loại bỏ điều kiện serverData)
   useEffect(() => {
-    if (serverData) {
-      const hasChanged =
-        JSON.stringify(nextCalls) !== JSON.stringify(serverData);
-      setHasLocalChanges(hasChanged);
-    }
+    const hasChanged = (() => {
+      // Nếu chưa có server data, coi như có thay đổi nếu có API calls
+      if (!serverData) {
+        return nextCalls.length > 0;
+      }
+
+      // Nếu có server data, so sánh số lượng API calls
+      if (nextCalls.length !== serverData.length) {
+        return true;
+      }
+
+      // So sánh nội dung nếu số lượng bằng nhau
+      return JSON.stringify(nextCalls) !== JSON.stringify(serverData);
+    })();
+
+    setHasLocalChanges(hasChanged);
+
+    console.log("Advanced - hasLocalChanges updated:", {
+      serverDataLength: serverData?.length || 0,
+      nextCallsLength: nextCalls.length,
+      hasChanged,
+      serverData,
+      nextCalls,
+    });
   }, [nextCalls, serverData]);
 
   // Component Tooltip (thêm vào đầu file)
@@ -878,8 +897,8 @@ export const ApiCallEditor = ({
       // ✅ SỬA: Reset hasLocalChanges về false NGAY LẬP TỨC sau khi PUT thành công
       setHasLocalChanges(false);
 
-      // ✅ BỎ: Không cần fetch GET nữa vì đã reset hasLocalChanges rồi
-      // Việc fetch GET có thể gây ra race condition và làm hasLocalChanges bị sai
+      // ✅ LOẠI BỎ: Gọi callback để cập nhật serverData ở parent component
+      // if (onSaveSuccess) onSaveSuccess();
 
       if (onSave) onSave();
     } catch (error) {
@@ -974,7 +993,6 @@ export const ApiCallEditor = ({
               size="icon"
               className={`h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1
     transition-all ${buttonShadow ? "shadow-md/30" : ""}
-    ${hasLocalChanges ? "bg-[#FBEB6B] hover:bg-[#FDE047]" : ""}
   `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
               onMouseEnter={handleSaveButtonMouseEnter} // ✅ Dùng hàm mới

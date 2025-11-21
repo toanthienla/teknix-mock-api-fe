@@ -85,6 +85,7 @@ const DashboardPage = () => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("url");
   const popoverRef = useRef(null);
+
   const [, setResponseNameError] = useState("");
   const { projectId, endpointId } = useParams();
   const [currentEndpointId, setCurrentEndpointId] = useState(null);
