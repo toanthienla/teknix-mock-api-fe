@@ -314,21 +314,31 @@ export const ApiCallEditor = ({
     setJsonInputs(initialJsonInputs);
   }, [nextCalls]);
 
-  // Thay đổi cách xử lý JSON để chỉ parse khi nhấn format
   const handleJsonChange = (index, value) => {
-    // Cập nhật JSON input (luôn là string)
+    // Cập nhật JSON input
     setJsonInputs((prev) => ({
       ...prev,
       [index]: value,
     }));
 
-    // Cập nhật body với string value (không parse)
-    const updatedCalls = [...nextCalls];
-    updatedCalls[index] = {
-      ...updatedCalls[index],
-      body: value, // Giữ nguyên string
-    };
-    setNextCalls(updatedCalls);
+    // Cố gắng parse JSON để lưu vào body
+    try {
+      const parsed = JSON.parse(value);
+      const updatedCalls = [...nextCalls];
+      updatedCalls[index] = {
+        ...updatedCalls[index],
+        body: parsed, // Lưu parsed object
+      };
+      setNextCalls(updatedCalls);
+    } catch {
+      // Nếu không parse được, vẫn lưu string để user có thể sửa
+      const updatedCalls = [...nextCalls];
+      updatedCalls[index] = {
+        ...updatedCalls[index],
+        body: value, // Lưu string nếu không parse được
+      };
+      setNextCalls(updatedCalls);
+    }
   };
 
   // Thêm hàm xử lý khi nhấn nút format
@@ -814,7 +824,7 @@ export const ApiCallEditor = ({
             id: call.id || undefined, // Chỉ có ID cho calls đã được save
             target_endpoint: fullTargetEndpoint, // Sử dụng full path
             method: call.method,
-            body: call.body,
+            body: call.body, // Gửi body như hiện tại (đã là object nếu parse được)
             condition: Number(call.condition),
           };
         }),
