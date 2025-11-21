@@ -615,46 +615,9 @@ export const ApiCallEditor = ({
     }
   };
 
-  // ✅ SỬA: handleSaveButtonMouseEnter để tránh conflict với useEffect
+  // ✅ SỬA: handleSaveButtonMouseEnter - chỉ hiển thị tooltip, không fetch API
   const handleSaveButtonMouseEnter = () => {
     setSaveTooltipVisible(true);
-
-    // ✅ CHỈ fetch nếu hasLocalChanges chưa được set hoặc đã lâu
-    const lastFetchTime = localStorage.getItem("lastAdvancedFetchTime");
-    const now = Date.now();
-
-    // Chỉ fetch nếu chưa fetch trong 5 giây (tăng thời gian để tránh fetch quá nhiều)
-    if (!lastFetchTime || now - parseInt(lastFetchTime) > 5000) {
-      // ✅ GỌI API GET để lấy dữ liệu mới nhất
-      fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
-        credentials: "include",
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch current data");
-          return res.json();
-        })
-        .then((data) => {
-          if (data && data.success && data.data && data.data.advanced_config) {
-            const apiNextCalls = data.data.advanced_config.nextCalls || [];
-
-            // So sánh với local data
-            const hasChanged =
-              JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
-            setHasLocalChanges(hasChanged);
-
-            // ✅ LƯU thời gian fetch
-            localStorage.setItem(
-              "lastAdvancedFetchTime",
-              Date.now().toString()
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching current data:", error);
-          // Nếu có lỗi, coi như có thay đổi để an toàn
-          setHasLocalChanges(true);
-        });
-    }
   };
 
   // ✅ SỬA: handleSaveButtonMouseLeave để reset tooltip thôi, không làm gì khác
