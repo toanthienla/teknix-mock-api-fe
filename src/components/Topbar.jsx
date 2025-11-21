@@ -42,7 +42,7 @@ import {useTheme} from "@/services/ThemeContext.jsx";
 import "@/styles/components/topbar.css";
 // import {API_ROOT} from "@/utils/constants.js";
 // import Notifications from "../components/Notifications.jsx";
-// import RealtimeClient from "@/services/centrifugo.jsx";
+// import RealtimeClient from "@/services/centrifugoClient.js";
 
 export default function Topbar({
                                  workspaces = [],

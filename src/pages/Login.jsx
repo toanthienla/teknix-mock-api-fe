@@ -27,7 +27,7 @@ export default function LoginPage() {
       </button>
 
       {/* Viền ngoài */}
-      <div className="w-full flex items-center justify-center auth-page rounded-2xl">
+      <div className="w-full h-full flex items-center justify-center auth-page rounded-2xl">
         {/* Bố cục chính */}
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full auth-card rounded-2xl overflow-hidden">
 

@@ -4323,7 +4323,7 @@ const DashboardPage = () => {
               open={isNewApiCallDialogOpen}
               onOpenChange={setIsNewApiCallDialogOpen}
             >
-              <DialogContent className="sm:max-w-md shadow-lg rounded-lg max-w-[500px]">
+              <DialogContent className="sm:max-w-xl shadow-lg rounded-lg max-w-[800px]">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold">
                     New API Call
@@ -4424,7 +4424,7 @@ const DashboardPage = () => {
                           }, 200);
                         }}
                         placeholder="Enter endpoint path (e.g., /workspace/project/path or https://domain.com/path)"
-                        className={`w-full max-w-[400px] ${
+                        className={`w-full ${
                           newApiCallValidationErrors.targetEndpoint
                             ? "border-red-500"
                             : ""
@@ -4434,7 +4434,7 @@ const DashboardPage = () => {
                       {/* Dropdown gợi ý - CHỈ HIỂN THỊ KHI INPUT ĐANG FOCUS */}
                       {isTargetEndpointSuggestionsOpen &&
                         getFilteredEndpoints().length > 0 && (
-                          <div className="target-endpoint absolute z-50 mt-1 w-full max-w-[400px] rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          <div className="target-endpoint absolute z-50 mt-1 w-full rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {getFilteredEndpoints()
                               .filter((endpoint) => {
                                 // Lọc gợi ý dựa trên input
@@ -4517,7 +4517,7 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallMethod}
                       >
                         <SelectTrigger
-                          className={`h-[36px] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                          className={`h-[36px] rounded-md pl-3 pr-1 w-full ${
                             newApiCallValidationErrors.method
                               ? "border-red-500"
                               : ""
@@ -4718,7 +4718,7 @@ const DashboardPage = () => {
                         onValueChange={setNewApiCallStatusCondition}
                       >
                         <SelectTrigger
-                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full max-w-[450px] ${
+                          className={`h-[36px] border-[#CBD5E1] rounded-md pl-3 pr-1 w-full ${
                             newApiCallValidationErrors.statusCondition
                               ? "border-red-500"
                               : ""
@@ -4729,7 +4729,7 @@ const DashboardPage = () => {
                             className="truncate"
                           />
                         </SelectTrigger>
-                        <SelectContent className="max-h-60 overflow-y-auto w-[450px]">
+                        <SelectContent className="max-h-60 overflow-y-auto w-full">
                           {/* ✅ CẬP NHẬT: Sử dụng logic mới */}
                           {getNewApiCallStatusConditionOptions()
                             .sort((a, b) => parseInt(a.code) - parseInt(b.code))

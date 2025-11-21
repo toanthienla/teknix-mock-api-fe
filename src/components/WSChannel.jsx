@@ -14,15 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// import JSONEditor from "jsoneditor";
 import "jsoneditor/dist/jsoneditor.css";
 import deleteIcon from "@/assets/light/delete.svg";
 import lightningIcon from "@/assets/light/lightning.svg";
-// import serverResponseIcon from "@/assets/light/server-response.svg";
 import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
 import {toast} from "react-toastify";
+import {useProjectWs} from "@/services/useProjectWs.js";
 
 export default function WSChannelSheet({
                                          open,
@@ -32,6 +31,8 @@ export default function WSChannelSheet({
                                          onDeleteWSChannel,
                                          onCopyURL,
                                        }) {
+  useProjectWs(project?.id, open);
+
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [wsURL, setWsURL] = useState(null);
   const [projectToken, setProjectToken] = useState(null);
