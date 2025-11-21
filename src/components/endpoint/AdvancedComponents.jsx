@@ -615,38 +615,52 @@ export const ApiCallEditor = ({
     }
   };
 
-  // ✅ SỬA: handleSaveButtonMouseEnter để fetch dữ liệu mới nhất
+  // ✅ SỬA: handleSaveButtonMouseEnter để tránh conflict với useEffect
   const handleSaveButtonMouseEnter = () => {
     setSaveTooltipVisible(true);
 
-    // ✅ GỌI API GET để lấy dữ liệu mới nhất
-    fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch current data");
-        return res.json();
-      })
-      .then((data) => {
-        if (data && data.success && data.data && data.data.advanced_config) {
-          const apiNextCalls = data.data.advanced_config.nextCalls || [];
+    // ✅ CHỈ fetch nếu hasLocalChanges chưa được set hoặc đã lâu
+    const lastFetchTime = localStorage.getItem("lastAdvancedFetchTime");
+    const now = Date.now();
 
-          // So sánh với local data
-          const hasChanged =
-            JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
-          setHasLocalChanges(hasChanged);
-        }
+    // Chỉ fetch nếu chưa fetch trong 5 giây (tăng thời gian để tránh fetch quá nhiều)
+    if (!lastFetchTime || now - parseInt(lastFetchTime) > 5000) {
+      // ✅ GỌI API GET để lấy dữ liệu mới nhất
+      fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
+        credentials: "include",
       })
-      .catch((error) => {
-        console.error("Error fetching current data:", error);
-        // Nếu có lỗi, coi như có thay đổi để an toàn
-        setHasLocalChanges(true);
-      });
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch current data");
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.success && data.data && data.data.advanced_config) {
+            const apiNextCalls = data.data.advanced_config.nextCalls || [];
+
+            // So sánh với local data
+            const hasChanged =
+              JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+            setHasLocalChanges(hasChanged);
+
+            // ✅ LƯU thời gian fetch
+            localStorage.setItem(
+              "lastAdvancedFetchTime",
+              Date.now().toString()
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching current data:", error);
+          // Nếu có lỗi, coi như có thay đổi để an toàn
+          setHasLocalChanges(true);
+        });
+    }
   };
 
-  // ✅ SỬA: handleSaveButtonMouseLeave
+  // ✅ SỬA: handleSaveButtonMouseLeave để reset tooltip thôi, không làm gì khác
   const handleSaveButtonMouseLeave = () => {
     setSaveTooltipVisible(false);
+    // ✅ KHÔNG reset hasLocalChanges ở đây
   };
 
   // Thêm state để theo dõi các calls đã được save (original calls)
@@ -840,6 +854,8 @@ export const ApiCallEditor = ({
 
   // ✅ SỬA: handleSave để gọi lại server data sau khi save thành công
   const handleSave = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Kiểm tra thay đổi trước khi lưu
     if (!hasLocalChanges) {
       toast.info(
@@ -896,13 +912,11 @@ export const ApiCallEditor = ({
 
       toast.success("Advanced configuration saved successfully!");
 
-      // ✅ CHỈNH: Cập nhật serverData NGAY LẬP TỨC sau khi save thành công
-      // Thay vì gọi loadServerData(), cập nhật trực tiếp để tránh race condition
-      const updatedServerData = [...nextCalls]; // Dữ liệu mới chính là nextCalls sau khi validate
-      setServerData(updatedServerData);
-
-      // ✅ THÊM: Cập nhật hasLocalChanges về false NGAY LẬP TỨC
+      // ✅ SỬA: Reset hasLocalChanges về false NGAY LẬP TỨC sau khi PUT thành công
       setHasLocalChanges(false);
+
+      // ✅ BỎ: Không cần fetch GET nữa vì đã reset hasLocalChanges rồi
+      // Việc fetch GET có thể gây ra race condition và làm hasLocalChanges bị sai
 
       if (onSave) onSave();
     } catch (error) {
