@@ -443,6 +443,8 @@ const DashboardPage = () => {
       toast.error("Failed to update endpoint!");
     }
   };
+  // Thêm state để trigger cập nhật
+  const [apiCallUpdateTrigger, setApiCallUpdateTrigger] = useState(0);
 
   // Thêm ref cho editor
   const newApiCallRequestBodyEditorRef = useRef(null);
@@ -893,6 +895,9 @@ const DashboardPage = () => {
 
       // Gọi lại GET API để lấy dữ liệu mới nhất
       await fetchAdvancedConfig();
+
+      // ✅ THÊM: Trigger cập nhật cho AdvancedComponents
+      setApiCallUpdateTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Error creating new API call:", error);
       toast.error(error.message || "Failed to create API call");
@@ -4302,6 +4307,7 @@ const DashboardPage = () => {
                         onSave={() => fetchEndpointResponses(isStateful)}
                         availableEndpoints={newApiCallAvailableEndpoints}
                         availableStatusCodes={newApiCallAvailableStatusCodes} // ✅ Debug: Kiểm tra prop này
+                         apiCallUpdateTrigger={apiCallUpdateTrigger} // Truyền trigger
                       />
                     </div>
                   )}

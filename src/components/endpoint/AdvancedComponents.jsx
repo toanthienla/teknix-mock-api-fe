@@ -26,6 +26,7 @@ export const ApiCallEditor = ({
   setNextCalls,
   isNewApiCallDialogOpen,
   setIsNewApiCallDialogOpen,
+  apiCallUpdateTrigger,
   onSave,
   // Thêm props cho filter
   availableEndpoints = [],
@@ -56,6 +57,13 @@ export const ApiCallEditor = ({
   const [serverData, setServerData] = useState(null);
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
+  // ✅ THÊM: useEffect để lắng nghe trigger cập nhật
+  useEffect(() => {
+    if (apiCallUpdateTrigger > 0) {
+      // Load lại server data khi có API call mới
+      loadServerData();
+    }
+  }, [apiCallUpdateTrigger]);
   // ✅ THÊM: Hàm để load data từ server 1 lần khi vào tab
   const loadServerData = async () => {
     try {
