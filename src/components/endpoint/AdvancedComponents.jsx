@@ -862,8 +862,13 @@ export const ApiCallEditor = ({
 
       toast.success("Advanced configuration saved successfully!");
 
-      // ✅ CHỈ GỌI 1 LẦN để lấy dữ liệu mới từ server
-      await loadServerData(); // Load lại data mới sau khi save
+      // ✅ CHỈNH: Cập nhật serverData NGAY LẬP TỨC sau khi save thành công
+      // Thay vì gọi loadServerData(), cập nhật trực tiếp để tránh race condition
+      const updatedServerData = [...nextCalls]; // Dữ liệu mới chính là nextCalls sau khi validate
+      setServerData(updatedServerData);
+
+      // ✅ THÊM: Cập nhật hasLocalChanges về false NGAY LẬP TỨC
+      setHasLocalChanges(false);
 
       if (onSave) onSave();
     } catch (error) {
