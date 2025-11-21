@@ -175,7 +175,6 @@ const DashboardPage = () => {
   // Thêm state để lưu giá trị ban đầu của data default
   const [initialDataDefault, setInitialDataDefault] = useState(null);
   // Thêm state để control tooltip visibility
-  const [saveTooltipVisible, setSaveTooltipVisible] = useState(false);
   const [starTooltipVisible, setStarTooltipVisible] = useState(false);
   const [addTooltipVisible, setAddTooltipVisible] = useState(false);
 
@@ -2390,6 +2389,11 @@ const DashboardPage = () => {
     // Mở dialog mà không thay đổi bất kỳ state nào
     setIsDialogOpen(true);
   };
+  // Thêm state để control tooltip visibility cho từng nút save riêng biệt
+  const [responseSaveTooltipVisible, setResponseSaveTooltipVisible] =
+    useState(false);
+  const [proxySaveTooltipVisible, setProxySaveTooltipVisible] = useState(false);
+  const [dataSaveTooltipVisible, setDataSaveTooltipVisible] = useState(false);
 
   // Cập nhật handleSaveResponse để sử dụng hàm async
   const handleSaveResponse = async () => {
@@ -3429,15 +3433,17 @@ const DashboardPage = () => {
                                     setButtonShadow
                                   )
                                 }
-                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseEnter={() =>
+                                  setResponseSaveTooltipVisible(true)
+                                }
                                 onMouseLeave={() =>
-                                  setSaveTooltipVisible(false)
+                                  setResponseSaveTooltipVisible(false)
                                 }
                               >
                                 <SaveIcon className="h-5 w-5" />
                               </Button>
                               <Tooltip
-                                visible={saveTooltipVisible}
+                                visible={responseSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
                                 Save button
@@ -3850,11 +3856,12 @@ const DashboardPage = () => {
                           Request_Response_icon
                         )}
                       {renderTabButton("advanced", "Advanced", Advanced_icon)}
-                      {wsEnabled && renderTabButton(
-                        "wsConfig",
-                        "WS Configuration",
-                        ws_config_icon
-                      )}
+                      {wsEnabled &&
+                        renderTabButton(
+                          "wsConfig",
+                          "WS Configuration",
+                          ws_config_icon
+                        )}
                     </div>
                   )}
                 </div>
@@ -3913,15 +3920,17 @@ const DashboardPage = () => {
                                     setButtonShadow
                                   )
                                 }
-                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseEnter={() =>
+                                  setProxySaveTooltipVisible(true)
+                                }
                                 onMouseLeave={() =>
-                                  setSaveTooltipVisible(false)
+                                  setProxySaveTooltipVisible(false)
                                 }
                               >
                                 <SaveIcon className="h-5 w-5" />
                               </Button>
                               <Tooltip
-                                visible={saveTooltipVisible}
+                                visible={proxySaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
                                 Save button
@@ -4123,15 +4132,17 @@ const DashboardPage = () => {
                                     setButtonShadow
                                   )
                                 }
-                                onMouseEnter={() => setSaveTooltipVisible(true)}
+                                onMouseEnter={() =>
+                                  setDataSaveTooltipVisible(true)
+                                }
                                 onMouseLeave={() =>
-                                  setSaveTooltipVisible(false)
+                                  setDataSaveTooltipVisible(false)
                                 }
                               >
                                 <SaveIcon className="h-5 w-5" />
                               </Button>
                               <Tooltip
-                                visible={saveTooltipVisible}
+                                visible={dataSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
                                 Save button
