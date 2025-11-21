@@ -3850,7 +3850,7 @@ const DashboardPage = () => {
                           Request_Response_icon
                         )}
                       {renderTabButton("advanced", "Advanced", Advanced_icon)}
-                      {renderTabButton(
+                      {wsEnabled && renderTabButton(
                         "wsConfig",
                         "WS Configuration",
                         ws_config_icon
@@ -4294,7 +4294,7 @@ const DashboardPage = () => {
                     </div>
                   )}
 
-                  {activeTab === "wsConfig" && (
+                  {activeTab === "wsConfig" && wsEnabled && (
                     <div className="mt-0">
                       <WSConfig
                         config={config}
