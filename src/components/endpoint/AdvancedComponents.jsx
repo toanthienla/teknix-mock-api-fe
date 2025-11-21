@@ -26,6 +26,7 @@ export const ApiCallEditor = ({
   setNextCalls,
   isNewApiCallDialogOpen,
   setIsNewApiCallDialogOpen,
+  apiCallUpdateTrigger,
   onSave,
   // Thêm props cho filter
   availableEndpoints = [],
@@ -52,41 +53,83 @@ export const ApiCallEditor = ({
 
   // Thêm state để lưu trữ giá trị ban đầu của nextCalls
   const [initialNextCalls, setInitialNextCalls] = useState([]);
+  // ✅ THÊM: State để lưu data từ server khi vào tab
+  const [serverData, setServerData] = useState(null);
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
-  // ✅ SỬA: Thay thế hàm hasChanges để so sánh trực tiếp với API data
-  const hasChanges = async () => {
+  // ✅ THÊM: useEffect để lắng nghe trigger cập nhật
+  useEffect(() => {
+    if (apiCallUpdateTrigger > 0) {
+      // Load lại server data khi có API call mới
+      loadServerData();
+    }
+  }, [apiCallUpdateTrigger]);
+  // ✅ THÊM: Hàm để load data từ server 1 lần khi vào tab
+  const loadServerData = async () => {
     try {
-      // Fetch dữ liệu mới nhất từ API
       const response = await fetch(
         `${API_ROOT}/endpoints/advanced/${endpointId}`,
-        {
-          credentials: "include",
-        }
+        { credentials: "include" }
       );
 
       if (!response.ok) {
-        console.error("Failed to fetch current advanced config");
-        return false; // Nếu không fetch được, coi như không có thay đổi
+        console.error("Failed to fetch advanced config");
+        return;
       }
 
       const data = await response.json();
-
-      // Lấy nextCalls từ API response
       const apiNextCalls = data?.data?.advanced_config?.nextCalls || [];
 
-      console.log("Comparing API calls with server data:", {
-        currentNextCalls: nextCalls,
-        apiNextCalls,
-        differences: JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls),
-      });
+      // Lưu data từ server
+      setServerData(apiNextCalls);
 
-      // So sánh nextCalls hiện tại với dữ liệu từ API
-      return JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+      // So sánh với local data ngay lập tức
+      const hasChanged =
+        JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+      setHasLocalChanges(hasChanged);
+
+      console.log("Loaded server data:", {
+        server: apiNextCalls,
+        local: nextCalls,
+        hasChanged,
+      });
     } catch (error) {
-      console.error("Error comparing API calls data:", error);
-      return false; // Nếu có lỗi, coi như không có thay đổi để an toàn
+      console.error("Error loading server data:", error);
     }
   };
+
+  // ✅ THÊM: useEffect chỉ gọi 1 lần khi component mount
+  useEffect(() => {
+    loadServerData();
+  }, []); // Chỉ chạy 1 lần khi vào tab
+
+  // ✅ SỬA: Cập nhật useEffect để theo dõi thay đổi local (loại bỏ điều kiện serverData)
+  useEffect(() => {
+    const hasChanged = (() => {
+      // Nếu chưa có server data, coi như có thay đổi nếu có API calls
+      if (!serverData) {
+        return nextCalls.length > 0;
+      }
+
+      // Nếu có server data, so sánh số lượng API calls
+      if (nextCalls.length !== serverData.length) {
+        return true;
+      }
+
+      // So sánh nội dung nếu số lượng bằng nhau
+      return JSON.stringify(nextCalls) !== JSON.stringify(serverData);
+    })();
+
+    setHasLocalChanges(hasChanged);
+
+    console.log("Advanced - hasLocalChanges updated:", {
+      serverDataLength: serverData?.length || 0,
+      nextCallsLength: nextCalls.length,
+      hasChanged,
+      serverData,
+      nextCalls,
+    });
+  }, [nextCalls, serverData]);
 
   // Component Tooltip (thêm vào đầu file)
   const Tooltip = ({ visible, children, className = "" }) => {
@@ -599,6 +642,17 @@ export const ApiCallEditor = ({
     }
   };
 
+  // ✅ SỬA: handleSaveButtonMouseEnter - chỉ hiển thị tooltip, không fetch API
+  const handleSaveButtonMouseEnter = () => {
+    setSaveTooltipVisible(true);
+  };
+
+  // ✅ SỬA: handleSaveButtonMouseLeave để reset tooltip thôi, không làm gì khác
+  const handleSaveButtonMouseLeave = () => {
+    setSaveTooltipVisible(false);
+    // ✅ KHÔNG reset hasLocalChanges ở đây
+  };
+
   // Thêm state để theo dõi các calls đã được save (original calls)
   const [savedCalls, setSavedCalls] = useState([]);
 
@@ -788,11 +842,12 @@ export const ApiCallEditor = ({
     };
   }, [isTargetEndpointSuggestionsOpen]);
 
-  // ✅ SỬA: Cập nhật handleSave để sử dụng hàm async
+  // ✅ SỬA: handleSave để gọi lại server data sau khi save thành công
   const handleSave = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Kiểm tra thay đổi trước khi lưu
-    const hasChanged = await hasChanges();
-    if (!hasChanged) {
+    if (!hasLocalChanges) {
       toast.info(
         "No changes detected. Please modify the API calls before saving."
       );
@@ -831,21 +886,33 @@ export const ApiCallEditor = ({
       },
     };
 
-    fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
-      credentials: "include",
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to save advanced configuration");
-        toast.success("Advanced configuration saved successfully!");
-        if (onSave) onSave();
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(error.message);
-      });
+    try {
+      const response = await fetch(
+        `${API_ROOT}/endpoints/advanced/${endpointId}`,
+        {
+          credentials: "include",
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok)
+        throw new Error("Failed to save advanced configuration");
+
+      toast.success("Advanced configuration saved successfully!");
+
+      // ✅ SỬA: Reset hasLocalChanges về false NGAY LẬP TỨC sau khi PUT thành công
+      setHasLocalChanges(false);
+
+      // ✅ LOẠI BỎ: Gọi callback để cập nhật serverData ở parent component
+      // if (onSaveSuccess) onSaveSuccess();
+
+      if (onSave) onSave();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message);
+    }
   };
 
   // Cập nhật useEffect để lưu giá trị ban đầu khi nextCalls thay đổi
@@ -933,12 +1000,11 @@ export const ApiCallEditor = ({
             <Button
               size="icon"
               className={`h-9 w-9 btn-primary rounded-full shadow-none hover:opacity-80 my-1
-                transition-all ${buttonShadow ? "shadow-md/30" : ""}
-                ${hasChanges() ? "bg-[#FBEB6B] hover:bg-[#FDE047]" : ""}
-              `}
+    transition-all ${buttonShadow ? "shadow-md/30" : ""}
+  `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
-              onMouseEnter={() => setSaveTooltipVisible(true)}
-              onMouseLeave={() => setSaveTooltipVisible(false)}
+              onMouseEnter={handleSaveButtonMouseEnter} // ✅ Dùng hàm mới
+              onMouseLeave={handleSaveButtonMouseLeave}
             >
               <SaveIcon className="h-5 w-5" />
             </Button>
