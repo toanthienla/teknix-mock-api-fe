@@ -615,6 +615,40 @@ export const ApiCallEditor = ({
     }
   };
 
+  // ✅ SỬA: handleSaveButtonMouseEnter để fetch dữ liệu mới nhất
+  const handleSaveButtonMouseEnter = () => {
+    setSaveTooltipVisible(true);
+
+    // ✅ GỌI API GET để lấy dữ liệu mới nhất
+    fetch(`${API_ROOT}/endpoints/advanced/${endpointId}`, {
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch current data");
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.success && data.data && data.data.advanced_config) {
+          const apiNextCalls = data.data.advanced_config.nextCalls || [];
+
+          // So sánh với local data
+          const hasChanged =
+            JSON.stringify(nextCalls) !== JSON.stringify(apiNextCalls);
+          setHasLocalChanges(hasChanged);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching current data:", error);
+        // Nếu có lỗi, coi như có thay đổi để an toàn
+        setHasLocalChanges(true);
+      });
+  };
+
+  // ✅ SỬA: handleSaveButtonMouseLeave
+  const handleSaveButtonMouseLeave = () => {
+    setSaveTooltipVisible(false);
+  };
+
   // Thêm state để theo dõi các calls đã được save (original calls)
   const [savedCalls, setSavedCalls] = useState([]);
 
@@ -966,8 +1000,8 @@ export const ApiCallEditor = ({
     ${hasLocalChanges ? "bg-[#FBEB6B] hover:bg-[#FDE047]" : ""}
   `}
               onClick={() => handleClick(handleSave, setButtonShadow)}
-              onMouseEnter={() => setSaveTooltipVisible(true)}
-              onMouseLeave={() => setSaveTooltipVisible(false)}
+              onMouseEnter={handleSaveButtonMouseEnter} // ✅ Dùng hàm mới
+              onMouseLeave={handleSaveButtonMouseLeave}
             >
               <SaveIcon className="h-5 w-5" />
             </Button>
