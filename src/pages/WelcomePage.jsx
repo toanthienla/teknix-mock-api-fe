@@ -72,7 +72,7 @@ export default function WelcomePage() {
             © Teknix Corp. All rights reserved.
           </div>
 
-          <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs text-gray-600">
+          <div className="absolute right-6 bottom-4 flex items-center gap-3 text-xs">
             <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 invert" />
             <img src={fbIcon} alt="facebook" className="w-4 h-4 invert" />
             <img src={linkedinIcon} alt="linkedin" className="w-4 h-4 invert" />
