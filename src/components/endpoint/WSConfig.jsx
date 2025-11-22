@@ -8,6 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {Input} from "@/components/ui/input";
 import {Code, SaveIcon} from "lucide-react";
 import {highlight, languages} from "prismjs/components/prism-core.js";
@@ -16,7 +22,7 @@ import {toast} from "react-toastify";
 import React, {useEffect, useState} from "react";
 import {statusCodes} from "@/components/endpoint/constants.js";
 
-export const WSConfig = ({ config, isStateful, method, onSave }) => {
+export const WSConfig = ({config, isStateful, method, onSave}) => {
 
   const statelessAllowed = statusCodes.map((c) => c.code); // Get all codes
 
@@ -120,6 +126,7 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
     );
 
   const [buttonShadow, setButtonShadow] = useState(false);
+
   function handleClick(callback, setShadow, duration = 100) {
     setShadow(true);
 
@@ -153,18 +160,30 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
         <div className="space-y-2">
           {/* --- Header --- */}
           <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex space-x-2 z-10">
-            <Button
-              size="icon"
-              className={`btn-primary rounded-full my-1 shadow-none transition-all 
-                ${buttonShadow ? "shadow-md/30" : ""}
-              `}
-              onClick={() => handleClick(handleSave, setButtonShadow)}
-              disabled={!isChanged}
-            >
-              <SaveIcon
-                className="w-5 h-5"
-              />
-            </Button>
+            {/* --- Header Save Button + Tooltip --- */}
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block">
+                    <Button
+                      size="icon"
+                      disabled={!isChanged}
+                      className={`btn-primary rounded-full my-1 shadow-none transition-all 
+                        ${buttonShadow ? "shadow-md/30" : ""}
+                      `}
+                      onClick={() => handleClick(handleSave, setButtonShadow)}
+                    >
+                      <SaveIcon className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+
+                <TooltipContent side="left" className="text-xs text-white bg-black">
+                  {!isChanged ? "No data changes found" : "Save"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
           </div>
 
           <div className="flex justify-between items-center">
@@ -208,7 +227,7 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
                     }
                   }}
                 >
-                  <Code className="mr-1 h-4 w-4" /> Format
+                  <Code className="mr-1 h-4 w-4"/> Format
                 </Button>
               </div>
             </div>
@@ -245,7 +264,7 @@ export const WSConfig = ({ config, isStateful, method, onSave }) => {
                 <SelectValue placeholder="Select Code"/>
               </SelectTrigger>
               <SelectContent className="max-h-[250px] overflow-y-auto">
-                {availableCodes.map(({ code, description }) => (
+                {availableCodes.map(({code, description}) => (
                   <SelectItem key={code} value={code}>
                     {code} - {description}
                   </SelectItem>

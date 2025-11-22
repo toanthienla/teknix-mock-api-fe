@@ -3015,11 +3015,13 @@ const DashboardPage = () => {
         />
 
         <div
-          className="response-page-content flex flex-col px-16 py-4"
+          className="response-page-content flex flex-col px-16 py-6"
           style={{
             backgroundImage: `url(${dot_background})`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
+            backgroundRepeat: "repeat",
+            backgroundSize: "auto",
+            width: "100%",
+            height: "100%",
           }}
         >
           {/* Phần bên trái - Display Endpoint Name and Method */}
@@ -3193,7 +3195,7 @@ const DashboardPage = () => {
               {/* Header với nút Add và Search */}
               <div className="response-header flex flex-col rounded-t-lg ">
                 <div className="flex items-center justify-between p-2.5 rounded-t-lg border border-b-0">
-                  <div className="flex items-center gap-3.5">
+                  <div className="flex items-center gap-3">
                     {!isStateful && (
                       <div className="relative">
                         <button
@@ -3218,6 +3220,9 @@ const DashboardPage = () => {
                         </Tooltip>
                       </div>
                     )}
+                    <div className={`flex items-center gap-2 ${isStateful && "ml-1"}`}>
+                      <span className="text-sm">List Response - {endpointResponses.length}</span>
+                    </div>
                     {/* <div className="flex items-center rounded-lg border px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
                         <img
@@ -3797,7 +3802,7 @@ const DashboardPage = () => {
                       <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
-                        {renderTabButton(
+                        {wsEnabled && renderTabButton(
                           "wsConfig",
                           "WS Configuration",
                           ws_config_icon
@@ -4171,7 +4176,7 @@ const DashboardPage = () => {
                               <div className="relative">
                                 {/* JSON Viewer (read-only, có highlight + format) */}
                                 <div
-                                  className="custom-json-editor font-mono text-sm h-60 border dark:border-none rounded-md p-2 overflow-auto"
+                                  className="custom-json-editor font-mono text-sm h-fit min-h-[200px] max-h-[400px] border dark:border-none rounded-md p-2 overflow-auto"
                                   dangerouslySetInnerHTML={{
                                     __html: (() => {
                                       try {
