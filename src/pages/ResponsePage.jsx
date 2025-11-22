@@ -71,7 +71,7 @@ import { statusCodes } from "@/components/endpoint/constants";
 import { WSConfig } from "@/components/endpoint/WSConfig.jsx";
 import "@/styles/pages/response-page.css";
 import { useTheme } from "@/services/ThemeContext.jsx";
-import {useProjectWs} from "@/services/useProjectWs.js";
+import { useProjectWs } from "@/services/useProjectWs.js";
 
 const DashboardPage = () => {
   const { isDark } = useTheme();
@@ -2088,7 +2088,44 @@ const DashboardPage = () => {
         )
       );
 
-      if (String(currentWsId) === String(id)) setCurrentWsId(null);
+      // ✅ ĐẢM BẢO chuyển hướng ngay khi xóa workspace đang dùng
+      if (String(currentWsId) === String(id)) {
+        // Tìm workspace khác để chuyển sang
+        const remainingWorkspaces = workspaces.filter(
+          (ws) => String(ws.id) !== String(id)
+        );
+        const newWorkspaceId =
+          remainingWorkspaces.length > 0 ? remainingWorkspaces[0].id : null;
+
+        localStorage.setItem("currentWorkspace", newWorkspaceId);
+        setCurrentWsId(newWorkspaceId);
+
+        // ✅ CHUYỂN HƯỚNG NGAY LẬP TỨC
+        navigate("/dashboard", { replace: true });
+
+        toast.success(
+          `Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`
+        );
+        return; // ✅ DỪNG NGAY Ở ĐÂY ĐỂ TRÁNH XUNG ĐỘT
+      }
+
+      // Nếu không phải workspace đang dùng, chỉ update state
+      setWorkspaces((prev) => prev.filter((w) => w.id !== id));
+      setProjects((prev) =>
+        prev.filter((p) => String(p.workspace_id) !== String(id))
+      );
+      setFolders((prev) =>
+        prev.filter(
+          (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
+        )
+      );
+      setEndpoints((prev) =>
+        prev.filter(
+          (e) =>
+            !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
+            !folderIds.some((fid) => String(e.folder_id) === String(fid))
+        )
+      );
 
       toast.success(
         `Workspace and all its content (${projectsToDelete.length} projects, ${foldersToDelete.length} folders, ${endpointsToDelete.length} endpoints) deleted successfully`
@@ -3220,8 +3257,14 @@ const DashboardPage = () => {
                         </Tooltip>
                       </div>
                     )}
-                    <div className={`flex items-center gap-2 ${isStateful && "ml-1"}`}>
-                      <span className="text-sm">List Response - {endpointResponses.length}</span>
+                    <div
+                      className={`flex items-center gap-2 ${
+                        isStateful && "ml-1"
+                      }`}
+                    >
+                      <span className="text-sm">
+                        List Response - {endpointResponses.length}
+                      </span>
                     </div>
                     {/* <div className="flex items-center rounded-lg border px-1.5 py-1 w-[146px] h-[26px]">
                       <div className="flex items-center gap-0.5 px-0.5">
@@ -3802,11 +3845,12 @@ const DashboardPage = () => {
                       <div className="flex items-center">
                         {renderTabButton("Rules", "Rules", Rules_icon)}
                         {renderTabButton("proxy", "Proxy", Proxy_icon)}
-                        {wsEnabled && renderTabButton(
-                          "wsConfig",
-                          "WS Configuration",
-                          ws_config_icon
-                        )}
+                        {wsEnabled &&
+                          renderTabButton(
+                            "wsConfig",
+                            "WS Configuration",
+                            ws_config_icon
+                          )}
                       </div>
 
                       {/* Dropdown chọn response - Tab bar (chỉ hiển thị khi stateless) */}
