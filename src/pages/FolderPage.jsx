@@ -11,7 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { useNavigate, useParams } from "react-router-dom";
+import {Navigate, useNavigate, useParams} from "react-router-dom";
 import { API_ROOT } from "@/utils/constants.js";
 import {
   Dialog,
@@ -47,6 +47,7 @@ import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
 import refreshIcon from "@/assets/light/refresh.svg";
 import WSChannelSheet from "@/components/WSChannel.jsx";
+import {useProjectWs} from "@/services/useProjectWs.js";
 
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -421,6 +422,20 @@ export default function FolderPage() {
   useEffect(() => {
     checkUserLogin();
   }, []);
+
+  useEffect(() => {
+    if (!currentWsId) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+      return;
+    }
+
+    // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
+    if (workspaces.length > 0 && !currentWorkspace) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+    }
+  }, [currentWsId, workspaces]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -1344,12 +1359,16 @@ export default function FolderPage() {
     toast.info("Copied to clipboard!");
   };
 
+  useProjectWs(currentProject?.id, currentProject?.websocket_enabled);
+
   useEffect(() => {
     const saved = localStorage.getItem("folder_active_tab");
     if (saved && saved !== activeTab) {
       setActiveTab(saved);
     }
   }, []);
+
+  if (!currentProject) return null;
 
   return (
     <div className="folder-page flex flex-col min-h-screen">

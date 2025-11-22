@@ -8,6 +8,7 @@ import linkedinIcon from "@/assets/light/linkedin.svg";
 import { LoginForm } from "@/components/LoginForm.jsx";
 import "@/styles/pages/auth.css";
 import {useTheme} from "@/services/ThemeContext.jsx";
+import React from "react";
 
 export default function LoginPage() {
   const { isDark, toggleTheme } = useTheme();
@@ -17,7 +18,7 @@ export default function LoginPage() {
   const loginImage = isDark ? loginImageDark : loginImageLight;
 
   return (
-    <div className="auth-page min-h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4">
+    <div className="auth-page h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 lg:px-6 lg:py-6 transition-colors duration-300">
       {/* Toggle Button */}
       <button
         onClick={toggleTheme}
@@ -38,7 +39,7 @@ export default function LoginPage() {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">MockHub</h1>
             </div>
 
-            <div className="flex justify-center items-center mt-6 sm:mt-8">
+            <div className="flex justify-center items-center">
               <img
                 src={loginImage}
                 alt="Login Image"
@@ -58,22 +59,38 @@ export default function LoginPage() {
 
           {/* Cột phải */}
           <div className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-10 relative">
-            <div className="w-full max-w-sm">
+            <div className="flex flex-col justify-center h-1/2 w-full min-w-sm max-w-md">
               <LoginForm />
             </div>
 
-            <div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs">
-              © Teknix Corp. All rights reserved.
-            </div>
+            {/*<div className="absolute left-4 sm:left-6 bottom-3 sm:bottom-4 text-xs">*/}
+            {/*  © Teknix Corp. All rights reserved.*/}
+            {/*</div>*/}
 
-            <div className="absolute right-4 sm:right-6 bottom-3 sm:bottom-4 flex items-center gap-2 sm:gap-3 text-xs opacity-80">
-              <img src={tiktokIcon} alt="tiktok" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
-              <img src={fbIcon} alt="facebook" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
-              <img src={linkedinIcon} alt="linkedin" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
-              <a className="hover:underline font-semibold" href="">About</a>
-              <span>·</span>
-              <a className="hover:underline font-semibold" href="">Support</a>
-            </div>
+            {/*<div className="absolute right-4 sm:right-6 bottom-3 sm:bottom-4 flex items-center gap-2 sm:gap-3 text-xs opacity-80">*/}
+            {/*  <img src={tiktokIcon} alt="tiktok" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />*/}
+            {/*  <img src={fbIcon} alt="facebook" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />*/}
+            {/*  <img src={linkedinIcon} alt="linkedin" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />*/}
+            {/*  <a className="hover:underline font-semibold" href="">About</a>*/}
+            {/*  <span>·</span>*/}
+            {/*  <a className="hover:underline font-semibold" href="">Support</a>*/}
+            {/*</div>*/}
+            <footer
+              className="absolute bottom-3 sm:bottom-4 w-full flex justify-between items-center px-4 py-2 text-xs font-semibold">
+              <span>© Teknix Corp. All rights reserved.</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-xs">
+                <img src={tiktokIcon} alt="tiktok" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
+                <img src={fbIcon} alt="facebook" className="w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
+                <img src={linkedinIcon} alt="linkedin" className="w-w-3 h-3 sm:w-4 sm:h-4 dark:invert" />
+                <a className="hover:underline font-semibold" href="">
+                  About
+                </a>
+                <span>·</span>
+                <a className="hover:underline font-semibold" href="">
+                  Support
+                </a>
+              </div>
+            </footer>
           </div>
         </div>
       </div>
