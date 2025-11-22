@@ -47,6 +47,7 @@ import FolderCard from "@/components/FolderCard.jsx";
 import searchIcon from "@/assets/light/search.svg";
 import refreshIcon from "@/assets/light/refresh.svg";
 import WSChannelSheet from "@/components/WSChannel.jsx";
+import {useProjectWs} from "@/services/useProjectWs.js";
 
 const BaseSchemaEditor = ({ folderData, folderId, onSave }) => {
   const [schemaFields, setSchemaFields] = useState([]);
@@ -1343,6 +1344,8 @@ export default function FolderPage() {
     navigator.clipboard.writeText(url);
     toast.info("Copied to clipboard!");
   };
+
+  useProjectWs(currentProject?.id, currentProject?.websocket_enabled);
 
   useEffect(() => {
     const saved = localStorage.getItem("folder_active_tab");

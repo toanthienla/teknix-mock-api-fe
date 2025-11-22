@@ -71,6 +71,7 @@ import { statusCodes } from "@/components/endpoint/constants";
 import { WSConfig } from "@/components/endpoint/WSConfig.jsx";
 import "@/styles/pages/response-page.css";
 import { useTheme } from "@/services/ThemeContext.jsx";
+import {useProjectWs} from "@/services/useProjectWs.js";
 
 const DashboardPage = () => {
   const { isDark } = useTheme();
@@ -620,10 +621,10 @@ const DashboardPage = () => {
           // ✅ SỬA: Luôn cập nhật để đảm bảo có status codes đúng từ endpoint responses
           setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
 
-          console.log(
-            "Updated available status codes from endpoint responses:",
-            statusCodesWithDesc
-          );
+          // console.log(
+          //   "Updated available status codes from endpoint responses:",
+          //   statusCodesWithDesc
+          // );
         } else {
           // Fallback nếu không có endpoint responses
           setNewApiCallAvailableStatusCodes([
@@ -1553,6 +1554,8 @@ const DashboardPage = () => {
     ? projects.find((p) => String(p.id) === String(projectId))
     : null;
 
+  useProjectWs(currentProject?.id, currentProject?.websocket_enabled);
+
   const currentWorkspace = currentProject
     ? workspaces.find(
         (w) => String(w.id) === String(currentProject.workspace_id)
@@ -1612,7 +1615,7 @@ const DashboardPage = () => {
       if (!response.ok) throw new Error("Failed to fetch endpoint");
       const data = await response.json();
       setCurrentEndpoint(data);
-      console.log("Current endpoint:", data);
+      // console.log("Current endpoint:", data);
     } catch (error) {
       console.error("Error fetching endpoint:", error);
     }

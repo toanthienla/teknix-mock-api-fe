@@ -23,10 +23,12 @@ export async function createCentrifugoForProject(projectId) {
 
   centrifuge.on("connected", (ctx) => {
     console.log("[centrifugo] connected!", ctx);
+    console.log("[centrifugo] WS State (connected):", centrifuge.state);
   });
 
   centrifuge.on("disconnected", (ctx) => {
     console.log("[centrifugo] disconnected!", ctx);
+    console.log("[centrifugo] WS State (disconnected):", centrifuge.state);
   });
 
   // ===== Client tự subscribe channel pj:ID =====
@@ -55,5 +57,6 @@ export async function createCentrifugoForProject(projectId) {
   // Connect
   centrifuge.connect();
 
+  console.log("[centrifugo] State", centrifuge.state);
   return { centrifuge, sub };
 }

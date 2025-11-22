@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Dialog,
-  DialogContent,
+  DialogContent, DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -21,7 +21,6 @@ import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
 import {toast} from "react-toastify";
-import {useProjectWs} from "@/services/useProjectWs.js";
 
 export default function WSChannelSheet({
                                          open,
@@ -31,36 +30,10 @@ export default function WSChannelSheet({
                                          onDeleteWSChannel,
                                          onCopyURL,
                                        }) {
-  useProjectWs(project?.id, open);
-
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [wsURL, setWsURL] = useState(null);
   const [projectToken, setProjectToken] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
-
-  // const [responseBody, setResponseBody] = useState(null);
-
-  // const jsonViewerRef = useRef(null);
-  // const jsonEditor = useRef(null);
-
-  // useEffect(() => {
-  //   if (jsonViewerRef.current && open) {
-  //     // Destroy old instance before re-render
-  //     if (jsonEditor.current) jsonEditor.current.destroy();
-  //
-  //     jsonEditor.current = new JSONEditor(jsonViewerRef.current, {
-  //       mode: "view",
-  //       mainMenuBar: false,
-  //       navigationBar: false,
-  //       statusBar: false,
-  //     });
-  //     jsonEditor.current.set(responseBody);
-  //   }
-  //
-  //   return () => {
-  //     if (jsonEditor.current) jsonEditor.current.destroy();
-  //   };
-  // }, [open, responseBody]);
 
   useEffect(() => {
     if (open && project) {
@@ -69,20 +42,9 @@ export default function WSChannelSheet({
           const data = await getProjectConnectToken(project.id);
           setWsURL(data.ws_url);
           setProjectToken(data.token);
-          // setResponseBody({
-          //   result: {
-          //     message: "Project token retrieved successfully",
-          //     channels: data.channels,
-          //     mode: data.mode,
-          //   }
-          // });
           toast.success("Project token retrieved successfully");
         } catch (error) {
           console.error("Failed to get project connect token:", error);
-          // setResponseBody({
-          //   error: "Failed to fetch project token",
-          //   details: error.message
-          // });
           toast.error("Failed to fetch project token");
         }
       })();
@@ -106,8 +68,7 @@ export default function WSChannelSheet({
             <SheetTitle className="text-2xl font-bold">
               Real-time Updates via WebSocket
             </SheetTitle>
-            <SheetDescription>
-            </SheetDescription>
+            <SheetDescription></SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 mt-4 overflow-y-auto space-y-4 text-sm pr-4">
@@ -167,32 +128,14 @@ export default function WSChannelSheet({
 
                     // --- Nếu server trả về lỗi ---
                     if (!r.ok) {
-                      // setResponseBody({
-                      //   result: null,
-                      //   error: "Test failed",
-                      //   details: r.error || "Unknown error",
-                      // });
                       toast.error("Test failed");
                       return;
                     }
 
                     // --- Nếu thành công ---
-                    // setResponseBody({
-                    //   result: {
-                    //     status: "success",
-                    //     channel: r.channel,
-                    //     message: r.message || "Test connection successful",
-                    //     payload: r.payload || {},
-                    //   },
-                    // });
                     toast.success("Test connection successful");
 
                   } catch (e) {
-                    // fallback nếu testWsConnection ném exception thật
-                    // setResponseBody({
-                    //   error: "Test failed",
-                    //   details: e.message,
-                    // });
                     toast.error("Test failed: " + e.message || "Unknown error");
                   } finally {
                     setIsTesting(false);
@@ -239,65 +182,7 @@ export default function WSChannelSheet({
               />
             </div>
 
-            {/*/!* Server Response *!/*/}
-            {/*<div className="rounded-lg">*/}
-            {/*  <div className="btn-primary px-4 py-2 rounded-lg flex items-center mb-3">*/}
-            {/*    <img*/}
-            {/*      src={serverResponseIcon}*/}
-            {/*      alt="Server Response"*/}
-            {/*      className="w-4 h-4 mr-2"*/}
-            {/*    />*/}
-            {/*    <span className="">Server Response</span>*/}
-            {/*  </div>*/}
-
-            {/*  /!* JSON Viewer *!/*/}
-            {/*  <div className="relative">*/}
-            {/*    <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">*/}
-            {/*      <span className="opacity-70">json</span>*/}
-            {/*      <button*/}
-            {/*        className="btn-primary text-xs px-2 py-1 rounded-xs"*/}
-            {/*        onClick={() => handleCopy(JSON.stringify(responseBody.result))}*/}
-            {/*      >*/}
-            {/*        Copy*/}
-            {/*      </button>*/}
-            {/*    </div>*/}
-            {/*    /!* JSON Viewer (read-only, có highlight + format) *!/*/}
-            {/*    <div*/}
-            {/*      className="custom-ws-json font-mono text-sm h-fit border border-t-0*/}
-            {/*      rounded-b-md p-2"*/}
-            {/*      dangerouslySetInnerHTML={{*/}
-            {/*        __html: (() => {*/}
-            {/*          try {*/}
-            {/*            let formattedData;*/}
-
-            {/*            if (responseBody?.error) {*/}
-            {/*              formattedData = JSON.stringify(*/}
-            {/*                {*/}
-            {/*                  error: responseBody.error,*/}
-            {/*                  details: responseBody.details,*/}
-            {/*                },*/}
-            {/*                null,*/}
-            {/*                2*/}
-            {/*              );*/}
-            {/*            } else if (responseBody?.result) {*/}
-            {/*              formattedData = JSON.stringify(responseBody.result, null, 2);*/}
-            {/*            } else {*/}
-            {/*              formattedData = "[]";*/}
-            {/*            }*/}
-
-            {/*            const highlighted = highlight(formattedData, languages.json, "json");*/}
-            {/*            return `<pre style="margin:0; white-space:pre;">${highlighted}</pre>`;*/}
-            {/*          } catch (err) {*/}
-            {/*            console.error("JSON format error:", err);*/}
-            {/*            return "<pre style='color:red'>Invalid JSON</pre>";*/}
-            {/*          }*/}
-            {/*        })(),*/}
-            {/*      }}*/}
-            {/*    />*/}
-            {/*  </div>*/}
-            {/*</div>*/}
             {/* Delete Button */}
-
             <div className="">
               <Button
                 variant="destructive"
@@ -317,8 +202,7 @@ export default function WSChannelSheet({
             </div>
           </div>
 
-          <SheetFooter>
-          </SheetFooter>
+          <SheetFooter></SheetFooter>
         </SheetContent>
       </Sheet>
 
@@ -330,6 +214,7 @@ export default function WSChannelSheet({
               Delete Confirm
             </DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <div className="mt-4 flex flex-col space-y-2">
             <Button
