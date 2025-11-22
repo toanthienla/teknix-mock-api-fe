@@ -4220,13 +4220,9 @@ const DashboardPage = () => {
                                     className="custom-initial-value"
                                     value={tempDataDefaultString}
                                     onValueChange={(code) => {
+                                      // ✅ CHỈ cập nhật string, không parse
                                       setTempDataDefaultString(code);
-                                      try {
-                                        // Chỉ cập nhật state khi JSON hợp lệ
-                                        setTempDataDefault(JSON.parse(code));
-                                      } catch {
-                                        // Giữ nguyên state cũ nếu JSON không hợp lệ
-                                      }
+                                      // ✅ KHÔNG parse thời gian thực nữa
                                     }}
                                     highlight={(code) =>
                                       highlight(code, languages.json)
@@ -4250,8 +4246,6 @@ const DashboardPage = () => {
                                     }}
                                     textareaClassName="focus:outline-none w-full"
                                   />
-
-                                  {/* JSON Editor controls */}
                                   <div className="absolute top-2 right-2 flex space-x-2 z-10">
                                     <Button
                                       variant="outline"
@@ -4259,14 +4253,19 @@ const DashboardPage = () => {
                                       className="w-fit h-[29px] rounded-sm bg-[#1a2131] text-white hover:bg-[#222838] hover:text-white"
                                       onClick={() => {
                                         try {
+                                          // ✅ CHỈ parse khi bấm Format
+                                          const parsed = JSON.parse(
+                                            tempDataDefaultString
+                                          );
                                           const formatted = JSON.stringify(
-                                            JSON.parse(tempDataDefaultString),
+                                            parsed,
                                             null,
                                             2
                                           );
                                           setTempDataDefaultString(formatted);
-                                          setTempDataDefault(
-                                            JSON.parse(formatted)
+                                          setTempDataDefault(parsed); // ✅ Cập nhật state khi parse thành công
+                                          toast.success(
+                                            "JSON formatted successfully!"
                                           );
                                         } catch {
                                           toast.error("Invalid JSON format");
@@ -4307,7 +4306,7 @@ const DashboardPage = () => {
                         onSave={() => fetchEndpointResponses(isStateful)}
                         availableEndpoints={newApiCallAvailableEndpoints}
                         availableStatusCodes={newApiCallAvailableStatusCodes} // ✅ Debug: Kiểm tra prop này
-                         apiCallUpdateTrigger={apiCallUpdateTrigger} // Truyền trigger
+                        apiCallUpdateTrigger={apiCallUpdateTrigger} // Truyền trigger
                       />
                     </div>
                   )}

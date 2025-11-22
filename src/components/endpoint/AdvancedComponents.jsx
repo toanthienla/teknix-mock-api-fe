@@ -357,6 +357,7 @@ export const ApiCallEditor = ({
     setJsonInputs(initialJsonInputs);
   }, [nextCalls]);
 
+  // ✅ SỬA: handleJsonChange - chỉ cập nhật input, không parse
   const handleJsonChange = (index, value) => {
     // Cập nhật JSON input
     setJsonInputs((prev) => ({
@@ -364,34 +365,29 @@ export const ApiCallEditor = ({
       [index]: value,
     }));
 
-    // Cố gắng parse JSON để lưu vào body
-    try {
-      const parsed = JSON.parse(value);
-      const updatedCalls = [...nextCalls];
-      updatedCalls[index] = {
-        ...updatedCalls[index],
-        body: parsed, // Lưu parsed object
-      };
-      setNextCalls(updatedCalls);
-    } catch {
-      // Nếu không parse được, vẫn lưu string để user có thể sửa
-      const updatedCalls = [...nextCalls];
-      updatedCalls[index] = {
-        ...updatedCalls[index],
-        body: value, // Lưu string nếu không parse được
-      };
-      setNextCalls(updatedCalls);
-    }
+    // ✅ KHÔNG parse thời gian thực nữa
+    // Chỉ lưu string vào body để giữ nguyên giá trị người dùng nhập
+    const updatedCalls = [...nextCalls];
+    updatedCalls[index] = {
+      ...updatedCalls[index],
+      body: value, // Lưu string thay vì parse
+    };
+    setNextCalls(updatedCalls);
   };
 
-  // Thêm hàm xử lý khi nhấn nút format
+  // ✅ SỬA: handleFormatJson - parse và format JSON
   const handleFormatJson = (index) => {
-    try {
-      const currentJson = jsonInputs[index] || "";
-      if (!currentJson.trim()) return;
+    const currentJson = jsonInputs[index] || "";
+    if (!currentJson.trim()) {
+      toast.error("Please enter JSON to format");
+      return;
+    }
 
-      // Parse và format JSON
+    try {
+      // Parse JSON
       const parsed = JSON.parse(currentJson);
+
+      // Format JSON
       const formatted = JSON.stringify(parsed, null, 2);
 
       // Cập nhật cả jsonInputs và nextCalls
@@ -403,13 +399,13 @@ export const ApiCallEditor = ({
       const updatedCalls = [...nextCalls];
       updatedCalls[index] = {
         ...updatedCalls[index],
-        body: parsed, // Lưu parsed object
+        body: parsed, // Lưu parsed object sau khi format
       };
       setNextCalls(updatedCalls);
 
       toast.success("JSON formatted successfully!");
-    } catch {
-      toast.error("Invalid JSON format - cannot format");
+    } catch (error) {
+      toast.error(`Invalid JSON format: ${error.message}`);
     }
   };
 
