@@ -139,7 +139,7 @@ export default function Topbar({
         <DropdownMenu onOpenChange={setOpenWorkspace}>
           <DropdownMenuTrigger asChild>
             <button
-              className="workspace-btn flex items-center justify-between px-3 py-2 rounded-md font-medium min-w-[180px]"
+              className="workspace-btn flex items-center justify-between px-3 py-2 rounded-md font-medium min-w-[200px]"
             >
               <span>{currentWorkspace?.name || "Select Workspace"}</span>
               <img

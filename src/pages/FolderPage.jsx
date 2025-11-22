@@ -11,7 +11,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { useNavigate, useParams } from "react-router-dom";
+import {Navigate, useNavigate, useParams} from "react-router-dom";
 import { API_ROOT } from "@/utils/constants.js";
 import {
   Dialog,
@@ -422,6 +422,20 @@ export default function FolderPage() {
   useEffect(() => {
     checkUserLogin();
   }, []);
+
+  useEffect(() => {
+    if (!currentWsId) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+      return;
+    }
+
+    // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
+    if (workspaces.length > 0 && !currentWorkspace) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+    }
+  }, [currentWsId, workspaces]);
 
   const currentProject = projectId
     ? projects.find((p) => String(p.id) === String(projectId))
@@ -1353,6 +1367,8 @@ export default function FolderPage() {
       setActiveTab(saved);
     }
   }, []);
+
+  if (!currentProject) return null;
 
   return (
     <div className="folder-page flex flex-col min-h-screen">

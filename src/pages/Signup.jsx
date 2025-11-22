@@ -17,7 +17,7 @@ export default function SignupPage() {
   const signupImage = isDark ? signupImageDark : signupImageLight;
 
   return (
-    <div className="auth-page min-h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 transition-colors duration-300">
+    <div className="auth-page h-screen w-full flex items-center justify-center px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 transition-colors duration-300">
       {/* Toggle Button */}
       <button
         onClick={toggleTheme}
@@ -26,7 +26,7 @@ export default function SignupPage() {
         {isDark ? "☀ Light" : "🌙 Dark"}
       </button>
 
-      <div className="w-full rounded-2xl flex items-center justify-center auth-page">
+      <div className="w-full h-full rounded-2xl flex items-center justify-center auth-page">
         {/* Bố cục chính chia 2 cột */}
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full auth-card rounded-2xl overflow-hidden">
 
@@ -56,7 +56,7 @@ export default function SignupPage() {
           </div>
 
           {/* Cột phải: Hình ảnh và mô tả */}
-          <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10 lg:block">
+          <div className="relative flex flex-col justify-between p-6 sm:p-8 md:p-10">
             {/* Logo trên cùng */}
             <div className="flex items-center justify-center lg:justify-start gap-2">
               <img

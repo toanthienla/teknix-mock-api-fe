@@ -156,6 +156,20 @@ export default function ProjectPage() {
   }, []);
 
   useEffect(() => {
+    if (!currentWsId) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+      return;
+    }
+
+    // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
+    if (workspaces.length > 0 && !currentWorkspace) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+    }
+  }, [currentWsId, workspaces]);
+
+  useEffect(() => {
     if (projectId && projects.length > 0) {
       const project = projects.find((p) => String(p.id) === String(projectId));
       if (project) {

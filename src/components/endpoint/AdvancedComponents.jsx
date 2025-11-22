@@ -1286,7 +1286,7 @@ export const ApiCallEditor = ({
                     className="custom-initial-value"
                     style={{
                       fontFamily: '"Fira code", "Fira Mono", monospace',
-                      fontSize: 12,
+                      fontSize: 14,
                       minHeight: "124px",
                       maxHeight: "200px",
                       overflow: "auto",
