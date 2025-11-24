@@ -338,7 +338,7 @@ export const ApiCallEditor = ({
   // Thêm state để lưu JSON string thay vì dùng call.body trực tiếp
   const [jsonInputs, setJsonInputs] = useState({});
 
-  // Khởi tạo JSON inputs từ nextCalls
+  // ✅ SỬA: Khởi tạo JSON inputs từ nextCalls - luôn lưu string
   useEffect(() => {
     const initialJsonInputs = {};
     nextCalls.forEach((call, index) => {
@@ -346,8 +346,8 @@ export const ApiCallEditor = ({
         // Nếu body là string (JSON string), dùng trực tiếp
         initialJsonInputs[index] = call.body;
       } else if (call.body) {
-        // Nếu body là object, stringify
-        initialJsonInputs[index] = JSON.stringify(call.body, null, 2);
+        // Nếu body là object, stringify thành string nhưng giữ nguyên format
+        initialJsonInputs[index] = JSON.stringify(call.body);
       } else {
         // Default JSON
         initialJsonInputs[index] =
@@ -365,12 +365,11 @@ export const ApiCallEditor = ({
       [index]: value,
     }));
 
-    // ✅ KHÔNG parse thời gian thực nữa
-    // Chỉ lưu string vào body để giữ nguyên giá trị người dùng nhập
+    // ✅ SỬA: Luôn lưu string nguyên bản thay vì parse
     const updatedCalls = [...nextCalls];
     updatedCalls[index] = {
       ...updatedCalls[index],
-      body: value, // Lưu string thay vì parse
+      body: value, // ✅ LUÔN LƯU STRING NGUYÊN BẢN
     };
     setNextCalls(updatedCalls);
   };
@@ -399,7 +398,7 @@ export const ApiCallEditor = ({
       const updatedCalls = [...nextCalls];
       updatedCalls[index] = {
         ...updatedCalls[index],
-        body: parsed, // Lưu parsed object sau khi format
+        body: formatted, // ✅ SỬA: Lưu formatted string thay vì parsed object
       };
       setNextCalls(updatedCalls);
 
@@ -718,29 +717,21 @@ export const ApiCallEditor = ({
     setEndpointValidationErrors(newErrors);
   };
 
-  // Cập nhật hàm validateAllJson
+  // ✅ SỬA: Validation để làm việc với JSON string
   const validateAllJson = () => {
-    // Kiểm tra tất cả JSON trong nextCalls
+    // Kiểm tra tất cả JSON string trong jsonInputs
     for (let i = 0; i < nextCalls.length; i++) {
-      const body = nextCalls[i].body;
-      try {
-        // Thử chuyển body thành chuỗi JSON để kiểm tra
-        JSON.stringify(body);
-      } catch {
-        // Nếu không thể stringify thì JSON không hợp lệ
-        toast.error(`Invalid JSON in API Call ${i + 1} - Request Body`);
-        return false;
-      }
+      const jsonStr = jsonInputs[i];
+      if (!jsonStr || !jsonStr.trim()) continue;
 
-      // Kiểm tra JSON string từ jsonStrings
-      if (jsonStrings[i]) {
-        try {
-          JSON.parse(jsonStrings[i]);
-        } catch {
-          // Nếu không thể parse JSON string thì JSON không hợp lệ
-          toast.error(`Invalid JSON in API Call ${i + 1} - Request Body`);
-          return false;
-        }
+      try {
+        // Thử parse JSON string để kiểm tra tính hợp lệ
+        JSON.parse(jsonStr);
+      } catch (error) {
+        toast.error(
+          `Invalid JSON in API Call ${i + 1} - Request Body: ${error.message}`
+        );
+        return false;
       }
     }
     return true;
@@ -838,7 +829,7 @@ export const ApiCallEditor = ({
     };
   }, [isTargetEndpointSuggestionsOpen]);
 
-  // ✅ SỬA: handleSave để gọi lại server data sau khi save thành công
+  // ✅ SỬA: handleSave để xử lý JSON đúng cách khi gửi đi
   const handleSave = async () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -865,22 +856,39 @@ export const ApiCallEditor = ({
     const minimumId = getMinimumId(nextCalls);
     console.log(`Minimum ID in nextCalls: ${minimumId}`);
 
-    // Chuẩn bị payload with full target endpoints
+    // ✅ SỬA: Chuẩn bị payload - xử lý body đúng cách
     const payload = {
       advanced_config: {
         nextCalls: nextCalls.map((call, index) => {
           const fullTargetEndpoint = getFullTargetEndpoint(index);
+          let bodyToSend = call.body;
+
+          // ✅ XỬ LÝ ĐÚNG: Nếu body là string (JSON string), parse thành object trước khi gửi
+          // Nếu body là object, dùng trực tiếp
+          if (typeof bodyToSend === "string" && bodyToSend.trim()) {
+            try {
+              bodyToSend = JSON.parse(bodyToSend);
+            } catch (error) {
+              // Nếu không parse được, giữ nguyên string (trường hợp edge case)
+              console.warn(
+                "Failed to parse JSON body, keeping as string:",
+                error
+              );
+            }
+          }
 
           return {
             id: call.id || undefined, // Chỉ có ID cho calls đã được save
             target_endpoint: fullTargetEndpoint, // Sử dụng full path
             method: call.method,
-            body: call.body, // Gửi body như hiện tại (đã là object nếu parse được)
+            body: bodyToSend, // ✅ GỬI object thay vì string
             condition: Number(call.condition),
           };
         }),
       },
     };
+
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
 
     try {
       const response = await fetch(
@@ -889,7 +897,7 @@ export const ApiCallEditor = ({
           credentials: "include",
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload), // Backend sẽ tự stringify toàn bộ payload
         }
       );
 
@@ -900,9 +908,6 @@ export const ApiCallEditor = ({
 
       // ✅ SỬA: Reset hasLocalChanges về false NGAY LẬP TỨC sau khi PUT thành công
       setHasLocalChanges(false);
-
-      // ✅ LOẠI BỎ: Gọi callback để cập nhật serverData ở parent component
-      // if (onSaveSuccess) onSaveSuccess();
 
       if (onSave) onSave();
     } catch (error) {
