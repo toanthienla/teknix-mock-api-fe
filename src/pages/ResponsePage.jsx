@@ -280,12 +280,13 @@ const DashboardPage = () => {
     );
   };
 
-  const [buttonShadow, setButtonShadow] = useState(false);
+  const [buttonSaveShadow, setButtonSaveShadow] = useState(false);
+  const [buttonDefaultShadow, setButtonDefaultShadow] = useState(false);
 
   function handleClick(callback, setShadow, duration = 50) {
     setShadow(true);
 
-    callback();
+    if (callback instanceof Function) callback();
 
     setTimeout(() => setShadow(false), duration);
   }
@@ -3432,7 +3433,7 @@ const DashboardPage = () => {
                       >
                         <span className="truncate max-w-[150px]">
                           {selectedResponse
-                            ? `${selectedResponse.status_code}-${selectedResponse.name}`
+                            ? `${selectedResponse.status_code} - ${selectedResponse.name}`
                             : "Select Response"}
                         </span>
                         <ChevronDown className="h-3 w-3 flex-shrink-0" />
@@ -3482,12 +3483,12 @@ const DashboardPage = () => {
                                 className={`
                                   btn-primary hover:opacity-80 rounded-full shadow-none my-1
                                   transition-all
-                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                  ${buttonSaveShadow ? "shadow-md/30" : ""}
                                 `}
                                 onClick={() =>
                                   handleClick(
                                     handleSaveResponse,
-                                    setButtonShadow
+                                    setButtonSaveShadow
                                   )
                                 }
                                 onMouseEnter={() =>
@@ -3512,11 +3513,13 @@ const DashboardPage = () => {
                               <div className="relative">
                                 <Button
                                   size="icon"
-                                  // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
-                                  className="btn-primary hover:opacity-80 rounded-full shadow-none my-1" // ✅ CẬP NHẬT: Thay đổi hover
+                                  className={`btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  ${buttonDefaultShadow ? "shadow-md/30" : ""}
+                                  `}
                                   onClick={() => {
                                     if (selectedResponse) {
                                       setDefaultResponse(selectedResponse.id);
+                                      handleClick(null, setButtonDefaultShadow);
                                     }
                                   }}
                                   onMouseEnter={() =>
@@ -3863,7 +3866,7 @@ const DashboardPage = () => {
                         >
                           <span className="truncate max-w-[150px]">
                             {selectedResponse
-                              ? `${selectedResponse.status_code}-${selectedResponse.name}`
+                              ? `${selectedResponse.status_code} - ${selectedResponse.name}`
                               : "Select Response"}
                           </span>
                           <ChevronDown className="h-3 w-3 flex-shrink-0" />
@@ -3970,12 +3973,12 @@ const DashboardPage = () => {
                                 className={`
                                   btn-primary hover:opacity-80 rounded-full shadow-none my-1
                                   transition-all duration-300
-                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                  ${buttonSaveShadow ? "shadow-md/30" : ""}
                                 `}
                                 onClick={() =>
                                   handleClick(
                                     handleSaveResponse,
-                                    setButtonShadow
+                                    setButtonSaveShadow
                                   )
                                 }
                                 onMouseEnter={() =>
@@ -4177,7 +4180,7 @@ const DashboardPage = () => {
                                 className={`
                                   btn-primary hover:opacity-80 rounded-full shadow-none my-1
                                   transition-all duration-300
-                                  ${buttonShadow ? "shadow-md/30" : ""}
+                                  ${buttonSaveShadow ? "shadow-md/30" : ""}
                                   ${
                                     hasDataDefaultChanged()
                                       ? "bg-[#FBEB6B] hover:bg-[#FDE047]"
@@ -4187,7 +4190,7 @@ const DashboardPage = () => {
                                 onClick={() =>
                                   handleClick(
                                     handleSaveInitialValue,
-                                    setButtonShadow
+                                    setButtonSaveShadow
                                   )
                                 }
                                 onMouseEnter={() =>
@@ -5059,9 +5062,20 @@ const DashboardPage = () => {
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this workspace and all its projects?
-          </p>
+          {(() => {
+            const wsToDelete = workspaces.find(
+              (w) => String(w.id) === String(confirmDeleteWs)
+            );
+
+            return (
+              <DialogDescription>
+                Are you sure you want to delete workspace{" "}
+                <span className="text-red-500 font-bold">
+                      {wsToDelete ? wsToDelete.name : "this workspace"}
+                    </span>{" "} and all its projects?
+              </DialogDescription>
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
@@ -5080,10 +5094,11 @@ const DashboardPage = () => {
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md shadow-lg rounded-lg">
+        <DialogContent className="sm:max-w-xl shadow-lg rounded-lg max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Create New Response</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
 
           <div className="space-y-6">
             <div>

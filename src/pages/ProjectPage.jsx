@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1208,10 +1208,20 @@ export default function ProjectPage() {
               <DialogHeader>
                 <DialogTitle>Confirm Delete</DialogTitle>
               </DialogHeader>
-              <p>
-                Are you sure you want to delete this workspace and all its
-                projects?
-              </p>
+              {(() => {
+                const wsToDelete = workspaces.find(
+                  (w) => String(w.id) === String(confirmDeleteWs)
+                );
+
+                return (
+                  <DialogDescription>
+                    Are you sure you want to delete workspace{" "}
+                    <span className="text-red-500 font-bold">
+                      {wsToDelete ? wsToDelete.name : "this workspace"}
+                    </span>{" "} and all its projects?
+                  </DialogDescription>
+                );
+              })()}
               <DialogFooter>
                 <Button
                   variant="outline"
@@ -1236,20 +1246,20 @@ export default function ProjectPage() {
           <Sheet open={openDetail} onOpenChange={setOpenDetail}>
             <SheetContent
               side="right"
-              className="!max-w-none w-[420px] sm:w-[500px] md:w-[600px] shadow-lg overflow-y-auto p-6"
+              className="project-sheet-content !max-w-none w-[420px] sm:w-[500px] md:w-[600px] shadow-lg overflow-y-auto p-6"
             >
               {selectedProject && (
                 <>
-                  <SheetHeader className="mb-4">
-                    <SheetTitle className="text-xl font-semibold">
+                  <SheetHeader className="mb-2">
+                    <SheetTitle className="text-xl font-semibold ml-4">
                       Details
                     </SheetTitle>
                     <SheetDescription></SheetDescription>
                   </SheetHeader>
 
-                  <div className="space-y-5">
+                  <div className="space-y-2">
                     {/* Description */}
-                    <div className="border rounded-lg p-4">
+                    <div className="custom-card border rounded-lg p-4">
                       <h2 className="text-2xl font-bold">
                         {selectedProject.name}
                       </h2>
@@ -1270,7 +1280,7 @@ export default function ProjectPage() {
                     </div>
 
                     {/* Folders & Endpoints */}
-                    <div className="border rounded-lg p-4">
+                    <div className="custom-card border rounded-lg p-4">
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center gap-2">
                           <img
@@ -1303,7 +1313,7 @@ export default function ProjectPage() {
                             return (
                               <div
                                 key={f.id}
-                                className="flex justify-between items-center"
+                                className="custom-card flex justify-between items-center"
                               >
                                 {/* Folder name */}
                                 <span className="dark:opacity-70 ">
@@ -1311,31 +1321,24 @@ export default function ProjectPage() {
                                 </span>
 
                                 {/* Endpoint badge */}
-                                <div className="flex items-center rounded-full px-3 py-1.5 min-w-[90px] justify-between text-xs font-semibold">
+                                <div className="endpoint-badge">
                                   {/* Stateless */}
-                                  <div className="flex items-center gap-1">
-                                    <span>
-                                      {statelessCount}
-                                    </span>
+                                  <div className="endpoint-item endpoint-left">
+                                    <span className="text-white">{statelessCount}</span>
                                     <img
                                       src={statelessIcon}
                                       alt="stateless"
-                                      className="w-3.5 h-3.5 opacity-90"
+                                      className="icon"
                                     />
                                   </div>
 
-                                  {/* Divider */}
-                                  <span className="opacity-60">|</span>
-
                                   {/* Stateful */}
-                                  <div className="flex items-center gap-1">
-                                    <span>
-                                      {statefulCount}
-                                    </span>
+                                  <div className="endpoint-item endpoint-right">
+                                    <span className="text-white">{statefulCount}</span>
                                     <img
                                       src={statefulIcon}
                                       alt="stateful"
-                                      className="w-3.5 h-3.5 opacity-90 inverted"
+                                      className="icon"
                                     />
                                   </div>
                                 </div>
@@ -1346,7 +1349,7 @@ export default function ProjectPage() {
                     </div>
 
                     {/* Date */}
-                    <div className="border rounded-lg p-4 flex justify-between items-center">
+                    <div className="custom-card border rounded-lg p-4 flex justify-between items-center">
                       <div className="flex items-center gap-2 text-sm">
                         <img
                           src={dateIcon}
@@ -1377,7 +1380,7 @@ export default function ProjectPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="destructive"
-                        className="hover:bg-red-500 dark:hover:bg-red-500"
+                        className="hover:bg-red-500 dark:hover:bg-red-500 rounded-xs"
                         onClick={() => {
                           openDeleteProjectDialog(selectedProject?.id);
                         }}
@@ -1389,7 +1392,7 @@ export default function ProjectPage() {
                         />
                       </Button>
                       <Button
-                        className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
+                        className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white rounded-xs"
                         onClick={() => {
                           openEditProjectDialog(selectedProject);
                         }}
@@ -1398,6 +1401,7 @@ export default function ProjectPage() {
                       </Button>
                       <Button
                         variant="outline"
+                        className="rounded-xs"
                         onClick={() => setOpenDetail(false)}
                       >
                         Close

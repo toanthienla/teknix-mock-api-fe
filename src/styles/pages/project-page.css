@@ -91,3 +91,51 @@
 .project-page-content ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover);
 }
+
+.project-sheet-content {
+    background-color: var(--card);
+}
+
+.project-sheet-content .custom-card {
+    background-color: var(--background);
+    border-color: var(--card-border);
+}
+
+/* Wrapper */
+.endpoint-badge {
+    display: flex;
+    align-items: center;
+    border-radius: 999px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 400;
+    min-width: 90px;
+    position: relative;
+
+    background: linear-gradient(
+            135deg,
+            #36393F 0%,
+            #36393F 50%,
+            #202225 50.1%,
+            #202225 100%
+    );
+}
+
+/* Items */
+.endpoint-left,
+.endpoint-right {
+    flex: 1;
+    padding: 1px 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    background: transparent !important;
+}
+
+/* Icon */
+.endpoint-item .icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.9;
+}
