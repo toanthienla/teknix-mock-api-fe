@@ -42,7 +42,7 @@ export default function WSChannelSheet({
           const data = await getProjectConnectToken(project.id);
           setWsURL(data.ws_url);
           setProjectToken(data.token);
-          toast.success("Project token retrieved successfully");
+          // toast.success("Project token retrieved successfully");
         } catch (error) {
           console.error("Failed to get project connect token:", error);
           toast.error("Failed to fetch project token");

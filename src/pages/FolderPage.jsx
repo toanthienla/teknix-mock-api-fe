@@ -1989,16 +1989,26 @@ export default function FolderPage() {
           <DialogHeader>
             <DialogTitle>Delete Workspace</DialogTitle>
           </DialogHeader>
-          <DialogDescription>
-            Are you sure you want to delete this workspace and all its projects?
-          </DialogDescription>
+          {(() => {
+            const wsToDelete = workspaces.find(
+              (w) => String(w.id) === String(confirmDeleteWs)
+            );
+
+            return (
+              <DialogDescription>
+                Are you sure you want to delete workspace{" "}
+                <span className="text-red-500 font-bold">
+                      {wsToDelete ? wsToDelete.name : "this workspace"}
+                    </span>{" "} and all its projects?
+              </DialogDescription>
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDeleteWs(null)}>
               Cancel
             </Button>
             <Button
-              className="dark:hover:bg-red-500"
-              variant="destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => {
                 handleDeleteWorkspace(confirmDeleteWs);
                 setConfirmDeleteWs(null);
