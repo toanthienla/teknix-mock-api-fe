@@ -56,7 +56,7 @@ import folderIcon from "@/assets/light/project-icon.svg";
 import dateIcon from "@/assets/light/date.svg";
 import statelessIcon from "@/assets/light/stateless.svg";
 import statefulIcon from "@/assets/light/stateful.svg";
-import trashIcon from "@/assets/light/Trash Icon.svg";
+// import trashIcon from "@/assets/light/Trash Icon.svg";
 import "@/styles/pages/project-page.css";
 // import {themeContext} from "@/services/ThemeContext.jsx";
 
@@ -1374,23 +1374,15 @@ export default function ProjectPage() {
                   </div>
 
                   <SheetFooter className="flex justify-between items-center mt-6">
-                    <div className="text-sm flex items-center gap-2">
-                      <span>Expand new tab</span> <span>•</span>
+                    <div
+                      className="text-sm flex items-center gap-2"
+                      onClick={() => {
+                        openDeleteProjectDialog(selectedProject?.id);
+                      }}
+                    >
+                      <span className="text-red-500 hover:underline hover:cursor-pointer">Delete this project?</span> <span>•</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="destructive"
-                        className="hover:bg-red-500 dark:hover:bg-red-500 rounded-xs"
-                        onClick={() => {
-                          openDeleteProjectDialog(selectedProject?.id);
-                        }}
-                      >
-                        <img
-                          src={trashIcon}
-                          alt="trash"
-                          className="w-5 h-5 brightness-0 dark:invert"
-                        />
-                      </Button>
                       <Button
                         className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white rounded-xs"
                         onClick={() => {

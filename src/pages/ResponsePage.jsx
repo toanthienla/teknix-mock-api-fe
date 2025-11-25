@@ -10,13 +10,10 @@ import {
   Plus,
   Star,
   Trash2,
-  Upload,
   Code,
   GripVertical,
   FileCode,
   X,
-  SaveIcon,
-  Hash,
   ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -37,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Topbar from "@/components/Topbar.jsx";
-// import reset_icon from "@/assets/light/reset_state_button.svg";
 import chainIcon from "@/assets/light/Chain.svg";
 import Advanced_icon from "@/assets/light/Adavanced_icon.svg";
 import Data_default from "@/assets/light/Data_default.svg";
@@ -52,7 +48,8 @@ import linkedinIcon from "@/assets/light/linkedin.svg";
 import dot_backgroundLight from "@/assets/light/dot_rows.svg";
 import dot_backgroundDark from "@/assets/dark/dot_rows.svg";
 import hashtagIcon from "@/assets/light/hashtag.svg";
-//import searchIcon from "@/assets/light/search.svg";
+import variablePickerIcon from "@/assets/light/variable-picker.svg";
+import saveIcon from "@/assets/light/save-icon.svg";
 import editIcon from "@/assets/light/editName.svg";
 import Editor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs/components/prism-core";
@@ -3477,75 +3474,6 @@ const DashboardPage = () => {
                         <div className="flex justify-between items-center">
                           {/* Tất cả nút nằm bên phải */}
                           <div className="btn-primary rounded-full border p-1 absolute top-2 right-4 flex flex-col items-center z-10">
-                            <div className="relative">
-                              <Button
-                                size="icon"
-                                className={`
-                                  btn-primary hover:opacity-80 rounded-full shadow-none my-1
-                                  transition-all
-                                  ${buttonSaveShadow ? "shadow-md/30" : ""}
-                                `}
-                                onClick={() =>
-                                  handleClick(
-                                    handleSaveResponse,
-                                    setButtonSaveShadow
-                                  )
-                                }
-                                onMouseEnter={() =>
-                                  setResponseSaveTooltipVisible(true)
-                                }
-                                onMouseLeave={() =>
-                                  setResponseSaveTooltipVisible(false)
-                                }
-                              >
-                                <SaveIcon className="h-5 w-5" />
-                              </Button>
-                              <Tooltip
-                                visible={responseSaveTooltipVisible}
-                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-                              >
-                                Save button
-                              </Tooltip>
-                            </div>
-
-                            {/* Nút Default - ẩn khi stateful */}
-                            {!isStateful && (
-                              <div className="relative">
-                                <Button
-                                  size="icon"
-                                  className={`btn-primary hover:opacity-80 rounded-full shadow-none my-1
-                                  ${buttonDefaultShadow ? "shadow-md/30" : ""}
-                                  `}
-                                  onClick={() => {
-                                    if (selectedResponse) {
-                                      setDefaultResponse(selectedResponse.id);
-                                      handleClick(null, setButtonDefaultShadow);
-                                    }
-                                  }}
-                                  onMouseEnter={() =>
-                                    setStarTooltipVisible(true)
-                                  }
-                                  onMouseLeave={() =>
-                                    setStarTooltipVisible(false)
-                                  }
-                                >
-                                  <Star
-                                    className={`h-4 w-4 ${
-                                      selectedResponse?.is_default
-                                        ? "text-yellow-500 fill-yellow-500"
-                                        : ""
-                                    }`}
-                                  />
-                                </Button>
-                                <Tooltip
-                                  visible={starTooltipVisible}
-                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
-                                >
-                                  Set Default
-                                </Tooltip>
-                              </div>
-                            )}
-
                             {/* Nút Popover - di chuyển từ trong editor ra đây */}
                             <div className="relative">
                               <Button
@@ -3570,7 +3498,7 @@ const DashboardPage = () => {
                                 }
                                 title="Variable Picker"
                               >
-                                <FileCode className="h-5 w-5" />
+                                <img src={variablePickerIcon} alt="Variable Picker Icon" className="h-5 w-5 dark:invert" />
                               </Button>
 
                               {/* Popover */}
@@ -3611,8 +3539,8 @@ const DashboardPage = () => {
                                             {section === "url"
                                               ? "URL Parameters"
                                               : section === "query"
-                                              ? "Query Parameters"
-                                              : "Project State"}
+                                                ? "Query Parameters"
+                                                : "Project State"}
                                           </div>
                                         )
                                       )}
@@ -3637,6 +3565,75 @@ const DashboardPage = () => {
                                   </div>
                                 </div>
                               )}
+                            </div>
+
+                            {/* Nút Default - ẩn khi stateful */}
+                            {!isStateful && (
+                              <div className="relative">
+                                <Button
+                                  size="icon"
+                                  className={`btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  ${buttonDefaultShadow ? "shadow-md/30" : ""}
+                                  `}
+                                  onClick={() => {
+                                    if (selectedResponse) {
+                                      setDefaultResponse(selectedResponse.id);
+                                      handleClick(null, setButtonDefaultShadow);
+                                    }
+                                  }}
+                                  onMouseEnter={() =>
+                                    setStarTooltipVisible(true)
+                                  }
+                                  onMouseLeave={() =>
+                                    setStarTooltipVisible(false)
+                                  }
+                                >
+                                  <Star
+                                    className={`h-4 w-4 ${
+                                      selectedResponse?.is_default
+                                        ? "text-yellow-500 fill-yellow-500"
+                                        : ""
+                                    }`}
+                                  />
+                                </Button>
+                                <Tooltip
+                                  visible={starTooltipVisible}
+                                  className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                                >
+                                  Set Default
+                                </Tooltip>
+                              </div>
+                            )}
+
+                            <div className="relative">
+                              <Button
+                                size="icon"
+                                className={`
+                                  btn-primary hover:opacity-80 rounded-full shadow-none my-1
+                                  transition-all
+                                  ${buttonSaveShadow ? "shadow-md/30" : ""}
+                                `}
+                                onClick={() =>
+                                  handleClick(
+                                    handleSaveResponse,
+                                    setButtonSaveShadow
+                                  )
+                                }
+                                onMouseEnter={() =>
+                                  setResponseSaveTooltipVisible(true)
+                                }
+                                onMouseLeave={() =>
+                                  setResponseSaveTooltipVisible(false)
+                                }
+                              >
+                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
+                              </Button>
+                              <Tooltip
+                                visible={responseSaveTooltipVisible}
+                                className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+                              >
+                                Save button
+                              </Tooltip>
                             </div>
                           </div>
                         </div>
@@ -3988,7 +3985,7 @@ const DashboardPage = () => {
                                   setProxySaveTooltipVisible(false)
                                 }
                               >
-                                <SaveIcon className="h-5 w-5" />
+                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
                               </Button>
                               <Tooltip
                                 visible={proxySaveTooltipVisible}
@@ -4072,7 +4069,6 @@ const DashboardPage = () => {
                             >
                               <Button
                                 size="icon"
-                                // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
                                 className={`h-9 w-9 btn-primary hover:opacity-80 rounded-full shadow-none my-1 transition-all
                                 ${
                                   isInitialValuePopoverOpen
@@ -4087,7 +4083,7 @@ const DashboardPage = () => {
                                 }
                                 title="Variable Picker"
                               >
-                                <FileCode className="h-5 w-5" />
+                                <img src={variablePickerIcon} alt="Variable Picker Icon" className="h-5 w-5 dark:invert" />
                               </Button>
 
                               {/* Popover cho Initial Value */}
@@ -4200,7 +4196,7 @@ const DashboardPage = () => {
                                   setDataSaveTooltipVisible(false)
                                 }
                               >
-                                <SaveIcon className="h-5 w-5" />
+                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
                               </Button>
                               <Tooltip
                                 visible={dataSaveTooltipVisible}
@@ -4897,7 +4893,7 @@ const DashboardPage = () => {
               Cancel
             </Button>
             <Button
-              className="bg-[#FA2F2F] hover:bg-[#E02929] text-white"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleConfirmStateful}
             >
               Switch
@@ -4955,7 +4951,7 @@ const DashboardPage = () => {
               Cancel
             </Button>
             <Button
-              className="bg-[#FA2F2F] hover:bg-[#E02929] text-white"
+              className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleConfirmStateless}
             >
               Switch

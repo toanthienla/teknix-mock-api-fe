@@ -21,6 +21,7 @@ import Editor from "react-simple-code-editor";
 import {toast} from "react-toastify";
 import React, {useEffect, useState} from "react";
 import {statusCodes} from "@/components/endpoint/constants.js";
+import saveIcon from "@/assets/light/save-icon.svg";
 
 export const WSConfig = ({config, isStateful, method, onSave}) => {
 
@@ -173,7 +174,7 @@ export const WSConfig = ({config, isStateful, method, onSave}) => {
                       `}
                       onClick={() => handleClick(handleSave, setButtonShadow)}
                     >
-                      <SaveIcon className="w-5 h-5" />
+                      <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
                     </Button>
                   </div>
                 </TooltipTrigger>

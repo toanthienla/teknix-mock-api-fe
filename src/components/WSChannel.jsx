@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import "jsoneditor/dist/jsoneditor.css";
 import deleteIcon from "@/assets/light/delete.svg";
 import lightningIcon from "@/assets/light/lightning.svg";
+import chainIcon from "@/assets/light/chain.svg";
+import keyIcon from "@/assets/light/key-icon.svg";
+import connectIcon from "@/assets/light/connect-format.svg";
 import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
@@ -71,7 +74,12 @@ export default function WSChannelSheet({
             <SheetDescription></SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 mt-4 overflow-y-auto space-y-4 text-sm pr-4">
+          <div className="flex-1 mt-4 overflow-y-auto space-y-6 text-sm pr-4">
+
+            <div className="flex bg-[#FBEB6B] dark:bg-[#5865F2] px-3 py-2 rounded-sm items-center  mb-3">
+              <img src={chainIcon} alt="Chain Icon" className="w-4 h-4 brightness-0 dark:invert"/>
+              <span className="ml-1">Production</span>
+            </div>
             {/* Unsecured URL */}
             <div className="relative">
               <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
@@ -90,6 +98,10 @@ export default function WSChannelSheet({
               </div>
             </div>
 
+            <div className="flex bg-[#FBEB6B] dark:bg-[#5865F2] px-3 py-2 rounded-sm items-center  mb-3">
+              <img src={keyIcon} alt="Key Icon" className="w-4 h-4 dark:invert"/>
+              <span className="ml-1">Token</span>
+            </div>
             {/* Project Token */}
             <div className="relative">
               <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
@@ -151,6 +163,10 @@ export default function WSChannelSheet({
               <span className="mt-2">{isTesting ? "Testing..." : "Test Connection"}</span>
             </div>
 
+            <div className="flex bg-[#FBEB6B] dark:bg-[#5865F2] px-3 py-2 rounded-sm items-center mb-3">
+              <img src={connectIcon} alt="Connect Icon" className="w-3 h-3 dark:invert"/>
+              <span className="ml-1">Connect Format</span>
+            </div>
             {/* === Connect Format (JSON style) === */}
             <div className="rounded-lg">
               <div className="ws-header text-xs font-mono px-4 py-1.5 rounded-t border flex justify-between items-center">
@@ -158,7 +174,7 @@ export default function WSChannelSheet({
                 <button
                   className="btn-primary text-xs px-2 py-1 rounded-xs"
                   onClick={() =>
-                    handleCopy(JSON.stringify({ "id": 1, "connect": { "token": "..." } }))
+                    handleCopy(JSON.stringify({ "id": 1, "connect": { "token": `${projectToken ? projectToken : "..."}` } }))
                   }
                 >
                   Copy
