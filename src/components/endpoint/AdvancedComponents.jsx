@@ -1407,12 +1407,6 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
 
     if (!row.value.trim()) {
       newErrors.value = "Value cannot be empty";
-    } else if (row.type === "Body") {
-      try {
-        JSON.parse(row.value);
-      } catch {
-        newErrors.value = "Value must be valid JSON";
-      }
     }
 
     const existingRules = parameterRows.filter((r) => r.id !== row.id);
