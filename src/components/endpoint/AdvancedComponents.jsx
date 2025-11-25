@@ -19,6 +19,7 @@ import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
 import equalIcon from "@/assets/light/equal.svg";
 import questionIcon from "@/assets/light/question-mark.svg";
+import saveIcon from "@/assets/light/save-icon.svg";
 
 export const ApiCallEditor = ({
   endpointId,
@@ -1007,7 +1008,7 @@ export const ApiCallEditor = ({
               onMouseEnter={handleSaveButtonMouseEnter} // ✅ Dùng hàm mới
               onMouseLeave={handleSaveButtonMouseLeave}
             >
-              <SaveIcon className="h-5 w-5" />
+              <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
             </Button>
             <Tooltip
               visible={saveTooltipVisible}
@@ -1699,12 +1700,11 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
         <div className="relative">
           <Button
             onClick={handleAddRule}
-            // style={{ backgroundColor: "#FBEB6B" }} // ✅ CẬP NHẬT: Sử dụng màu #FBEB6B
             className="w-9 h-9 btn-primary rounded-full shadow-none my-1 hover:opacity-80"
             onMouseEnter={() => setFrameAddTooltipVisible(true)}
             onMouseLeave={() => setFrameAddTooltipVisible(false)}
           >
-            <Plus className="h-7 w-7" />
+            <Plus className="h-10 w-10" />
           </Button>
           <Tooltip
             visible={frameAddTooltipVisible}
@@ -1723,7 +1723,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             onMouseEnter={() => setFrameSaveTooltipVisible(true)}
             onMouseLeave={() => setFrameSaveTooltipVisible(false)}
           >
-            <SaveIcon className="h-5 w-5" />
+            <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
           </Button>
           <Tooltip
             visible={frameSaveTooltipVisible}

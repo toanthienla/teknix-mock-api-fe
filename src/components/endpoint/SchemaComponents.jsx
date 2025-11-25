@@ -22,6 +22,7 @@ import {
 import "prismjs/components/prism-json";
 import "prismjs/themes/prism.css";
 import "jsoneditor/dist/jsoneditor.css";
+import saveIcon from "@/assets/light/save-icon.svg";
 
 export const SchemaBodyEditor = ({
   endpointData,
@@ -452,7 +453,7 @@ export const SchemaBodyEditor = ({
               onMouseEnter={() => setSaveTooltipVisible(true)}
               onMouseLeave={() => setSaveTooltipVisible(false)}
             >
-              <SaveIcon className="h-5 w-5" />
+              <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
             </Button>
             <Tooltip
               visible={saveTooltipVisible}
