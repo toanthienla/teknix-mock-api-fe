@@ -36,11 +36,11 @@
 }
 
 .response-page-content .response-card-header {
-    background-color: var(--rules-header-bg);
+    background-color: var(--card-border);
     color: var(--muted-foreground);
 }
 .response-page-content .response-card-header:hover {
-    background-color: var(--card-border);
+    background-color: var(--rules-header-bg);
 }
 .response-page-content .response-card-header.active {
     background-color: var(--card);
@@ -258,7 +258,9 @@
 }
 
 .response-page-content .muted {
-    color: var(--muted-foreground);
+    background-color: var(--input-disabled-bg);
+    border-color: var(--input-disabled-border);
+    color: var(--foreground);
 }
 
 .rs-loader{

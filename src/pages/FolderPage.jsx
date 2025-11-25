@@ -1612,7 +1612,7 @@ export default function FolderPage() {
                               <TableHead className="w-1/4">
                                 Matched Response
                               </TableHead>
-                              <TableHead className="w-1/12">
+                              <TableHead className="w-1/12 text-center">
                                 Method
                               </TableHead>
                               <TableHead className="w-1/3">
