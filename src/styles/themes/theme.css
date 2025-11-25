@@ -17,6 +17,8 @@
     --input-border: #cbd5e1;
     --input-text: #1e293b;
     --input-placeholder: #94a3b8;
+    --input-disabled-bg: #F2F2F2;
+    --input-disabled-border: #CBD5E1;
 
     /* ===== JSON ===== */
     --custom-json-key: #0051D9;
@@ -103,9 +105,11 @@
 
     /* ===== Input ===== */
     --input-bg: #334155;
-    --input-border: #475569;
+    --input-border: #72767D;
     --input-text: #f8fafc;
     --input-placeholder: #72767D;
+    --input-disabled-bg: #42454A;
+    --input-disabled-border: #42454A;
 
     /* ===== JSON ===== */
     --custom-json-key: #6CACE5;
@@ -175,7 +179,7 @@
     --folder-header-bg: #72767D;
     --folder-header-text: #ffffff;
 
-    --rules-header-bg: #42454A;
+    --rules-header-bg: #34393f;
     --response-border: #72767D;
 
     --variable-bg: #53555B;

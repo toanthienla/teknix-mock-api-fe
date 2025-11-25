@@ -89,7 +89,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
             className=""
             onClick={() => onEdit(endpoint)}
           >
-            <img src={editIcon} alt="edit" className="w-4 h-4 dark:brightness-0 dark:invert" />
+            <img src={editIcon} alt="edit" className="w-5 h-5 dark:brightness-0 dark:invert" />
           </Button>
 
           <AlertDialog>
@@ -99,7 +99,7 @@ export default function EndpointCard({ endpoint, onEdit, onDelete, onClick }) {
                 size="icon"
                 className="h-7 w-7"
               >
-                <img src={deleteIcon} alt="delete" className="w-4 h-4 dark:brightness-0 dark:invert" />
+                <img src={deleteIcon} alt="delete" className="w-5 h-5 dark:brightness-0 dark:invert" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent

@@ -3577,7 +3577,7 @@ const DashboardPage = () => {
                               {isPopoverOpen && (
                                 <div
                                   ref={popoverRef}
-                                  className="card absolute z-100 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
+                                  className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]"
                                 >
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
@@ -3707,7 +3707,7 @@ const DashboardPage = () => {
                             <div className="col-span-1 px-2 pl-2 text-sm">
                               Content-Type
                             </div>
-                            <div className="col-span-4 border rounded-md p-2">
+                            <div className="muted col-span-4 border rounded-md p-2">
                               application/json
                             </div>
                           </div>
@@ -3763,7 +3763,7 @@ const DashboardPage = () => {
                                 />
 
                                 {/* Format button */}
-                                <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                <div className="absolute top-2 right-2 flex space-x-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -4092,7 +4092,7 @@ const DashboardPage = () => {
 
                               {/* Popover cho Initial Value */}
                               {isInitialValuePopoverOpen && (
-                                <div className="card absolute z-50 top-0 right-full mr-2 w-[392px] h-[120px] rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
+                                <div className="card absolute z-5 top-0 right-full mr-2 w-[392px] h-[120px] border rounded-lg shadow-[0px_4px_4px_rgba(0,0,0,0.25)]">
                                   <div className="flex flex-col items-center gap-2 p-3.5">
                                     <div className="w-full flex justify-between items-center">
                                       <div className="font-semibold text-sm">
@@ -4301,7 +4301,7 @@ const DashboardPage = () => {
                                     }}
                                     textareaClassName="focus:outline-none w-full"
                                   />
-                                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                                  <div className="absolute top-2 right-2 flex space-x-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -4641,7 +4641,7 @@ const DashboardPage = () => {
                       />
 
                       {/* JSON Editor controls */}
-                      <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                      <div className="absolute top-2 right-2 flex space-x-2">
                         <Button
                           variant="outline"
                           size="sm"

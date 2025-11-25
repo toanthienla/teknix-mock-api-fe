@@ -1032,7 +1032,7 @@ export const ApiCallEditor = ({
                 <span className="mr-2 flex items-center justify-center text-lg font-medium">
                   #{index + 1}
                 </span>
-                <span className="font-bold ">Next API Call</span>
+                <span className="font-bold text-lg">Next API Call</span>
               </div>
 
               {/* Text "External call" and toggle, delete buttons */}

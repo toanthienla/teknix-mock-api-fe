@@ -45,7 +45,7 @@ export default function LogCard({log}) {
         {log.endpointResponseName || "No response"}
       </TableCell>
 
-      <TableCell>
+      <TableCell className="text-center">
         <Badge
           className={`px-3 py-1.5 text-xs font-semibold rounded-md ${
             request_method === "GET"

@@ -87,14 +87,12 @@
     background-color: var(--button-bg);
     color: var(--button-text);
     border-color: var(--lightgray-border);
-    opacity: 0.8;
 }
 
 .folder-page-content .btn-new-endpoint:hover {
-    background-color: var(--button-bg);
+    background-color: var(--button-bg-hover);
     color: var(--button-text);
     border-color: var(--lightgray-border);
-    opacity: 1;
 }
 
 /* ===== Table ===== */
