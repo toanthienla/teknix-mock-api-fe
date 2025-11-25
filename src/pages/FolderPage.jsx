@@ -1605,7 +1605,7 @@ export default function FolderPage() {
                   <>
                     {/* Logs */}
                     <div className="flex flex-col items-center justify-center w-full">
-                      <div className="w-full max-w-7xl overflow-x-auto">
+                      <div className="w-full max-w-[1440px] overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -1657,54 +1657,54 @@ export default function FolderPage() {
                                   </div>
 
                                   {/* Right: Select */}
-                                  <div className="w-1/6 text-right">
-                                    <Select
-                                      value={timeFilter}
-                                      onValueChange={(value) => {
-                                        setTimeFilter(value);
-                                        setPage(1);
-                                        localStorage.setItem("logs_timeSpan", value);
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-full border-none shadow-none">
-                                        <SelectValue placeholder="Recent logs" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Recent logs">Recent logs</SelectItem>
-                                        <SelectItem value="24h">Last 24 hours</SelectItem>
-                                        <SelectItem value="7d">Last 7 days</SelectItem>
-                                        <SelectItem value="30d">Last 30 days</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                  <div className="flex justify-between w-1/6">
+                                    <div className="">
+                                      <Select
+                                        value={timeFilter}
+                                        onValueChange={(value) => {
+                                          setTimeFilter(value);
+                                          setPage(1);
+                                          localStorage.setItem("logs_timeSpan", value);
+                                        }}
+                                      >
+                                        <SelectTrigger className="w-full ml-2 border-none shadow-none">
+                                          <SelectValue placeholder="Recent logs" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Recent logs">Recent logs</SelectItem>
+                                          <SelectItem value="24h">Last 24 hours</SelectItem>
+                                          <SelectItem value="7d">Last 7 days</SelectItem>
+                                          <SelectItem value="30d">Last 30 days</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                      <div className="flex justify-center">
+                                        <div className="flex items-center">
+                                          <button
+                                            onClick={() => {
+                                              // Gọi lại API logs
+                                              fetchLogs(projectId, page, rowsPerPage);
+                                            }}
+                                            className="rounded-md"
+                                          >
+                                            <img
+                                              src={refreshIcon}
+                                              alt="refresh"
+                                              className="w-6 h-6 transition-all duration-300 dark:brightness-0 dark:invert"
+                                            />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               </TableHead>
                             </TableRow>
 
                             <TableRow className="border-none">
-                              <TableHead colSpan={6}>
-                                <div className="flex justify-end">
-                                  <div className="w-1/6 text-right flex items-center">
-                                    <Button
-                                      onClick={() => {
-                                        // Reset page về 1 nếu cần
-                                        // setPage(1);
-
-                                        // Gọi lại API logs
-                                        fetchLogs(projectId, page, rowsPerPage);
-                                      }}
-                                      className="w-full btn-primary rounded-md"
-                                    >
-                                      <img
-                                        src={refreshIcon}
-                                        alt="refresh"
-                                        className="w-4 h-4 mr-1 transition-all duration-300 dark:brightness-0 dark:invert"
-                                      />
-                                      <span>Refresh</span>
-                                    </Button>
-                                  </div>
-                                </div>
-                              </TableHead>
+                              <TableHead colSpan={6}></TableHead>
                             </TableRow>
                           </TableHeader>
 

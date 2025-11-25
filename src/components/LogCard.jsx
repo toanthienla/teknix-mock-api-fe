@@ -83,7 +83,7 @@ export default function LogCard({log}) {
 
       <TableCell className="text-center">{latency_ms + " ms" || "-"}</TableCell>
 
-      <TableCell className="text-right">{formatDate(created_at)}</TableCell>
+      <TableCell className="text-sm text-right">{formatDate(created_at)}</TableCell>
     </TableRow>
   );
 }

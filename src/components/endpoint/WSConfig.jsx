@@ -194,7 +194,7 @@ export const WSConfig = ({config, isStateful, method, onSave}) => {
             <div className="relative">
               {/* --- JSON Editor for message --- */}
               <Editor
-                className="custom-initial-value"
+                className="custom-initial-value h-fit"
                 value={message}
                 onValueChange={(code) => setMessage(code)}
                 highlight={(code) => highlight(code, languages.json)}
