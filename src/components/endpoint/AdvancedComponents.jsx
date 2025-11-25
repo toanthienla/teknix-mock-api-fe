@@ -338,16 +338,16 @@ export const ApiCallEditor = ({
   // Thêm state để lưu JSON string thay vì dùng call.body trực tiếp
   const [jsonInputs, setJsonInputs] = useState({});
 
-  // ✅ SỬA: Khởi tạo JSON inputs từ nextCalls - luôn lưu string
+  // ✅ SỬA: Khởi tạo JSON inputs từ nextCalls - parse body đúng cách
   useEffect(() => {
     const initialJsonInputs = {};
     nextCalls.forEach((call, index) => {
       if (call.body && typeof call.body === "string") {
         // Nếu body là string (JSON string), dùng trực tiếp
         initialJsonInputs[index] = call.body;
-      } else if (call.body) {
-        // Nếu body là object, stringify thành string nhưng giữ nguyên format
-        initialJsonInputs[index] = JSON.stringify(call.body);
+      } else if (call.body && typeof call.body === "object") {
+        // Nếu body là object, stringify thành string với format đẹp
+        initialJsonInputs[index] = JSON.stringify(call.body, null, 2);
       } else {
         // Default JSON
         initialJsonInputs[index] =
