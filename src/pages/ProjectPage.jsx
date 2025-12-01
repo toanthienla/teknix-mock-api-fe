@@ -62,7 +62,6 @@ import "@/styles/pages/project-page.css";
 
 export default function ProjectPage() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
   // const { isDark } = themeContext();
 
   const [workspaces, setWorkspaces] = useState([]);
@@ -75,10 +74,6 @@ export default function ProjectPage() {
   const [targetWsId, setTargetWsId] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [openProjectsMap, setOpenProjectsMap] = useState(
-    () => JSON.parse(localStorage.getItem("openProjectsMap")) || {}
-  );
 
   const [openNewProject, setOpenNewProject] = useState(false);
   const [openEditProject, setOpenEditProject] = useState(false);
@@ -97,6 +92,8 @@ export default function ProjectPage() {
 
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [isCreatingPj, setIsCreatingPj] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   const [editId, setEditId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -111,9 +108,6 @@ export default function ProjectPage() {
       try {
         await Promise.all([
           fetchWorkspaces(),
-          fetchProjects(),
-          fetchEndpoints(),
-          fetchFolders(),
         ]);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -149,13 +143,6 @@ export default function ProjectPage() {
   }, []);
 
   useEffect(() => {
-    fetchWorkspaces();
-    fetchProjects();
-    fetchEndpoints();
-    fetchFolders();
-  }, []);
-
-  useEffect(() => {
     if (!currentWsId) {
       localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
       navigate("/dashboard");
@@ -170,50 +157,36 @@ export default function ProjectPage() {
   }, [currentWsId, workspaces]);
 
   useEffect(() => {
-    if (projectId && projects.length > 0) {
-      const project = projects.find((p) => String(p.id) === String(projectId));
-      if (project) {
-        setCurrentWsId(project.workspace_id);
-        setOpenProjectsMap((prev) => ({
-          ...prev,
-          [project.workspace_id]: true,
-        }));
-      }
-    }
-  }, [projectId, projects]);
+    if (!currentWsId) return;
+    fetchProjects();
+    fetchEndpoints();
+  }, [currentWsId]);
 
   useEffect(() => {
+    // Lấy workspace từ localStorage khi load page
     const savedWs = localStorage.getItem("currentWorkspace");
-    if (savedWs) setCurrentWsId(savedWs);
+    if (savedWs && savedWs !== currentWsId) {
+      setCurrentWsId(savedWs);
+    }
 
-    // Listen for localStorage changes (from breadcrumb clicks)
-    const handleStorageChange = () => {
-      const updatedWs = localStorage.getItem("currentWorkspace");
-      if (updatedWs && updatedWs !== currentWsId) {
-        setCurrentWsId(updatedWs);
+    // Sync giữa các tab
+    const handleStorageChange = (e) => {
+      if (e.key === "currentWorkspace") {
+        const updatedWs = e.newValue;
+        setCurrentWsId(prev => {
+          if (prev === updatedWs) return prev;
+          return updatedWs;
+        });
       }
     };
 
     window.addEventListener("storage", handleStorageChange);
 
-    // Also listen for manual localStorage updates in same tab
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function (key, value) {
-      originalSetItem.apply(this, arguments);
-      if (key === "currentWorkspace") {
-        handleStorageChange();
-      }
-    };
-
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      localStorage.setItem = originalSetItem;
     };
-  }, [currentWsId]);
-
-  useEffect(() => {
-    localStorage.setItem("openProjectsMap", JSON.stringify(openProjectsMap));
-  }, [openProjectsMap]);
+    // chỉ chạy 1 lần khi mount
+  }, []);
 
   // -------------------- Fetch --------------------
   const fetchWorkspaces = () => {
@@ -229,35 +202,52 @@ export default function ProjectPage() {
       .catch(() => toast.error("Failed to load workspaces"));
   };
 
-  const fetchProjects = () => {
-    fetch(`${API_ROOT}/projects`)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        setProjects(sorted);
-      })
-      .catch(() => toast.error("Failed to load projects"));
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch(`${API_ROOT}/projects?workspace_id=${currentWsId}`);
+      let projects = await res.json();
+
+      // Sắp xếp mới → cũ
+      projects.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      // Gộp fetchFolders
+      const projectsWithFolders = await Promise.all(
+        projects.map(async (project) => {
+          const folderRes = await fetch(`${API_ROOT}/folders?project_id=${project.id}`);
+          const folders = await folderRes.json();
+          return {
+            ...project,
+            folders,
+          };
+        })
+      );
+
+      setProjects(projectsWithFolders);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+      toast.error("Failed to load projects");
+    }
   };
 
   const fetchEndpoints = () => {
-    fetch(`${API_ROOT}/endpoints`)
+    fetch(`${API_ROOT}/workspaces/${currentWsId || "1"}/all-endpoints`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
   };
 
-  const fetchFolders = async () => {
-    try {
-      console.log("ProjectPage: Fetching folders...");
-      const response = await fetch(`${API_ROOT}/folders`);
-      const data = await response.json();
-      console.log("ProjectPage: Folders fetched:", data);
-      setFolders(data);
-    } catch (error) {
-      console.error("Error fetching folders:", error);
-    }
-  };
+  // const fetchFolders = async () => {
+  //   try {
+  //     console.log("ProjectPage: Fetching folders...");
+  //     const response = await fetch(`${API_ROOT}/folders`);
+  //     const data = await response.json();
+  //     console.log("ProjectPage: Folders fetched:", data);
+  //     setFolders(data);
+  //   } catch (error) {
+  //     console.error("Error fetching folders:", error);
+  //   }
+  // };
 
   // -------------------- Filtering & Sorting --------------------
   const currentProjects = projects.filter(
@@ -315,7 +305,6 @@ export default function ProjectPage() {
         setWorkspaces((prev) => [...prev, createdWs]);
         setCurrentWsId(String(createdWs.id));
         localStorage.setItem("currentWorkspace", String(createdWs.id));
-        setOpenProjectsMap((prev) => ({ ...prev, [createdWs.id]: true }));
 
         toast.success("Workspace created successfully");
         setNewWsName("");
@@ -453,8 +442,10 @@ export default function ProjectPage() {
     editId = null,
     workspaceId
   ) => {
-    // const title.trim() = title.trim();
-    // const desc.trim() = desc.trim();
+
+    if (isValidating) return false;
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
 
     if (!title.trim()) {
       toast.warning("Project name cannot be empty");
@@ -493,8 +484,14 @@ export default function ProjectPage() {
   };
 
   const handleCreateProject = () => {
+    if (isCreatingPj) return;
+    setIsCreatingPj(true);
+
     const workspaceId = targetWsId || currentWsId;
-    if (!validateProject(newTitle, newDesc, false, null, workspaceId)) return;
+    if (!validateProject(newTitle, newDesc, false, null, workspaceId)) {
+      setIsCreatingPj(false);
+      return;
+    }
 
     const newProject = {
       name: newTitle.trim(),
@@ -529,13 +526,11 @@ export default function ProjectPage() {
 
         // Thành công
         const createdProject = data;
-        setProjects((prev) => [...prev, createdProject]);
+        // setProjects((prev) => [...prev, createdProject]);
 
         // mở workspace tương ứng
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
-
-        setOpenProjectsMap({ [createdProject.workspace_id]: true });
 
         setNewTitle("");
         setNewDesc("");
@@ -548,6 +543,9 @@ export default function ProjectPage() {
         if (!err.message.includes("Validation")) {
           toast.error("Failed to create project");
         }
+      })
+      .finally(() => {
+        setTimeout(() => setIsCreatingPj(false), 1000);
       });
   };
 
@@ -823,7 +821,7 @@ export default function ProjectPage() {
                             <ProjectCard
                               key={p.id}
                               project={p}
-                              folders={folders}
+                              folders={p.folders}
                               endpoints={endpoints}
                               onClick={() => {
                                 localStorage.setItem("folder_active_tab", "folders");
@@ -950,8 +948,8 @@ export default function ProjectPage() {
                   Project details
                 </div>
               </DialogHeader>
-
-              <div className="mt-4 space-y-4">
+              <DialogDescription></DialogDescription>
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Name
@@ -999,10 +997,11 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
+                  disabled={isCreatingPj}
                   className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={handleCreateProject}
                 >
-                  Create
+                  {isCreatingPj ? "Creating..." : "Create"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1298,7 +1297,7 @@ export default function ProjectPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {folders
+                        {selectedProject.folders
                           .filter((f) => f.project_id === selectedProject.id)
                           .map((f) => {
                             const statelessCount = endpoints.filter(

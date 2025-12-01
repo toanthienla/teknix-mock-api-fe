@@ -4838,31 +4838,32 @@ const DashboardPage = () => {
             </Dialog>
           </div>
         </div>
-        {/* footer */}
-        <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
-          <span>© Teknix Corp. All rights reserved.</span>
-          <div className="flex items-center gap-3">
-            <img
-              src={tiktokIcon}
-              alt="tiktok"
-              className="w-4 h-4 dark:invert"
-            />
-            <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
-            <img
-              src={linkedinIcon}
-              alt="linkedin"
-              className="w-4 h-4 dark:invert"
-            />
-            <a className="hover:underline font-semibold" href="">
-              About
-            </a>
-            <span>·</span>
-            <a className="hover:underline font-semibold" href="">
-              Support
-            </a>
-          </div>
-        </footer>
       </div>
+
+      {/* footer */}
+      <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
+        <span>© Teknix Corp. All rights reserved.</span>
+        <div className="flex items-center gap-3">
+          <img
+            src={tiktokIcon}
+            alt="tiktok"
+            className="w-4 h-4 dark:invert"
+          />
+          <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
+          <img
+            src={linkedinIcon}
+            alt="linkedin"
+            className="w-4 h-4 dark:invert"
+          />
+          <a className="hover:underline font-semibold" href="">
+            About
+          </a>
+          <span>·</span>
+          <a className="hover:underline font-semibold" href="">
+            Support
+          </a>
+        </div>
+      </footer>
 
       {/* Dialog xác nhận chuyển sang stateful */}
       <Dialog
@@ -5013,8 +5014,9 @@ const DashboardPage = () => {
           <DialogHeader>
             <DialogTitle>New Workspace</DialogTitle>
           </DialogHeader>
+          <DialogDescription></DialogDescription>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium opacity-70">
               Name
             </label>
             <Input

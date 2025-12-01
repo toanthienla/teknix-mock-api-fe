@@ -337,7 +337,8 @@ export default function FolderPage() {
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [workspaces, setWorkspaces] = useState([]);
-  const [projects, setProjects] = useState([]);
+  // const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState(null);
   const [endpoints, setEndpoints] = useState([]);
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -431,15 +432,13 @@ export default function FolderPage() {
     }
 
     // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
-    if (workspaces.length > 0 && !currentWorkspace) {
-      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
-      navigate("/dashboard");
-    }
+    // if (workspaces.length > 0 && !currentWorkspace) {
+    //   localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+    //   navigate("/dashboard");
+    // }
   }, [currentWsId, workspaces]);
 
-  const currentProject = projectId
-    ? projects.find((p) => String(p.id) === String(projectId))
-    : null;
+  const currentProject = project;
 
   const currentWorkspace = workspaces.find(
     (w) => String(w.id) === String(currentWsId)
@@ -480,13 +479,18 @@ export default function FolderPage() {
     loadData();
   }, []);
 
+  // useEffect(() => {
+  //   if (currentWsId) {
+  //     fetchProjects(currentWsId);
+  //   } else {
+  //     setProjects([]);
+  //   }
+  // }, [currentWsId]);
+
   useEffect(() => {
-    if (currentWsId) {
-      fetchProjects(currentWsId);
-    } else {
-      setProjects([]);
-    }
-  }, [currentWsId]);
+    if (!projectId) return;
+    fetchProject(projectId);
+  }, [projectId]);
 
   const fetchWorkspaces = () => {
     return fetch(`${API_ROOT}/workspaces`)
@@ -498,90 +502,71 @@ export default function FolderPage() {
         setWorkspaces(sorted);
         if (sorted.length > 0 && !currentWsId) {
           setCurrentWsId(sorted[0].id);
-          localStorage.setItem("currentWorkspace", sorted[0].id);
         }
       })
       .catch(() =>
-        toast.error("Failed to load workspaces", {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-        })
+        toast.error("Failed to load workspaces")
       );
   };
 
-  const fetchProjects = (wsId) => {
-    if (!wsId) return;
+  const fetchProject = (projectId) => {
+    if (!projectId) return;
 
-    fetch(`${API_ROOT}/projects?workspace_id=${wsId}`)
+    // Reset dữ liệu cũ trước khi load dữ liệu mới
+    setProject(null);
+    setFolders([]);
+    setEndpoints([]);
+
+    // 1. Fetch project
+    fetch(`${API_ROOT}/projects/${projectId}`)
       .then((r) => r.json())
-      .then((rData) => {
-        const projectsArr = Array.isArray(rData) ? rData : rData.data || [];
-        setProjects(projectsArr);
+      .then((projData) => {
+        setProject(projData);
 
-        // reset folders + endpoints trước khi fetch mới
-        setFolders([]);
-        setEndpoints([]);
+        // 2. Fetch folders trong project
+        return fetch(`${API_ROOT}/folders?project_id=${projectId}`, {
+          credentials: "include",
+        });
+      })
+      .then((r) => r.json())
+      .then((foldersData) => {
+        const folderArr = Array.isArray(foldersData)
+          ? foldersData
+          : foldersData.data || [];
 
-        projectsArr.forEach((p) => {
-          // fetch folders của từng project
-          fetch(`${API_ROOT}/folders?project_id=${p.id}`, {
+        setFolders(folderArr);
+
+        // 3. Fetch tất cả endpoints của từng folder
+        folderArr.forEach((folder) => {
+          fetch(`${API_ROOT}/endpoints?folder_id=${folder.id}`, {
             credentials: "include",
           })
             .then((r) => r.json())
-            .then((fData) => {
-              const fArr = Array.isArray(fData) ? fData : fData.data || [];
-              setFolders((prev) => {
+            .then((eData) => {
+              const eArr = Array.isArray(eData) ? eData : eData.data || [];
+
+              // add project_id vào mỗi endpoint
+              const withProjectId = eArr.map((e) => ({
+                ...e,
+                project_id: projectId,
+              }));
+
+              setEndpoints((prev) => {
                 const merged = [...prev];
-                fArr.forEach((f) => {
-                  if (!merged.some((ff) => ff.id === f.id)) {
-                    merged.push(f);
+                withProjectId.forEach((e) => {
+                  if (!merged.some((ee) => ee.id === e.id)) {
+                    merged.push(e);
                   }
                 });
                 return merged;
               });
-
-              // fetch endpoints cho từng folder
-              fArr.forEach((f) => {
-                fetch(`${API_ROOT}/endpoints?folder_id=${f.id}`, {
-                  credentials: "include",
-                })
-                  .then((r2) => r2.json())
-                  .then((eData) => {
-                    const eArr = Array.isArray(eData)
-                      ? eData
-                      : eData.data || [];
-
-                    const withProjectId = eArr.map((e) => ({
-                      ...e,
-                      project_id: f.project_id,
-                    }));
-
-                    setEndpoints((prev) => {
-                      const merged = [...prev];
-                      withProjectId.forEach((e) => {
-                        if (!merged.some((ee) => ee.id === e.id)) {
-                          merged.push(e);
-                        }
-                      });
-                      return merged;
-                    });
-                  })
-                  .catch(() =>
-                    console.error(
-                      `Failed to fetch endpoints for folder ${f.id}`
-                    )
-                  );
-              });
             })
             .catch(() =>
-              console.error(`Failed to fetch folders for project ${p.id}`)
+              console.error(`Failed to fetch endpoints for folder ${folder.id}`)
             );
         });
       })
-      .catch(() =>
-        console.error(`Failed to fetch projects for workspace ${wsId}`)
-      );
+      .catch(() => console.error(`Failed to fetch project ${projectId}`));
   };
 
   useEffect(() => {
@@ -672,15 +657,6 @@ export default function FolderPage() {
       setLoadingLogs(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (activeTab !== "logs") return;
-  //
-  //   // Reset về page 1 khi filter thay đổi
-  //   setPage(1);
-  //
-  //   fetchLogs(projectId, 1, rowsPerPage);
-  // }, [searchTerm, timeFilter]);
 
   // -------------------- Folder --------------------
   const handleDeleteFolder = async (folderId) => {
@@ -1140,7 +1116,7 @@ export default function FolderPage() {
       .then((res) => res.json())
       .then((createdWs) => {
         setWorkspaces((prev) => [...prev, createdWs]);
-        setCurrentWsId(createdWs.id);
+        // setCurrentWsId(createdWs.id);
         toast.success("Create workspace successfully!");
         setNewWsName("");
         setOpenNewWs(false);
@@ -1230,21 +1206,21 @@ export default function FolderPage() {
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) =>
-        prev.filter((p) => String(p.workspace_id) !== String(id))
-      );
-      setFolders((prev) =>
-        prev.filter(
-          (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
-        )
-      );
-      setEndpoints((prev) =>
-        prev.filter(
-          (e) =>
-            !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
-            !folderIds.some((fid) => String(e.folder_id) === String(fid))
-        )
-      );
+      // setProjects((prev) =>
+      //   prev.filter((p) => String(p.workspace_id) !== String(id))
+      // );
+      // setFolders((prev) =>
+      //   prev.filter(
+      //     (f) => !projectIds.some((pid) => String(f.project_id) === String(pid))
+      //   )
+      // );
+      // setEndpoints((prev) =>
+      //   prev.filter(
+      //     (e) =>
+      //       !projectIds.some((pid) => String(e.project_id) === String(pid)) &&
+      //       !folderIds.some((fid) => String(e.folder_id) === String(fid))
+      //   )
+      // );
 
       if (String(currentWsId) === String(id)) setCurrentWsId(null);
 
@@ -1317,10 +1293,8 @@ export default function FolderPage() {
 
       if (!res.ok) throw new Error("Failed to enable WebSocket");
 
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === projectId ? { ...p, websocket_enabled: true } : p
-        )
+      setProject((prev) =>
+        prev ? { ...prev, websocket_enabled: true } : prev
       );
 
       toast.success("WebSocket Channel created!");
@@ -1340,10 +1314,8 @@ export default function FolderPage() {
 
       if (!res.ok) throw new Error("Failed to delete WebSocket Channel");
 
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === projectId ? { ...p, websocket_enabled: false } : p
-        )
+      setProject((prev) =>
+        prev ? { ...prev, websocket_enabled: true } : prev
       );
 
       toast.success("WebSocket Channel deleted");
