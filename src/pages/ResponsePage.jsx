@@ -719,59 +719,18 @@ const DashboardPage = () => {
     return data;
   };
   // ✅ THÊM: State để đánh dấu đã fetch xong
-  const [hasFetchedStatusCodes, setHasFetchedStatusCodes] = useState({});
-  // ✅ SỬA: useEffect để lấy status codes - sử dụng cache
+  const [hasFetchedStatusCodes] = useState({});
+  // ✅ SỬA: useEffect thứ hai - XỬ LÝ CẢ STATUS CODES VÀ UI
   useEffect(() => {
-    if (!currentEndpointId) return;
+    if (currentEndpointId && isEndpointsLoaded && !isSwitchingMode) {
+      const endpointIdStr = String(currentEndpointId);
 
-    const endpointIdStr = String(currentEndpointId);
+      // ✅ KIỂM TRA CACHE TRƯỚC
+      if (endpointResponsesCache[endpointIdStr]) {
+        const data = endpointResponsesCache[endpointIdStr];
 
-    // ✅ KIỂM TRA CACHE TRƯỚC
-    if (endpointResponsesCache[endpointIdStr]) {
-      const data = endpointResponsesCache[endpointIdStr];
-      if (Array.isArray(data)) {
-        const uniqueStatusCodes = [
-          ...new Set(data.map((response) => response.status_code.toString())),
-        ];
-        const default500Codes = ["500", "501", "502", "503", "504", "505"];
-        const combinedCodes = [
-          ...new Set([...uniqueStatusCodes, ...default500Codes]),
-        ];
-        const statusCodesWithDesc = combinedCodes.map((code) => {
-          const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
-          const description = statusCodeInfo
-            ? statusCodeInfo.description
-            : "Custom status code";
-          return { code: code, description: description };
-        });
-        setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
-      }
-
-      // ✅ THÊM: CẬP NHẬT UI NGAY LẬP TỨC KHI CÓ CACHE
-      // Đảm bảo cả hai luồng đều có dữ liệu để hiển thị
-      updateUIWithResponseData(data, isStateful);
-
-      // ✅ ĐÁNH DẤU ĐÃ FETCH XONG
-      setHasFetchedStatusCodes((prev) => ({
-        ...prev,
-        [endpointIdStr]: true,
-      }));
-      return;
-    }
-
-    // ✅ FETCH NẾU CHƯA CÓ TRONG CACHE
-    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
+        // ✅ CẬP NHẬT STATUS CODES
         if (Array.isArray(data)) {
-          // ✅ LƯU VÀO CACHE
-          setEndpointResponsesCache((prev) => ({
-            ...prev,
-            [endpointIdStr]: data,
-          }));
-
           const uniqueStatusCodes = [
             ...new Set(data.map((response) => response.status_code.toString())),
           ];
@@ -787,10 +746,55 @@ const DashboardPage = () => {
             return { code: code, description: description };
           });
           setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+        }
 
-          // ✅ THÊM: CẬP NHẬT UI NGAY LẬP TỨC SAU KHI FETCH
+        // ✅ CẬP NHẬT UI
+        updateUIWithResponseData(data, isStateful);
+        return;
+      }
+
+      // ✅ FETCH NẾU CHƯA CÓ TRONG CACHE
+      setIsLoading(true);
+      fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`, {
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          // ✅ LƯU VÀO CACHE
+          setEndpointResponsesCache((prev) => ({
+            ...prev,
+            [endpointIdStr]: data,
+          }));
+
+          // ✅ CẬP NHẬT STATUS CODES
+          if (Array.isArray(data)) {
+            const uniqueStatusCodes = [
+              ...new Set(
+                data.map((response) => response.status_code.toString())
+              ),
+            ];
+            const default500Codes = ["500", "501", "502", "503", "504", "505"];
+            const combinedCodes = [
+              ...new Set([...uniqueStatusCodes, ...default500Codes]),
+            ];
+            const statusCodesWithDesc = combinedCodes.map((code) => {
+              const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
+              const description = statusCodeInfo
+                ? statusCodeInfo.description
+                : "Custom status code";
+              return { code: code, description: description };
+            });
+            setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+          }
+
+          // ✅ CẬP NHẬT UI
           updateUIWithResponseData(data, isStateful);
-        } else {
+        })
+        .catch((error) => {
+          console.error(
+            "Failed to fetch status codes from endpoint responses:",
+            error
+          );
           setNewApiCallAvailableStatusCodes([
             { code: "500", description: "Internal Server Error." },
             { code: "501", description: "Not Implemented." },
@@ -799,23 +803,18 @@ const DashboardPage = () => {
             { code: "504", description: "Gateway Timeout." },
             { code: "505", description: "HTTP Version Not Supported." },
           ]);
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "Failed to fetch status codes from endpoint responses:",
-          error
-        );
-        setNewApiCallAvailableStatusCodes([
-          { code: "500", description: "Internal Server Error." },
-          { code: "501", description: "Not Implemented." },
-          { code: "502", description: "Bad Gateway." },
-          { code: "503", description: "Service Unavailable." },
-          { code: "504", description: "Gateway Timeout." },
-          { code: "505", description: "HTTP Version Not Supported." },
-        ]);
-      });
-  }, [currentEndpointId, isStateful, endpointResponsesCache]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [
+    currentEndpointId,
+    isStateful,
+    isEndpointsLoaded,
+    isSwitchingMode,
+    endpointResponsesCache,
+  ]);
 
   // ✅ CẬP NHẬT: Chỉ cập nhật logic khi method thay đổi
   useEffect(() => {
