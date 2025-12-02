@@ -93,7 +93,7 @@ const DashboardPage = () => {
   const [responseBody, setResponseBody] = useState("");
   const [delay, setDelay] = useState("0");
   const [workspaces, setWorkspaces] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [project, setProject] = useState(null);
   const [currentWsId, setCurrentWsId] = useState(null);
   const [isStateful, setIsStateful] = useState(false);
   const [, setIsActive] = useState(true);
@@ -1548,9 +1548,7 @@ const DashboardPage = () => {
   //     status.code.toLowerCase().includes(searchTerm.toLowerCase())
   // );
 
-  const currentProject = projectId
-    ? projects.find((p) => String(p.id) === String(projectId))
-    : null;
+  const currentProject = project;
 
   useProjectWs(currentProject?.id, currentProject?.websocket_enabled);
 
@@ -1584,20 +1582,17 @@ const DashboardPage = () => {
       );
   };
 
-  const fetchProjects = () => {
-    return fetch(`${API_ROOT}/projects`)
+  const fetchProject = () => {
+    return fetch(`${API_ROOT}/projects/${projectId}`)
       .then((res) => res.json())
       .then((data) => {
-        const sorted = data.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
-        setProjects(sorted);
+        setProject(data);
       })
-      .catch(() => toast.error("Failed to load projects"));
+      .catch(() => toast.error("Failed to load project"));
   };
 
   const fetchEndpoints = () => {
-    return fetch(`${API_ROOT}/endpoints`)
+    return fetch(`${API_ROOT}/projects/${projectId}/project-endpoints`)
       .then((res) => res.json())
       .then((data) => {
         setEndpoints(data);
@@ -1620,7 +1615,7 @@ const DashboardPage = () => {
   };
 
   const fetchFolders = () => {
-    return fetch(`${API_ROOT}/folders`)
+    return fetch(`${API_ROOT}/folders?project_id=${projectId}`)
       .then((res) => res.json())
       .then((data) => {
         setFolders(data);
@@ -1883,7 +1878,7 @@ const DashboardPage = () => {
       try {
         await Promise.all([
           fetchWorkspaces(),
-          fetchProjects(),
+          fetchProject(),
           fetchEndpoints(),
           fetchFolders(),
           fetchWebsocketConfig(),
@@ -1937,7 +1932,7 @@ const DashboardPage = () => {
   // Keep sidebar expanded when on endpoint detail
   useEffect(() => {
     if (!projectId) return;
-    const p = projects.find((proj) => String(proj.id) === String(projectId));
+    const p = project;
     if (!p) return;
 
     if (String(currentWsId) !== String(p.workspace_id)) {
@@ -1945,7 +1940,7 @@ const DashboardPage = () => {
     }
     setOpenProjectsMap((prev) => ({ ...prev, [p.workspace_id]: true }));
     setOpenEndpointsMap((prev) => ({ ...prev, [p.id]: true }));
-  }, [projectId, projects, currentWsId]);
+  }, [projectId, project, currentWsId]);
 
   // -------------------- Workspace --------------------
   const validateWsName = (name, excludeId = null) => {
@@ -2070,7 +2065,7 @@ const DashboardPage = () => {
 
       // 8. Update local state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) =>
+      setProject((prev) =>
         prev.filter((p) => String(p.workspace_id) !== String(id))
       );
       setFolders((prev) =>
@@ -2109,7 +2104,7 @@ const DashboardPage = () => {
 
       // Nếu không phải workspace đang dùng, chỉ update state
       setWorkspaces((prev) => prev.filter((w) => w.id !== id));
-      setProjects((prev) =>
+      setProject((prev) =>
         prev.filter((p) => String(p.workspace_id) !== String(id))
       );
       setFolders((prev) =>
