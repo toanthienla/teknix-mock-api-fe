@@ -1273,20 +1273,17 @@ const DashboardPage = () => {
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
+  // SỬA LẠI useEffect thứ hai để không fetch dư thừa
   useEffect(() => {
     const found = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     );
 
-    // Nếu endpoint có trong danh sách nhưng không có send_notification → fetch chi tiết
+    // Nếu endpoint có trong danh sách → chỉ set currentEndpoint, KHÔNG fetch
     if (found) {
       setCurrentEndpoint(found);
-      if (found.send_notification === undefined && currentEndpointId) {
-        fetchEndpoint(currentEndpointId);
-      }
     } else if (currentEndpointId) {
-      // Nếu không có trong danh sách → fetch riêng
-      fetchEndpoint(currentEndpointId);
+      fetchEndpointIfNeeded(currentEndpointId);
     }
   }, [endpoints, currentEndpointId]);
 
@@ -1764,18 +1761,30 @@ const DashboardPage = () => {
       });
   };
 
-  const fetchEndpoint = async (id) => {
+  // Thêm hàm fetch endpoint mới, chỉ fetch khi cần thiết
+  const fetchEndpointIfNeeded = async (id) => {
     if (!id) return;
-    try {
-      const response = await fetch(`${API_ROOT}/endpoints/${id}`, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to fetch endpoint");
-      const data = await response.json();
-      setCurrentEndpoint(data);
-      // console.log("Current endpoint:", data);
-    } catch (error) {
-      console.error("Error fetching endpoint:", error);
+
+    // Kiểm tra xem endpoint đã có trong danh sách endpoints chưa
+    const existingEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(id)
+    );
+
+    if (existingEndpoint) {
+      // Nếu đã có trong danh sách, chỉ cần set currentEndpoint
+      setCurrentEndpoint(existingEndpoint);
+    } else {
+      // Nếu không có trong danh sách, mới fetch từ API
+      try {
+        const response = await fetch(`${API_ROOT}/endpoints/${id}`, {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to fetch endpoint");
+        const data = await response.json();
+        setCurrentEndpoint(data);
+      } catch (error) {
+        console.error("Error fetching endpoint:", error);
+      }
     }
   };
 
