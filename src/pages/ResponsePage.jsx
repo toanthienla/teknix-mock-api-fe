@@ -718,7 +718,8 @@ const DashboardPage = () => {
 
     return data;
   };
-
+  // ✅ THÊM: State để đánh dấu đã fetch xong
+  const [hasFetchedStatusCodes, setHasFetchedStatusCodes] = useState({});
   // ✅ SỬA: useEffect để lấy status codes - sử dụng cache
   useEffect(() => {
     if (!currentEndpointId) return;
@@ -745,6 +746,16 @@ const DashboardPage = () => {
         });
         setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
       }
+
+      // ✅ THÊM: CẬP NHẬT UI NGAY LẬP TỨC KHI CÓ CACHE
+      // Đảm bảo cả hai luồng đều có dữ liệu để hiển thị
+      updateUIWithResponseData(data, isStateful);
+
+      // ✅ ĐÁNH DẤU ĐÃ FETCH XONG
+      setHasFetchedStatusCodes((prev) => ({
+        ...prev,
+        [endpointIdStr]: true,
+      }));
       return;
     }
 
@@ -776,6 +787,9 @@ const DashboardPage = () => {
             return { code: code, description: description };
           });
           setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+
+          // ✅ THÊM: CẬP NHẬT UI NGAY LẬP TỨC SAU KHI FETCH
+          updateUIWithResponseData(data, isStateful);
         } else {
           setNewApiCallAvailableStatusCodes([
             { code: "500", description: "Internal Server Error." },
@@ -1924,13 +1938,26 @@ const DashboardPage = () => {
     loadData();
   }, []);
 
-  // ✅ SỬA: useEffect để fetch responses khi cần thiết
+  // ✅ SỬA: useEffect thứ hai - đợi hasFetchedStatusCodes
   useEffect(() => {
     if (currentEndpointId && isEndpointsLoaded && !isSwitchingMode) {
+      const endpointIdStr = String(currentEndpointId);
+
+      // ✅ CHỈ FETCH KHI ĐÃ FETCH STATUS CODES XONG
+      if (!hasFetchedStatusCodes[endpointIdStr]) {
+        return; // Chờ đến khi hasFetchedStatusCodes được cập nhật
+      }
+
       setIsLoading(true);
       fetchEndpointResponses(isStateful).finally(() => setIsLoading(false));
     }
-  }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
+  }, [
+    currentEndpointId,
+    isStateful,
+    isEndpointsLoaded,
+    isSwitchingMode,
+    hasFetchedStatusCodes,
+  ]);
 
   useEffect(() => {
     if (endpoints.length > 0) {
