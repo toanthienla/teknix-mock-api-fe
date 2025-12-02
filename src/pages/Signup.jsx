@@ -21,7 +21,7 @@ export default function SignupPage() {
       {/* Toggle Button */}
       <button
         onClick={toggleTheme}
-        className="absolute top-4 right-8 z-10 px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold shadow-md transition-all duration-200"
+        className="absolute top-8 right-8 z-10 px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold shadow-md transition-all duration-200"
       >
         {isDark ? "☀ Light" : "🌙 Dark"}
       </button>
