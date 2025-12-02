@@ -993,7 +993,7 @@ export const ApiCallEditor = ({
               visible={addTooltipVisible}
               className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
             >
-              Add New API Call
+              New
             </Tooltip>
           </div>
 
@@ -1014,7 +1014,7 @@ export const ApiCallEditor = ({
               visible={saveTooltipVisible}
               className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
             >
-              Save API Calls
+              Save
             </Tooltip>
           </div>
         </div>
@@ -1710,7 +1710,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             visible={frameAddTooltipVisible}
             className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
           >
-            Add New Rule
+            New
           </Tooltip>
         </div>
 
@@ -1729,7 +1729,7 @@ export const Frame = ({ selectedResponse, onUpdateRules, onSave }) => {
             visible={frameSaveTooltipVisible}
             className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
           >
-            Save Rules
+            Save
           </Tooltip>
         </div>
       </div>

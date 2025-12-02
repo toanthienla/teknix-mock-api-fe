@@ -459,7 +459,7 @@ export const SchemaBodyEditor = ({
               visible={saveTooltipVisible}
               className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
             >
-              Save button
+              Save
             </Tooltip>
           </div>
         </div>

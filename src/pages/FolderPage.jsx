@@ -349,6 +349,7 @@ export default function FolderPage() {
   );
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
 
   // const [targetWsId, setTargetWsId] = useState(null);
   const [targetProjectId, setTargetProjectId] = useState(null);
@@ -360,14 +361,18 @@ export default function FolderPage() {
 
   const [openNewWs, setOpenNewWs] = useState(false);
   const [newWsName, setNewWsName] = useState("");
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isEditingWorkspace, setIsEditingWorkspace] = useState(false);
 
   // folder state
   const [openNewFolder, setOpenNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDesc, setNewFolderDesc] = useState("");
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   const [editingFolderId, setEditingFolderId] = useState(null);
   const [editFolderName, setEditFolderName] = useState("");
+  const [isEditingFolder, setIsEditingFolder] = useState(false);
 
   const [deleteFolderId, setDeleteFolderId] = useState(null);
   const [openDeleteFolder, setOpenDeleteFolder] = useState(false);
@@ -376,7 +381,6 @@ export default function FolderPage() {
 
   const [newFolderMode, setNewFolderMode] = useState(false);
   const [openEditFolder, setOpenEditFolder] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [currentUsername, setCurrentUsername] = useState("Unknown");
@@ -390,12 +394,14 @@ export default function FolderPage() {
   const [newEMethod, setNewEMethod] = useState("");
   const [newEFolderId, setNewEFolderId] = useState("");
   const [newEType, setNewEType] = useState(false); // false = stateless, true = stateful
+  const [isCreatingEndpoint, setIsCreatingEndpoint] = useState(false);
 
   // edit endpoint state
   const [editId, setEditId] = useState(null);
   const [editEName, setEditEName] = useState("");
   const [editEPath, setEditEPath] = useState("/");
   const [editEState, setEditEState] = useState(false);
+  const [isEditingEndpoint, setIsEditingEndpoint] = useState(false);
 
   // dialogs
   const [openNew, setOpenNew] = useState(false);
@@ -432,10 +438,10 @@ export default function FolderPage() {
     }
 
     // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
-    // if (workspaces.length > 0 && !currentWorkspace) {
-    //   localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
-    //   navigate("/dashboard");
-    // }
+    if (workspaces.length > 0 && !currentWorkspace) {
+      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
+      navigate("/dashboard");
+    }
   }, [currentWsId, workspaces]);
 
   const currentProject = project;
@@ -458,11 +464,6 @@ export default function FolderPage() {
     setFiltersReady(true);
   }, []);
 
-  // useEffect(() => {
-  //   fetchLogs();
-  //   toast.info("Logs loaded successfully");
-  // }, [page, rowsPerPage, searchTerm, timeFilter]);
-
   // fetch workspaces + projects + endpoints
   useEffect(() => {
     const loadData = async () => {
@@ -478,14 +479,6 @@ export default function FolderPage() {
     };
     loadData();
   }, []);
-
-  // useEffect(() => {
-  //   if (currentWsId) {
-  //     fetchProjects(currentWsId);
-  //   } else {
-  //     setProjects([]);
-  //   }
-  // }, [currentWsId]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -740,9 +733,17 @@ export default function FolderPage() {
   };
 
   const handleCreateFolder = async () => {
-    const validationError = validateFolderName(newFolderName);
-    if (validationError) return toast.warning(validationError);
+    if (isCreatingFolder || isValidating) return;
 
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+    const validationError = validateFolderName(newFolderName);
+    if (validationError) {
+      toast.warning(validationError);
+      return;
+    }
+
+    setIsCreatingFolder(true);
     try {
       const folderData = {
         name: newFolderName.trim(),
@@ -761,23 +762,42 @@ export default function FolderPage() {
       });
 
       if (!res.ok) throw new Error("Failed to create folder");
+
       const saved = await res.json();
 
       setFolders((prev) => [...prev, saved]);
       toast.success(`Folder "${saved.name}" created successfully`);
+
       setOpenNewFolder(false);
       setNewFolderName("");
       setNewFolderDesc("");
+
     } catch (err) {
       console.error("Error creating folder:", err);
       toast.error("Failed to create folder");
+    } finally {
+      setIsCreatingFolder(false);
     }
   };
 
   const handleUpdateFolder = async () => {
-    const validationError = validateFolderName(editFolderName);
-    if (validationError) return toast.warning(validationError);
+    if (isValidating || isEditingFolder) return;
 
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+
+    const validationError = validateFolderName(editFolderName);
+    if (validationError) {
+      toast.warning(validationError);
+      return;
+    }
+
+    if (!hasChanges()) {
+      setOpenEditFolder(false);
+      return;
+    }
+
+    setIsEditingFolder(true);
     try {
       const res = await fetch(`${API_ROOT}/folders/${editingFolderId}`, {
         method: "PUT",
@@ -789,16 +809,21 @@ export default function FolderPage() {
       });
 
       if (!res.ok) throw new Error("Failed to update folder");
+
       const updated = await res.json();
 
       setFolders((prev) =>
         prev.map((f) => (f.id === editingFolderId ? updated : f))
       );
+
       toast.success("Folder updated successfully!");
       setOpenEditFolder(false);
+
     } catch (err) {
       console.error("Error updating folder:", err);
       toast.error("Failed to update folder");
+    } finally {
+      setIsEditingFolder(false);
     }
   };
 
@@ -962,7 +987,14 @@ export default function FolderPage() {
 
   // Create endpoint
   const handleCreateEndpoint = async () => {
+    if (isValidating || isCreatingEndpoint) return;
+
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+
     if (!validateCreateEndpoint(newEName, newEPath, newEMethod)) return;
+
+    setIsCreatingEndpoint(true);
 
     try {
       const newEndpoint = {
@@ -979,23 +1011,19 @@ export default function FolderPage() {
         body: JSON.stringify(newEndpoint),
       });
 
-      // Nếu response không thành công, đọc lỗi chi tiết
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
-        if (errorData && errorData.errors && Array.isArray(errorData.errors)) {
-          errorData.errors.forEach((err) => {
-            if (err.message)
-              toast.error(
-                `Error ${err.field ? `${err.field}: ` : ""}${err.message}`
-              );
-          });
+
+        if (errorData?.errors?.length) {
+          errorData.errors.forEach((err) =>
+            toast.error(`${err.field ? `${err.field}: ` : ""}${err.message}`)
+          );
         } else {
           toast.error("Failed to create endpoint");
         }
         return;
       }
 
-      // Nếu thành công
       const created = await res.json();
       setEndpoints((prev) => [...prev, created]);
       setOpenNew(false);
@@ -1003,6 +1031,8 @@ export default function FolderPage() {
     } catch (error) {
       console.error("Error creating endpoint:", error);
       toast.error("Failed to create endpoint");
+    } finally {
+      setIsCreatingEndpoint(false);
     }
   };
 
@@ -1029,6 +1059,11 @@ export default function FolderPage() {
   }, [editEName, editEPath, currentEndpoint]);
 
   const handleUpdateEndpoint = async () => {
+    if (isValidating || isEditingEndpoint) return;
+
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+
     const isValid = await validateEditEndpoint(
       editId,
       editEName,
@@ -1036,14 +1071,17 @@ export default function FolderPage() {
       editEState,
       currentEndpoint.method
     );
+
     if (!isValid) return;
 
-    const updated = {
-      name: editEName,
-      path: editEPath
-    };
+    setIsEditingEndpoint(true);
 
     try {
+      const updated = {
+        name: editEName.trim(),
+        path: editEPath.trim(),
+      };
+
       const res = await fetch(`${API_ROOT}/endpoints/${editId}`, {
         method: "PUT",
         credentials: "include",
@@ -1061,9 +1099,12 @@ export default function FolderPage() {
 
       setOpenEdit(false);
       toast.success("Update endpoint successfully!");
+
     } catch (err) {
       console.error(err);
       toast.error("Failed to update endpoint!");
+    } finally {
+      setIsEditingEndpoint(false);
     }
   };
 
@@ -1098,59 +1139,118 @@ export default function FolderPage() {
     return "";
   };
 
-  const handleAddWorkspace = (name) => {
+  const handleAddWorkspace = async (name) => {
+    if (isCreatingWorkspace || isValidating) return;
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+    setIsCreatingWorkspace(true);
+
     const err = validateWsName(name);
     if (err) {
       toast.warning(err);
+      setIsCreatingWorkspace(false);
       return;
     }
-    fetch(`${API_ROOT}/workspaces`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then((res) => res.json())
-      .then((createdWs) => {
-        setWorkspaces((prev) => [...prev, createdWs]);
-        // setCurrentWsId(createdWs.id);
-        toast.success("Create workspace successfully!");
-        setNewWsName("");
-        setOpenNewWs(false);
-        fetchWorkspaces();
-      })
-      .catch(() => toast.error("Failed to create workspace"));
+
+    try {
+      const res = await fetch(`${API_ROOT}/workspaces`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+
+      const result = await res.json();
+      if (!result.success || !result.data) {
+        toast.error("Failed to create workspace");
+        return;
+      }
+
+      const createdWs = result.data;
+      setWorkspaces((prev) => [...prev, createdWs]);
+      setCurrentWsId(String(createdWs.id));
+      localStorage.setItem("currentWorkspace", String(createdWs.id));
+
+      toast.success("Workspace created successfully");
+      setNewWsName("");
+      setOpenNewWs(false);
+
+    } catch (err) {
+      console.error("Error creating workspace:", err);
+      toast.error("Failed to create workspace");
+    } finally {
+      setIsCreatingWorkspace(false);
+    }
   };
 
-  const handleEditWorkspace = () => {
+  const handleEditWorkspace = async () => {
+    if (isEditingWorkspace || isValidating) return;
+
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+
     const err = validateWsName(editWsName, editWsId);
     if (err) {
       toast.warning(err);
       return;
     }
-    fetch(`${API_ROOT}/workspaces/${editWsId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: editWsName.trim(),
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then(() => {
-        setWorkspaces((prev) =>
-          prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
-          )
-        );
-        setOpenEditWs(false);
-        setEditWsName("");
-        setEditWsId(null);
-        toast.success("Update workspace successfully!");
-      })
-      .catch(() => toast.error("Failed to update workspace"));
+
+    const original = workspaces.find((w) => w.id === editWsId);
+    if (!original) {
+      toast.error("Original workspace not found");
+      return;
+    }
+
+    // Nếu không có thay đổi → đóng dialog
+    if (editWsName.trim() === original.name) {
+      setOpenEditWs(false);
+      return;
+    }
+
+    setIsEditingWorkspace(true);
+
+    try {
+      const res = await fetch(`${API_ROOT}/workspaces/${editWsId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editWsName.trim(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success || !result.data) {
+        toast.error("Failed to update workspace");
+        return;
+      }
+
+      const updatedWs = result.data;
+
+      // Cập nhật vào workspaces
+      setWorkspaces((prev) =>
+        prev.map((w) =>
+          w.id === editWsId ? updatedWs : w
+        )
+      );
+
+      toast.success("Workspace updated successfully");
+
+      // Đóng dialog + reset input
+      setOpenEditWs(false);
+      setEditWsName("");
+      setEditWsId(null);
+
+    } catch (err) {
+      console.error("Error updating workspace:", err);
+      toast.error("Failed to update workspace");
+    } finally {
+      setIsEditingWorkspace(false);
+    }
   };
 
   const handleDeleteWorkspace = async (id) => {
@@ -1552,6 +1652,7 @@ export default function FolderPage() {
                                   onAddEndpoint={(f) => {
                                     setNewEType(false);
                                     setNewEFolderId(f.id || "");
+                                    setSelectedFolder(f);
                                     setNewEName("");
                                     setNewEPath("");
                                     setNewEMethod("");
@@ -1894,12 +1995,13 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
+              disabled={isCreatingWorkspace}
               className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={() => {
                 handleAddWorkspace(newWsName);
               }}
             >
-              Create
+              {isCreatingWorkspace ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1942,11 +2044,15 @@ export default function FolderPage() {
               Cancel
             </Button>
             <Button
-              type="button"
+              disabled={
+                editWsName.trim() ===
+                (workspaces.find((w) => w.id === editWsId)?.name || "") ||
+                isEditingWorkspace
+              }
               className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleEditWorkspace}
             >
-              Update
+              {isEditingWorkspace ? "Editing..." : "Edit"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2070,10 +2176,11 @@ export default function FolderPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenNewFolder(false)}>Cancel</Button>
             <Button
+              disabled={isCreatingFolder}
               className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleCreateFolder}
             >
-              Create
+              {isCreatingFolder ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2106,7 +2213,7 @@ export default function FolderPage() {
               className={`bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white ${!hasChanges() ? "opacity-50 cursor-not-allowed" : ""
                 }`}
             >
-              Update
+              {isEditingFolder ? "Editing..." : "Edit"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2135,60 +2242,58 @@ export default function FolderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* === Delete Confirmation Dialog === */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Folder</DialogTitle>
-          </DialogHeader>
-          <DialogDescription></DialogDescription>
+      {/*/!* === Delete Confirmation Dialog === *!/*/}
+      {/*<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>*/}
+      {/*  <DialogContent className="sm:max-w-md">*/}
+      {/*    <DialogHeader>*/}
+      {/*      <DialogTitle>Delete Folder</DialogTitle>*/}
+      {/*    </DialogHeader>*/}
+      {/*    <DialogDescription className="opacity-70">*/}
+      {/*      Are you sure you want to delete{" "}*/}
+      {/*      <span className="font-semibold">{selectedFolder?.name}</span>?*/}
+      {/*      <span className="text-red-500 text-sm">*/}
+      {/*        This action cannot be undone.*/}
+      {/*      </span>*/}
+      {/*    </DialogDescription>*/}
 
-          <p className="opacity-70">
-            Are you sure you want to delete{" "}
-            <span className="font-semibold">{selectedFolder?.name}</span>?<br />
-            <span className="text-red-500 text-sm">
-              This action cannot be undone.
-            </span>
-          </p>
+      {/*    <DialogFooter className="flex justify-end gap-2">*/}
+      {/*      <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>*/}
+      {/*        Cancel*/}
+      {/*      </Button>*/}
+      {/*      <Button*/}
+      {/*        className="destructive"*/}
+      {/*        onClick={async () => {*/}
+      {/*          try {*/}
+      {/*            if (!selectedFolder?.id)*/}
+      {/*              throw new Error("No folder selected");*/}
 
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="destructive"
-              onClick={async () => {
-                try {
-                  if (!selectedFolder?.id)
-                    throw new Error("No folder selected");
+      {/*            const res = await fetch(*/}
+      {/*              `${API_ROOT}/folders/${selectedFolder.id}`,*/}
+      {/*              {*/}
+      {/*                method: "DELETE",*/}
+      {/*                credentials: "include",*/}
+      {/*              }*/}
+      {/*            );*/}
 
-                  const res = await fetch(
-                    `${API_ROOT}/folders/${selectedFolder.id}`,
-                    {
-                      method: "DELETE",
-                      credentials: "include",
-                    }
-                  );
+      {/*            if (!res.ok) throw new Error("Failed to delete folder");*/}
 
-                  if (!res.ok) throw new Error("Failed to delete folder");
+      {/*            setFolders((prev) =>*/}
+      {/*              prev.filter((f) => f.id !== selectedFolder.id)*/}
+      {/*            );*/}
 
-                  setFolders((prev) =>
-                    prev.filter((f) => f.id !== selectedFolder.id)
-                  );
-
-                  toast.success("Folder deleted successfully!");
-                  setDeleteDialogOpen(false);
-                } catch (err) {
-                  toast.error("Failed to delete folder!");
-                  console.error(err);
-                }
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/*            toast.success("Folder deleted successfully!");*/}
+      {/*            setDeleteDialogOpen(false);*/}
+      {/*          } catch (err) {*/}
+      {/*            toast.error("Failed to delete folder!");*/}
+      {/*            console.error(err);*/}
+      {/*          }*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        Delete*/}
+      {/*      </Button>*/}
+      {/*    </DialogFooter>*/}
+      {/*  </DialogContent>*/}
+      {/*</Dialog>*/}
 
       {/* Delete Folder Dialog */}
       <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
@@ -2200,7 +2305,7 @@ export default function FolderPage() {
           </DialogHeader>
           <DialogDescription></DialogDescription>
 
-          <div className="py-2">
+          <div>
             <p className="text-sm opacity-70">
               Are you sure you want to delete this folder and all its endpoints?
               This action cannot be undone.
@@ -2340,10 +2445,11 @@ export default function FolderPage() {
             </Button>
 
             <Button
+              disabled={isCreatingEndpoint}
               className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               onClick={handleCreateEndpoint}
             >
-              Create
+              {isCreatingEndpoint ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2405,7 +2511,7 @@ export default function FolderPage() {
               className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
               disabled={!hasEdited}
             >
-              Update
+              {isEditingEndpoint ? "Editing..." : "Edit"}
             </Button>
           </DialogFooter>
         </DialogContent>

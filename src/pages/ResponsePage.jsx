@@ -3315,7 +3315,7 @@ const DashboardPage = () => {
                           visible={addTooltipVisible}
                           className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                         >
-                          Add New Response
+                          New
                         </Tooltip>
                       </div>
                     )}
@@ -3324,7 +3324,7 @@ const DashboardPage = () => {
                         isStateful && "ml-1"
                       }`}
                     >
-                      <span className="text-sm">
+                      <span className="text-sm font-bold">
                         List Response - {endpointResponses.length}
                       </span>
                     </div>
@@ -3668,7 +3668,7 @@ const DashboardPage = () => {
                                   visible={starTooltipVisible}
                                   className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                                 >
-                                  Set Default
+                                  Default
                                 </Tooltip>
                               </div>
                             )}
@@ -3704,7 +3704,7 @@ const DashboardPage = () => {
                                 visible={responseSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                           </div>
@@ -3814,7 +3814,7 @@ const DashboardPage = () => {
                                   style={{
                                     fontFamily:
                                       '"Consolas", "Menlo", "Cascadia Code", monospace',
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     minHeight: "200px",
                                     maxHeight: "400px",
                                     overflow: "auto",
@@ -4067,7 +4067,7 @@ const DashboardPage = () => {
                                 visible={proxySaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                             <h2 className="text-md">Forward Proxy URL</h2>
@@ -4286,7 +4286,7 @@ const DashboardPage = () => {
                                 visible={dataSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                           </div>
