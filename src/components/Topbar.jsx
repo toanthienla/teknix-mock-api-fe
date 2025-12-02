@@ -104,6 +104,7 @@ export default function Topbar({
   useEffect(() => {
     checkUserLogin();
   }, []);
+
   const switchIcon = isDark ? switchIconDark : switchIconLight;
   const logoIcon = isDark ? logoIconDark : logoIconLight;
   const openWorkspaceIcon = isDark ? openWorkspaceIconDark : openWorkspaceIconLight

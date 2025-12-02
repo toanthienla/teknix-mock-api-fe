@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Topbar from "../components/Topbar";
 import ProjectCard from "../components/ProjectCard";
 import { API_ROOT } from "../utils/constants";
@@ -89,10 +89,14 @@ export default function ProjectPage() {
 
   const [openNewWs, setOpenNewWs] = useState(false);
   const [newWsName, setNewWsName] = useState("");
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [isEditingWorkspace, setIsEditingWorkspace] = useState(false);
 
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [isCreatingPj, setIsCreatingPj] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+
   const [isValidating, setIsValidating] = useState(false);
 
   const [editId, setEditId] = useState(null);
@@ -143,18 +147,25 @@ export default function ProjectPage() {
   }, []);
 
   useEffect(() => {
+    // Chưa load xong workspaces → không làm gì
+    if (workspaces.length === 0) return;
+
+    // Nếu chưa có currentWsId → đặt mặc định workspace đầu tiên
     if (!currentWsId) {
-      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
-      navigate("/dashboard");
+      const firstId = String(workspaces[0].id);
+      setCurrentWsId(firstId);
+      localStorage.setItem("currentWorkspace", firstId);
       return;
     }
 
-    // Nếu đã load workspace list nhưng không tìm thấy workspace tương ứng
-    if (workspaces.length > 0 && !currentWorkspace) {
-      localStorage.setItem("currentWorkspace", workspaces[0]?.id || null);
-      navigate("/dashboard");
+    // Nếu id hiện tại KHÔNG tồn tại trong list workspaces → reset về cái đầu tiên
+    const exists = workspaces.some(w => String(w.id) === String(currentWsId));
+    if (!exists) {
+      const firstId = String(workspaces[0].id);
+      setCurrentWsId(firstId);
+      localStorage.setItem("currentWorkspace", firstId);
     }
-  }, [currentWsId, workspaces]);
+  }, [workspaces]);
 
   useEffect(() => {
     if (!currentWsId) return;
@@ -232,7 +243,7 @@ export default function ProjectPage() {
   };
 
   const fetchEndpoints = () => {
-    fetch(`${API_ROOT}/workspaces/${currentWsId || "1"}/all-endpoints`)
+    fetch(`${API_ROOT}/workspaces/${currentWsId}/all-endpoints`)
       .then((res) => res.json())
       .then((data) => setEndpoints(data));
   };
@@ -279,79 +290,118 @@ export default function ProjectPage() {
     return "";
   };
 
-  const handleAddWorkspace = (name) => {
+  const handleAddWorkspace = async (name) => {
+    if (isCreatingWorkspace || isValidating) return;
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+    setIsCreatingWorkspace(true);
+
     const err = validateWsName(name);
     if (err) {
       toast.warning(err);
+      setIsCreatingWorkspace(false);
       return;
     }
-    fetch(`${API_ROOT}/workspaces`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        if (!result.success || !result.data) {
-          toast.error("Failed to create workspace");
-          return;
-        }
-        const createdWs = result.data;
 
-        setWorkspaces((prev) => [...prev, createdWs]);
-        setCurrentWsId(String(createdWs.id));
-        localStorage.setItem("currentWorkspace", String(createdWs.id));
-
-        toast.success("Workspace created successfully");
-        setNewWsName("");
-        setOpenNewWs(false);
-
-        fetchWorkspaces();
-      })
-      .catch((err) => {
-        console.error("Error creating workspace:", err);
-        toast.error("Failed to create workspace");
+    try {
+      const res = await fetch(`${API_ROOT}/workspaces`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
       });
+
+      const result = await res.json();
+      if (!result.success || !result.data) {
+        toast.error("Failed to create workspace");
+        return;
+      }
+
+      const createdWs = result.data;
+      setWorkspaces((prev) => [...prev, createdWs]);
+      setCurrentWsId(String(createdWs.id));
+      localStorage.setItem("currentWorkspace", String(createdWs.id));
+
+      toast.success("Workspace created successfully");
+      setNewWsName("");
+      setOpenNewWs(false);
+
+    } catch (err) {
+      console.error("Error creating workspace:", err);
+      toast.error("Failed to create workspace");
+    } finally {
+      setIsCreatingWorkspace(false);
+    }
   };
 
-  const handleEditWorkspace = () => {
+  const handleEditWorkspace = async () => {
+    if (isEditingWorkspace || isValidating) return;
+
+    setIsValidating(true);
+    setTimeout(() => setIsValidating(false), 1000);
+
     const err = validateWsName(editWsName, editWsId);
     if (err) {
       toast.warning(err);
       return;
     }
 
-    // Kiểm tra nếu tên workspace không thay đổi
     const original = workspaces.find((w) => w.id === editWsId);
-    if (original && editWsName.trim() === original.name) {
+    if (!original) {
+      toast.error("Original workspace not found");
+      return;
+    }
+
+    // Nếu không có thay đổi → đóng dialog
+    if (editWsName.trim() === original.name) {
       setOpenEditWs(false);
       return;
     }
 
-    fetch(`${API_ROOT}/workspaces/${editWsId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: editWsName.trim(),
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then(() => {
-        setWorkspaces((prev) =>
-          prev.map((w) =>
-            w.id === editWsId ? { ...w, name: editWsName.trim() } : w
-          )
-        );
-        setOpenEditWs(false);
-        setEditWsName("");
-        setEditWsId(null);
-        toast.success("Workspace updated successfully");
-      })
-      .catch(() => toast.error("Failed to update workspace"));
+    setIsEditingWorkspace(true);
+
+    try {
+      const res = await fetch(`${API_ROOT}/workspaces/${editWsId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editWsName.trim(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success || !result.data) {
+        toast.error("Failed to update workspace");
+        return;
+      }
+
+      const updatedWs = result.data;
+
+      // Cập nhật vào workspaces
+      setWorkspaces((prev) =>
+        prev.map((w) =>
+          w.id === editWsId ? updatedWs : w
+        )
+      );
+
+      toast.success("Workspace updated successfully");
+
+      // Đóng dialog + reset input
+      setOpenEditWs(false);
+      setEditWsName("");
+      setEditWsId(null);
+
+    } catch (err) {
+      console.error("Error updating workspace:", err);
+      toast.error("Failed to update workspace");
+    } finally {
+      setIsEditingWorkspace(false);
+    }
   };
 
   const handleDeleteWorkspace = async (id) => {
@@ -556,11 +606,14 @@ export default function ProjectPage() {
     setOpenEditProject(true);
   };
 
-  const handleUpdateProject = () => {
+  const handleUpdateProject = async () => {
     const original = projects.find((p) => p.id === editId);
-    if (!original) return;
+    if (!original) {
+      toast.error("Original project not found");
+      return;
+    }
 
-    // Kiểm tra nếu không có thay đổi thì đóng dialog
+    // Kiểm tra nếu không có thay đổi thì đóng dialog (không gọi API)
     if (
       editTitle.trim() === (original.name || "") &&
       editDesc.trim() === (original.description || "")
@@ -569,33 +622,73 @@ export default function ProjectPage() {
       return;
     }
 
-    if (
-      !validateProject(editTitle, editDesc, true, editId, original.workspace_id)
-    )
+    // Validate trước khi gửi request
+    if (!validateProject(editTitle, editDesc, true, editId, original.workspace_id)) {
       return;
+    }
 
-    fetch(`${API_ROOT}/projects/${editId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: editId,
-        name: editTitle.trim(),
-        description: editDesc.trim(),
-        workspace_id: original.workspace_id,
-        created_at: original.created_at, //Giữ lại created_at
-        updated_at: new Date().toISOString(),
-      }),
-    })
-      .then((res) => res.json())
-      .then((updatedProject) => {
-        setProjects((prev) =>
-          prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-        );
-        setSelectedProject(updatedProject);
-        setOpenEditProject(false);
-        toast.success("Project updated successfully");
-      })
-      .catch(() => toast.error("Failed to update project"));
+    // Bật chế độ editing (ngăn spam) trước khi gọi network
+    if (isEditingProject) return;
+    setIsEditingProject(true);
+
+    try {
+      const res = await fetch(`${API_ROOT}/projects/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editId,
+          name: editTitle.trim(),
+          description: editDesc.trim(),
+          workspace_id: original.workspace_id,
+          created_at: original.created_at, // giữ lại created_at
+          updated_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        // Cố gắng đọc message lỗi nếu có
+        let errMsg = "Failed to update project";
+        try {
+          const errBody = await res.json();
+          if (errBody?.message) errMsg = errBody.message;
+        } catch (e) {
+          console.warn("Failed to parse error body:", e);
+        }
+        toast.error(errMsg);
+        return;
+      }
+
+      const updatedProject = await res.json();
+
+      // --- Fetch folders cho project này (để đảm bảo UI có folders) ---
+      let foldersForProject = [];
+      try {
+        const folderRes = await fetch(`${API_ROOT}/folders?project_id=${editId}`);
+        if (folderRes.ok) {
+          foldersForProject = await folderRes.json();
+        }
+      } catch (e) {
+        console.warn("Failed to fetch folders for updated project:", e);
+      }
+
+      const updatedWithFolders = {
+        ...updatedProject,
+        folders: Array.isArray(foldersForProject) ? foldersForProject : [],
+      };
+
+      setProjects((prev) =>
+        prev.map((p) => (p.id === updatedWithFolders.id ? updatedWithFolders : p))
+      );
+      setSelectedProject(updatedWithFolders);
+
+      setOpenEditProject(false);
+      toast.success("Project updated successfully");
+    } catch (err) {
+      console.error("Update project error:", err);
+      toast.error("Failed to update project");
+    } finally {
+      setIsEditingProject(false);
+    }
   };
 
   const openDeleteProjectDialog = (id) => {
@@ -1018,7 +1111,7 @@ export default function ProjectPage() {
                   Project details
                 </div>
               </DialogHeader>
-
+              <DialogDescription></DialogDescription>
               <div className="mt-4 space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
@@ -1096,10 +1189,11 @@ export default function ProjectPage() {
                     editTitle.trim() ===
                       (projects.find((p) => p.id === editId)?.name || "") &&
                     editDesc.trim() ===
-                      (projects.find((p) => p.id === editId)?.description || "")
+                      (projects.find((p) => p.id === editId)?.description || "") ||
+                    isEditingProject
                   }
                 >
-                  Update
+                  {isEditingProject ? "Editing..." : "Edit"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1111,7 +1205,7 @@ export default function ProjectPage() {
               <DialogHeader>
                 <DialogTitle>Delete Project</DialogTitle>
               </DialogHeader>
-              <p>Are you sure you want to delete this project?</p>
+              <DialogDescription>Are you sure you want to delete this project?</DialogDescription>
               <DialogFooter>
                 <Button
                   variant="outline"
@@ -1132,6 +1226,7 @@ export default function ProjectPage() {
               <DialogHeader>
                 <DialogTitle>New Workspace</DialogTitle>
               </DialogHeader>
+              <DialogDescription></DialogDescription>
               <div className="space-y-2">
                 <label className="block text-sm font-medium">
                   Name
@@ -1153,12 +1248,13 @@ export default function ProjectPage() {
                   Cancel
                 </Button>
                 <Button
+                  disabled={isCreatingWorkspace}
                   className="bg-[#FBEB6B] hover:bg-[#FDE047] text-black dark:bg-[#5865F2] dark:hover:bg-[#4752C4] dark:text-white"
                   onClick={() => {
                     handleAddWorkspace(newWsName);
                   }}
                 >
-                  Create
+                  {isCreatingWorkspace ? "Creating..." : "Create"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1170,6 +1266,7 @@ export default function ProjectPage() {
               <DialogHeader>
                 <DialogTitle>Edit Workspace</DialogTitle>
               </DialogHeader>
+              <DialogDescription></DialogDescription>
               <div className="space-y-2">
                 <label className="block text-sm font-medium opacity-70">
                   Name
@@ -1189,10 +1286,11 @@ export default function ProjectPage() {
                   onClick={handleEditWorkspace}
                   disabled={
                     editWsName.trim() ===
-                    (workspaces.find((w) => w.id === editWsId)?.name || "")
+                    (workspaces.find((w) => w.id === editWsId)?.name || "") ||
+                    isEditingWorkspace
                   }
                 >
-                  Update
+                  {isEditingWorkspace ? "Editing..." : "Edit"}
                 </Button>
               </DialogFooter>
             </DialogContent>

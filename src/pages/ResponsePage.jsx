@@ -188,78 +188,85 @@ const DashboardPage = () => {
     return tempDataDefaultString !== initialDataDefault;
   };
 
-  // Sửa lại hàm hasResponseChanged để so sánh trực tiếp với API data
-  const hasResponseChanged = async () => {
+  // Sửa lại hàm hasResponseChanged để chuẩn hóa JSON trước khi so sánh
+  const hasResponseChanged = () => {
     if (!selectedResponse) {
       return false;
     }
 
-    try {
-      // Fetch dữ liệu mới nhất từ API
-      const url = isStateful
-        ? `${API_ROOT}/endpoint_responses_ful/${selectedResponse.id}`
-        : `${API_ROOT}/endpoint_responses/${selectedResponse.id}`;
+    // Lấy dữ liệu gốc từ endpointResponses (đã được fetch trước đó)
+    const originalData = endpointResponses.find(
+      (r) => r.id === selectedResponse.id
+    );
 
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) {
-        console.error("Failed to fetch current response data");
-        return false; // Nếu không fetch được, coi như không có thay đổi
-      }
-
-      const currentData = await response.json();
-
-      // Chuẩn bị dữ liệu hiện tại đang hiển thị
-      const displayData = {
-        name: responseName,
-        statusCode: statusCode,
-        responseBody: responseBody,
-        delay: delay,
-        proxyUrl: proxyUrl,
-        proxyMethod: proxyMethod,
-        condition: JSON.stringify(responseCondition || {}),
-      };
-
-      // Chuẩn bị dữ liệu từ API để so sánh
-      const apiData = {
-        name: currentData.name,
-        statusCode: currentData.status_code.toString(),
-        responseBody: JSON.stringify(currentData.response_body, null, 2),
-        delay: currentData.delay_ms?.toString() || "0",
-        proxyUrl: currentData.proxy_url || "",
-        proxyMethod: currentData.proxy_method || "GET",
-        condition: JSON.stringify(currentData.condition || {}),
-      };
-
-      // So sánh từng trường
-      const hasChanged =
-        displayData.name !== apiData.name ||
-        displayData.statusCode !== apiData.statusCode ||
-        displayData.responseBody !== apiData.responseBody ||
-        displayData.delay !== apiData.delay ||
-        displayData.proxyUrl !== apiData.proxyUrl ||
-        displayData.proxyMethod !== apiData.proxyMethod ||
-        displayData.condition !== apiData.condition;
-
-      console.log("Comparing with API data:", {
-        hasChanged,
-        displayData,
-        apiData,
-        differences: {
-          name: displayData.name !== apiData.name,
-          statusCode: displayData.statusCode !== apiData.statusCode,
-          responseBody: displayData.responseBody !== apiData.responseBody,
-          delay: displayData.delay !== apiData.delay,
-          proxyUrl: displayData.proxyUrl !== apiData.proxyUrl,
-          proxyMethod: displayData.proxyMethod !== apiData.proxyMethod,
-          condition: displayData.condition !== apiData.condition,
-        },
-      });
-
-      return hasChanged;
-    } catch (error) {
-      console.error("Error comparing response data:", error);
-      return false; // Nếu có lỗi, coi như không có thay đổi để an toàn
+    if (!originalData) {
+      return true; // Nếu không tìm thấy dữ liệu gốc, coi như có thay đổi
     }
+
+    // Chuẩn bị dữ liệu hiện tại đang hiển thị
+    const currentData = {
+      name: responseName,
+      statusCode: statusCode,
+      responseBody: responseBody,
+      delay: delay,
+      proxyUrl: proxyUrl,
+      proxyMethod: proxyMethod,
+      condition: JSON.stringify(responseCondition || {}),
+    };
+
+    // Chuẩn bị dữ liệu gốc để so sánh
+    const originalDataForCompare = {
+      name: originalData.name,
+      statusCode: originalData.status_code.toString(),
+      responseBody: JSON.stringify(originalData.response_body, null, 2),
+      delay: originalData.delay_ms?.toString() || "0",
+      proxyUrl: originalData.proxy_url || "",
+      proxyMethod: originalData.proxy_method || "GET",
+      condition: JSON.stringify(originalData.condition || {}),
+    };
+
+    // Hàm chuẩn hóa JSON để so sánh
+    const normalizeJson = (jsonString) => {
+      try {
+        // Parse và stringify lại để loại bỏ khoảng trắng, xuống dòng không cần thiết
+        return JSON.stringify(JSON.parse(jsonString));
+      } catch {
+        // Nếu không parse được, trả về nguyên bản
+        return jsonString;
+      }
+    };
+
+    // So sánh từng trường, đặc biệt là responseBody cần chuẩn hóa JSON
+    const hasChanged =
+      currentData.name !== originalDataForCompare.name ||
+      currentData.statusCode !== originalDataForCompare.statusCode ||
+      normalizeJson(currentData.responseBody) !==
+        normalizeJson(originalDataForCompare.responseBody) ||
+      currentData.delay !== originalDataForCompare.delay ||
+      currentData.proxyUrl !== originalDataForCompare.proxyUrl ||
+      currentData.proxyMethod !== originalDataForCompare.proxyMethod ||
+      currentData.condition !== originalDataForCompare.condition;
+
+    console.log("Comparing with original data:", {
+      hasChanged,
+      currentData,
+      originalDataForCompare,
+      differences: {
+        name: currentData.name !== originalDataForCompare.name,
+        statusCode:
+          currentData.statusCode !== originalDataForCompare.statusCode,
+        responseBody:
+          normalizeJson(currentData.responseBody) !==
+          normalizeJson(originalDataForCompare.responseBody),
+        delay: currentData.delay !== originalDataForCompare.delay,
+        proxyUrl: currentData.proxyUrl !== originalDataForCompare.proxyUrl,
+        proxyMethod:
+          currentData.proxyMethod !== originalDataForCompare.proxyMethod,
+        condition: currentData.condition !== originalDataForCompare.condition,
+      },
+    });
+
+    return hasChanged;
   };
 
   // Component Tooltip
@@ -2512,7 +2519,7 @@ const DashboardPage = () => {
     }
 
     // Kiểm tra xem người dùng có thay đổi gì không
-    const hasChanged = await hasResponseChanged();
+    const hasChanged = hasResponseChanged();
     if (!hasChanged) {
       toast.info(
         "No changes detected. Please modify the response data before saving."
@@ -3315,7 +3322,7 @@ const DashboardPage = () => {
                           visible={addTooltipVisible}
                           className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                         >
-                          Add New Response
+                          New
                         </Tooltip>
                       </div>
                     )}
@@ -3324,7 +3331,7 @@ const DashboardPage = () => {
                         isStateful && "ml-1"
                       }`}
                     >
-                      <span className="text-sm">
+                      <span className="text-sm font-bold">
                         List Response - {endpointResponses.length}
                       </span>
                     </div>
@@ -3668,7 +3675,7 @@ const DashboardPage = () => {
                                   visible={starTooltipVisible}
                                   className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                                 >
-                                  Set Default
+                                  Default
                                 </Tooltip>
                               </div>
                             )}
@@ -3704,7 +3711,7 @@ const DashboardPage = () => {
                                 visible={responseSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                           </div>
@@ -3814,7 +3821,7 @@ const DashboardPage = () => {
                                   style={{
                                     fontFamily:
                                       '"Consolas", "Menlo", "Cascadia Code", monospace',
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     minHeight: "200px",
                                     maxHeight: "400px",
                                     overflow: "auto",
@@ -4067,7 +4074,7 @@ const DashboardPage = () => {
                                 visible={proxySaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                             <h2 className="text-md">Forward Proxy URL</h2>
@@ -4286,7 +4293,7 @@ const DashboardPage = () => {
                                 visible={dataSaveTooltipVisible}
                                 className="bottom-full left-1/2 transform -translate-x-1/2 mb-2"
                               >
-                                Save button
+                                Save
                               </Tooltip>
                             </div>
                           </div>
