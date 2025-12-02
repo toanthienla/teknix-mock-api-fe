@@ -581,50 +581,220 @@ const DashboardPage = () => {
       });
   }, [currentEndpointId, isStateful]);
 
-  // ✅ SỬA: Luôn fetch endpoint responses để có status codes đúng cho API Call Editor
-  useEffect(() => {
-    if (!currentEndpointId) return;
+  // ✅ THÊM: State để cache endpoint responses
+  const [endpointResponsesCache, setEndpointResponsesCache] = useState({});
 
-    fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${currentEndpointId}`, {
-      credentials: "include",
-    })
+  const fetchEndpointResponsesWithCache = (isStatefulMode) => {
+    const endpointIdStr = String(currentEndpointId);
+
+    // ✅ KIỂM TRA CACHE TRƯỚC
+    if (endpointResponsesCache[endpointIdStr]) {
+      console.log("Using cached endpoint responses for:", endpointIdStr);
+
+      // ✅ LẤY DỮ LIỆU TỪ CACHE VÀ CẬP NHẬT UI NGAY LẬP TỨC
+      const cachedData = endpointResponsesCache[endpointIdStr];
+      return Promise.resolve(
+        updateUIWithResponseData(cachedData, isStatefulMode)
+      );
+    }
+
+    return fetch(
+      `${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`,
+      { credentials: "include" }
+    )
       .then((res) => res.json())
       .then((data) => {
+        // ✅ LƯU VÀO CACHE
+        setEndpointResponsesCache((prev) => ({
+          ...prev,
+          [endpointIdStr]: data,
+        }));
+
+        // ✅ CẬP NHẬT UI VỚI DỮ LIỆU MỚI
+        return updateUIWithResponseData(data, isStatefulMode);
+      });
+  };
+
+  // ✅ HÀM MỚI: Cập nhật UI với dữ liệu response
+  const updateUIWithResponseData = (data, isStatefulMode) => {
+    if (isStatefulMode) {
+      const statefulResponses = data.map((res) => ({
+        id: res.id,
+        endpoint_id: res.endpoint_id,
+        name: res.name,
+        status_code: res.status_code,
+        response_body: res.response_body,
+        delay_ms: res.delay_ms,
+        is_stateful: res.is_stateful !== undefined ? res.is_stateful : true,
+        created_at: res.created_at,
+        updated_at: res.updated_at,
+      }));
+
+      setEndpointResponses(statefulResponses);
+
+      const statusDataFormatted = statefulResponses.map((res) => ({
+        id: res.id,
+        code: res.status_code.toString(),
+        name: res.name,
+        isStateful: res.is_stateful !== undefined ? res.is_stateful : true,
+        bgColor: "",
+      }));
+
+      setStatusData(statusDataFormatted);
+
+      if (!selectedResponse && statefulResponses.length > 0) {
+        const firstResponse = statefulResponses[0];
+        setSelectedResponse(firstResponse);
+        setResponseName(firstResponse.name);
+        setStatusCode(firstResponse.status_code.toString());
+        setResponseBody(JSON.stringify(firstResponse.response_body, null, 2));
+        setDelay(firstResponse.delay_ms?.toString() || "0");
+      }
+    } else {
+      const sortedData = [...data].sort((a, b) => a.priority - b.priority);
+      setEndpointResponses(sortedData);
+
+      const statusDataFormatted = sortedData.map((res) => ({
+        id: res.id,
+        code: res.status_code.toString(),
+        name: res.name,
+        isDefault: res.is_default,
+        bgColor: res.is_default ? "bg-slate-100" : "",
+        priority: res.priority,
+      }));
+      setStatusData(statusDataFormatted);
+
+      if (!selectedResponse && data.length > 0) {
+        const defaultResponse = data.find((res) => res.is_default) || data[0];
+        setSelectedResponse(defaultResponse);
+        setResponseName(defaultResponse.name);
+        setStatusCode(defaultResponse.status_code.toString());
+        setResponseBody(JSON.stringify(defaultResponse.response_body, null, 2));
+        setDelay(defaultResponse.delay_ms?.toString() || "0");
+        setProxyUrl(defaultResponse.proxy_url || "");
+        setProxyMethod(defaultResponse.proxy_method || "GET");
+      }
+    }
+
+    if (selectedResponse) {
+      const existingResponse = data.find(
+        (res) => res.id === selectedResponse.id
+      );
+      if (existingResponse) {
+        if (isStatefulMode) {
+          setSelectedResponse({
+            id: existingResponse.id,
+            endpoint_id: existingResponse.endpoint_id,
+            name: existingResponse.name,
+            status_code: existingResponse.status_code,
+            response_body: existingResponse.response_body,
+            delay_ms: existingResponse.delay_ms,
+            is_stateful:
+              existingResponse.is_stateful !== undefined
+                ? existingResponse.is_stateful
+                : true,
+            created_at: existingResponse.created_at,
+            updated_at: existingResponse.updated_at,
+          });
+          setResponseName(existingResponse.name);
+          setStatusCode(existingResponse.status_code.toString());
+          setResponseBody(
+            JSON.stringify(existingResponse.response_body, null, 2)
+          );
+          setDelay(existingResponse.delay_ms?.toString() || "0");
+        } else {
+          setSelectedResponse(existingResponse);
+          setResponseName(existingResponse.name);
+          setStatusCode(existingResponse.status_code.toString());
+          setResponseBody(
+            JSON.stringify(existingResponse.response_body, null, 2)
+          );
+          setDelay(existingResponse.delay_ms?.toString() || "0");
+          setProxyUrl(existingResponse.proxy_url || "");
+          setProxyMethod(existingResponse.proxy_method || "GET");
+        }
+      }
+    }
+
+    return data;
+  };
+  // ✅ THÊM: State để đánh dấu đã fetch xong
+  const [hasFetchedStatusCodes] = useState({});
+  // ✅ SỬA: useEffect thứ hai - XỬ LÝ CẢ STATUS CODES VÀ UI
+  useEffect(() => {
+    if (currentEndpointId && isEndpointsLoaded && !isSwitchingMode) {
+      const endpointIdStr = String(currentEndpointId);
+
+      // ✅ KIỂM TRA CACHE TRƯỚC
+      if (endpointResponsesCache[endpointIdStr]) {
+        const data = endpointResponsesCache[endpointIdStr];
+
+        // ✅ CẬP NHẬT STATUS CODES
         if (Array.isArray(data)) {
-          // ✅ SỬA: Lấy unique status codes từ endpoint responses thực tế
           const uniqueStatusCodes = [
             ...new Set(data.map((response) => response.status_code.toString())),
           ];
-
-          // ✅ THÊM: Luôn thêm các status code 500 mặc định
           const default500Codes = ["500", "501", "502", "503", "504", "505"];
           const combinedCodes = [
             ...new Set([...uniqueStatusCodes, ...default500Codes]),
           ];
-
-          // Tạo danh sách status codes với description
           const statusCodesWithDesc = combinedCodes.map((code) => {
-            // Tìm description từ constants.js nếu có
             const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
             const description = statusCodeInfo
               ? statusCodeInfo.description
               : "Custom status code";
-
-            return {
-              code: code,
-              description: description,
-            };
+            return { code: code, description: description };
           });
-
-          // ✅ SỬA: Luôn cập nhật để đảm bảo có status codes đúng từ endpoint responses
           setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+        }
 
-          // console.log(
-          //   "Updated available status codes from endpoint responses:",
-          //   statusCodesWithDesc
-          // );
-        } else {
-          // Fallback nếu không có endpoint responses
+        // ✅ CẬP NHẬT UI
+        updateUIWithResponseData(data, isStateful);
+        return;
+      }
+
+      // ✅ FETCH NẾU CHƯA CÓ TRONG CACHE
+      setIsLoading(true);
+      fetch(`${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`, {
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          // ✅ LƯU VÀO CACHE
+          setEndpointResponsesCache((prev) => ({
+            ...prev,
+            [endpointIdStr]: data,
+          }));
+
+          // ✅ CẬP NHẬT STATUS CODES
+          if (Array.isArray(data)) {
+            const uniqueStatusCodes = [
+              ...new Set(
+                data.map((response) => response.status_code.toString())
+              ),
+            ];
+            const default500Codes = ["500", "501", "502", "503", "504", "505"];
+            const combinedCodes = [
+              ...new Set([...uniqueStatusCodes, ...default500Codes]),
+            ];
+            const statusCodesWithDesc = combinedCodes.map((code) => {
+              const statusCodeInfo = statusCodes.find((sc) => sc.code === code);
+              const description = statusCodeInfo
+                ? statusCodeInfo.description
+                : "Custom status code";
+              return { code: code, description: description };
+            });
+            setNewApiCallAvailableStatusCodes(statusCodesWithDesc);
+          }
+
+          // ✅ CẬP NHẬT UI
+          updateUIWithResponseData(data, isStateful);
+        })
+        .catch((error) => {
+          console.error(
+            "Failed to fetch status codes from endpoint responses:",
+            error
+          );
           setNewApiCallAvailableStatusCodes([
             { code: "500", description: "Internal Server Error." },
             { code: "501", description: "Not Implemented." },
@@ -633,24 +803,19 @@ const DashboardPage = () => {
             { code: "504", description: "Gateway Timeout." },
             { code: "505", description: "HTTP Version Not Supported." },
           ]);
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "Failed to fetch status codes from endpoint responses:",
-          error
-        );
-        // Fallback nếu fetch lỗi
-        setNewApiCallAvailableStatusCodes([
-          { code: "500", description: "Internal Server Error." },
-          { code: "501", description: "Not Implemented." },
-          { code: "502", description: "Bad Gateway." },
-          { code: "503", description: "Service Unavailable." },
-          { code: "504", description: "Gateway Timeout." },
-          { code: "505", description: "HTTP Version Not Supported." },
-        ]);
-      });
-  }, [currentEndpointId, isStateful]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [
+    currentEndpointId,
+    isStateful,
+    isEndpointsLoaded,
+    isSwitchingMode,
+    endpointResponsesCache,
+  ]);
+
   // ✅ CẬP NHẬT: Chỉ cập nhật logic khi method thay đổi
   useEffect(() => {
     // Kiểm tra có API call nào đã có ID trong nextCalls không
@@ -1108,20 +1273,17 @@ const DashboardPage = () => {
   // Thêm state cho dialog xác nhận reset
   const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false);
 
+  // SỬA LẠI useEffect thứ hai để không fetch dư thừa
   useEffect(() => {
     const found = endpoints.find(
       (ep) => String(ep.id) === String(currentEndpointId)
     );
 
-    // Nếu endpoint có trong danh sách nhưng không có send_notification → fetch chi tiết
+    // Nếu endpoint có trong danh sách → chỉ set currentEndpoint, KHÔNG fetch
     if (found) {
       setCurrentEndpoint(found);
-      if (found.send_notification === undefined && currentEndpointId) {
-        fetchEndpoint(currentEndpointId);
-      }
     } else if (currentEndpointId) {
-      // Nếu không có trong danh sách → fetch riêng
-      fetchEndpoint(currentEndpointId);
+      fetchEndpointIfNeeded(currentEndpointId);
     }
   }, [endpoints, currentEndpointId]);
 
@@ -1599,18 +1761,30 @@ const DashboardPage = () => {
       });
   };
 
-  const fetchEndpoint = async (id) => {
+  // Thêm hàm fetch endpoint mới, chỉ fetch khi cần thiết
+  const fetchEndpointIfNeeded = async (id) => {
     if (!id) return;
-    try {
-      const response = await fetch(`${API_ROOT}/endpoints/${id}`, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to fetch endpoint");
-      const data = await response.json();
-      setCurrentEndpoint(data);
-      // console.log("Current endpoint:", data);
-    } catch (error) {
-      console.error("Error fetching endpoint:", error);
+
+    // Kiểm tra xem endpoint đã có trong danh sách endpoints chưa
+    const existingEndpoint = endpoints.find(
+      (ep) => String(ep.id) === String(id)
+    );
+
+    if (existingEndpoint) {
+      // Nếu đã có trong danh sách, chỉ cần set currentEndpoint
+      setCurrentEndpoint(existingEndpoint);
+    } else {
+      // Nếu không có trong danh sách, mới fetch từ API
+      try {
+        const response = await fetch(`${API_ROOT}/endpoints/${id}`, {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to fetch endpoint");
+        const data = await response.json();
+        setCurrentEndpoint(data);
+      } catch (error) {
+        console.error("Error fetching endpoint:", error);
+      }
     }
   };
 
@@ -1646,128 +1820,9 @@ const DashboardPage = () => {
     }
   };
 
+  // ✅ SỬA: fetchEndpointResponses để sử dụng cache
   const fetchEndpointResponses = (isStatefulMode) => {
-    const endpointIdStr = String(currentEndpointId);
-
-    return fetch(
-      `${API_ROOT}/endpoint_responses?endpoint_id=${endpointIdStr}`,
-      { credentials: "include" }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        // Processing for stateful endpoint
-        if (isStatefulMode) {
-          // Only take necessary fields for stateful
-          const statefulResponses = data.map((res) => ({
-            id: res.id,
-            endpoint_id: res.endpoint_id,
-            name: res.name,
-            status_code: res.status_code,
-            response_body: res.response_body,
-            delay_ms: res.delay_ms,
-            // Use value from backend instead of self-setting
-            is_stateful: res.is_stateful !== undefined ? res.is_stateful : true,
-            created_at: res.created_at,
-            updated_at: res.updated_at,
-          }));
-
-          setEndpointResponses(statefulResponses);
-
-          // Format data for UI
-          const statusDataFormatted = statefulResponses.map((res) => ({
-            id: res.id,
-            code: res.status_code.toString(),
-            name: res.name,
-            isStateful: res.is_stateful !== undefined ? res.is_stateful : true,
-            bgColor: "",
-          }));
-
-          setStatusData(statusDataFormatted);
-
-          // Select first response as default
-          if (!selectedResponse && statefulResponses.length > 0) {
-            const firstResponse = statefulResponses[0];
-            setSelectedResponse(firstResponse);
-            setResponseName(firstResponse.name);
-            setStatusCode(firstResponse.status_code.toString());
-            setResponseBody(
-              JSON.stringify(firstResponse.response_body, null, 2)
-            );
-            setDelay(firstResponse.delay_ms?.toString() || "0");
-          }
-        } else {
-          // Processing as current for stateless
-          const sortedData = [...data].sort((a, b) => a.priority - b.priority);
-          setEndpointResponses(sortedData);
-
-          const statusDataFormatted = sortedData.map((res) => ({
-            id: res.id,
-            code: res.status_code.toString(),
-            name: res.name,
-            isDefault: res.is_default,
-            bgColor: res.is_default ? "bg-slate-100" : "",
-            priority: res.priority,
-          }));
-          setStatusData(statusDataFormatted);
-
-          if (!selectedResponse && data.length > 0) {
-            const defaultResponse =
-              data.find((res) => res.is_default) || data[0];
-            setSelectedResponse(defaultResponse);
-            setResponseName(defaultResponse.name);
-            setStatusCode(defaultResponse.status_code.toString());
-            setResponseBody(
-              JSON.stringify(defaultResponse.response_body, null, 2)
-            );
-            setDelay(defaultResponse.delay_ms?.toString() || "0");
-            setProxyUrl(defaultResponse.proxy_url || "");
-            setProxyMethod(defaultResponse.proxy_method || "GET");
-          }
-        }
-
-        // Common processing for both stateful and stateless
-        if (selectedResponse) {
-          const existingResponse = data.find(
-            (res) => res.id === selectedResponse.id
-          );
-          if (existingResponse) {
-            // Processing for stateful
-            if (isStatefulMode) {
-              setSelectedResponse({
-                id: existingResponse.id,
-                endpoint_id: existingResponse.endpoint_id,
-                name: existingResponse.name,
-                status_code: existingResponse.status_code,
-                response_body: existingResponse.response_body,
-                delay_ms: existingResponse.delay_ms,
-                // Use value from backend instead of self-setting
-                is_stateful:
-                  existingResponse.is_stateful !== undefined
-                    ? existingResponse.is_stateful
-                    : true,
-                created_at: existingResponse.created_at,
-                updated_at: existingResponse.updated_at,
-              });
-              setResponseName(existingResponse.name);
-              setStatusCode(existingResponse.status_code.toString());
-              setResponseBody(
-                JSON.stringify(existingResponse.response_body, null, 2)
-              );
-              setDelay(existingResponse.delay_ms?.toString() || "0");
-            } else {
-              setSelectedResponse(existingResponse);
-              setResponseName(existingResponse.name);
-              setStatusCode(existingResponse.status_code.toString());
-              setResponseBody(
-                JSON.stringify(existingResponse.response_body, null, 2)
-              );
-              setDelay(existingResponse.delay_ms?.toString() || "0");
-              setProxyUrl(existingResponse.proxy_url || "");
-              setProxyMethod(existingResponse.proxy_method || "GET");
-            }
-          }
-        }
-      });
+    return fetchEndpointResponsesWithCache(isStatefulMode);
   };
 
   const fetchEndpointDataByPath = (path) => {
@@ -1891,12 +1946,26 @@ const DashboardPage = () => {
     loadData();
   }, []);
 
+  // ✅ SỬA: useEffect thứ hai - đợi hasFetchedStatusCodes
   useEffect(() => {
     if (currentEndpointId && isEndpointsLoaded && !isSwitchingMode) {
+      const endpointIdStr = String(currentEndpointId);
+
+      // ✅ CHỈ FETCH KHI ĐÃ FETCH STATUS CODES XONG
+      if (!hasFetchedStatusCodes[endpointIdStr]) {
+        return; // Chờ đến khi hasFetchedStatusCodes được cập nhật
+      }
+
       setIsLoading(true);
       fetchEndpointResponses(isStateful).finally(() => setIsLoading(false));
     }
-  }, [currentEndpointId, isStateful, isEndpointsLoaded, isSwitchingMode]);
+  }, [
+    currentEndpointId,
+    isStateful,
+    isEndpointsLoaded,
+    isSwitchingMode,
+    hasFetchedStatusCodes,
+  ]);
 
   useEffect(() => {
     if (endpoints.length > 0) {
@@ -3493,7 +3562,11 @@ const DashboardPage = () => {
                                 }
                                 title="Variable Picker"
                               >
-                                <img src={variablePickerIcon} alt="Variable Picker Icon" className="h-5 w-5 dark:invert" />
+                                <img
+                                  src={variablePickerIcon}
+                                  alt="Variable Picker Icon"
+                                  className="h-5 w-5 dark:invert"
+                                />
                               </Button>
 
                               {/* Popover */}
@@ -3534,8 +3607,8 @@ const DashboardPage = () => {
                                             {section === "url"
                                               ? "URL Parameters"
                                               : section === "query"
-                                                ? "Query Parameters"
-                                                : "Project State"}
+                                              ? "Query Parameters"
+                                              : "Project State"}
                                           </div>
                                         )
                                       )}
@@ -3621,7 +3694,11 @@ const DashboardPage = () => {
                                   setResponseSaveTooltipVisible(false)
                                 }
                               >
-                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
+                                <img
+                                  src={saveIcon}
+                                  alt="Save Icon"
+                                  className="h-5 w-5 dark:invert"
+                                />
                               </Button>
                               <Tooltip
                                 visible={responseSaveTooltipVisible}
@@ -3980,7 +4057,11 @@ const DashboardPage = () => {
                                   setProxySaveTooltipVisible(false)
                                 }
                               >
-                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
+                                <img
+                                  src={saveIcon}
+                                  alt="Save Icon"
+                                  className="h-5 w-5 dark:invert"
+                                />
                               </Button>
                               <Tooltip
                                 visible={proxySaveTooltipVisible}
@@ -4078,7 +4159,11 @@ const DashboardPage = () => {
                                 }
                                 title="Variable Picker"
                               >
-                                <img src={variablePickerIcon} alt="Variable Picker Icon" className="h-5 w-5 dark:invert" />
+                                <img
+                                  src={variablePickerIcon}
+                                  alt="Variable Picker Icon"
+                                  className="h-5 w-5 dark:invert"
+                                />
                               </Button>
 
                               {/* Popover cho Initial Value */}
@@ -4191,7 +4276,11 @@ const DashboardPage = () => {
                                   setDataSaveTooltipVisible(false)
                                 }
                               >
-                                <img src={saveIcon} alt="Save Icon" className="h-5 w-5 dark:invert" />
+                                <img
+                                  src={saveIcon}
+                                  alt="Save Icon"
+                                  className="h-5 w-5 dark:invert"
+                                />
                               </Button>
                               <Tooltip
                                 visible={dataSaveTooltipVisible}
@@ -4839,11 +4928,7 @@ const DashboardPage = () => {
       <footer className="mt-auto w-full flex justify-between items-center px-8 py-4 text-xs font-semibold">
         <span>© Teknix Corp. All rights reserved.</span>
         <div className="flex items-center gap-3">
-          <img
-            src={tiktokIcon}
-            alt="tiktok"
-            className="w-4 h-4 dark:invert"
-          />
+          <img src={tiktokIcon} alt="tiktok" className="w-4 h-4 dark:invert" />
           <img src={fbIcon} alt="facebook" className="w-4 h-4 dark:invert" />
           <img
             src={linkedinIcon}
@@ -5011,9 +5096,7 @@ const DashboardPage = () => {
           </DialogHeader>
           <DialogDescription></DialogDescription>
           <div className="space-y-2">
-            <label className="block text-sm font-medium opacity-70">
-              Name
-            </label>
+            <label className="block text-sm font-medium opacity-70">Name</label>
             <Input
               placeholder="Workspace name"
               value={newWsName}
@@ -5064,8 +5147,9 @@ const DashboardPage = () => {
               <DialogDescription>
                 Are you sure you want to delete workspace{" "}
                 <span className="text-red-500 font-bold">
-                      {wsToDelete ? wsToDelete.name : "this workspace"}
-                    </span>{" "} and all its projects?
+                  {wsToDelete ? wsToDelete.name : "this workspace"}
+                </span>{" "}
+                and all its projects?
               </DialogDescription>
             );
           })()}
