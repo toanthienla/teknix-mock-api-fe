@@ -546,7 +546,7 @@ export default function ProjectPage() {
     const newProject = {
       name: newTitle.trim(),
       description: newDesc.trim(),
-      workspace_id: targetWsId || currentWsId,
+      workspace_id: workspaceId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -559,13 +559,10 @@ export default function ProjectPage() {
       .then(async (res) => {
         const data = await res.json();
 
-        // Kiểm tra phản hồi từ API có success = false
+        // Xử lý lỗi từ API
         if (!res.ok || data.success === false) {
           if (data?.errors?.length > 0) {
-            // Lấy tất cả message lỗi và hiển thị toast
-            data.errors.forEach((err) => {
-              toast.error(err.message || "Invalid input");
-            });
+            data.errors.forEach((err) => toast.error(err.message || "Invalid input"));
           } else if (data?.message) {
             toast.error(data.message);
           } else {
@@ -574,18 +571,38 @@ export default function ProjectPage() {
           throw new Error("Validation error");
         }
 
-        // Thành công
+        // ⬇ Đây là project mới được tạo
         const createdProject = data;
-        // setProjects((prev) => [...prev, createdProject]);
 
-        // mở workspace tương ứng
+        // --- FETCH FOLDERS CHO PROJECT MỚI TẠO ---
+        let foldersForProject = [];
+        try {
+          const folderRes = await fetch(`${API_ROOT}/folders?project_id=${createdProject.id}`);
+          if (folderRes.ok) {
+            foldersForProject = await folderRes.json();
+          }
+        } catch (e) {
+          console.warn("Failed to fetch folders for new project:", e);
+        }
+
+        const createdWithFolders = {
+          ...createdProject,
+          folders: Array.isArray(foldersForProject) ? foldersForProject : [],
+        };
+
+        // Thêm vào danh sách project
+        setProjects((prev) => [...prev, createdWithFolders]);
+
+        // Đặt workspace hiện tại
         setCurrentWsId(createdProject.workspace_id);
         localStorage.setItem("currentWorkspace", createdProject.workspace_id);
 
+        // Reset input
         setNewTitle("");
         setNewDesc("");
-        setTargetWsId(null); // reset sau khi tạo xong
+        setTargetWsId(null);
         setOpenNewProject(false);
+
         toast.success("Project created successfully");
       })
       .catch((err) => {
@@ -700,34 +717,40 @@ export default function ProjectPage() {
     if (!deleteProjectId) return;
 
     try {
-      // 1. Get all folders in this project
-      const foldersRes = await fetch(`${API_ROOT}/folders`);
-      const allFolders = await foldersRes.json();
-      const foldersToDelete = allFolders.filter(
-        (f) => String(f.project_id) === String(deleteProjectId)
+      // 1. Fetch folders in this project ONLY
+      const foldersRes = await fetch(
+        `${API_ROOT}/folders?project_id=${deleteProjectId}`
       );
+      const folders = await foldersRes.json();
+      const foldersToDelete = Array.isArray(folders)
+        ? folders
+        : folders.data || [];
       const folderIds = foldersToDelete.map((f) => f.id);
 
-      // 2. Get all endpoints in this project or its folders
-      const endpointsRes = await fetch(`${API_ROOT}/endpoints`);
-      const allEndpoints = await endpointsRes.json();
-      const endpointsToDelete = allEndpoints.filter(
-        (e) =>
-          String(e.project_id) === String(deleteProjectId) ||
-          folderIds.some((fid) => String(e.folder_id) === String(fid))
+      // 2. Fetch endpoints in this project using optimized API
+      const endpointsRes = await fetch(
+        `${API_ROOT}/projects/${deleteProjectId}/project-endpoints`
       );
+      const endpointsRaw = await endpointsRes.json();
+      const endpointsToDelete = Array.isArray(endpointsRaw)
+        ? endpointsRaw
+        : endpointsRaw.data || [];
 
-      // 3. Delete all endpoints first
+      // 3. Delete all endpoints
       await Promise.all(
         endpointsToDelete.map((e) =>
-          fetch(`${API_ROOT}/endpoints/${e.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/endpoints/${e.id}`, {
+            method: "DELETE",
+          })
         )
       );
 
       // 4. Delete all folders
       await Promise.all(
         foldersToDelete.map((f) =>
-          fetch(`${API_ROOT}/folders/${f.id}`, { method: "DELETE" })
+          fetch(`${API_ROOT}/folders/${f.id}`, {
+            method: "DELETE",
+          })
         )
       );
 
@@ -736,7 +759,7 @@ export default function ProjectPage() {
         method: "DELETE",
       });
 
-      // 6. Update local state
+      // 6. Update local states (projects, folders, endpoints)
       setProjects((prev) => prev.filter((p) => p.id !== deleteProjectId));
       setFolders((prev) =>
         prev.filter((f) => String(f.project_id) !== String(deleteProjectId))
@@ -745,10 +768,11 @@ export default function ProjectPage() {
         prev.filter(
           (e) =>
             String(e.project_id) !== String(deleteProjectId) &&
-            !folderIds.some((fid) => String(e.folder_id) === String(fid))
+            !folderIds.includes(e.folder_id)
         )
       );
 
+      // Close dialogs
       setDeleteProjectId(null);
       setOpenDeleteProject(false);
       setOpenDetail(false);

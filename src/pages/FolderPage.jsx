@@ -406,6 +406,7 @@ export default function FolderPage() {
   // dialogs
   const [openNew, setOpenNew] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [openWSDialog, setOpenWSDialog] = useState(false);
 
@@ -1415,7 +1416,7 @@ export default function FolderPage() {
       if (!res.ok) throw new Error("Failed to delete WebSocket Channel");
 
       setProject((prev) =>
-        prev ? { ...prev, websocket_enabled: true } : prev
+        prev ? { ...prev, websocket_enabled: false } : prev
       );
 
       toast.success("WebSocket Channel deleted");
@@ -2242,58 +2243,58 @@ export default function FolderPage() {
         </DialogContent>
       </Dialog>
 
-      {/*/!* === Delete Confirmation Dialog === *!/*/}
-      {/*<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>*/}
-      {/*  <DialogContent className="sm:max-w-md">*/}
-      {/*    <DialogHeader>*/}
-      {/*      <DialogTitle>Delete Folder</DialogTitle>*/}
-      {/*    </DialogHeader>*/}
-      {/*    <DialogDescription className="opacity-70">*/}
-      {/*      Are you sure you want to delete{" "}*/}
-      {/*      <span className="font-semibold">{selectedFolder?.name}</span>?*/}
-      {/*      <span className="text-red-500 text-sm">*/}
-      {/*        This action cannot be undone.*/}
-      {/*      </span>*/}
-      {/*    </DialogDescription>*/}
+      {/* === Delete Confirmation Dialog === */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Folder</DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="opacity-70">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold">{selectedFolder?.name}</span>?
+            <span className="text-red-500 text-sm">
+              This action cannot be undone.
+            </span>
+          </DialogDescription>
 
-      {/*    <DialogFooter className="flex justify-end gap-2">*/}
-      {/*      <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>*/}
-      {/*        Cancel*/}
-      {/*      </Button>*/}
-      {/*      <Button*/}
-      {/*        className="destructive"*/}
-      {/*        onClick={async () => {*/}
-      {/*          try {*/}
-      {/*            if (!selectedFolder?.id)*/}
-      {/*              throw new Error("No folder selected");*/}
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="destructive"
+              onClick={async () => {
+                try {
+                  if (!selectedFolder?.id)
+                    throw new Error("No folder selected");
 
-      {/*            const res = await fetch(*/}
-      {/*              `${API_ROOT}/folders/${selectedFolder.id}`,*/}
-      {/*              {*/}
-      {/*                method: "DELETE",*/}
-      {/*                credentials: "include",*/}
-      {/*              }*/}
-      {/*            );*/}
+                  const res = await fetch(
+                    `${API_ROOT}/folders/${selectedFolder.id}`,
+                    {
+                      method: "DELETE",
+                      credentials: "include",
+                    }
+                  );
 
-      {/*            if (!res.ok) throw new Error("Failed to delete folder");*/}
+                  if (!res.ok) throw new Error("Failed to delete folder");
 
-      {/*            setFolders((prev) =>*/}
-      {/*              prev.filter((f) => f.id !== selectedFolder.id)*/}
-      {/*            );*/}
+                  setFolders((prev) =>
+                    prev.filter((f) => f.id !== selectedFolder.id)
+                  );
 
-      {/*            toast.success("Folder deleted successfully!");*/}
-      {/*            setDeleteDialogOpen(false);*/}
-      {/*          } catch (err) {*/}
-      {/*            toast.error("Failed to delete folder!");*/}
-      {/*            console.error(err);*/}
-      {/*          }*/}
-      {/*        }}*/}
-      {/*      >*/}
-      {/*        Delete*/}
-      {/*      </Button>*/}
-      {/*    </DialogFooter>*/}
-      {/*  </DialogContent>*/}
-      {/*</Dialog>*/}
+                  toast.success("Folder deleted successfully!");
+                  setDeleteDialogOpen(false);
+                } catch (err) {
+                  toast.error("Failed to delete folder!");
+                  console.error(err);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Folder Dialog */}
       <Dialog open={openDeleteFolder} onOpenChange={setOpenDeleteFolder}>
