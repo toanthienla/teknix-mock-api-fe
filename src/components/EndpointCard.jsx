@@ -108,11 +108,11 @@ export default function EndpointCard({endpoint, onEdit, onDelete, onClick}) {
               <TooltipContent className="text-white bg-black">Edit</TooltipContent>
             </Tooltip>
 
-            {/* === Delete Button with Tooltip === */}
+            {/* === Delete Button with Tooltip (fixed) === */}
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -124,12 +124,12 @@ export default function EndpointCard({endpoint, onEdit, onDelete, onClick}) {
                         className="w-5 h-5 dark:brightness-0 dark:invert"
                       />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-white bg-black">Delete</TooltipContent>
-                </Tooltip>
-              </AlertDialogTrigger>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
 
-              {/* AlertDialog content */}
+                <TooltipContent className="text-white bg-black">Delete</TooltipContent>
+              </Tooltip>
+
               <AlertDialogContent
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -141,7 +141,7 @@ export default function EndpointCard({endpoint, onEdit, onDelete, onClick}) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete this endpoint.
+                    This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -157,6 +157,7 @@ export default function EndpointCard({endpoint, onEdit, onDelete, onClick}) {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
           </div>
         </TableCell>
       </TableRow>
