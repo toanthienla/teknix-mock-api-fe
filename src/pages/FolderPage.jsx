@@ -569,7 +569,7 @@ export default function FolderPage() {
     if (!endpoints || endpoints.length === 0) return;
 
     fetchLogs(projectId, page, rowsPerPage);
-  }, [projectId, endpoints, page, rowsPerPage, searchTerm, timeFilter]);
+  }, [projectId, page, rowsPerPage, searchTerm, timeFilter]);
 
   const fetchLogs = async (pid, page = 1, limit = 10) => {
     if (!pid) return;
