@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import "jsoneditor/dist/jsoneditor.css";
 import deleteIcon from "@/assets/light/delete.svg";
-import lightningIcon from "@/assets/light/lightning.svg";
+import lightningIconLight from "@/assets/light/lightning.svg";
+import lightningIconDark from "@/assets/dark/lightning.svg";
 import chainIcon from "@/assets/light/chain.svg";
 import keyIcon from "@/assets/light/key-icon.svg";
 import connectIcon from "@/assets/light/connect-format.svg";
@@ -24,6 +25,7 @@ import {highlight, languages} from "prismjs/components/prism-core.js";
 
 import {getProjectConnectToken, testWsConnection} from "@/services/api.js";
 import {toast} from "react-toastify";
+import {useTheme} from "@/services/ThemeContext.jsx";
 
 export default function WSChannelSheet({
                                          open,
@@ -33,6 +35,8 @@ export default function WSChannelSheet({
                                          onDeleteWSChannel,
                                          onCopyURL,
                                        }) {
+  const {isDark} = useTheme();
+  const lightningIcon = isDark ? lightningIconDark : lightningIconLight;
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [wsURL, setWsURL] = useState(null);
   const [projectToken, setProjectToken] = useState(null);
